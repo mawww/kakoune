@@ -668,7 +668,6 @@ Optional<Key> NCursesUI::get_next_key()
     };
 
     auto parse_mask = [](int mask) {
-        mask = std::max(mask - 1, 0);
         Key::Modifiers mod = Key::Modifiers::None;
         if (mask & 1)
             mod |= Key::Modifiers::Shift;
@@ -721,7 +720,10 @@ Optional<Key> NCursesUI::get_next_key()
                     (Codepoint)((down ? 1 : -1) * m_wheel_scroll_amount)};
         };
 
-        auto masked_key = [&](Codepoint key) { return Key{parse_mask(params[1]), key}; };
+        auto masked_key = [&](Codepoint key) {
+            int mask = std::max(params[1] - 1, 0);
+            return Key{parse_mask(mask), key};
+        };
 
         switch (c)
         {
@@ -810,39 +812,40 @@ Optional<Key> NCursesUI::get_next_key()
             raw_mask = raw_mask * 10 + (code - '0');
             code = get_char().value_or((unsigned char)0xff);
         } while (code >= '0' and code <= '9');
+        Key::Modifiers mod = parse_mask(std::max(raw_mask - 1, 0));
 
         switch (code)
         {
-        case ' ': return Key{parse_mask(raw_mask), ' '};
-        case 'A': return Key{parse_mask(raw_mask), Key::Up};
-        case 'B': return Key{parse_mask(raw_mask), Key::Down};
-        case 'C': return Key{parse_mask(raw_mask), Key::Right};
-        case 'D': return Key{parse_mask(raw_mask), Key::Left};
-        case 'F': return Key{parse_mask(raw_mask), Key::End};
-        case 'H': return Key{parse_mask(raw_mask), Key::Home};
-        case 'I': return Key{parse_mask(raw_mask), Key::Tab};
-        case 'M': return Key{parse_mask(raw_mask), Key::Return};
-        case 'P': return Key{parse_mask(raw_mask), Key::F1};
-        case 'Q': return Key{parse_mask(raw_mask), Key::F2};
-        case 'R': return Key{parse_mask(raw_mask), Key::F3};
-        case 'S': return Key{parse_mask(raw_mask), Key::F4};
-        case 'X': return Key{parse_mask(raw_mask), '='};
-        case 'j': return Key{parse_mask(raw_mask), '*'};
-        case 'k': return Key{parse_mask(raw_mask), '+'};
-        case 'l': return Key{parse_mask(raw_mask), ','};
-        case 'm': return Key{parse_mask(raw_mask), '-'};
-        case 'n': return Key{parse_mask(raw_mask), '.'};
-        case 'o': return Key{parse_mask(raw_mask), '/'};
-        case 'p': return Key{parse_mask(raw_mask), '0'};
-        case 'q': return Key{parse_mask(raw_mask), '1'};
-        case 'r': return Key{parse_mask(raw_mask), '2'};
-        case 's': return Key{parse_mask(raw_mask), '3'};
-        case 't': return Key{parse_mask(raw_mask), '4'};
-        case 'u': return Key{parse_mask(raw_mask), '5'};
-        case 'v': return Key{parse_mask(raw_mask), '6'};
-        case 'w': return Key{parse_mask(raw_mask), '7'};
-        case 'x': return Key{parse_mask(raw_mask), '8'};
-        case 'y': return Key{parse_mask(raw_mask), '9'};
+        case ' ': return Key{mod, ' '};
+        case 'A': return Key{mod, Key::Up};
+        case 'B': return Key{mod, Key::Down};
+        case 'C': return Key{mod, Key::Right};
+        case 'D': return Key{mod, Key::Left};
+        case 'F': return Key{mod, Key::End};
+        case 'H': return Key{mod, Key::Home};
+        case 'I': return Key{mod, Key::Tab};
+        case 'M': return Key{mod, Key::Return};
+        case 'P': return Key{mod, Key::F1};
+        case 'Q': return Key{mod, Key::F2};
+        case 'R': return Key{mod, Key::F3};
+        case 'S': return Key{mod, Key::F4};
+        case 'X': return Key{mod, '='};
+        case 'j': return Key{mod, '*'};
+        case 'k': return Key{mod, '+'};
+        case 'l': return Key{mod, ','};
+        case 'm': return Key{mod, '-'};
+        case 'n': return Key{mod, '.'};
+        case 'o': return Key{mod, '/'};
+        case 'p': return Key{mod, '0'};
+        case 'q': return Key{mod, '1'};
+        case 'r': return Key{mod, '2'};
+        case 's': return Key{mod, '3'};
+        case 't': return Key{mod, '4'};
+        case 'u': return Key{mod, '5'};
+        case 'v': return Key{mod, '6'};
+        case 'w': return Key{mod, '7'};
+        case 'x': return Key{mod, '8'};
+        case 'y': return Key{mod, '9'};
         default: return {};
         }
     };
