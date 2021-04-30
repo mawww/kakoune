@@ -419,7 +419,7 @@ define-command -hidden c-family-alternative-file %{
                         /*) altname="${alt_dir}/${file_noext}.${ext}" ;;
                         *) altname="${dir}/${alt_dir}/${file_noext}.${ext}" ;;
                         esac
-                        if [ -f ${altname} ]; then
+                        if [ -f "${altname}" ]; then
                             printf 'edit %%{%s}\n' "${altname}"
                             exit
                         fi
@@ -433,7 +433,7 @@ define-command -hidden c-family-alternative-file %{
                         /*) altname="${alt_dir}/${file_noext}.${ext}" ;;
                         *) altname="${dir}/${alt_dir}/${file_noext}.${ext}" ;;
                         esac
-                        if [ -f ${altname} ]; then
+                        if [ -f "${altname}" ]; then
                             printf 'edit %%{%s}\n' "${altname}"
                             exit
                         fi
