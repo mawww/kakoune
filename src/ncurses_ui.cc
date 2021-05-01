@@ -156,6 +156,14 @@ static constexpr StringView assistant_dilbert[] =
       R"(      @     )",
       R"(            )"};
 
+static constexpr StringView assistant_duck[] =
+   {
+    R"(     __    )",
+    R"( ___( o)> ╮)",
+    R"( \ <_. )  ╰)",
+    R"(  `---'    )",
+    R"(           )"};
+
 template<typename T> T sq(T x) { return x * x; }
 
 constexpr struct { unsigned char r, g, b; } builtin_colors[] = {
@@ -1354,6 +1362,8 @@ void NCursesUI::set_ui_options(const Options& options)
             m_assistant = assistant_cat;
         else if (it->value == "dilbert")
             m_assistant = assistant_dilbert;
+        else if (it->value == "duck")
+            m_assistant = assistant_duck;
         else if (it->value == "none" or it->value == "off")
             m_assistant = ConstArrayView<StringView>{};
     }

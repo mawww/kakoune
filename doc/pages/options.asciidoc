@@ -337,7 +337,7 @@ are exclusively available to built-in options.
 
         *ncurses_assistant*:::
             specify the nice assistant displayed in info boxes,
-            can be *clippy* (the default), *cat*, *dilbert* or *none*
+            can be *clippy* (the default), *cat*, *dilbert*, *duck* or *none*
 
         *ncurses_enable_mouse*:::
             boolean option that enables mouse support
