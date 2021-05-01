@@ -587,28 +587,20 @@ String get_user_name()
     return getenv("USER");
 }
 
-String session_directory()
+const String& session_directory()
 {
-    StringView xdg_runtime_dir = getenv("XDG_RUNTIME_DIR");
-    if (xdg_runtime_dir.empty())
-        return format("{}/kakoune/{}", tmpdir(), get_user_name());
-    else
-        return format("{}/kakoune", xdg_runtime_dir);
-}
-
-void make_session_directory()
-{
-    StringView xdg_runtime_dir = getenv("XDG_RUNTIME_DIR");
-    if (xdg_runtime_dir.empty())
-    {
-        // set sticky bit on the shared kakoune directory
-        make_directory(format("{}/kakoune", tmpdir()), 01777);
-    }
-    else if (struct stat st;
-             stat(xdg_runtime_dir.zstr(), &st) == 0 && st.st_uid != geteuid())
-        throw runtime_error("XDG_RUNTIME_DIR is not owned by current user");
-
-    make_directory(session_directory(), 0711);
+    static String session_dir = [] {
+        StringView xdg_runtime_dir = getenv("XDG_RUNTIME_DIR");
+        if (not xdg_runtime_dir.empty())
+        {
+            if (struct stat st; stat(xdg_runtime_dir.zstr(), &st) == 0 && st.st_uid == geteuid())
+                return format("{}/kakoune", xdg_runtime_dir);
+            else
+                write_to_debug_buffer("XDG_RUNTIME_DIR does not exist or not owned by current user, using tmpdir");
+        }
+        return format("{}/kakoune-{}", tmpdir(), get_user_name());
+    }();
+    return session_dir;
 }
 
 String session_path(StringView session)
@@ -863,7 +855,7 @@ Server::Server(String session_name, bool is_daemon)
     fcntl(listen_sock, F_SETFD, FD_CLOEXEC);
     sockaddr_un addr = session_addr(m_session);
 
-    make_session_directory();
+    make_directory(session_directory(), 0711);
 
     // Do not give any access to the socket to other users by default
     auto old_mask = umask(0077);
