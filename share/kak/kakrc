@@ -32,9 +32,12 @@ evaluate-commands %sh{
             | sed 's/.*/try %{ source "&" } catch %{ echo -debug Autoload: could not load "&" }/'
     }
 
+    readonly SYSTEM_ONLY="$1"
+
     echo "colorscheme default"
 
-    if [ -d "${kak_config}/autoload" ]; then
+    if [ -d "${kak_config}/autoload" ] \
+       && [ "${SYSTEM_ONLY}" != "true" ]; then
         autoload_directory ${kak_config}/autoload
     elif [ -d "${kak_runtime}/autoload" ]; then
         autoload_directory ${kak_runtime}/autoload
@@ -44,7 +47,8 @@ evaluate-commands %sh{
         echo "source '${kak_runtime}/kakrc.local'"
     fi
 
-    if [ -f "${kak_config}/kakrc" ]; then
+    if [ -f "${kak_config}/kakrc" ] \
+       && [ "${SYSTEM_ONLY}" != "true" ]; then
         echo "source '${kak_config}/kakrc'"
     fi
 }
