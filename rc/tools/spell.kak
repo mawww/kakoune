@@ -1,8 +1,9 @@
 declare-option -hidden range-specs spell_regions
-declare-option -hidden str spell_last_lang
 declare-option -hidden str spell_tmp_file
+declare-option -hidden str spell_options
 
 declare-option -docstring "default language to use when none is passed to the spell-check command" str spell_lang
+declare-option -docstring "spell checking engine to use" str spellcmd
 
 define-command -params ..1 -docstring %{
     spell [<language>]: spell check the current buffer
@@ -19,14 +20,41 @@ define-command -params ..1 -docstring %{
         printf 'set-option buffer spell_tmp_file %s\n' "${file}"
     }
     evaluate-commands %sh{
+        # Check if awk characters-as-bytes option is available
+        awk_options=
+        awk -b "" > /dev/null 2>&1 && awk_options=-b
+        if [ -z "$kak_opt_spellcmd" ]; then
+            for cmd in 'aspell' 'hunspell' 'nuspell'; do
+                if command -v $cmd > /dev/null; then
+                    kak_opt_spellcmd="$cmd"
+                    printf %s\\n "set-option buffer spellcmd $cmd"
+                    break
+                fi
+            done
+        fi
+        case $kak_opt_spellcmd in
+            *aspell) options="--byte-offsets -a";;
+            *hunspell) options="-a";;
+            *nuspell) options="";;
+            *)
+                printf %s\\n "fail 'Unrecognised spellcmd: $kak_opt_spellcmd'"
+                rm -rf "$(dirname "$kak_opt_spell_tmp_file")"
+                exit 1
+                ;;
+        esac
+        printf "set-option buffer spell_options '%s'\n" "$options"
         use_lang() {
             if ! printf %s "$1" | grep -qE '^[a-z]{2,3}([_-][A-Z]{2})?$'; then
                 echo "fail 'Invalid language code (examples of expected format: en, en_US, en-US)'"
                 rm -rf "$(dirname "$kak_opt_spell_tmp_file")"
                 exit 1
             else
-                options="-l '$1'"
-                printf 'set-option buffer spell_last_lang %s\n' "$1"
+                case $kak_opt_spellcmd in
+                    *aspell) options="$options -l $1";;
+                    *hunspell) options="$options -d $1";;
+                    *nuspell) options="$options -d $1";;
+                esac
+                printf "set-option buffer spell_options '%s'\n" "$options"
             fi
         }
 
@@ -37,7 +65,7 @@ define-command -params ..1 -docstring %{
         fi
 
         {
-            sed 's/^/^/' "$kak_opt_spell_tmp_file" | eval "aspell --byte-offsets -a $options" 2>&1 | awk '
+            sed 's/^/^/' "$kak_opt_spell_tmp_file" | eval "$kak_opt_spellcmd $options" 2>&1| awk "$awk_options" '
                 BEGIN {
                     line_num = 1
                     regions = ENVIRON["kak_timestamp"]
@@ -49,12 +77,17 @@ define-command -params ..1 -docstring %{
                         # drop the identification message
                     }
 
-                    else if (/^\*/) {
-                        # nothing
+                    else if (/^[-*+]/) {
+                        # Nothing to do with these lines:
+                        # * means: word found in dictionary
+                        # + means: word found with affix removal
+                        # - means: word found through compound formation
+                        # aspell seems to also use these, but it is not documented:
+                        # https://lists.gnu.org/archive/html/aspell-user/2009-11/msg00003.html
                     }
 
-                    else if (/^\+/) {
-                        # required to ignore undocumented aspell functionality
+                    else if (/^Nuspell|^INFO/) {
+                        # drop nuspell warning and info messages
                     }
 
                     else if (/^$/) {
@@ -149,12 +182,9 @@ define-command \
     spell-replace %{
     prompt \
         -shell-script-candidates %{
-            options=""
-            if [ -n "$kak_opt_spell_last_lang" ]; then
-                options="-l '$kak_opt_spell_last_lang'"
-            fi
+            options="$kak_opt_spell_options"
             printf %s "$kak_selection" |
-                eval "aspell -a $options" |
+                eval "$kak_opt_spellcmd $options" |
                 sed -n -e '/^&/ { s/^[^:]*: //; s/, /\n/g; p }'
         } \
         "Replace with: " \
@@ -170,17 +200,14 @@ define-command \
 define-command -params 0.. \
     -docstring "Add the current selection to the dictionary" \
     spell-add %{ evaluate-commands %sh{
-    options=""
-    if [ -n "$kak_opt_spell_last_lang" ]; then
-        options="-l '$kak_opt_spell_last_lang'"
-    fi
+    options="$kak_opt_spell_options"
     if [ $# -eq 0 ]; then
         # use selections
         eval set -- "$kak_quoted_selections"
     fi
     while [ $# -gt 0 ]; do
         word="$1"
-        if ! printf '*%s\n#\n' "${word}" | eval "aspell -a $options" >/dev/null; then
+        if ! printf '*%s\n#\n' "${word}" | eval "$kak_opt_spellcmd $options" >/dev/null; then
            printf 'fail "Unable to add word: %s"' "$(printf %s "${word}" | sed 's/"/&&/g')"
            exit 1
         fi
