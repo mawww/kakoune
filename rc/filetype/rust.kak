@@ -46,7 +46,9 @@ add-highlighter shared/rust/line_doctest/code default-region ref rust
 add-highlighter shared/rust/line_code_rest   region ^\h*//[!/]\h*``` ^\h*//[!/]\h*```$      fill documentation # reset invalid doctest
 add-highlighter shared/rust/line_comment2    region //[!/]{2} $                             fill comment
 add-highlighter shared/rust/line_doc         region //[!/] $                                fill documentation
-add-highlighter shared/rust/line_comment1    region // $                                    fill comment
+add-highlighter shared/rust/line_comment1    region // $                                    group
+add-highlighter shared/rust/line_comment1/comment fill comment
+add-highlighter shared/rust/line_comment1/todo regex (TODO|NOTE|FIXME): 1:meta
 
 add-highlighter shared/rust/block_comment2   region -recurse /\*\*\* /\*\*\* \*/            fill comment
 add-highlighter shared/rust/block_doc        region -recurse /\*\* /\*\* \*/ regions
@@ -60,7 +62,9 @@ add-highlighter shared/rust/block_doc/doctest/inner/comment regex ^\h*\* 0:docum
 add-highlighter shared/rust/block_doc/doctest/inner/code ref rust
 add-highlighter shared/rust/block_doc/code_rest region ``` ``` fill documentation
 add-highlighter shared/rust/block_doc/doc    default-region fill documentation
-add-highlighter shared/rust/block_comment1   region -recurse /\* /\* \*/                    fill comment
+add-highlighter shared/rust/block_comment1   region -recurse /\* /\* \*/ group
+add-highlighter shared/rust/block_comment1/comment fill comment
+add-highlighter shared/rust/block_comment1/todo regex (TODO|NOTE|FIXME): 1:meta
 
 add-highlighter shared/rust/macro_attributes region -recurse "\[" "#!?\[" "\]" regions
 add-highlighter shared/rust/macro_attributes/ default-region fill meta
