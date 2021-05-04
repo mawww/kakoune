@@ -21,16 +21,37 @@ define-command jedi-complete -docstring "Complete the current selection" %{
         printf %s\\n "evaluate-commands -draft %{ edit! -fifo ${dir}/fifo *jedi-output* }"
         ((
             cd $(dirname ${kak_buffile})
-            header="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"
 
             export PYTHONPATH="$kak_opt_jedi_python_path:$PYTHONPATH"
-            compl=$(python 2> "${dir}/fifo" <<-END
-		import jedi
-		script=jedi.Script(code=open('$dir/buf', 'r').read(), path='$kak_buffile')
-		print(' '.join(["'" + (str(c.name).replace("|", "\\|") + "|info -style menu %!" + str(c.docstring()).replace("|", "\\|").replace("!", "!!") + "!|" + str(c.name).replace("|", "\\|")).replace("~", "~~").replace("'", "''") + "'" for c in script.complete(line=$kak_cursor_line, column=$kak_cursor_column)]))
-		END
-            )
-            printf %s\\n "evaluate-commands -client ${kak_client} %~echo completed; set-option %{buffer=${kak_buffile}} jedi_completions ${header} ${compl}~" | kak -p ${kak_session}
+            python 2> "${dir}/fifo" -c 'if 1:
+                import os
+                dir = os.environ["kak_opt_jedi_tmp_dir"]
+                buffile = os.environ["kak_buffile"]
+                line = int(os.environ["kak_cursor_line"])
+                column = int(os.environ["kak_cursor_column"])
+                timestamp = os.environ["kak_timestamp"]
+                client = os.environ["kak_client"]
+                pipe_escape = lambda s: s.replace("|", "\\|")
+                def quote(s):
+                    c = chr(39) # single quote
+                    return c + s.replace(c, c+c) + c
+                import jedi
+                script = jedi.Script(code=open(dir + "/buf", "r").read(), path=buffile)
+                completions = (
+                    quote(
+                        pipe_escape(str(c.name)) + "|" +
+                        pipe_escape("info -style menu -- " + quote(c.docstring())) + "|" +
+                        pipe_escape(str(c.name))
+                    )
+                    for c in script.complete(line=line, column=column-1)
+                )
+                header = str(line) + "." + str(column) + "@" + timestamp
+                cmds = [
+                    "echo completed",
+                    " ".join(("set-option", quote("buffer=" + buffile), "jedi_completions", header, *completions)),
+                ]
+                print("evaluate-commands -client", quote(client), quote("\n".join(cmds)))
+            ' | kak -p "${kak_session}"
             rm -r ${dir}
         ) & ) > /dev/null 2>&1 < /dev/null
     }
