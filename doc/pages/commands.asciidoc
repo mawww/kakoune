@@ -501,7 +501,7 @@ New commands can be defined using the *define-command* command:
         following string is a shell command which takes parameters as
         positional params and outputs one completion candidate per line.
         The provided shell command will run once at the beginning of each
-        completion session, candidates are cached and then used by kakoune
+        completion session, candidates are cached and then used by Kakoune
         internal fuzzy engine
 
         during the execution of the shell command, the following env vars are
