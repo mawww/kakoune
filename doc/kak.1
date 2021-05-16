@@ -1,251 +1,276 @@
-.TH KAK 1
-
-.SH NAME
-
-kak \- a vim inspired, selection oriented code editor
-
-.SH SYNOPSIS
-
-.PP
-.B kak \-help
-
-.PP
-.B kak \-version
-
-.PP
-.B kak \-l
-
-.PP
-.B kak \-clear
-
-.PP
-.B kak \-f
-.I keys
-[\fB\-q\fR] [\fB\-i\fR]
-.IR file ...
-
-.PP
-.B kak \-p
-.I session_id
-
-.PP
-.B kak \-s
-.I session_id
-.B \-d
-[\fB\-n\fR] [\fB\-ro\fR]
-[\fB\-E\fR \fIcommand\fR]
-[\fB+line\fR[\fB:column\fR]|\fB+:\fR]
-.IR file ...
-
-.PP
-.B kak
-[\fB\-c\fR \fIsession_id\fR|\fB\-s\fR \fIsession_id\fR]
-[\fB\-n\fR] [\fB\-ro\fR]
-[\fB\-ui\fR \fIui_type\fR] [\fB\-e\fR \fIcommand\fR]
-[\fB\-E\fR \fIcommand\fR]
-[\fB+line\fR[\fB:column\fR]|\fB+:\fR]
-.IR file ...
-
-.SH DESCRIPTION
-
-Kakoune is a code editor heavily inspired by Vim. As such, most of its commands
-are similar to Vi's and it shares Vi's "keystrokes as a text editing
-language" model.
-
-Kakoune can operate in two modes, normal and insertion. In insertion mode,
-keys are directly inserted into the current buffer. In normal mode, keys
-are used to manipulate the current selection and to enter insertion mode.
-
-Kakoune has a strong focus on interactivity, most commands provide immediate
-and incremental results, while still being competitive (as in keystroke
-count) with Vim.
-
-Kakoune works on selections, which are oriented, inclusive ranges of
-characters. Selections have an anchor and a cursor. Most commands
-move both of them except when extending selection, where the anchor character
-stays fixed and the cursor moves around.
-
-For more information, use the \fB:doc\fR command after starting Kakoune,
-the Kakoune wiki at https://github.com/mawww/kakoune/wiki
-or the main Kakoune web site: https://kakoune.org/
-
-.SH OPTIONS
-
-.TP
-.BR \-help
-display a help message and quit
-
-.TP
-.BR \-version
-display kakoune version and quit
-
-.TP
-.BR \-n
-do not load resource files on startup (\fIkakrc\fR, \fIautoload\fR, \fIrc\fR etc)
-
-.TP
-.BR \-l
-list existing sessions
-
-.TP
-.BR \-d
-run as a headless session (requires \fB\-s\fR)
-
-.TP
-.BR \-e " " \fIcommand\fR
-execute \fIcommand\fR after the client initialization phase
-
-.TP
-.BR \-E " " \fIcommand\fR
-execute \fIcommand\fR after the server initialization phase
-
-.TP
-.BR \-f " " \fIkeys\fR
-enter in \fIfilter mode\fR: select the whole file, then execute \fIkeys\fR
-
-.TP
-.BR \-i " " \fIsuffix\fR
-backup the files on which a filter is applied using the given suffix
-
-.TP
-.BR \-q
-when in \fIfilter mode\fR, don't print any errors
-
-.TP
-.BR \-p " " \fIsession_id\fR
-send the commands written on the standard input to session \fIsession_id\fR
-
-.TP
-.BR \-c " " \fIsession_id\fR
-connect to the given session
-
-.TP
-.BR \-s " " \fIsession_id\fR
-set the current session name to \fIsession_id\fR
-
-.TP
-.BR \-ui " " \fItype\fR
-select the user interface, can be one of \fIncurses\fR, \fIdummy\fR or \fIjson\fR
-
-.TP
-.BR \-clear
-remove sessions that terminated in an incorrect state (e.g. after a crash)
-
-.TP
-.BR \-ro
-enter in \fIreadonly mode\fR, all the buffers opened will not be written to disk
-
-.TP
-.BR +line "[:" column "]"
-specify a target \fIline\fR and \fIcolumn\fR for the first file; when the
-plus sign is followed by only a colon, then the cursor is sent to the last
-line of the file
-
-.TP
-.BR file
-one or more \fIfile\fRs to edit
-
-.SH ENVIRONMENT
-
-.TP
-.BR KAKOUNE_POSIX_SHELL
-Overrides the posix shell binary path to use for \fI%sh{...}\fR expansion.
-
-.TP
-.BR KAKOUNE_CONFIG_DIR
-Overrides the location of the directory containing kakoune user configuration,
-defaults to \fI$XDG_CONFIG_HOME/kak\fR if unset.
-
-.TP
-.BR XDG_CONFIG_HOME
-Path to the user configuration directory, defaults to \fI$HOME/.config\fR if unset.
-
-.TP
-.BR XDG_RUNTIME_DIR
-Path to the user session sockets, defaults to \fI$TMPDIR/kakoune\fR if unset.
-
-.SH FILES
-
-In the paths documented below, \fI<rtdir>\fR refers to the runtime directory,
-whose value is determined in relation to the path to the \fBkak\fR binary:
-\fI<rtdir>\fR = \fI<path_to_kak_binary>/../share/kak\fR.
-
-If not started with the \fB\-n\fR switch, Kakoune will first load
-\fI<rtdir>/kakrc\fR, which will in turn load the following additional files:
-
-.nf
-.RS
-if the \fI$KAKOUNE_CONFIG_DIR/autoload\fR directory exists, recursively load every
-\fI*.kak\fR files in it and its sub-directories
-.RE
-.fi
-
-.nf
-.RS
-if it does not exist, fall back to the system\-wide autoload directory
-in \fI<rtdir>/autoload\fR, and recursively load all files in a similar way
-.RE
-.fi
-
-.nf
-.RS
-\fI<rtdir>/kakrc.local\fR, if it exists; this is a user\-defined system\-wide
-configuration
-.RE
-.fi
-
-.nf
-.RS
-\fI$KAKOUNE_CONFIG_DIR/kakrc\fR, if it exists; this is the user configuration
-.RE
-.fi
-
-Consequently, if the \fI$KAKOUNE_CONFIG_DIR/autoload\fR directory exists,
-only scripts stored within that directory will be loaded \- the built-in
-\fI*.kak\fR files \fBwill not be\fR.
-
-Users who still want to have the built\-in scripts loaded along their own
-can create a symbolic link to \fI<rtdir>/autoload\fR (or to individual
-scripts in it) in their user\-configuration directory:
-
-.nf
-.RS
-ln -s \fI<rtdir>\fR/autoload "${XDG_CONFIG_HOME:-$HOME/.config}"/kak/autoload
-.RE
-.fi
-
-.SH EXAMPLES
-
-.PP
-Edit a file:
-
-.nf
-.RS
-kak /path/to/file
-.RE
-.fi
-
-.PP
-Edit multiple files (multiple buffers will be created):
-
-.nf
-.RS
-kak ./file1.txt /path/to/file2.c
-.RE
-.fi
-
-.PP
-Insert a modeline that sets the tabstop variable at the beginning of several
-source code files:
-
-.nf
-.RS
-kak \-f "ggO// kak: tabstop=8<esc>" *.c
-.RE
-.fi
-
-.SH SEE ALSO
-
-.BR vi (1),
-.BR vim (1),
-.BR sam (1plan9)
+.Dd June 15, 2021
+.Dt KAK 1
+.Os
+.Sh NAME
+.Nm kak
+.Nd a vim-inspired, selection oriented code editor
+.
+.Sh SYNOPSIS
+.Nm
+.Op Fl d
+.Op Fl n
+.Op Fl ro
+.Op Fl c Ar session_id | Fl s Ar session_id
+.Op Fl ui Ar ui_type
+.Op Fl e Ar command
+.Op Fl E Ar command
+.Op Sy + Ns Ar line Ns Oo Sy \&: Ns Ar column Oc | Sy +:
+.Op Ar file ...
+.
+.Nm
+.Fl f Ar keys
+.Op Fl q
+.Op Fl i Ar suffix
+.Op Ar file ...
+.
+.Nm
+.Fl p Ar session_id
+.
+.Nm
+.Fl l
+.Nm
+.Fl clear
+.
+.Nm
+.Fl version
+.
+.Nm
+.Fl help
+.
+.Sh DESCRIPTION
+.Sy Kakoune
+is a code editor heavily inspired by
+.Xr vim 1
+and
+.Xr vi 1 .
+As such, most of its commands are similar to
+.Xr vi 1 Ap s,
+sharing its
+.Dq keystrokes as a text editing language
+model.
+.Pp
+.Sy Kakoune
+operates in two modes, normal and insertion.
+In insertion mode, keys are directly inserted into the current buffer.
+In normal mode, keys are used to manipulate the current selection and to
+enter insertion mode.
+.Pp
+.Sy Kakoune
+has a strong focus on interactivity.
+Most commands provide immediate and incremental results, while still
+being competitive in keystroke count with vim.
+.Pp
+.Sy Kakoune
+works on selections, which are oriented, inclusive ranges of characters.
+Selections have an anchor and a cursor.
+Most commands move both of them except when extending selection, where
+the anchor character stays fixed and the cursor moves around.
+.Pp
+The options are as follows:
+.Bl -tag -width indent
+.It Fl help
+Display a help message and quit.
+.
+.It Fl version
+Display Kakoune version and quit.
+.
+.It Fl n
+Do not load the system's kakrc.
+.Pq often, Pa /usr/share/kak/kakrc
+.
+.It Fl l
+List existing sessions.
+.
+.It Fl d
+Run as a headless session
+.Pq requires Fl s .
+.
+.It Fl e Ar command
+Execute
+.Ar command
+after the client initialization phase.
+.
+.It Fl E Ar command
+Execute
+.Ar command
+after the server initialization phase.
+.
+.It Fl f Ar keys
+Enter in
+.Sq filter mode :
+select the whole file, then execute
+.Ar keys .
+.
+.It Fl i Ar suffix
+Backup the files on which a filter is applied, using the given suffix.
+.
+.It Fl q
+When in
+.Sq filter mode ,
+don't print any errors
+.
+.It Fl p Ar session_id
+Send the commands written on the standard input to session
+.Ar session_id .
+.
+.It Fl c Ar session_id
+Connect to the given session
+.Ar session_id .
+.
+.It Fl s Ar session_id
+Set the current session name to
+.Ar session_id .
+.
+.It Fl ui Ar type
+Select the user interface type, which can be
+.Em ncurses ,
+.Em dummy ,
+or
+.Em json .
+.
+.It Fl clear
+Remove sessions that were terminated in an incorrect state
+.Pq e.g. after a crash .
+.
+.It Fl ro
+Begin in
+.Em readonly mode ,
+all the buffers opened will not be written to disk.
+.
+.It Sy + Ns Ar line Ns Oo Sy \&: Ns Ar column Oc | Sy +:
+Specify a target line and column for the first file.
+When the plus sign is followed by only a colon, then the cursor is sent
+to the last line of the file.
+.
+.It Ar file ...
+One or more
+.Ar file(s)
+to edit.
+.El
+.
+.Sh ENVIRONMENT
+.Bl -tag -width 6n
+.It Ev KAKOUNE_POSIX_SHELL
+Overrides the POSIX shell used for
+.Em %sh{...}
+expansion, which is
+.Pa /bin/sh
+.Pq Xr sh 1
+if unset.
+.
+.It Ev KAKOUNE_CONFIG_DIR
+Overrides the location of the directory containing Kakoune user
+configuration.
+If unset,
+.Pa $XDG_CONFIG_HOME/kak
+is used.
+.
+.It Ev XDG_CONFIG_HOME
+Path to the user's configuration directory.
+If unset,
+.Pa $HOME/.config
+is used.
+.
+.It Ev XDG_RUNTIME_DIR
+Path to the user's session's sockets.
+If unset,
+.Pa $TMPDIR/kakoune
+is used.
+.El
+.
+.Sh FILES
+In the paths documented below,
+.Pa <rtdir>
+refers to the runtime directory, whose value is determined in relation
+to the path to
+.Nm Ap s
+binary location:
+.Pa <rtdir>
+=
+.Pa <path_to_kak_binary>/../share/kak .
+.
+.Pp
+If not started with the
+.Fl n
+switch,
+.Nm
+will first load
+.Pa <rtdir>/kakrc ,
+which will in turn load the following additional files:
+.
+.Bl -bullet
+.It
+If the
+.Pa $KAKOUNE_CONFIG_DIR/autoload
+directory exists, recursively load every
+.Pa *.kak
+file in it, and its sub-directories.
+.
+.It
+If it does not exist, fall back to the system-wide autoload directory in
+.Pa <rtdir>/autoload ,
+and recursively load all files in a similar way.
+.
+.It
+.Pa <rtdir>/kakrc.local ,
+if it exists; this is a user-defined system-wide configuration.
+.
+.It
+.Pa $KAKOUNE_CONFIG_DIR/kakrc ,
+if it exists; this is the user configuration.
+.
+.El
+.
+.Pp
+Consequently, if the
+.Pa $KAKOUNE_CONFIG_DIR/autoload
+directory exists, only scripts stored within that directory will be
+loaded \(em the built-in
+.Pa *.kak
+files will not be.
+.
+.Pp
+Users who still want the built-in scripts to be loaded along their own
+can create a symbolic link to
+.Pa <rtdir>/autoload
+.Pq or to individual scripts in it
+in their user-configuration directory:
+.
+.Pp
+.Dl ln -s \fI<rtdir>\fR/autoload "${XDG_CONFIG_HOME:-$HOME/.config}"/kak/autoload
+.
+.Sh EXAMPLES
+.Bl -tag -width 6n
+.It Edit a file:
+.Nm
+.Pa /path/to/file
+.
+.It Edit multiple files (multiple buffers will be created):
+.Nm
+.Pa ./file1.txt
+.Pa /path/to/file2.c
+.
+.It Prepend a modeline that sets the tabstop to multiple files:
+.Nm
+.Fl f Qq ggO// kak: tabstop=8<esc>
+.Pa *.c
+.El
+.
+.Sh SEE ALSO
+For the complete on-line documentation, use the
+.Ic :doc
+command after starting
+.Nm .
+.
+.Pp
+.Lk https://github.com/mawww/kakoune/wiki The Kakoune wiki .
+.Pp
+.Lk https://kakoune.org The main Kakoune web site .
+.Pp
+.Xr vi 1 ,
+.Xr vim 1 ,
+.Xr sam 1plan9 .
+.
+.Sh AUTHORS
+.An Maxime Coste Aq Mt frrrwww@gmail.com
+and many others.
