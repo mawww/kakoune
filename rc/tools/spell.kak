@@ -1,6 +1,5 @@
 declare-option -hidden range-specs spell_regions
 declare-option -hidden str spell_last_lang
-declare-option -hidden str spell_tmp_file
 
 declare-option -docstring "default language to use when none is passed to the spell-check command" str spell_lang
 
@@ -14,15 +13,9 @@ define-command -params ..1 -docstring %{
     } spell %{
     try %{ add-highlighter window/ ranges 'spell_regions' }
     evaluate-commands %sh{
-        file=$(mktemp -d "${TMPDIR:-/tmp}"/kak-spell.XXXXXXXX)/buffer
-        printf 'eval -no-hooks write -sync %s\n' "${file}"
-        printf 'set-option buffer spell_tmp_file %s\n' "${file}"
-    }
-    evaluate-commands %sh{
         use_lang() {
             if ! printf %s "$1" | grep -qE '^[a-z]{2,3}([_-][A-Z]{2})?$'; then
                 echo "fail 'Invalid language code (examples of expected format: en, en_US, en-US)'"
-                rm -rf "$(dirname "$kak_opt_spell_tmp_file")"
                 exit 1
             else
                 options="-l '$1'"
@@ -37,7 +30,7 @@ define-command -params ..1 -docstring %{
         fi
 
         {
-            sed 's/^/^/' "$kak_opt_spell_tmp_file" | eval "aspell --byte-offsets -a $options" 2>&1 | awk '
+            printf '%s' "$kak_bufstr" | sed 's/^/^/' | eval "aspell --byte-offsets -a $options" 2>&1 | awk '
                 BEGIN {
                     line_num = 1
                     regions = ENVIRON["kak_timestamp"]
@@ -83,7 +76,6 @@ define-command -params ..1 -docstring %{
                     close(server_command)
                 }
             '
-            rm -rf $(dirname "$kak_opt_spell_tmp_file")
         } </dev/null >/dev/null 2>&1 &
     }
 }

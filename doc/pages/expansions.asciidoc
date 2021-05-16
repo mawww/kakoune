@@ -204,6 +204,10 @@ The following expansions are supported (with required context _in italics_):
     _in buffer, window scope_ +
     name of the current buffer
 
+*%val{bufstr}*::
+    _in buffer, window scope_ +
+    the contents of the entire buffer, as a string
+
 *%val{client_env_X}*::
     _in window scope_ +
     value of the `$X` environment variable in the client displaying the current

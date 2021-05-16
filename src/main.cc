@@ -190,6 +190,10 @@ static const EnvVarDesc builtin_env_vars[] = { {
         "buffile", false,
         [](StringView name, const Context& context) -> Vector<String>
         { return {context.buffer().name()}; }
+    },  {
+        "bufstr", false,
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {context.buffer().string({0, 0}, context.buffer().end_coord())}; }
     }, {
         "buflist", false,
         [](StringView name, const Context& context) -> Vector<String>
