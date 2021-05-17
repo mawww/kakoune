@@ -56,6 +56,7 @@ provide-module kotlin %§
 add-highlighter shared/kotlin regions
 add-highlighter shared/kotlin/code default-region group
 add-highlighter shared/kotlin/string region %{(?<!')"} %{(?<!\\)(\\\\)*"} fill string
+add-highlighter shared/kotlin/character region %{(?<!")'} %{(?<!\\)(\\\\)*'} fill string
 add-highlighter shared/kotlin/comment region /\* \*/ fill comment
 add-highlighter shared/kotlin/inline_documentation region /// $ fill documentation
 add-highlighter shared/kotlin/line_comment region // $ fill comment
