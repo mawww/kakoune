@@ -28,6 +28,7 @@ provide-module java %§
 add-highlighter shared/java regions
 add-highlighter shared/java/code default-region group
 add-highlighter shared/java/string region %{(?<!')"} %{(?<!\\)(\\\\)*"} fill string
+add-highlighter shared/java/character region %{'} %{(?<!\\)'} fill value
 add-highlighter shared/java/comment region /\* \*/ fill comment
 add-highlighter shared/java/inline_documentation region /// $ fill documentation
 add-highlighter shared/java/line_comment region // $ fill comment
