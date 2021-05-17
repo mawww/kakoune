@@ -55,8 +55,8 @@ provide-module kotlin %§
 
 add-highlighter shared/kotlin regions
 add-highlighter shared/kotlin/code default-region group
-add-highlighter shared/kotlin/string region %{(?<!')"} %{(?<!\\)(\\\\)*"} fill string
-add-highlighter shared/kotlin/character region %{(?<!")'} %{(?<!\\)(\\\\)*'} fill string
+add-highlighter shared/kotlin/string region %{(?<!')"} %{(?<!\\)(\\\\)*"} group
+add-highlighter shared/kotlin/character region %{(?<!")'} %{(?<!\\)(\\\\)*'} fill value
 add-highlighter shared/kotlin/comment region /\* \*/ fill comment
 add-highlighter shared/kotlin/inline_documentation region /// $ fill documentation
 add-highlighter shared/kotlin/line_comment region // $ fill comment
@@ -64,6 +64,10 @@ add-highlighter shared/kotlin/line_comment region // $ fill comment
 add-highlighter shared/kotlin/code/annotations regex @\w+\b|\b\w+@(?=\{) 0:meta
 add-highlighter shared/kotlin/code/identifiers regex \b(field|it)\b 1:variable
 add-highlighter shared/kotlin/code/fields      regex \.([A-Za-z_][\w]*)\s*?\. 1:type
+
+# String interpolation
+add-highlighter shared/kotlin/string/ fill string
+add-highlighter shared/kotlin/string/ regex \$\{.*?\} 0:value
 
 # As at 15 March 2021, method see: https://regex101.com/r/Mhy4HG/1
 add-highlighter shared/kotlin/code/methods     regex ::([A-Za-z_][\w]*)|\.([A-Za-z_][\w]*)\s*?[\(\{]|\.([A-Za-z_][\w]*)[\s\)\}>](?=[^\(\{]) 1:function 2:function 3:function
