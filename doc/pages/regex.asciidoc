@@ -1,29 +1,29 @@
 = Regex
 
-== Regex Syntax
+== Regex syntax
 
-Kakoune regex syntax is based on the ECMAScript syntax, as defined by the
-ECMA-262 standard (see <<Compatibility>>).
+Kakoune regex syntax is based on ECMAScript syntax, as defined by the
+ECMA-262 standard (see <<regex#compatibility,:doc regex compatibility>>).
 
-Kakoune's regex always run on Unicode codepoint sequences, not on bytes.
+Kakoune's regex always runs on Unicode codepoint sequences, not on bytes.
 
 == Literals
 
 Every character except the syntax characters `\^$.*+?[]{}|().` match
-themselves. Syntax characters can be escaped with a backslash so `\$`
-will match a literal `$` and `\\` will match a literal `\`.
+themselves. Syntax characters can be escaped with a backslash so that
+`\$` will match a literal `$`, and `\\` will match a literal `\`.
 
 Some literals are available as escape sequences:
 
 * `\f` matches the form feed character.
-* `\n` matches the line feed character.
+* `\n` matches the newline character.
 * `\r` matches the carriage return character.
 * `\t` matches the tabulation character.
 * `\v` matches the vertical tabulation character.
 * `\0` matches the null character.
-* `\cX` matches the control-X character (X can be in `[A-Za-z]`).
-* `\xXX` matches the character whose codepoint is XX (in hexadecimal).
-* `\uXXXXXX` matches the character whose codepoint is XXXXXX (in hexadecimal).
+* `\cX` matches the control-`X` character (`X` can be in `[A-Za-z]`).
+* `\xXX` matches the character whose codepoint is `XX` (in hexadecimal).
+* `\uXXXXXX` matches the character whose codepoint is `XXXXXX` (in hexadecimal).
 
 == Character classes
 
@@ -40,15 +40,15 @@ in the character class.
 Literals match themselves, including syntax characters, so `^`
 does not need to be escaped in a character class. `[\*+]` matches both
 the `\*` character and the `+` character. Literal escape sequences are
-supported, so `[\n\r]` matches both the line feed and carriage return
+supported, so `[\n\r]` matches both the newline and carriage return
 characters.
 
 The `]` character needs to be escaped for it to match a literal `]`
 instead of closing the character class.
 
 Character ranges are written as `<start character>-<end character>`, so
-`[A-Z]` matches all upper case basic letters. `[A-Z0-9]` will match all
-upper cases basic letters and all basic digits.
+`[A-Z]` matches all uppercase basic letters. `[A-Z0-9]` will match all
+uppercase basic letters and all basic digits.
 
 The `-` characters in a character class that are not specifying a
 range are treated as literal `-`, so `[A-Z-+]` matches all upper case
@@ -62,15 +62,16 @@ Supported character class escapes are:
 * `\h` which matches all horizontal whitespace characters.
 
 Using an upper case letter instead of a lower case one will negate
-the character class, meaning for example that `\D` will match every
-non-digit character.
+the character class. For example, `\D` will match every non-digit
+character.
 
 Character class escapes can be used outside of a character class, `\d`
 is equivalent to `[\d]`.
 
 == Any character
 
-`.` matches any character, including new lines.
+`.` matches any character, including newlines, by default.
+(see <<regex#modifiers,:doc regex modifiers>> on how to change it)
 
 == Groups
 
@@ -99,16 +100,16 @@ matches `foo` followed by either `bar`, `baz` or `qux`.
 
 == Quantifier
 
-Literals, Character classes, Any characters and groups can be followed
+Literals, character classes, any characters, and groups can be followed
 by a quantifier, which specifies the number of times they can match.
 
-* `?` matches zero or one times.
+* `?` matches zero, or one time.
 * `*` matches zero or more times.
 * `+` matches one or more times.
-* `{n}` matches exactly n times.
-* `{n,}` matches n or more times.
-* `{n,m}` matches n to m times.
-* `{,m}` matches zero to m times.
+* `{n}` matches exactly `n` times.
+* `{n,}` matches `n` or more times.
+* `{n,m}` matches `n` to `m` times.
+* `{,m}` matches zero to `m` times.
 
 By default, quantifiers are *greedy*, which means they will prefer to
 match more characters if possible. Suffixing a quantifier with `?` will
@@ -117,37 +118,40 @@ as possible.
 
 == Zero width assertions
 
-Assertions do not consume any character, but will prevent the regex
-from matching if they are not fulfilled.
+Assertions do not consume any character, but they will prevent the regex
+from matching if not fulfilled.
 
-* `^` matches at the start of a line, that is just after a new line
-      character, or at the subject begin (except if specified that the
-      subject begin is not a start of line).
-* `$` matches at the end of a line, that is just before a new line, or
-      at the subject end (except if specified that the subject's end
+* `^` matches at the start of a line; that is, just after a newline
+      character, or at the subject's beginning (unless it is specified
+      that the subject's beginning is not a start of line).
+* `$` matches at the end of a line; that is, just before a newline, or
+      at the subject end (unless it is specified that the subject's end
       is not an end of line).
-* `\b` matches at a word boundary, when one of the previous character
-       and current character is a word character, and the other is not.
-* `\B` matches at a non word boundary, when both the previous character
-       and the current character are word, or are not.
-* `\A` matches at the subject string begin.
-* `\z` matches at the subject string end.
-* `\K` matches anything, and resets the start position of the capture
-       group 0 to the current position.
+* `\b` matches at a word boundary; which is to say that between the
+       previous character and the current character, one is a word
+       character, and the other is not.
+* `\B` matches at a non-word boundary; meaning, when both the previous
+       character and the current character are word characters, or both
+       are not.
+* `\A` matches at the subject string's beginning.
+* `\z` matches at the subject string's end.
+* `\K` matches anything, and resets the start position of capture group
+       0 to the current position.
 
 More complex assertions can be expressed with lookarounds:
 
-* `(?=...)` is a lookahead, it will match if its content matches the text
-            following the current position
-* `(?!...)` is a negative lookahead, it will match if its content does
-            not match the text following the current position
-* `(?<=...)` is a lookbehind, it will match if its content matches
-             the text preceding the current position
-* `(?<!...)` is a negative lookbehind, it will match if its content does
-             not match the text preceding the current position
+* `(?=...)` is a lookahead; it will match if its content matches the
+            text following the current position.
+* `(?!...)` is a negative lookahead; it will match if its content does
+            not match the text following the current position.
+* `(?<=...)` is a lookbehind; it will match if its content matches
+             the text preceding the current position.
+* `(?<!...)` is a negative lookbehind; it will match if its content does
+             not match the text preceding the current position.
 
-For performance reasons lookaround contents must be sequence of literals,
-character classes or any-character (`.`); Quantifiers are not supported.
+For performance reasons, lookaround contents must be a sequence of
+literals, character classes, or any character (`.`); quantifiers are not
+supported.
 
 For example, `(?<!bar)(?=foo).` will match any character which is not
 preceded by `bar` and where `foo` matches from the current position
@@ -158,10 +162,10 @@ preceded by `bar` and where `foo` matches from the current position
 Some modifiers can control the matching behavior of the atoms following
 them:
 
-* `(?i)` enables case-insensitive matching
-* `(?I)` disables case-insensitive matching (default)
-* `(?s)` enables dot-matches-newline (default)
-* `(?S)` disables dot-matches-newline
+* `(?i)` starts case-insensitive matching.
+* `(?I)` starts case-sensitive matching (default).
+* `(?s)` allows `.` to match newlines (default).
+* `(?S)` prevents `.` from matching newlines.
 
 == Quoting
 
@@ -169,20 +173,20 @@ them:
 a literal. That quoted sequence will continue until either the end of
 the regex, or the appearance of `\E`.
 
-For example `.\Q.^$\E$` will match any character followed by the literal
-string `.^$` followed by an end of line.
+For example, `.\Q.^$\E$` will match any character followed by the
+literal string `.^$`, followed by an end of line.
 
 == Compatibility
 
-The syntax tries to follow the ECMAScript regex syntax as defined by
-https://www.ecma-international.org/ecma-262/8.0/ some divergences
-exists for ease of use or performance reasons:
+Kakoune's syntax tries to follow the ECMAScript regex syntax, as defined
+by <https://www.ecma-international.org/ecma-262/8.0/>; some divergence
+exists for ease of use, or performance reasons:
 
-* lookarounds are not arbitrary, but lookbehind is supported.
+* Lookarounds are not arbitrary, but lookbehind is supported.
 * `\K`, `\Q..\E`, `\A`, `\h` and `\z` are added.
-* Stricter handling of escaping, as we introduce additional
-  escapes, identity escapes like `\X` with X a non-special character
+* Stricter handling of escaping, as we introduce additional escapes;
+  identity escapes like `\X` with `X` being a non-special character
   are not accepted, to avoid confusions between `\h` meaning literal
   `h` in ECMAScript, and horizontal blank in Kakoune.
-* `\uXXXXXX` uses 6 digits to cover all of unicode, instead of relying
+* `\uXXXXXX` uses 6 digits to cover all of Unicode, instead of relying
   on ECMAScript UTF-16 surrogate pairs with 4 digits.
