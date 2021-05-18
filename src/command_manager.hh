@@ -59,6 +59,7 @@ struct Token
     ByteCount pos;
     BufferCoord coord;
     String content;
+    bool terminated = false;
 };
 
 struct Reader
