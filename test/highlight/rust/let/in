@@ -1,0 +1,4 @@
+let foo = "bar";
+let mut foo = "bar";
+let (foo, bar) = ("baz", "quux");
+let (mut foo, mut bar) = ("baz", "quux");
