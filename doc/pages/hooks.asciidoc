@@ -153,11 +153,11 @@ name. Hooks with no description will always use an empty string.
     and the `on-key -mode-name bar` command pushes 'next-key[bar]' mode.
 
 *KakBegin* `session name`::
-    kakoune has started, this hook is called just after reading the user
+    Kakoune has started, this hook is called just after reading the user
     configuration files
 
 *KakEnd*::
-    kakoune is quitting
+    Kakoune is quitting
 
 *FocusIn* `client name`::
     on supported clients, triggered when the client gets focused
