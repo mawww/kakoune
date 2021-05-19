@@ -4,7 +4,7 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate (.*/)?(.*\.(scm|ss|sld)) %{
+hook global BufCreate (.*/)?(.*\.(scm|ss|sld|sps|sls)) %{
     set-option buffer filetype scheme
 }
 
