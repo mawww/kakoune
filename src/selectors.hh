@@ -54,6 +54,12 @@ select_to_line_begin(const Context& context, const Selection& selection);
 Optional<Selection>
 select_to_first_non_blank(const Context& context, const Selection& selection);
 
+Optional<Selection>
+select_to_first_non_blank_column(const Context& context, const Selection& selection);
+
+Optional<Selection>
+select_to_first_non_eol_column_reverse(const Context& context, const Selection& selection);
+
 enum class ObjectFlags
 {
     ToBegin = 1,

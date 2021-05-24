@@ -48,6 +48,9 @@ constexpr auto enum_desc(Meta::Type<SelectMode>)
         { SelectMode::Append, "append" },
     });
 }
+
+enum Direction { Backward = -1, Forward = 1 };
+
 void merge_selections(Selection& sel, const Selection& new_sel)
 {
     const bool forward = sel.cursor() >= sel.anchor();
@@ -210,6 +213,22 @@ String build_autoinfo_for_mapping(const Context& context, KeymapMode mode,
     return res;
 }
 
+template<typename Type, Direction direction, SelectMode mode = SelectMode::Replace>
+void move_cursor(Context& context, NormalParams params)
+{
+    kak_assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
+    const Type offset{direction * std::max(params.count,1)};
+    const ColumnCount tabstop = context.options()["tabstop"].get<int>();
+    auto& selections = context.selections();
+    for (auto& sel : selections)
+    {
+        auto cursor = context.buffer().offset_coord(sel.cursor(), offset, tabstop, true);
+        sel.anchor() = mode == SelectMode::Extend ? sel.anchor() : cursor;
+        sel.cursor() = cursor;
+    }
+    selections.sort_and_merge_overlapping();
+}
+
 template<SelectMode mode>
 void goto_commands(Context& context, NormalParams params)
 {
@@ -224,10 +243,110 @@ void goto_commands(Context& context, NormalParams params)
     {
         on_next_key_with_autoinfo(context, "goto", KeymapMode::Goto,
                                  [](Key key, Context& context) {
-            auto cp = key.codepoint();
-            if (not cp or key == Key::Escape)
-                return;
             auto& buffer = context.buffer();
+            if (key == Key::Escape)
+                return;
+            else if (context.has_window())
+            {
+                if (key == alt('h') || key == alt('i'))
+                {
+                    const auto& window = context.window();
+                    auto& selections = context.selections();
+
+                    selections = SelectionList{buffer, selections.main()};
+
+                    auto& sel = selections.main();
+                    if (auto cursor_coord = window.display_position(sel.cursor()); cursor_coord)
+                    {
+                        const auto buffer_coord = window.buffer_coord({cursor_coord->line, 0});
+                        const auto edge_coord = buffer.clamp(buffer_coord);
+
+                        if (mode == SelectMode::Replace)
+                            sel.set(edge_coord);
+                        else if (mode == SelectMode::Extend)
+                            sel.cursor() = edge_coord;
+                    }
+
+                    if (key == alt('i'))
+                        select<mode, select_to_first_non_blank_column>(context, {});
+                }
+                else if (key == alt('j'))
+                {
+                    const auto& window = context.window();
+                    auto& selections = context.selections();
+
+                    selections = SelectionList{buffer, selections.main()};
+
+                    auto& sel = selections.main();
+                    if (auto cursor_coord = window.display_position(sel.cursor());
+                        cursor_coord and cursor_coord->line + 1 < window.dimensions().line)
+                    {
+                        const auto buffer_coord = window.buffer_coord({cursor_coord->line + 1,
+                                                                       cursor_coord->column});
+                        const auto edge_coord = buffer.clamp(buffer_coord);
+
+                        if (auto target_coord = window.display_position(edge_coord);
+                            target_coord and target_coord->line > cursor_coord->line)
+                        {
+                            if (mode == SelectMode::Replace)
+                                sel.set(edge_coord);
+                            else if (mode == SelectMode::Extend)
+                                sel.cursor() = edge_coord;
+                        }
+                    }
+                    else
+                        move_cursor<LineCount, Forward, mode>(context, {1, 0});
+                }
+                else if (key == alt('k'))
+                {
+                    const auto& window = context.window();
+                    auto& selections = context.selections();
+
+                    selections = SelectionList{buffer, selections.main()};
+
+                    auto& sel = selections.main();
+                    if (auto cursor_coord = window.display_position(sel.cursor());
+                        cursor_coord and cursor_coord->line > 0)
+                    {
+                        const auto buffer_coord = window.buffer_coord({cursor_coord->line - 1,
+                                                                       cursor_coord->column});
+                        const auto edge_coord = buffer.clamp(buffer_coord);
+
+                        if (mode == SelectMode::Replace)
+                            sel.set(edge_coord);
+                        else if (mode == SelectMode::Extend)
+                            sel.cursor() = edge_coord;
+                    }
+                    else
+                        move_cursor<LineCount, Backward, mode>(context, {1, 0});
+                }
+                else if (key == alt('l'))
+                {
+                    const auto& window = context.window();
+                    auto& selections = context.selections();
+
+                    selections = SelectionList{buffer, selections.main()};
+
+                    auto& sel = selections.main();
+                    if (auto cursor_coord = window.display_position(sel.cursor()); cursor_coord)
+                    {
+                        const auto buffer_coord = window.buffer_coord({cursor_coord->line,
+                                                                       window.dimensions().column});
+                        const auto edge_coord = buffer.clamp(buffer_coord);
+
+                        if (mode == SelectMode::Replace)
+                            sel.set(edge_coord);
+                        else if (mode == SelectMode::Extend)
+                            sel.cursor() = edge_coord;
+                    }
+                    select<mode, select_to_first_non_eol_column_reverse>(context, {});
+                }
+            }
+
+            auto cp = key.codepoint();
+            if (not cp)
+                return;
+
             switch (to_lower(*cp))
             {
             case 'g':
@@ -330,18 +449,23 @@ void goto_commands(Context& context, NormalParams params)
             }
         }, (mode == SelectMode::Extend ? "goto (extend to)" : "goto"),
         build_autoinfo_for_mapping(context, KeymapMode::Goto,
-            {{{'g','k'},"buffer top"},
-             {{'l'},    "line end"},
-             {{'h'},    "line begin"},
-             {{'i'},    "line non blank start"},
-             {{'j'},    "buffer bottom"},
-             {{'e'},    "buffer end"},
-             {{'t'},    "window top"},
-             {{'b'},    "window bottom"},
-             {{'c'},    "window center"},
-             {{'a'},    "last buffer"},
-             {{'f'},    "file"},
-             {{'.'},    "last buffer change"}}));
+            {{{'g','k'}, "buffer top"},
+             {{'l'},     "line end"},
+             {{'h'},     "line begin"},
+             {{'i'},     "line non blank start"},
+             {{'j'},     "buffer bottom"},
+             {{'e'},     "buffer end"},
+             {{'t'},     "window top"},
+             {{'b'},     "window bottom"},
+             {{'c'},     "window center"},
+             {alt('h'),  "display-line start"},
+             {alt('j'),  "next display-line"},
+             {alt('k'),  "previous display-line"},
+             {alt('l'),  "display-line end"},
+             {alt('i'),  "display-line non blank start"},
+             {{'a'},     "last buffer"},
+             {{'f'},     "file"},
+             {{'.'},     "last buffer change"}}));
     }
 }
 
@@ -1397,8 +1521,6 @@ void select_object(Context& context, NormalParams params)
          {{alt(';')},    "run command in object context"}}));
 }
 
-enum Direction { Backward = -1, Forward = 1 };
-
 template<Direction direction, bool half = false>
 void scroll(Context& context, NormalParams params)
 {
@@ -2064,22 +2186,6 @@ void repeated(Context& context, NormalParams params)
 {
     ScopedEdition edition(context);
     do { func(context, {0, params.reg}); } while(--params.count > 0);
-}
-
-template<typename Type, Direction direction, SelectMode mode = SelectMode::Replace>
-void move_cursor(Context& context, NormalParams params)
-{
-    kak_assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
-    const Type offset{direction * std::max(params.count,1)};
-    const ColumnCount tabstop = context.options()["tabstop"].get<int>();
-    auto& selections = context.selections();
-    for (auto& sel : selections)
-    {
-        auto cursor = context.buffer().offset_coord(sel.cursor(), offset, tabstop, true);
-        sel.anchor() = mode == SelectMode::Extend ? sel.anchor() : cursor;
-        sel.cursor() = cursor;
-    }
-    selections.sort_and_merge_overlapping();
 }
 
 void select_whole_buffer(Context& context, NormalParams)
