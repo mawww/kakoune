@@ -1,7 +1,7 @@
 # eRuby
 # http://www2a.biglobe.ne.jp/~seki/ruby/erb.html
 
-hook global BufCreate '.*\.html\.erb' %{
+hook global BufCreate '.*\.erb' %{
   set-option buffer filetype eruby
 }
 
