@@ -20,57 +20,13 @@
 namespace Kakoune
 {
 
-struct ParsedLines
-{
-    BufferLines lines;
-    ByteOrderMark bom = ByteOrderMark::None;
-    EolFormat eolformat = EolFormat::Lf;
-};
-
-static ParsedLines parse_lines(StringView data)
-{
-    ParsedLines res;
-    const char* pos = data.begin();
-    if (data.substr(0, 3_byte) == "\xEF\xBB\xBF")
-    {
-        res.bom = ByteOrderMark::Utf8;
-        pos = data.begin() + 3;
-    }
-
-    bool has_crlf = false, has_lf = false;
-    for (auto it = pos; it != data.end(); ++it)
-    {
-        if (*it == '\n')
-            ((it != pos and *(it-1) == '\r') ? has_crlf : has_lf) = true;
-    }
-    const bool crlf = has_crlf and not has_lf;
-    res.eolformat = crlf ? EolFormat::Crlf : EolFormat::Lf;
-
-    while (pos < data.end())
-    {
-        const char* eol = std::find(pos, data.end(), '\n');
-        res.lines.emplace_back(StringData::create({{pos, eol - (crlf and eol != data.end() ? 1 : 0)}, "\n"}));
-        pos = eol + 1;
-    }
-
-    if (res.lines.empty())
-        res.lines.emplace_back(StringData::create({"\n"}));
-
-    return res;
-}
-
-static void apply_options(OptionManager& options, const ParsedLines& parsed_lines)
-{
-    options.get_local_option("eolformat").set(parsed_lines.eolformat);
-    options.get_local_option("BOM").set(parsed_lines.bom);
-}
-
 Buffer::HistoryNode::HistoryNode(HistoryId parent)
     : parent{parent}, committed{Clock::now()}
 {}
 
-Buffer::Buffer(String name, Flags flags, StringView data,
-               timespec fs_timestamp)
+Buffer::Buffer(String name, Flags flags, BufferLines lines,
+               ByteOrderMark bom, EolFormat eolformat,
+               FsStatus fs_status)
     : Scope{GlobalScope::instance()},
       m_name{(flags & Flags::File) ? real_path(parse_filename(name)) : std::move(name)},
       m_display_name{(flags & Flags::File) ? compact_path(m_name) : m_name},
@@ -78,20 +34,19 @@ Buffer::Buffer(String name, Flags flags, StringView data,
       m_history{{HistoryId::Invalid}},
       m_history_id{HistoryId::First},
       m_last_save_history_id{HistoryId::First},
-      m_fs_status{fs_timestamp, data.length(), hash_value(data)}
+      m_fs_status{fs_status}
 {
-    ParsedLines parsed_lines = parse_lines(data);
-
     #ifdef KAK_DEBUG
-    for (auto& line : parsed_lines.lines)
+    for (auto& line : lines)
         kak_assert(not (line->length == 0) and
                    line->data()[line->length-1] == '\n');
     #endif
-    static_cast<BufferLines&>(m_lines) = std::move(parsed_lines.lines);
+    static_cast<BufferLines&>(m_lines) = std::move(lines);
 
     m_changes.push_back({ Change::Insert, {0,0}, line_count() });
 
-    apply_options(options(), parsed_lines);
+    options().get_local_option("eolformat").set(eolformat);
+    options().get_local_option("BOM").set(bom);
 
     // now we may begin to record undo data
     if (not (flags & Flags::NoUndo))
@@ -236,10 +191,8 @@ Buffer::Modification Buffer::Modification::inverse() const
     return {type == Insert ? Erase : Insert, coord, content};
 }
 
-void Buffer::reload(StringView data, timespec fs_timestamp)
+void Buffer::reload(BufferLines lines, ByteOrderMark bom, EolFormat eolformat, FsStatus fs_status)
 {
-    ParsedLines parsed_lines = parse_lines(data);
-
     const bool record_undo = not (m_flags & Flags::NoUndo);
 
     commit_undo_group();
@@ -252,21 +205,21 @@ void Buffer::reload(StringView data, timespec fs_timestamp)
         m_history = {HistoryNode{HistoryId::Invalid}};
 
         m_changes.push_back({ Change::Erase, {0,0}, line_count() });
-        static_cast<BufferLines&>(m_lines) = std::move(parsed_lines.lines);
+        static_cast<BufferLines&>(m_lines) = std::move(lines);
         m_changes.push_back({ Change::Insert, {0,0}, line_count() });
     }
     else
     {
         Vector<Diff> diff;
         for_each_diff(m_lines.begin(), m_lines.size(),
-                      parsed_lines.lines.begin(), parsed_lines.lines.size(),
+                      lines.begin(), lines.size(),
                       [&diff](DiffOp op, int len)
                       { diff.push_back({op, len}); },
                       [](const StringDataPtr& lhs, const StringDataPtr& rhs)
                       { return lhs->strview() == rhs->strview(); });
 
         auto it = m_lines.begin();
-        auto new_it = parsed_lines.lines.begin();
+        auto new_it = lines.begin();
         for (auto& d : diff)
         {
             if (d.op == DiffOp::Keep)
@@ -303,10 +256,12 @@ void Buffer::reload(StringView data, timespec fs_timestamp)
 
     commit_undo_group();
 
-    apply_options(options(), parsed_lines);
+    options().get_local_option("eolformat").set(eolformat);
+    options().get_local_option("BOM").set(bom);
+
 
     m_last_save_history_id = m_history_id;
-    m_fs_status = {fs_timestamp, data.length(), hash_value(data)};
+    m_fs_status = fs_status;
 }
 
 void Buffer::commit_undo_group()
@@ -729,44 +684,13 @@ String Buffer::debug_description() const
                   content_size, additional_size);
 }
 
-UnitTest test_parse_line{[]
-{
-    {
-        auto lines = parse_lines("foo\nbar\nbaz\n");
-        kak_assert(lines.eolformat == EolFormat::Lf);
-        kak_assert(lines.bom == ByteOrderMark::None);
-        kak_assert(lines.lines.size() == 3);
-        kak_assert(lines.lines[0]->strview() == "foo\n");
-        kak_assert(lines.lines[1]->strview() == "bar\n");
-        kak_assert(lines.lines[2]->strview() == "baz\n");
-    }
-
-    {
-        auto lines = parse_lines("\xEF\xBB\xBF" "foo\nbar\r\nbaz");
-        kak_assert(lines.eolformat == EolFormat::Lf);
-        kak_assert(lines.bom == ByteOrderMark::Utf8);
-        kak_assert(lines.lines.size() == 3);
-        kak_assert(lines.lines[0]->strview() == "foo\n");
-        kak_assert(lines.lines[1]->strview() == "bar\r\n");
-        kak_assert(lines.lines[2]->strview() == "baz\n");
-    }
-
-    {
-        auto lines = parse_lines("foo\r\nbar\r\nbaz\r\n");
-        kak_assert(lines.eolformat == EolFormat::Crlf);
-        kak_assert(lines.bom == ByteOrderMark::None);
-        kak_assert(lines.lines.size() == 3);
-        kak_assert(lines.lines[0]->strview() == "foo\n");
-        kak_assert(lines.lines[1]->strview() == "bar\n");
-        kak_assert(lines.lines[2]->strview() == "baz\n");
-    }
-}};
-
 UnitTest test_buffer{[]()
 {
-    Buffer empty_buffer("empty", Buffer::Flags::None, {});
+    auto make_lines = [](auto&&... lines) { return BufferLines{StringData::create({lines})...}; };
 
-    Buffer buffer("test", Buffer::Flags::None, "allo ?\nmais que fais la police\n hein ?\n youpi\n");
+    Buffer empty_buffer("empty", Buffer::Flags::None, make_lines("\n"));
+
+    Buffer buffer("test", Buffer::Flags::None, make_lines("allo ?\n", "mais que fais la police\n", " hein ?\n", " youpi\n"));
     kak_assert(buffer.line_count() == 4);
 
     BufferIterator pos = buffer.begin();
@@ -809,7 +733,9 @@ UnitTest test_buffer{[]()
 
 UnitTest test_undo{[]()
 {
-    Buffer buffer("test", Buffer::Flags::None, "allo ?\nmais que fais la police\n hein ?\n youpi\n");
+    auto make_lines = [](auto&&... lines) { return BufferLines{StringData::create({lines})...}; };
+
+    Buffer buffer("test", Buffer::Flags::None, make_lines("allo ?\n", "mais que fais la police\n", " hein ?\n", " youpi\n"));
     auto pos = buffer.end_coord();
     buffer.insert(pos, "kanaky\n");                           // change 1
     buffer.commit_undo_group();

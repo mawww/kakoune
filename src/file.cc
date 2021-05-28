@@ -218,8 +218,6 @@ MappedFile::MappedFile(StringView filename)
 
     if (st.st_size == 0)
         return;
-    else if (st.st_size > std::numeric_limits<int>::max())
-        throw runtime_error("file is too big");
 
     data = (const char*)mmap(nullptr, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     if (data == MAP_FAILED)
@@ -238,6 +236,8 @@ MappedFile::~MappedFile()
 
 MappedFile::operator StringView() const
 {
+    if (st.st_size > std::numeric_limits<int>::max())
+        throw runtime_error("file is too big");
     return { data, (int)st.st_size };
 }
 

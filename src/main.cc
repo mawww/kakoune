@@ -966,8 +966,8 @@ int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet, 
         }
         if (not isatty(0))
         {
-            Buffer& buffer = *buffer_manager.create_buffer(
-                "*stdin*", Buffer::Flags::NoHooks, read_fd(0), InvalidTime);
+            Buffer& buffer = *create_buffer_from_string(
+                "*stdin*", Buffer::Flags::NoHooks, read_fd(0));
             apply_to_buffer(buffer);
             write_buffer_to_fd(buffer, 1);
             buffer_manager.delete_buffer(buffer);

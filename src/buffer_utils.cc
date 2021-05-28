@@ -85,33 +85,86 @@ ByteCount get_byte_to_column(const Buffer& buffer, ColumnCount tabstop, DisplayC
     return (int)(it - line.begin());
 }
 
+static BufferLines parse_lines(const char* pos, const char* end, EolFormat eolformat)
+{
+    BufferLines lines;
+    while (pos < end)
+    {
+        if (lines.size() >= std::numeric_limits<int>::max())
+            throw runtime_error("too many lines");
+
+        const char* eol = std::find(pos, end, '\n');
+        if ((eol - pos) >= std::numeric_limits<int>::max())
+            throw runtime_error("line is too long");
+
+        lines.emplace_back(StringData::create({{pos, eol - (eolformat == EolFormat::Crlf and eol != end ? 1 : 0)}, "\n"}));
+        pos = eol + 1;
+    }
+
+    if (lines.empty())
+        lines.emplace_back(StringData::create({"\n"}));
+
+    return lines;
+}
+
+Buffer* create_buffer_from_string(String name, Buffer::Flags flags, StringView data)
+{
+    return BufferManager::instance().create_buffer(
+        std::move(name), flags,
+        parse_lines(data.begin(), data.end(), EolFormat::Lf),
+        ByteOrderMark::None, EolFormat::Lf,
+        FsStatus{InvalidTime, {}, {}});
+}
+
+template<typename Func>
+decltype(auto) parse_file(StringView filename, Func&& func)
+{
+    MappedFile file{parse_filename(filename)};
+
+    const char* pos = file.data;
+    const char* end = pos + file.st.st_size;
+
+    auto bom = ByteOrderMark::None;
+    if (file.st.st_size >= 3 && StringView{pos, 3_byte} == "\xEF\xBB\xBF")
+    {
+        bom = ByteOrderMark::Utf8;
+        pos += 3;
+    }
+
+    bool has_crlf = false, has_lf = false;
+    for (auto it = pos; it != end; ++it)
+    {
+        if (*it == '\n')
+            ((it != pos and *(it-1) == '\r') ? has_crlf : has_lf) = true;
+    }
+    const bool crlf = has_crlf and not has_lf;
+    auto eolformat = crlf ? EolFormat::Crlf : EolFormat::Lf;
+
+    FsStatus fs_status{file.st.st_mtim, file.st.st_size, hash_data(file.data, file.st.st_size)};
+    return func(parse_lines(pos, end, eolformat), bom, eolformat, fs_status);
+}
+
 Buffer* open_file_buffer(StringView filename, Buffer::Flags flags)
 {
-    MappedFile file_data{parse_filename(filename)};
-    return BufferManager::instance().create_buffer(
-        filename.str(), Buffer::Flags::File | flags, file_data, file_data.st.st_mtim);
+    return parse_file(filename, [&](BufferLines&& lines, ByteOrderMark bom, EolFormat eolformat, FsStatus fs_status)  {
+        return BufferManager::instance().create_buffer(filename.str(), flags, std::move(lines), bom, eolformat, fs_status);
+    });
 }
 
 Buffer* open_or_create_file_buffer(StringView filename, Buffer::Flags flags)
 {
-    auto& buffer_manager = BufferManager::instance();
     auto path = parse_filename(filename);
     if (file_exists(path))
-    {
-        MappedFile file_data{path};
-        return buffer_manager.create_buffer(filename.str(), Buffer::Flags::File | flags,
-                                            file_data, file_data.st.st_mtim);
-    }
-    return buffer_manager.create_buffer(
-        filename.str(), Buffer::Flags::File | Buffer::Flags::New,
-        {}, InvalidTime);
+        return open_file_buffer(filename.str(), Buffer::Flags::File | flags);
+    return create_buffer_from_string(filename.str(), Buffer::Flags::File | Buffer::Flags::New, StringView{});
 }
 
 void reload_file_buffer(Buffer& buffer)
 {
     kak_assert(buffer.flags() & Buffer::Flags::File);
-    MappedFile file_data{buffer.name()};
-    buffer.reload(file_data, file_data.st.st_mtim);
+    parse_file(buffer.name(), [&](auto&&... params) {
+        buffer.reload(std::forward<decltype(params)>(params)...);
+    });
     buffer.flags() &= ~Buffer::Flags::New;
 }
 
@@ -124,11 +177,12 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
     if (buffer)
     {
         buffer->flags() |= Buffer::Flags::NoUndo | flags;
-        buffer->reload({}, InvalidTime);
+        buffer->reload({StringData::create({"\n"})}, ByteOrderMark::None, EolFormat::Lf, {InvalidTime, {}, {}});
     }
     else
         buffer = buffer_manager.create_buffer(
-            std::move(name), flags | Buffer::Flags::Fifo | Buffer::Flags::NoUndo);
+            std::move(name), flags | Buffer::Flags::Fifo | Buffer::Flags::NoUndo,
+            {StringData::create({"\n"})}, ByteOrderMark::None, EolFormat::Lf, {InvalidTime, {}, {}});
 
     struct FifoWatcher : FDWatcher
     {
@@ -239,9 +293,9 @@ void write_to_debug_buffer(StringView str)
     else
     {
         String line = str + (eol_back ? "\n" : "\n\n");
-        BufferManager::instance().create_buffer(
+        create_buffer_from_string(
             debug_buffer_name.str(), Buffer::Flags::NoUndo | Buffer::Flags::Debug | Buffer::Flags::ReadOnly,
-            line, InvalidTime);
+            line);
     }
 }
 

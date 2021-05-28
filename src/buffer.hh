@@ -129,8 +129,10 @@ public:
 
     enum class HistoryId : size_t { First = 0, Invalid = (size_t)-1 };
 
-    Buffer(String name, Flags flags, StringView data = {},
-           timespec fs_timestamp = InvalidTime);
+    Buffer(String name, Flags flags, BufferLines lines,
+           ByteOrderMark bom = ByteOrderMark::None,
+           EolFormat eolformat = EolFormat::Lf,
+           FsStatus fs_status = {InvalidTime, {}, {}});
     Buffer(const Buffer&) = delete;
     Buffer& operator= (const Buffer&) = delete;
     ~Buffer();
@@ -210,7 +212,7 @@ public:
     void run_hook_in_own_context(Hook hook, StringView param,
                                  String client_name = {});
 
-    void reload(StringView data, timespec fs_timestamp = InvalidTime);
+    void reload(BufferLines lines, ByteOrderMark bom, EolFormat eolformat, FsStatus status);
 
     void check_invariant() const;
 

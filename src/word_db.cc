@@ -231,12 +231,10 @@ UnitTest test_word_db{[]()
                        });
     };
 
+    auto make_lines = [](auto&&... lines) { return BufferLines{StringData::create({lines})...}; };
+
     Buffer buffer("test", Buffer::Flags::None,
-                  "tchou mutch\n"
-                  "tchou kanaky tchou\n"
-                  "\n"
-                  "tchaa tchaa\n"
-                  "allo\n");
+                  make_lines("tchou mutch\n", "tchou kanaky tchou\n", "\n", "tchaa tchaa\n", "allo\n"));
     WordDB word_db(buffer);
     auto res = word_db.find_matching("");
     std::sort(res.begin(), res.end(), cmp_words);

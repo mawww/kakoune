@@ -369,7 +369,7 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
         {
             if (buffer != nullptr and force_reload)
                 buffer_manager.delete_buffer(*buffer);
-            buffer = buffer_manager.create_buffer(std::move(name), flags);
+            buffer = create_buffer_from_string(std::move(name), flags, {});
         }
         else if (buffer->flags() & Buffer::Flags::File)
             throw runtime_error(format("buffer '{}' exists but is not a scratch buffer", name));
