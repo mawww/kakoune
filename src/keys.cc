@@ -80,6 +80,8 @@ static constexpr KeyAndName keynamemap[] = {
     { "minus", '-' },
     { "semicolon", ';' },
     { "percent", '%' },
+    { "focus_in", Key::FocusIn },
+    { "focus_out", Key::FocusOut },
 };
 
 KeyList parse_keys(StringView str)
