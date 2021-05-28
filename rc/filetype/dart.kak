@@ -39,13 +39,18 @@ provide-module dart %§
 
 add-highlighter shared/dart regions
 add-highlighter shared/dart/code default-region group
-add-highlighter shared/dart/back_string region '`' '`' fill string
-add-highlighter shared/dart/double_string region '"' (?<!\\)(\\\\)*" fill string
-add-highlighter shared/dart/single_string region "'" (?<!\\)(\\\\)*' fill string
+add-highlighter shared/dart/double_string region '"' (?<!\\)(\\\\)*" group
+add-highlighter shared/dart/single_string region "'" (?<!\\)(\\\\)*' group
 add-highlighter shared/dart/comment region /\* \*/ fill comment
 add-highlighter shared/dart/comment_line region '//' $ fill comment
 
 add-highlighter shared/dart/code/ regex %{-?([0-9]*\.(?!0[xX]))?\b([0-9]+|0[xX][0-9a-fA-F]+)\.?([eE][+-]?[0-9]+)?i?\b} 0:value
+
+# String interpolation
+add-highlighter shared/dart/double_string/ fill string
+add-highlighter shared/dart/double_string/ regex \$\{.*?\} 0:value
+add-highlighter shared/dart/single_string/ fill string
+add-highlighter shared/dart/single_string/ regex \$\{.*?\} 0:value
 
 evaluate-commands %sh{
     # Grammar
