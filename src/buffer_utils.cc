@@ -147,7 +147,8 @@ decltype(auto) parse_file(StringView filename, Func&& func)
 Buffer* open_file_buffer(StringView filename, Buffer::Flags flags)
 {
     return parse_file(filename, [&](BufferLines&& lines, ByteOrderMark bom, EolFormat eolformat, FsStatus fs_status)  {
-        return BufferManager::instance().create_buffer(filename.str(), flags, std::move(lines), bom, eolformat, fs_status);
+        return BufferManager::instance().create_buffer(filename.str(), Buffer::Flags::File | flags,
+                                                       std::move(lines), bom, eolformat, fs_status);
     });
 }
 
