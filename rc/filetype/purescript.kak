@@ -45,7 +45,7 @@ add-highlighter shared/purescript/code/ regex (?<!')\b0x+[A-Fa-f0-9]+ 0:value
 add-highlighter shared/purescript/code/ regex (?<!')\b\d+([.]\d+)? 0:value
 add-highlighter shared/purescript/code/ regex (?<!')\b(import|hiding|module)(?!')\b 0:keyword
 add-highlighter shared/purescript/code/ regex (?<!')\b(import)(?!')\b[^\n]+(?<!')\b(as)(?!')\b 2:keyword
-add-highlighter shared/purescript/code/ regex (?<!')\b(class|data|default|deriving|infix|infixl|infixr|instance|module|newtype|pattern|type|where)(?!')\b 0:keyword
+add-highlighter shared/purescript/code/ regex (?<!')\b(class|data|default|derive|infix|infixl|infixr|instance|module|newtype|pattern|type|where)(?!')\b 0:keyword
 add-highlighter shared/purescript/code/ regex (?<!')\b(case|do|else|if|in|let|mdo|of|proc|rec|then)(?!')\b 0:attribute
 add-highlighter shared/purescript/code/ regex (?<!')\b(type|data)\b\s+(\bfamily\b)?(?!') 0:keyword
 

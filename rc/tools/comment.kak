@@ -21,7 +21,7 @@ hook global BufSetOption filetype=(c|cpp|dart|gluon|go|java|javascript|objc|php|
     set-option buffer comment_block_end '*/'
 }
 
-hook global BufSetOption filetype=(cabal|haskell|moon|idris|elm|dhall) %{
+hook global BufSetOption filetype=(cabal|haskell|moon|idris|elm|dhall|purescript) %{
     set-option buffer comment_line '--'
     set-option buffer comment_block_begin '{-'
     set-option buffer comment_block_end '-}'
