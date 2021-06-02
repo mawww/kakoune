@@ -346,7 +346,7 @@ Final Thoughts
 Kakoune provides an efficient code editing environment, both very predictable,
 hence scriptable, and very interactive. Its learning curve is considerably
 easier than Vim thanks to a more consistent design associated with strong
-discoverability, while still being faster (as in less keystrokes) in most
+discoverability, while still being faster (as in fewer keystrokes) in most
 use cases.
 
 Although easier to learn than Vim, the learning curve is still quite steep,
