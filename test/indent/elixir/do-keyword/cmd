@@ -1,0 +1,1 @@
+c<ret>f()<esc>jo<ret>def f1() do<ret>1<esc>jo<ret>def f2(), do: 2<ret>

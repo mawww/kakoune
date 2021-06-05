@@ -19,8 +19,8 @@ hook global WinSetOption filetype=elixir %{
     require-module elixir
 
     hook window ModeChange pop:insert:.* -group elixir-trim-indent  elixir-trim-indent
-    hook window InsertChar \n -group elixir-insert elixir-insert-on-new-line
     hook window InsertChar \n -group elixir-indent elixir-indent-on-new-line
+    hook window InsertChar \n -group elixir-insert elixir-insert-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window elixir-.+ }
 }
@@ -92,12 +92,25 @@ define-command -hidden elixir-trim-indent %{
     try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
 }
 
-define-command -hidden elixir-insert-on-new-line %{
-    evaluate-commands -draft -itersel %{
+define-command -hidden elixir-insert-on-new-line %[
+    evaluate-commands -no-hooks -draft -itersel %[
         # copy -- comments prefix and following white spaces
         try %{ execute-keys -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P }
-    }
-}
+        # wisely add end structure
+        evaluate-commands -save-regs x %[
+            try %{ execute-keys -draft k <a-x> s ^ \h + <ret> \" x y } catch %{ reg x '' }
+            try %[
+                evaluate-commands -draft %[
+                    # Check if previous line opens a block
+                    execute-keys -draft k<a-x> <a-k>^<c-r>x(.+\bdo$)<ret>
+                    # Check that we do not already have an end for this indent level which is first set via `elixir-indent-on-new-line` hook
+                    execute-keys -draft }i J <a-x> <a-K> ^<c-r>x(end|else)[^0-9A-Za-z_!?]<ret>
+                ]
+                execute-keys -draft o<c-r>xend<esc> # insert a new line with containing end
+            ]
+        ]
+    ]
+]
 
 define-command -hidden elixir-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
