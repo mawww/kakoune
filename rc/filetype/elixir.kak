@@ -95,7 +95,7 @@ define-command -hidden elixir-trim-indent %{
 define-command -hidden elixir-insert-on-new-line %[
     evaluate-commands -no-hooks -draft -itersel %[
         # copy '#' comment prefix and following white spaces
-        try %{ exec -draft k <a-x> s ^\h*\K#\h* <ret> y jgi P }
+        try %{ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y jgi P }
         # wisely add end structure
         evaluate-commands -save-regs x %[
             try %{ execute-keys -draft k <a-x> s ^ \h + <ret> \" x y } catch %{ reg x '' }
