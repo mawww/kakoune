@@ -6,3 +6,13 @@
 
 #    indented
 #    indented2
+
+def f
+    # comment
+    # comment2
+end
+
+def f
+    # comm
+    # ent
+end
