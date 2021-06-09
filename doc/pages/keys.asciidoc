@@ -95,8 +95,9 @@ it when pasting text.
 
 == Movement
 
-'word' is a sequence of alphanumeric characters or underscore, and 'WORD'
-is a sequence of non whitespace characters. Generally, a movement on its own
+'word' is a sequence of alphanumeric characters, or those in the `extra_word_chars`
+option (see <<options#builtin-options,`:doc options builtin-options`>>).
+'WORD' is a sequence of non whitespace characters. Generally, a movement on its own
 will move each selection to cover the text moved over, while holding down
 the Shift modifier and moving will extend each selection instead.
 

@@ -56,10 +56,11 @@ characters, the `-` character, and the `+` character.
 
 Supported character class escapes are:
 
-* `\d` which matches all digits.
-* `\w` which matches all word characters.
-* `\s` which matches all whitespace characters.
-* `\h` which matches all horizontal whitespace characters.
+* `\d` which matches digits 0-9.
+* `\w` which matches word characters A-Z, a-z, 0-9 and underscore
+    (ignoring the `extra_word_chars` option).
+* `\s` which matches all Unicode whitespace characters.
+* `\h` which matches whitespace except Vertical Tab and line-breaks.
 
 Using an upper case letter instead of a lower case one will negate
 the character class. For example, `\D` will match every non-digit
