@@ -102,8 +102,8 @@ define-command -hidden zig-trim-indent %{
 
 define-command -hidden zig-insert-on-new-line %<
     evaluate-commands -draft -itersel %<
-        # copy // or /// comments prefix and following whitespace
-        try %< execute-keys -draft k <a-x> s ^\h*\K///?\h* <ret> y gh j P >
+        # copy // or /// comments prefix or \\ string literal prefix and following whitespace
+        try %< execute-keys -draft k <a-x> s ^\h*\K(///?|\\\\)\h* <ret> y gh j P >
     >
 >
 
@@ -112,8 +112,8 @@ define-command -hidden zig-indent-on-new-line %<
         # preserve indent level
         try %< execute-keys -draft <semicolon> K <a-&> >
         try %<
-            # only if we didn't copy a comment
-            execute-keys -draft <a-x> <a-K> ^\h*// <ret>
+            # only if we didn't copy a comment or multiline string
+            execute-keys -draft <a-x> <a-K> ^\h*(//|\\\\) <ret>
             # indent after lines ending in {
             try %< execute-keys -draft k <a-x> <a-k> \{\h*$ <ret> j <a-gt> >
             # deindent closing } when after cursor
