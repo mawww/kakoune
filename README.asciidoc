@@ -7,7 +7,7 @@ ifdef::env-github,env-browser[:outfilesuffix: .asciidoc]
 :cirrus-img: https://api.cirrus-ci.com/github/mawww/kakoune.svg
 :cirrus-url: https://cirrus-ci.com/github/mawww/kakoune
 :irc-img: https://img.shields.io/badge/IRC-%23kakoune-blue.svg
-:irc-url: https://webchat.freenode.net/?channels=kakoune
+:irc-url: https://web.libera.chat/?channels=kakoune
 :icons: font
 :toc: right
 :pp: ++
@@ -57,7 +57,7 @@ and the cursor moves around.
 
 See https://vimeo.com/82711574
 
-Join us on freenode IRC `#Kakoune`
+Join us on libera IRC `#Kakoune`
 
 Features
 ~~~~~~~~
