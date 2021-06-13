@@ -1,5 +1,5 @@
 define-command new -params .. -command-completion -docstring '
-new [<commands>]: create a new kakoune client
+new [<commands>]: create a new Kakoune client
 The ''terminal'' alias is being used to determine the user''s preferred terminal emulator
 The optional arguments are passed as commands to the new client' \
 %{

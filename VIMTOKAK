@@ -37,7 +37,7 @@ and <esc> goes back to normal mode.
 Note that the Kakoune version is one key less, and is not a special
 feature per se, but just a nice way Kakoune features work together.
 
-replace in current curly braces block:
+replace in current curly brace block:
  * vim: viB:s/word/replacement<ret>
  * kak: <a-i>Bsword<ret>creplacement<esc>
 
