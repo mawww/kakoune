@@ -57,7 +57,7 @@ add-highlighter shared/zig/code/ regex '\b(?:const|var|extern|packed|export|pub|
 add-highlighter shared/zig/code/ regex '\b(?:struct|enum|union|error|opaque)\b' 0:attribute
 
 # statement
-add-highlighter shared/zig/code/ regex '\b(?:break|return|continue|asm|defer|errdefer|unreachable|try|catch|async|noasync|await|suspend|resume)\b' 0:keyword
+add-highlighter shared/zig/code/ regex '\b(?:break|return|continue|asm|defer|errdefer|unreachable|try|catch|async|noasync|await|suspend|nosuspend|resume)\b' 0:keyword
 # conditional
 add-highlighter shared/zig/code/ regex '\b(?:if|else|switch|and|or|orelse)\b' 0:keyword
 # repeat
@@ -90,7 +90,7 @@ add-highlighter shared/zig/code/ regex '\b0x[0-9a-fA-F]+\.?[eE][-+]?[0-9a-fA-F]+
 add-highlighter shared/zig/code/ regex '(?:\+|-|\*|/|%|=|<|>|&|\||\^|~|\?|!)' 0:operator
 
 # builtin functions
-add-highlighter shared/zig/code/ regex "@(?:addWithOverflow|alignCast|alignOf|as|asyncCall|atomicLoad|atomicRmw|atomicStore|bitCast|bitOffsetOf|boolToInt|bitSizeOf|breakpoint|mulAdd|byteSwap|bitReverse|byteOffsetOf|call|cDefine|cImport|cInclude|clz|cmpxchgStrong|cmpxchgWeak|compileError|compileLog|ctz|cUndef|divExact|divFloor|divTrunc|embedFile|enumToInt|errorName|errorReturnTrace|errorToInt|errSetCast|export|fence|field|fieldParentPtr|floatCast|floatToInt|frame|Frame|frameAddress|frameSize|hasDecl|hasField|import|intCast|intToEnum|intToError|intToFloat|intToPtr|memcpy|memset|wasmMemorySize|wasmMemoryGrow|mod|mulWithOverflow|panic|popCount|ptrCast|ptrToInt|rem|returnAddress|setAlignStack|setCold|setEvalBranchQuota|setFloatMode|setRuntimeSafety|shlExact|shlWithOverflow|shrExact|shuffle|sizeOf|splat|reduce|src|sqrt|sin|cos|exp|exp2|log|log2|log10|fabs|floor|ceil|trunc|round|subWithOverflow|tagName|TagType|This|truncate|Type|typeInfo|typeName|TypeOf|unionInit)\b" 0:function
+add-highlighter shared/zig/code/ regex "@(?:addWithOverflow|alignCast|alignOf|as|asyncCall|atomicLoad|atomicRmw|atomicStore|bitCast|bitOffsetOf|boolToInt|bitSizeOf|breakpoint|mulAdd|byteSwap|bitReverse|byteOffsetOf|call|cDefine|cImport|cInclude|clz|cmpxchgStrong|cmpxchgWeak|compileError|compileLog|ctz|cUndef|divExact|divFloor|divTrunc|embedFile|enumToInt|errorName|errorReturnTrace|errorToInt|errSetCast|export|extern|fence|field|fieldParentPtr|floatCast|floatToInt|frame|Frame|frameAddress|frameSize|hasDecl|hasField|import|intCast|intToEnum|intToError|intToFloat|intToPtr|memcpy|memset|wasmMemorySize|wasmMemoryGrow|mod|mulWithOverflow|panic|popCount|ptrCast|ptrToInt|rem|returnAddress|setAlignStack|setCold|setEvalBranchQuota|setFloatMode|setRuntimeSafety|shlExact|shlWithOverflow|shrExact|shuffle|sizeOf|splat|reduce|src|sqrt|sin|cos|exp|exp2|log|log2|log10|fabs|floor|ceil|trunc|round|subWithOverflow|tagName|This|truncate|Type|typeInfo|typeName|TypeOf|unionInit)\b" 0:function
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -102,8 +102,8 @@ define-command -hidden zig-trim-indent %{
 
 define-command -hidden zig-insert-on-new-line %<
     evaluate-commands -draft -itersel %<
-        # copy // or /// comments prefix and following whitespace
-        try %< execute-keys -draft k <a-x> s ^\h*\K///?\h* <ret> y gh j P >
+        # copy // or /// comments prefix or \\ string literal prefix and following whitespace
+        try %< execute-keys -draft k <a-x> s ^\h*\K(///?|\\\\)\h* <ret> y gh j P >
     >
 >
 
@@ -112,8 +112,8 @@ define-command -hidden zig-indent-on-new-line %<
         # preserve indent level
         try %< execute-keys -draft <semicolon> K <a-&> >
         try %<
-            # only if we didn't copy a comment
-            execute-keys -draft <a-x> <a-K> ^\h*// <ret>
+            # only if we didn't copy a comment or multiline string
+            execute-keys -draft <a-x> <a-K> ^\h*(//|\\\\) <ret>
             # indent after lines ending in {
             try %< execute-keys -draft k <a-x> <a-k> \{\h*$ <ret> j <a-gt> >
             # deindent closing } when after cursor
