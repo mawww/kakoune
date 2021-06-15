@@ -156,7 +156,6 @@ define-command -hidden ruby-indent-on-char %{
         try %{ execute-keys -draft <a-x> <a-k> ^ \h * (elsif)  $ <ret> <a-a> i <a-semicolon> <a-?> ^ \h * (if)                                                    <ret> <a-S> 1<a-&> }
         try %{ execute-keys -draft <a-x> <a-k> ^ \h * (when)   $ <ret> <a-a> i <a-semicolon> <a-?> ^ \h * (case)                                                  <ret> <a-S> 1<a-&> }
         try %{ execute-keys -draft <a-x> <a-k> ^ \h * (rescue) $ <ret> <a-a> i <a-semicolon> <a-?> ^ \h * (begin|def)                                             <ret> <a-S> 1<a-&> }
-        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (end)    $ <ret> <a-a> i <a-semicolon> <a-?> ^ \h * (begin|case|class|def|for|if|module|unless|until|while) <ret> <a-S> 1<a-&> }
     }
 }
 
@@ -174,7 +173,7 @@ define-command -hidden ruby-indent-on-new-line %{
 define-command -hidden ruby-insert-on-new-line %[
     evaluate-commands -no-hooks -draft -itersel %[
         # copy _#_ comment prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s '^\h*\K#\h*' <ret> y j <a-x><semicolon> P }
+        try %{ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y jgi P }
         # wisely add end structure
         evaluate-commands -save-regs x %[
             try %{ execute-keys -draft k <a-x> s ^ \h + <ret> \" x y } catch %{ reg x '' }

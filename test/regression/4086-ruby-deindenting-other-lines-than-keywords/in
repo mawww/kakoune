@@ -1,0 +1,6 @@
+class MyClass
+  def method
+%( )
+
+  expression
+end
