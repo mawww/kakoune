@@ -134,7 +134,8 @@ pid_t spawn_shell(const char* shell, StringView cmdline,
     return -1;
 }
 
-Vector<String> generate_env(StringView cmdline, const Context& context, const ShellContext& shell_context)
+template<typename GetValue>
+Vector<String> generate_env(StringView cmdline, const Context& context, GetValue&& get_value)
 {
     static const Regex re(R"(\bkak_(quoted_)?(\w+)\b)");
 
@@ -153,13 +154,9 @@ Vector<String> generate_env(StringView cmdline, const Context& context, const Sh
 
         try
         {
-            Quoting quoting = match[1].matched ? Quoting::Shell : Quoting::Raw;
-            auto var_it = shell_context.env_vars.find(name);
-            String value = var_it != shell_context.env_vars.end() ?
-                var_it->value : join(ShellManager::instance().get_val(name, context) | transform(quoter(quoting)), ' ', false);
-
             StringView quoted{match[1].first, match[1].second};
-            env.push_back(format("kak_{}{}={}", quoted, name, value));
+            Quoting quoting = match[1].matched ? Quoting::Shell : Quoting::Raw;
+            env.push_back(format("kak_{}{}={}", quoted, name, get_value(name, quoting)));
         } catch (runtime_error&) {}
     }
 
@@ -222,7 +219,11 @@ std::pair<String, int> ShellManager::eval(
 
     auto start_time = profile ? Clock::now() : Clock::time_point{};
 
-    auto kak_env = generate_env(cmdline, context, shell_context);
+    auto kak_env = generate_env(cmdline, context, [&](StringView name, Quoting quoting) {
+        if (auto it = shell_context.env_vars.find(name); it != shell_context.env_vars.end())
+            return it->value;
+        return join(get_val(name, context) | transform(quoter(quoting)), ' ', false);
+    });
 
     auto spawn_time = profile ? Clock::now() : Clock::time_point{};
 
