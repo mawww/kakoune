@@ -273,7 +273,11 @@ are exclusively available to built-in options.
 
 *extra_word_chars* `codepoint-list`::
     a list of all additional codepoints that should be considered
-    as word character. This must be set on the buffer, not the window,
+    part of a word, for the purposes of the `w`, `b`, and `e` commands
+    (See <<keys#movement,`:doc keys movement`>>).
+    If this option is empty, Kakoune pretends it contains an
+    underscore, otherwise the value is used as-is.
+    This must be set on the buffer, not the window,
     for word completion to offer words containing these codepoints.
 
 *matching_pairs* `codepoint-list`::
