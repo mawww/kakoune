@@ -46,6 +46,7 @@ public:
 
     void run(FdEvents events, EventMode mode);
 
+    void reset_fd(int fd) { m_fd = fd; }
     void close_fd();
     void disable() { m_fd = -1; }
 
