@@ -143,6 +143,9 @@ are exclusively available to built-in options.
     except for the first element which follows the
     `<line>.<column>[+<length>]@<timestamp>` format to define where the
     completion apply in the buffer.
+    Any `|` or `\` characters that occur within the `<text>`,
+    `<select cmd>`, or `<menu text>` fields should be escaped as `\|`
+    or `\\`.
 
     Select commands are arbitrary Kakoune commands that will be executed
     each time the element is selected in the menu. The common use case is
