@@ -1,0 +1,1 @@
+c<ret><esc><a-o>jo# comment3<ret>comment4<esc><a-o>jo#    indented<ret>indented2<esc><a-o>jodef f() do<ret># comment<ret>comment2<esc>j<a-o>jodef f() do<ret># comment<esc>hhhi<ret>
