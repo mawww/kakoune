@@ -414,6 +414,8 @@ void NCursesUI::set_terminal_mode() const
     fputs("\033[?1004h", stdout);
     // request CSI u style key reporting
     fputs("\033[>4;1m", stdout);
+    // save the current window title
+    fputs("\033[22t", stdout);
     fflush(stdout);
 }
 
@@ -423,6 +425,7 @@ void NCursesUI::restore_terminal_mode() const
     fputs("\033>", stdout);
     fputs("\033[?1004l", stdout);
     fputs("\033[>4;0m", stdout);
+    fputs("\033[23t", stdout);
     fflush(stdout);
 }
 
