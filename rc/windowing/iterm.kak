@@ -116,6 +116,12 @@ If no client is passed then the current one is used' \
             -e "        tell aTab to repeat with aSession in sessions"     \
             -e "            tell aSession"                                 \
             -e "                if (unique id = \"${session}\") then"      \
+            -e "                    tell aWin"                             \
+            -e "                        select"                            \
+            -e "                    end tell"                              \
+            -e "                    tell aTab"                             \
+            -e "                        select"                            \
+            -e "                    end tell"                              \
             -e "                    select"                                \
             -e "                end if"                                    \
             -e "            end tell"                                      \
