@@ -362,8 +362,8 @@ NCursesUI::~NCursesUI()
 {
     enable_mouse(false);
     m_palette.set_change_colors(false);
-    endwin();
     restore_terminal_mode();
+    endwin();
     set_signal_handler(SIGWINCH, SIG_DFL);
     set_signal_handler(SIGHUP, SIG_DFL);
     set_signal_handler(SIGTSTP, SIG_DFL);
