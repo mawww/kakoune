@@ -1,7 +1,7 @@
 # Kakoune default color scheme
 #
-# Template: https://github.com/mawww/kakoune/blob/master/colors/default.kak
-# Documentation: https://github.com/mawww/kakoune/blob/master/doc/pages/faces.asciidoc
+# Template: "%val{runtime}/colors/default.kak"
+# Documentation: "%val{runtime}/doc/faces.asciidoc"
 
 # For code
 set-face global value red
