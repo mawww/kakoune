@@ -101,12 +101,6 @@ Codepoint Reader::peek_next() const
 Reader& Reader::operator++()
 {
     kak_assert(pos < str.end());
-    if (*pos == '\n')
-    {
-        ++line;
-        line_start = ++pos;
-        return *this;
-    }
     utf8::to_next(pos, str.end());
     return *this;
 }
@@ -114,11 +108,7 @@ Reader& Reader::operator++()
 Reader& Reader::next_byte()
 {
     kak_assert(pos < str.end());
-    if (*pos++ == '\n')
-    {
-        ++line;
-        line_start = pos;
-    }
+    ++pos;
     return *this;
 }
 
@@ -253,6 +243,22 @@ void skip_blanks_and_comments(Reader& reader)
     }
 }
 
+BufferCoord compute_coord(StringView s)
+{
+    BufferCoord coord{0,0};
+    for (auto c : s)
+    {
+        if (c == '\n')
+        {
+            ++coord.line;
+            coord.column = 0;
+        }
+        else
+            ++coord.column;
+    }
+    return coord;
+}
+
 Token parse_percent_token(Reader& reader, bool throw_on_unterminated)
 {
     kak_assert(*reader == '%');
@@ -278,7 +284,6 @@ Token parse_percent_token(Reader& reader, bool throw_on_unterminated)
     };
 
     const Codepoint opening_delimiter = *reader;
-    auto coord = reader.coord();
     ++reader;
     auto start = reader.pos;
 
@@ -291,22 +296,28 @@ Token parse_percent_token(Reader& reader, bool throw_on_unterminated)
         const Codepoint closing_delimiter = it->closing;
         auto quoted = parse_quoted_balanced(reader, opening_delimiter, closing_delimiter);
         if (throw_on_unterminated and not quoted.terminated)
+        {
+            auto coord = compute_coord({reader.str.begin(), start});
             throw parse_error{format("{}:{}: unterminated string '%{}{}...{}'",
-                                     coord.line, coord.column, type_name,
+                                     coord.line+1, coord.column+1, type_name,
                                      opening_delimiter, closing_delimiter)};
+        }
 
-        return {type, start - str_beg, coord, std::move(quoted.content), quoted.terminated};
+        return {type, start - str_beg, std::move(quoted.content), quoted.terminated};
     }
     else
     {
         auto quoted = parse_quoted(reader, opening_delimiter);
 
         if (throw_on_unterminated and not quoted.terminated)
+        {
+            auto coord = compute_coord({reader.str.begin(), start});
             throw parse_error{format("{}:{}: unterminated string '%{}{}...{}'",
-                                     coord.line, coord.column, type_name,
+                                     coord.line+1, coord.column+1, type_name,
                                      opening_delimiter, opening_delimiter)};
+        }
 
-        return {type, start - str_beg, coord, std::move(quoted.content), quoted.terminated};
+        return {type, start - str_beg, std::move(quoted.content), quoted.terminated};
     }
 }
 
@@ -393,7 +404,6 @@ Optional<Token> CommandParser::read_token(bool throw_on_unterminated)
 
     const StringView line = m_reader.str;
     const char* start = m_reader.pos;
-    auto coord = m_reader.coord();
 
     const char c = *m_reader.pos;
     if (c == '"' or c == '\'')
@@ -404,7 +414,7 @@ Optional<Token> CommandParser::read_token(bool throw_on_unterminated)
             throw parse_error{format("unterminated string {0}...{0}", c)};
         return Token{c == '"' ? Token::Type::RawEval
                               : Token::Type::RawQuoted,
-                     start - line.begin(), coord, std::move(quoted.content),
+                     start - line.begin(), std::move(quoted.content),
                      quoted.terminated};
     }
     else if (c == '%')
@@ -416,7 +426,7 @@ Optional<Token> CommandParser::read_token(bool throw_on_unterminated)
     {
         m_reader.next_byte();
         return Token{Token::Type::CommandSeparator,
-                     m_reader.pos - line.begin(), coord, {}};
+                     m_reader.pos - line.begin(), {}};
     }
     else
     {
@@ -427,7 +437,7 @@ Optional<Token> CommandParser::read_token(bool throw_on_unterminated)
                 m_reader.next_byte();
         }
         return Token{Token::Type::Raw, start - line.begin(),
-                     coord, parse_unquoted(m_reader)};
+                     parse_unquoted(m_reader)};
     }
     return {};
 }
@@ -477,12 +487,6 @@ String expand(StringView str, const Context& context,
     return expand_impl(str, context, shell_context, postprocess);
 }
 
-struct command_not_found : runtime_error
-{
-    command_not_found(StringView name)
-        : runtime_error(format("no such command: '{}'", name)) {}
-};
-
 StringView resolve_alias(const Context& context, StringView name)
 {
     auto alias = context.aliases()[name];
@@ -491,8 +495,7 @@ StringView resolve_alias(const Context& context, StringView name)
 
 void CommandManager::execute_single_command(CommandParameters params,
                                             Context& context,
-                                            const ShellContext& shell_context,
-                                            BufferCoord pos)
+                                            const ShellContext& shell_context)
 {
     if (params.empty())
         return;
@@ -502,41 +505,25 @@ void CommandManager::execute_single_command(CommandParameters params,
         throw runtime_error("maximum nested command depth hit");
 
     ++m_command_depth;
-    auto pop_cmd = on_scope_end([this] { --m_command_depth; });
+    auto pop_depth = on_scope_end([this] { --m_command_depth; });
 
-    ParameterList param_view(params.begin()+1, params.end());
     auto command_it = m_commands.find(resolve_alias(context, params[0]));
     if (command_it == m_commands.end())
-        throw command_not_found(params[0]);
+        throw runtime_error("no such command");
 
     auto debug_flags = context.options()["debug"].get<DebugFlags>();
-    auto start = (debug_flags & DebugFlags::Profile) ? Clock::now() : Clock::time_point{};
     if (debug_flags & DebugFlags::Commands)
         write_to_debug_buffer(format("command {}", join(params, ' ')));
 
-    auto profile = on_scope_end([&] {
+    auto profile = on_scope_end([&, start = (debug_flags & DebugFlags::Profile) ? Clock::now() : Clock::time_point{}] {
         if (not (debug_flags & DebugFlags::Profile))
             return;
         auto full = std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - start);
         write_to_debug_buffer(format("command {} took {} us", params[0], full.count()));
     });
 
-    try
-    {
-        ParametersParser parameter_parser(param_view,
-                                          command_it->value.param_desc);
-        command_it->value.func(parameter_parser, context, shell_context);
-    }
-    catch (failure& error)
-    {
-        throw;
-    }
-    catch (runtime_error& error)
-    {
-        error.set_what(format("{}:{}: '{}' {}", pos.line+1, pos.column+1,
-                              params[0], error.what()));
-        throw;
-    }
+    command_it->value.func({{params.begin()+1, params.end()}, command_it->value.param_desc},
+                           context, shell_context);
 }
 
 void CommandManager::execute(StringView command_line,
@@ -544,31 +531,50 @@ void CommandManager::execute(StringView command_line,
 {
     CommandParser parser(command_line);
 
-    BufferCoord command_coord;
+    ByteCount command_pos{};
     Vector<String, MemoryDomain::Commands> params;
-    while (Optional<Token> token_opt = parser.read_token(true))
+    while (true)
     {
-        auto& token = *token_opt;
-        if (params.empty())
-            command_coord = token.coord;
-
-        if (token.type == Token::Type::CommandSeparator)
+        Optional<Token> token = parser.read_token(true);
+        if (not token or token->type == Token::Type::CommandSeparator)
         {
-            execute_single_command(params, context, shell_context, command_coord);
+            try
+            {
+                execute_single_command(params, context, shell_context);
+            }
+            catch (failure& error)
+            {
+                throw;
+            }
+            catch (runtime_error& error)
+            {
+                auto coord = compute_coord(command_line.substr(0_byte, command_pos));
+                error.set_what(format("{}:{}: '{}': {}", coord.line+1, coord.column+1,
+                                      params[0], error.what()));
+                throw;
+            }
+
+            if (not token)
+                return;
+
             params.clear();
+            continue;
         }
-        else if (token.type == Token::Type::ArgExpand and token.content == '@')
+
+        if (params.empty())
+            command_pos = token->pos;
+
+        if (token->type == Token::Type::ArgExpand and token->content == '@')
             params.insert(params.end(), shell_context.params.begin(),
                           shell_context.params.end());
         else
         {
-            auto tokens = expand_token<false>(token, context, shell_context);
+            auto tokens = expand_token<false>(*token, context, shell_context);
             params.insert(params.end(),
                           std::make_move_iterator(tokens.begin()),
                           std::make_move_iterator(tokens.end()));
         }
     }
-    execute_single_command(params, context, shell_context, command_coord);
 }
 
 Optional<CommandInfo> CommandManager::command_info(const Context& context, StringView command_line) const
@@ -673,7 +679,7 @@ Completions CommandManager::complete(const Context& context,
     }
 
     if (is_last_token)
-        tokens.push_back({Token::Type::Raw, command_line.length(), parser.coord(), {}});
+        tokens.push_back({Token::Type::Raw, command_line.length(), {}});
     kak_assert(not tokens.empty());
     const auto& token = tokens.back();
 

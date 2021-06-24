@@ -57,7 +57,6 @@ struct Token
 
     Type type;
     ByteCount pos;
-    BufferCoord coord;
     String content;
     bool terminated = false;
 };
@@ -65,7 +64,7 @@ struct Token
 struct Reader
 {
 public:
-    Reader(StringView s) : str{s}, pos{s.begin()}, line_start{s.begin()}, line{} {}
+    Reader(StringView s) : str{s}, pos{s.begin()} {}
 
     Codepoint operator*() const;
     Codepoint peek_next() const;
@@ -74,12 +73,9 @@ public:
 
     explicit operator bool() const { return pos < str.end(); }
     StringView substr_from(const char* start) const { return {start, pos}; }
-    BufferCoord coord() const { return {line, (int)(pos - line_start)}; }
 
     StringView str;
     const char* pos;
-    const char* line_start;
-    LineCount line;
 };
 
 class CommandParser
@@ -89,7 +85,6 @@ public:
     Optional<Token> read_token(bool throw_on_unterminated);
 
     const char* pos() const { return m_reader.pos; }
-    BufferCoord coord() const { return m_reader.coord(); }
     bool done() const { return not m_reader; }
 
 private:
@@ -104,8 +99,7 @@ public:
 
     void execute_single_command(CommandParameters params,
                                 Context& context,
-                                const ShellContext& shell_context,
-                                BufferCoord pos = {});
+                                const ShellContext& shell_context);
 
 
     Completions complete(const Context& context, CompletionFlags flags,

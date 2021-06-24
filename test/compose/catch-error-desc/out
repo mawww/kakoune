@@ -1,1 +1,1 @@
-no such command: 'non-existing-command'
+1:2: 'non-existing-command': no such command
