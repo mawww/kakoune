@@ -146,7 +146,7 @@ Vector<String> generate_env(StringView cmdline, const Context& context, const Sh
 
         auto match_name = [&](const String& s) {
             return s.substr(0_byte, shell_name.length()) == shell_name and
-                   s.substr(0_byte + shell_name.length(), 1_byte) == "=";
+                   s.substr(shell_name.length(), 1_byte) == "=";
         };
         if (any_of(env, match_name))
             continue;
