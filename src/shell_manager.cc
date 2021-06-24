@@ -142,11 +142,11 @@ Vector<String> generate_env(StringView cmdline, const Context& context, const Sh
     for (auto&& match : RegexIterator{cmdline.begin(), cmdline.end(), re})
     {
         StringView name{match[2].first, match[2].second};
+        StringView shell_name{match[0].first, match[0].second};
 
         auto match_name = [&](const String& s) {
-            // 4_byte because of the initial `kak_` prefix
-            return s.substr(4_byte, name.length()) == name and
-                   s.substr(4_byte + name.length(), 1_byte) == "=";
+            return s.substr(0_byte, shell_name.length()) == shell_name and
+                   s.substr(0_byte + shell_name.length(), 1_byte) == "=";
         };
         if (any_of(env, match_name))
             continue;
