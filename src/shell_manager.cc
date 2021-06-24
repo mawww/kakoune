@@ -144,8 +144,9 @@ Vector<String> generate_env(StringView cmdline, const Context& context, const Sh
         StringView name{match[2].first, match[2].second};
 
         auto match_name = [&](const String& s) {
-            return s.substr(0_byte, name.length()) == name and
-                   s.substr(name.length(), 1_byte) == "=";
+            // 4_byte because of the initial `kak_` prefix
+            return s.substr(4_byte, name.length()) == name and
+                   s.substr(4_byte + name.length(), 1_byte) == "=";
         };
         if (any_of(env, match_name))
             continue;
