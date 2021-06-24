@@ -514,7 +514,7 @@ void CommandManager::execute_single_command(CommandParameters params,
     if (debug_flags & DebugFlags::Commands)
         write_to_debug_buffer(format("command {}", join(params, ' ')));
 
-    on_scope_end([&] {
+    auto profile = on_scope_end([&] {
         if (not (debug_flags & DebugFlags::Profile))
             return;
         auto full = std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - start);

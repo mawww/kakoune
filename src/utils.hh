@@ -61,7 +61,7 @@ Singleton<T>* Singleton<T>::ms_instance = nullptr;
 // This permits to cleanup c-style resources without implementing
 // a wrapping class
 template<typename T>
-class OnScopeEnd
+class [[nodiscard]] OnScopeEnd
 {
 public:
     [[gnu::always_inline]]
