@@ -321,34 +321,43 @@ std::pair<String, int> ShellManager::eval(
     int status = 0;
     // check for termination now that SIGCHLD is blocked
     bool terminated = waitpid(pid, &status, WNOHANG) != 0;
+    bool failed = false;
 
     using namespace std::chrono;
     static constexpr seconds wait_timeout{1};
     Optional<DisplayLine> previous_status;
-    Timer wait_timer{wait_time + wait_timeout, [&](Timer& timer)
-    {
-        auto wait_duration = Clock::now() - wait_time;
-        if (context.has_client())
-        {
-            auto& client = context.client();
-            if (not previous_status)
-                previous_status = client.current_status();
+    Timer wait_timer{wait_time + wait_timeout, [&](Timer& timer) {
+        if (not context.has_client())
+            return;
 
-            client.print_status({ format("waiting for shell command to finish ({}s)",
-                                          duration_cast<seconds>(wait_duration).count()),
-                                    context.faces()["Information"] });
-            client.redraw_ifn();
-        }
-        timer.set_next_date(Clock::now() + wait_timeout);
+        const auto now = Clock::now();
+        timer.set_next_date(now + wait_timeout);
+        auto& client = context.client();
+        if (not previous_status)
+            previous_status = client.current_status();
+
+        client.print_status({format("waiting for shell command to finish{} ({}s)",
+                                     terminated ? " (shell terminated)" : "",
+                                     duration_cast<seconds>(now - wait_time).count()),
+                             context.faces()[failed ? "Error" : "Information"]});
+        client.redraw_ifn();
     }, EventMode::Urgent};
 
     while (not terminated or child_stdin.write_fd() != -1 or
            ((flags & Flags::WaitForStdout) and
             (child_stdout.read_fd() != -1 or child_stderr.read_fd() != -1)))
     {
-        EventManager::instance().handle_next_events(EventMode::Urgent, &orig_mask);
+        try
+        {
+            EventManager::instance().handle_next_events(EventMode::Urgent, &orig_mask);
+        }
+        catch (runtime_error& error)
+        {
+            write_to_debug_buffer(format("error while waiting for shell: {}", error.what()));
+            failed = true;
+        }
         if (not terminated)
-            terminated = waitpid(pid, &status, WNOHANG) != 0;
+            terminated = waitpid(pid, &status, WNOHANG) == pid;
     }
 
     if (not stderr_contents.empty())
