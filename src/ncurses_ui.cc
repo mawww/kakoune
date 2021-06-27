@@ -333,7 +333,12 @@ NCursesUI::NCursesUI()
             return;
 
         while (auto key = get_next_key())
-            m_on_key(*key);
+        {
+            if (key == ctrl('z'))
+                kill(0, SIGTSTP); // We suspend at this line
+            else
+                m_on_key(*key);
+        }
       }},
       m_assistant(assistant_clippy)
 {
@@ -640,11 +645,6 @@ Optional<Key> NCursesUI::get_next_key()
     auto parse_key = [&convert](unsigned char c) -> Key {
         if (Codepoint cp = convert(c); cp > 255)
             return Key{cp};
-        if (c == control('z'))
-        {
-            kill(0, SIGTSTP); // We suspend at this line
-            return {};
-        }
         // Special case: you can type NUL with Ctrl-2 or Ctrl-Shift-2 or
         // Ctrl-Backtick, but the most straightforward way is Ctrl-Space.
         if (c == 0)
