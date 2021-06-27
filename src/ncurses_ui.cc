@@ -380,7 +380,6 @@ void NCursesUI::suspend()
     enable_mouse(false);
     bool change_color_enabled = m_palette.get_change_colors();
     m_palette.set_change_colors(false);
-    endwin();
 
     auto current = set_signal_handler(SIGTSTP, SIG_DFL);
     sigset_t unblock_sigtstp, old_mask;
@@ -388,6 +387,7 @@ void NCursesUI::suspend()
     sigaddset(&unblock_sigtstp, SIGTSTP);
     sigprocmask(SIG_UNBLOCK, &unblock_sigtstp, &old_mask);
     restore_terminal_mode();
+    endwin();
 
     raise(SIGTSTP); // suspend here
 
