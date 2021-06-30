@@ -374,7 +374,8 @@ expand_token(const Token& token, const Context& context, const ShellContext& she
             else
                 return Vector<String>{params.begin(), params.end()};
         }
-        else if (prefix_match(content, "@:")) {
+        else if (prefix_match(content, "@:"))
+        {
             const int arg1 = str_to_int(content.substr (2_byte)) - 1;
             if (arg1 < 0)
                 throw runtime_error("invalid argument index");
@@ -383,6 +384,10 @@ expand_token(const Token& token, const Context& context, const ShellContext& she
                 return join(Vector<String>{argn, params.end()}, ' ', false);
             else
                 return Vector<String>{argn, params.end()};
+        }
+        else if (content == '#')
+        {
+            return {String{to_string(params.size())}};
         }
 
         const int arg = str_to_int(content)-1;
