@@ -44,7 +44,7 @@ struct {
     unsigned int version;
     StringView notes;
 } constexpr version_notes[] = { {
-        0,
+        20210701,
         "» {+u}set-option -remove{} support\n"
         "» prompts auto select {+i}menu{} completions on space\n"
         "» explicit completion support ({+b}<c-x>...{}) in prompts\n"
