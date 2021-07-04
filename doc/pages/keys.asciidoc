@@ -450,7 +450,10 @@ Searches use the */* register by default (See <<registers#,`:doc registers`>>)
         go to the last displayed line
 
     *a*:::
-        go to the previous (alternate) buffer
+        go to the previous (alternate) accessed buffer
+
+    *m*:::
+        go to the previous (alternate) modified buffer
 
     *f*:::
         open the file whose name is selected

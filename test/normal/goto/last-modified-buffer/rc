@@ -1,0 +1,7 @@
+nop %sh{ printf last-modified-buffer > last-modified-buffer }
+nop %sh{ printf last-accessed-buffer > last-accessed-buffer }
+
+edit last-modified-buffer
+execute-keys "i <backspace><esc>"
+edit last-accessed-buffer
+buffer out

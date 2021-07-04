@@ -51,6 +51,8 @@ Buffer::Buffer(String name, Flags flags, BufferLines lines,
     // now we may begin to record undo data
     if (not (flags & Flags::NoUndo))
         m_flags &= ~Flags::NoUndo;
+
+    m_modified_since_accessed = false;
 }
 
 void Buffer::on_registered()
@@ -278,6 +280,7 @@ void Buffer::commit_undo_group()
     m_current_undo_group.clear();
     current_history_node().redo_child = id;
     m_history_id = id;
+    m_modified_since_accessed = true;
 }
 
 bool Buffer::undo(size_t count)
@@ -553,6 +556,16 @@ bool Buffer::is_modified() const
     return m_flags & Flags::File and
            (m_history_id != m_last_save_history_id or
             not m_current_undo_group.empty());
+}
+
+bool Buffer::was_modified() const
+{
+    return m_flags & Flags::File and m_modified_since_accessed;
+}
+
+void Buffer::reset_modified_since_accessed()
+{
+    m_modified_since_accessed = false;
 }
 
 void Buffer::notify_saved(FsStatus status)

@@ -203,6 +203,10 @@ public:
     // returns true if the buffer is in a different state than
     // the last time it was saved
     bool is_modified() const;
+    // returns true if the buffer was modified
+    bool was_modified() const;
+    // reset buffer modified since accessed status
+    void reset_modified_since_accessed();
 
     // notify the buffer that it was saved in the current state
     void notify_saved(FsStatus status);
@@ -309,6 +313,8 @@ private:
     // Values are just data holding by the buffer, they are not part of its
     // observable state
     mutable ValueMap m_values;
+
+    bool m_modified_since_accessed;
 };
 
 }

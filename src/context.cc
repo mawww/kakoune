@@ -175,7 +175,14 @@ void Context::change_buffer(Buffer& buffer)
     if (has_buffer())
     {
         auto* current = &this->buffer();
-        m_last_buffer = contains(BufferManager::instance(), current) ? current : nullptr;
+        m_last_accessed_buffer = contains(BufferManager::instance(), current) ? current : nullptr;
+
+        if (current->was_modified() and m_last_modified_buffer1.get() != current)
+        {
+            m_last_modified_buffer2 = m_last_modified_buffer1;
+            m_last_modified_buffer1 = current;
+            current->reset_modified_since_accessed();
+        }
     }
 
     if (has_client())
@@ -197,8 +204,12 @@ void Context::change_buffer(Buffer& buffer)
 void Context::forget_buffer(Buffer& buffer)
 {
     m_jump_list.forget_buffer(buffer);
-    if (m_last_buffer.get() == &buffer)
-        m_last_buffer = nullptr;
+    if (m_last_accessed_buffer.get() == &buffer)
+        m_last_accessed_buffer = nullptr;
+    if (m_last_modified_buffer1.get() == &buffer)
+        m_last_modified_buffer1 = nullptr;
+    if (m_last_modified_buffer2.get() == &buffer)
+        m_last_modified_buffer2 = nullptr;
 
     if (&this->buffer() != &buffer)
         return;
@@ -206,7 +217,7 @@ void Context::forget_buffer(Buffer& buffer)
     if (is_editing() && has_input_handler())
         input_handler().reset_normal_mode();
 
-    change_buffer(m_last_buffer ? *m_last_buffer : BufferManager::instance().get_first_buffer());
+    change_buffer(m_last_accessed_buffer ? *m_last_accessed_buffer : BufferManager::instance().get_first_buffer());
 }
 
 SelectionList& Context::selections()

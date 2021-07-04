@@ -277,10 +277,22 @@ void goto_commands(Context& context, NormalParams params)
                 break;
             case 'a':
             {
-                Buffer* target = context.last_buffer();
+                Buffer* target = context.last_accessed_buffer();
                 if (not target)
                 {
-                    throw runtime_error("no last buffer");
+                    throw runtime_error("no last accessed buffer");
+                    break;
+                }
+                context.push_jump();
+                context.change_buffer(*target);
+                break;
+            }
+            case 'm':
+            {
+                Buffer* target = context.last_modified_buffer();
+                if (not target)
+                {
+                    throw runtime_error("no last modified buffer");
                     break;
                 }
                 context.push_jump();
@@ -339,7 +351,8 @@ void goto_commands(Context& context, NormalParams params)
              {{'t'},    "window top"},
              {{'b'},    "window bottom"},
              {{'c'},    "window center"},
-             {{'a'},    "last buffer"},
+             {{'a'},    "last accessed buffer"},
+             {{'m'},    "last modified buffer"},
              {{'f'},    "file"},
              {{'.'},    "last buffer change"}}));
     }
