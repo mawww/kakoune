@@ -53,7 +53,7 @@ define-command -params ..1 -docstring %{
                         # nothing
                     }
 
-                    else if (/^\+/) {
+                    else if (/^[+-]/) {
                         # required to ignore undocumented aspell functionality
                     }
 
