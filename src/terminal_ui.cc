@@ -1377,64 +1377,37 @@ void TerminalUI::enable_mouse(bool enabled)
 
 void TerminalUI::set_ui_options(const Options& options)
 {
-    {
-        auto it = options.find("terminal_assistant"_sv);
-        if (it == options.end() or it->value == "clippy")
-            m_assistant = assistant_clippy;
-        else if (it->value == "cat")
-            m_assistant = assistant_cat;
-        else if (it->value == "dilbert")
-            m_assistant = assistant_dilbert;
-        else if (it->value == "none" or it->value == "off")
-            m_assistant = ConstArrayView<StringView>{};
-    }
-
-    auto get_boolean_option = [&](StringView name, bool default_value) {
-        auto it = options.find(name);
-        return it == options.end() ? default_value
-                                   : (it->value == "yes" or it->value == "true");
+    auto find = [&](StringView name) -> Optional<StringView> {
+        if (auto it = options.find(name); it != options.end())
+            return StringView{it->value};
+        return {};
     };
 
-    m_status_on_top = get_boolean_option("terminal_status_on_top", false);
-    m_set_title = get_boolean_option("terminal_set_title", true);
+    auto assistant = find("terminal_assistant").value_or("clippy");
+    if (assistant == "clippy")
+        m_assistant = assistant_clippy;
+    else if (assistant == "cat")
+        m_assistant = assistant_cat;
+    else if (assistant == "dilbert")
+        m_assistant = assistant_dilbert;
+    else if (assistant == "none" or assistant == "off")
+        m_assistant = ConstArrayView<StringView>{};
 
-    {
-        auto it = options.find("terminal_shift_function_key"_sv);
-        m_shift_function_key = it != options.end() ?
-            str_to_int_ifp(it->value).value_or(default_shift_function_key)
-          : default_shift_function_key;
-    }
+    auto to_bool = [](StringView s) { return s == "yes" or s == "true"; };
 
-    {
-        enable_mouse(get_boolean_option("terminal_enable_mouse", true));
+    m_status_on_top = find("terminal_status_on_top").map(to_bool).value_or(false);
+    m_set_title = find("terminal_set_title").map(to_bool).value_or(true);
+    m_synchronized = find("terminal_synchronized").map(to_bool).value_or(false);
 
-        auto wheel_up_it = options.find("terminal_wheel_up_button"_sv);
-        m_wheel_up_button = wheel_up_it != options.end() ?
-            str_to_int_ifp(wheel_up_it->value).value_or(4) : 4;
+    m_shift_function_key = find("terminal_shift_function_key").map(str_to_int_ifp).value_or(default_shift_function_key);
 
-        auto wheel_down_it = options.find("terminal_wheel_down_button"_sv);
-        m_wheel_down_button = wheel_down_it != options.end() ?
-            str_to_int_ifp(wheel_down_it->value).value_or(5) : 5;
+    enable_mouse(find("terminal_enable_mouse").map(to_bool).value_or(true));
+    m_wheel_up_button = find("terminal_wheel_up_button").map(str_to_int_ifp).value_or(4);
+    m_wheel_down_button = find("terminal_wheel_down_button").map(str_to_int_ifp).value_or(5);
+    m_wheel_scroll_amount = find("terminal_wheel_scroll_amount").map(str_to_int_ifp).value_or(3);
 
-        auto wheel_scroll_amount_it = options.find("terminal_wheel_scroll_amount"_sv);
-        m_wheel_scroll_amount = wheel_scroll_amount_it != options.end() ?
-            str_to_int_ifp(wheel_scroll_amount_it->value).value_or(3) : 3;
-    }
-
-    {
-        auto it = options.find("terminal_padding_char"_sv);
-        if (it == options.end())
-            // Defaults to tilde.
-            m_padding_char = '~';
-        else if (it->value.column_length() < 1)
-            // Do not allow empty string, use space instead.
-            m_padding_char = ' ';
-        else
-            m_padding_char = it->value[0_char];
-    }
-
-    m_padding_fill = get_boolean_option("terminal_padding_fill", false);
-    m_synchronized = get_boolean_option("terminal_synchronized", false);
+    m_padding_char = find("terminal_padding_char").map([](StringView s) { return s.column_length() < 1 ? ' ' : s[0_char]; }).value_or(Codepoint{'~'});
+    m_padding_fill = find("terminal_padding_fill").map(to_bool).value_or(false);
 }
 
 }
