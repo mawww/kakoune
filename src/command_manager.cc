@@ -87,31 +87,6 @@ struct parse_error : runtime_error
         : runtime_error{format("parse error: {}", error)} {}
 };
 
-Codepoint Reader::operator*() const
-{
-    kak_assert(pos < str.end());
-    return utf8::codepoint(pos, str.end());
-}
-
-Codepoint Reader::peek_next() const
-{
-    return utf8::codepoint(utf8::next(pos, str.end()), str.end());
-}
-
-Reader& Reader::operator++()
-{
-    kak_assert(pos < str.end());
-    utf8::to_next(pos, str.end());
-    return *this;
-}
-
-Reader& Reader::next_byte()
-{
-    kak_assert(pos < str.end());
-    ++pos;
-    return *this;
-}
-
 namespace
 {
 
@@ -120,84 +95,86 @@ bool is_command_separator(Codepoint c)
     return c == ';' or c == '\n';
 }
 
-struct QuotedResult
+struct ParseResult
 {
     String content;
     bool terminated;
 };
 
-QuotedResult parse_quoted(Reader& reader, Codepoint delimiter)
+ParseResult parse_quoted(ParseState& state, Codepoint delimiter)
 {
-    auto beg = reader.pos;
+    const char* beg = state.pos;
+    const char* end = state.str.end();
     String str;
 
-    while (reader)
+    while (state.pos != end)
     {
-        const Codepoint c = *reader;
+        const char* cur = state.pos;
+        const Codepoint c = utf8::read_codepoint(state.pos, end);
         if (c == delimiter)
         {
-            if (reader.peek_next() != delimiter)
+            auto next = state.pos;
+            if (utf8::read_codepoint(next, end) != delimiter)
             {
-                str += reader.substr_from(beg);
-                ++reader;
+                if (str.empty())
+                    return {String{String::NoCopy{}, {beg, cur}}, true};
+
+                str += StringView{beg, cur};
                 return {str, true};
             }
-            str += (++reader).substr_from(beg);
-            beg = reader.pos+1;
+            str += StringView{beg, state.pos};
+            state.pos = beg = next;
         }
-        ++reader;
     }
-    if (beg < reader.str.end())
-        str += reader.substr_from(beg);
+    if (beg < end)
+        str += StringView{beg, end};
     return {str, false};
 }
 
-QuotedResult parse_quoted_balanced(Reader& reader, char opening_delimiter,
-                                   char closing_delimiter)
+ParseResult parse_quoted_balanced(ParseState& state, char opening_delimiter, char closing_delimiter)
 {
-    kak_assert(utf8::codepoint(utf8::previous(reader.pos, reader.str.begin()),
-                               reader.str.end()) == opening_delimiter);
-    int level = 0;
-    auto start = reader.pos;
-    while (reader)
+    int level = 1;
+    const char* pos = state.pos;
+    const char* beg = pos;
+    const char* end = state.str.end();
+    while (pos != end)
     {
-        const char c = *reader.pos;
+        const char c = *pos++;
         if (c == opening_delimiter)
             ++level;
-        else if (c == closing_delimiter and level-- == 0)
-        {
-            auto content = reader.substr_from(start);
-            reader.next_byte();
-            return {String{String::NoCopy{}, content}, true};
-        }
-        reader.next_byte();
+        else if (c == closing_delimiter and --level == 0)
+            break;
     }
-    return {String{String::NoCopy{}, reader.substr_from(start)}, false};
+    state.pos = pos;
+    const bool terminated = (level == 0);
+    return {String{String::NoCopy{}, {beg, pos - terminated}}, terminated};
 }
 
-String parse_unquoted(Reader& reader)
+String parse_unquoted(ParseState& state)
 {
-    auto beg = reader.pos;
+    const char* beg = state.pos;
+    const char* end = state.str.end();
+
     String str;
 
-    while (reader)
+    while (state.pos != end)
     {
-        const char c = *reader.pos;
+        const char c = *state.pos;
         if (is_command_separator(c) or is_horizontal_blank(c))
         {
-            str += reader.substr_from(beg);
-            if (reader.pos != reader.str.begin() and *(reader.pos - 1) == '\\')
+            str += StringView{beg, state.pos};
+            if (state.pos != beg and *(state.pos - 1) == '\\')
             {
                 str.back() = c;
-                beg = reader.pos+1;
+                beg = state.pos+1;
             }
             else
                 return str;
         }
-        reader.next_byte();
+        ++state.pos;
     }
-    if (beg < reader.str.end())
-        str += reader.substr_from(beg);
+    if (beg < end)
+        str += StringView{beg, end};
     return str;
 }
 
@@ -223,20 +200,20 @@ Token::Type token_type(StringView type_name, bool throw_on_invalid)
         return Token::Type::RawQuoted;
 }
 
-void skip_blanks_and_comments(Reader& reader)
+void skip_blanks_and_comments(ParseState& state)
 {
-    while (reader)
+    while (state)
     {
-        const Codepoint c = *reader.pos;
+        const Codepoint c = *state.pos;
         if (is_horizontal_blank(c))
-            reader.next_byte();
-        else if (c == '\\' and reader.pos + 1 != reader.str.end() and
-                 *(reader.pos + 1) == '\n')
-            reader.next_byte().next_byte();
+            ++state.pos;
+        else if (c == '\\' and state.pos + 1 != state.str.end() and
+                 state.pos[1] == '\n')
+            state.pos += 2;
         else if (c == '#')
         {
-            while (reader and *reader != '\n')
-                reader.next_byte();
+            while (state and *state.pos != '\n')
+                ++state.pos;
         }
         else
             break;
@@ -259,17 +236,16 @@ BufferCoord compute_coord(StringView s)
     return coord;
 }
 
-Token parse_percent_token(Reader& reader, bool throw_on_unterminated)
+Token parse_percent_token(ParseState& state, bool throw_on_unterminated)
 {
-    kak_assert(*reader == '%');
-    ++reader;
+    kak_assert(state.pos[-1] == '%');
+    const auto type_start = state.pos;
+    while (state and *state.pos >= 'a' and *state.pos <= 'z')
+        ++state.pos;
+    StringView type_name{type_start, state.pos};
 
-    const auto type_start = reader.pos;
-    while (reader and iswalpha(*reader))
-        ++reader;
-    StringView type_name = reader.substr_from(type_start);
-
-    if (not reader or is_blank(*reader))
+    const Codepoint opening_delimiter = utf8::read_codepoint(state.pos, state.str.end());
+    if (not state or iswalpha(opening_delimiter))
     {
         if (throw_on_unterminated)
             throw parse_error{format("expected a string delimiter after '%{}'",
@@ -279,45 +255,41 @@ Token parse_percent_token(Reader& reader, bool throw_on_unterminated)
 
     Token::Type type = token_type(type_name, throw_on_unterminated);
 
-    constexpr struct CharPair { Codepoint opening; Codepoint closing; } matching_pairs[] = {
+    constexpr struct CharPair { char opening; char closing; } matching_pairs[] = {
         { '(', ')' }, { '[', ']' }, { '{', '}' }, { '<', '>' }
     };
 
-    const Codepoint opening_delimiter = *reader;
-    ++reader;
-    auto start = reader.pos;
+    auto start = state.pos;
+    const ByteCount byte_pos = start - state.str.begin();
 
-    auto it = find_if(matching_pairs, [opening_delimiter](const CharPair& cp)
-                      { return opening_delimiter == cp.opening; });
-
-    const auto str_beg = reader.str.begin();
-    if (it != std::end(matching_pairs))
+    if (auto it = find_if(matching_pairs, [=](const CharPair& cp) { return opening_delimiter == cp.opening; });
+        it != std::end(matching_pairs))
     {
         const Codepoint closing_delimiter = it->closing;
-        auto quoted = parse_quoted_balanced(reader, opening_delimiter, closing_delimiter);
+        auto quoted = parse_quoted_balanced(state, opening_delimiter, closing_delimiter);
         if (throw_on_unterminated and not quoted.terminated)
         {
-            auto coord = compute_coord({reader.str.begin(), start});
+            auto coord = compute_coord({state.str.begin(), start});
             throw parse_error{format("{}:{}: unterminated string '%{}{}...{}'",
                                      coord.line+1, coord.column+1, type_name,
                                      opening_delimiter, closing_delimiter)};
         }
 
-        return {type, start - str_beg, std::move(quoted.content), quoted.terminated};
+        return {type, byte_pos, std::move(quoted.content), quoted.terminated};
     }
     else
     {
-        auto quoted = parse_quoted(reader, opening_delimiter);
+        auto quoted = parse_quoted(state, opening_delimiter);
 
         if (throw_on_unterminated and not quoted.terminated)
         {
-            auto coord = compute_coord({reader.str.begin(), start});
+            auto coord = compute_coord({state.str.begin(), start});
             throw parse_error{format("{}:{}: unterminated string '%{}{}...{}'",
                                      coord.line+1, coord.column+1, type_name,
                                      opening_delimiter, opening_delimiter)};
         }
 
-        return {type, start - str_beg, std::move(quoted.content), quoted.terminated};
+        return {type, byte_pos, std::move(quoted.content), quoted.terminated};
     }
 }
 
@@ -404,22 +376,22 @@ void expand_token(Token&& token, const Context& context, const ShellContext& she
 
 }
 
-CommandParser::CommandParser(StringView command_line) : m_reader{command_line} {}
+CommandParser::CommandParser(StringView command_line) : m_state{command_line, command_line.begin()} {}
 
 Optional<Token> CommandParser::read_token(bool throw_on_unterminated)
 {
-    skip_blanks_and_comments(m_reader);
-    if (not m_reader)
+    skip_blanks_and_comments(m_state);
+    if (not m_state)
         return {};
 
-    const StringView line = m_reader.str;
-    const char* start = m_reader.pos;
+    const StringView line = m_state.str;
+    const char* start = m_state.pos;
 
-    const char c = *m_reader.pos;
+    const char c = *m_state.pos;
     if (c == '"' or c == '\'')
     {
-        start = m_reader.next_byte().pos;
-        QuotedResult quoted = parse_quoted(m_reader, c);
+        start = ++m_state.pos;
+        ParseResult quoted = parse_quoted(m_state, c);
         if (throw_on_unterminated and not quoted.terminated)
             throw parse_error{format("unterminated string {0}...{0}", c)};
         return Token{c == '"' ? Token::Type::RawEval
@@ -429,25 +401,21 @@ Optional<Token> CommandParser::read_token(bool throw_on_unterminated)
     }
     else if (c == '%')
     {
-        auto token = parse_percent_token(m_reader, throw_on_unterminated);
-        return token;
+        ++m_state.pos;
+        return parse_percent_token(m_state, throw_on_unterminated);
     }
     else if (is_command_separator(c))
-    {
-        m_reader.next_byte();
         return Token{Token::Type::CommandSeparator,
-                     m_reader.pos - line.begin(), {}};
-    }
+                     ++m_state.pos - line.begin(), {}};
     else
     {
-        if (c == '\\')
+        if (c == '\\' and m_state.pos + 1 != m_state.str.end())
         {
-            auto next = m_reader.peek_next();
+            const char next = m_state.pos[1];
             if (next == '%' or next == '\'' or next == '"')
-                m_reader.next_byte();
+                ++m_state.pos;
         }
-        return Token{Token::Type::Raw, start - line.begin(),
-                     parse_unquoted(m_reader)};
+        return Token{Token::Type::Raw, start - line.begin(), parse_unquoted(m_state)};
     }
     return {};
 }
@@ -457,32 +425,29 @@ String expand_impl(StringView str, const Context& context,
                    const ShellContext& shell_context,
                    Postprocess postprocess)
 {
-    Reader reader{str};
+    ParseState state{str, str.begin()};
     String res;
-    auto beg = str.begin();
-    while (reader)
+    auto beg = state.pos;
+    while (state)
     {
-        Codepoint c = *reader;
-        if (c == '%')
+        if (*state.pos++ == '%')
         {
-            if (reader.peek_next() == '%')
+            if (state and *state.pos == '%')
             {
-                res += (++reader).substr_from(beg);
-                beg = (++reader).pos;
+                res += StringView{beg, state.pos};
+                beg = ++state.pos;
             }
             else
             {
-                res += reader.substr_from(beg);
+                res += StringView{beg, state.pos-1};
                 String token;
-                expand_token(parse_percent_token(reader, true), context, shell_context, token);
+                expand_token(parse_percent_token(state, true), context, shell_context, token);
                 res += postprocess(token);
-                beg = reader.pos;
+                beg = state.pos;
             }
         }
-        else
-            ++reader;
     }
-    res += reader.substr_from(beg);
+    res += StringView{beg, state.pos};
     return res;
 }
 
@@ -826,9 +791,9 @@ UnitTest test_command_parsing{[]
 {
     auto check_quoted = [](StringView str, bool terminated, StringView content)
     {
-        Reader reader{str};
-        const Codepoint delimiter = *reader;
-        auto quoted = parse_quoted(++reader, delimiter);
+        ParseState state{str, str.begin()};
+        const Codepoint delimiter = *state.pos++;
+        auto quoted = parse_quoted(state, delimiter);
         kak_assert(quoted.terminated == terminated);
         kak_assert(quoted.content == content);
     };
@@ -838,8 +803,8 @@ UnitTest test_command_parsing{[]
 
     auto check_balanced = [](StringView str, Codepoint opening, Codepoint closing, bool terminated, StringView content)
     {
-        Reader reader{str};
-        auto quoted = parse_quoted_balanced(++reader, opening, closing);
+        ParseState state{str, str.begin()+1};
+        auto quoted = parse_quoted_balanced(state, opening, closing);
         kak_assert(quoted.terminated == terminated);
         kak_assert(quoted.content == content);
     };
@@ -849,9 +814,8 @@ UnitTest test_command_parsing{[]
 
     auto check_unquoted = [](StringView str, StringView content)
     {
-        Reader reader{str};
-        auto res = parse_unquoted(reader);
-        kak_assert(res == content);
+        ParseState state{str, str.begin()};
+        kak_assert(parse_unquoted(state) == content);
     };
     check_unquoted("abc def", "abc");
     check_unquoted("abc; def", "abc");
