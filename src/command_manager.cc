@@ -321,10 +321,21 @@ Token parse_percent_token(Reader& reader, bool throw_on_unterminated)
     }
 }
 
-template<bool single>
-std::conditional_t<single, String, Vector<String>>
-expand_token(Token&& token, const Context& context, const ShellContext& shell_context)
+template<typename Target, typename = std::enable_if_t<std::is_same_v<Target, Vector<String>> or std::is_same_v<Target, String>>>
+void expand_token(Token&& token, const Context& context, const ShellContext& shell_context, Target& target)
 {
+    constexpr bool single = std::is_same_v<Target, String>;
+    auto set_target = [&](auto&& s) {
+        if constexpr (single)
+            target = std::move(s);
+        else if constexpr (std::is_same_v<std::decay_t<decltype(s)>, String>)
+            target.push_back(std::move(s));
+        else if constexpr (std::is_same_v<decltype(s), Vector<String>&&>)
+            target.insert(target.end(), std::make_move_iterator(s.begin()), std::make_move_iterator(s.end()));
+        else
+            target.insert(target.end(), s.begin(), s.end());
+    };
+
     auto&& content = token.content;
     switch (token.type)
     {
@@ -337,32 +348,32 @@ expand_token(Token&& token, const Context& context, const ShellContext& shell_co
         if (not str.empty() and str.back() == '\n')
             str.resize(str.length() - 1, 0);
 
-        return {str};
+        return set_target(std::move(str));
     }
     case Token::Type::RegisterExpand:
         if constexpr (single)
-            return context.main_sel_register_value(content).str();
+            return set_target(context.main_sel_register_value(content).str());
         else
-            return RegisterManager::instance()[content].get(context) | gather<Vector<String>>();
+            return set_target(RegisterManager::instance()[content].get(context));
     case Token::Type::OptionExpand:
     {
         auto& opt = context.options()[content];
         if constexpr (single)
-            return opt.get_as_string(Quoting::Raw);
+            return set_target(opt.get_as_string(Quoting::Raw));
         else
-            return opt.get_as_strings();
+            return set_target(opt.get_as_strings());
     }
     case Token::Type::ValExpand:
     {
         auto it = shell_context.env_vars.find(content);
         if (it != shell_context.env_vars.end())
-            return {it->value};
+            return set_target(it->value);
 
         auto val = ShellManager::instance().get_val(content, context);
         if constexpr (single)
-            return join(val, false, ' ');
+            return set_target(join(val, false, ' '));
         else
-            return val;
+            return set_target(std::move(val));
     }
     case Token::Type::ArgExpand:
     {
@@ -370,26 +381,25 @@ expand_token(Token&& token, const Context& context, const ShellContext& shell_co
         if (content == '@')
         {
             if constexpr (single)
-                return join(params, ' ', false);
+                return set_target(join(params, ' ', false));
             else
-                return Vector<String>{params.begin(), params.end()};
+                return set_target(params);
         }
 
         const int arg = str_to_int(content)-1;
         if (arg < 0)
             throw runtime_error("invalid argument index");
-        return {arg < params.size() ? params[arg] : String{}};
+        return set_target(arg < params.size() ? params[arg] : String{});
     }
     case Token::Type::FileExpand:
-        return {read_file(content)};
+        return set_target(read_file(content));
     case Token::Type::RawEval:
-        return {expand(content, context, shell_context)};
+        return set_target(expand(content, context, shell_context));
     case Token::Type::Raw:
     case Token::Type::RawQuoted:
-        return {std::move(content)};
+        return set_target(std::move(content));
     default: kak_assert(false);
     }
-    return {};
 }
 
 }
@@ -463,7 +473,9 @@ String expand_impl(StringView str, const Context& context,
             else
             {
                 res += reader.substr_from(beg);
-                res += postprocess(expand_token<true>(parse_percent_token(reader, true), context, shell_context));
+                String token;
+                expand_token(parse_percent_token(reader, true), context, shell_context, token);
+                res += postprocess(token);
                 beg = reader.pos;
             }
         }
@@ -532,7 +544,7 @@ void CommandManager::execute(StringView command_line,
     CommandParser parser(command_line);
 
     ByteCount command_pos{};
-    Vector<String, MemoryDomain::Commands> params;
+    Vector<String> params;
     while (true)
     {
         Optional<Token> token = parser.read_token(true);
@@ -568,12 +580,7 @@ void CommandManager::execute(StringView command_line,
             params.insert(params.end(), shell_context.params.begin(),
                           shell_context.params.end());
         else
-        {
-            auto tokens = expand_token<false>(*std::move(token), context, shell_context);
-            params.insert(params.end(),
-                          std::make_move_iterator(tokens.begin()),
-                          std::make_move_iterator(tokens.end()));
-        }
+            expand_token(*std::move(token), context, shell_context, params);
     }
 }
 
