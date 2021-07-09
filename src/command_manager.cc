@@ -323,9 +323,9 @@ Token parse_percent_token(Reader& reader, bool throw_on_unterminated)
 
 template<bool single>
 std::conditional_t<single, String, Vector<String>>
-expand_token(const Token& token, const Context& context, const ShellContext& shell_context)
+expand_token(Token&& token, const Context& context, const ShellContext& shell_context)
 {
-    auto& content = token.content;
+    auto&& content = token.content;
     switch (token.type)
     {
     case Token::Type::ShellExpand:
@@ -386,7 +386,7 @@ expand_token(const Token& token, const Context& context, const ShellContext& she
         return {expand(content, context, shell_context)};
     case Token::Type::Raw:
     case Token::Type::RawQuoted:
-        return {content};
+        return {std::move(content)};
     default: kak_assert(false);
     }
     return {};
@@ -569,7 +569,7 @@ void CommandManager::execute(StringView command_line,
                           shell_context.params.end());
         else
         {
-            auto tokens = expand_token<false>(*token, context, shell_context);
+            auto tokens = expand_token<false>(*std::move(token), context, shell_context);
             params.insert(params.end(),
                           std::make_move_iterator(tokens.begin()),
                           std::make_move_iterator(tokens.end()));
