@@ -88,7 +88,7 @@ private:
 
     struct Screen : Window
     {
-        void output(bool force);
+        void output(bool force, bool synchronized);
         void set_face(const Face& face);
 
         Vector<size_t> hashes;
@@ -152,6 +152,7 @@ private:
     int m_shift_function_key = default_shift_function_key;
 
     bool m_set_title = true;
+    bool m_synchronized = false;
 
     Codepoint m_padding_char = '~';
     bool m_padding_fill = false;

@@ -221,13 +221,14 @@ void TerminalUI::Screen::set_face(const Face& face)
     m_active_face = face;
 }
 
-void TerminalUI::Screen::output(bool force)
+void TerminalUI::Screen::output(bool force, bool synchronized)
 {
     if (lines.empty())
         return;
 
-    // iTerm2 "begin synchronised update" sequence
-    printf("\033P=1s\033\\");
+    // iTerm2 "begin synchronized update" sequence
+    if (synchronized)
+        printf("\033P=1s\033\\");
 
     if (force)
     {
@@ -304,8 +305,9 @@ void TerminalUI::Screen::output(bool force)
         }
     }
 
-    // iTerm2 "endsynchronised update" sequence
-    printf("\033P=2s\033\\");
+    // iTerm2 "end synchronized update" sequence
+    if (synchronized)
+        printf("\033P=2s\033\\");
 }
 
 constexpr int TerminalUI::default_shift_function_key;
@@ -450,7 +452,7 @@ void TerminalUI::redraw(bool force)
 
     m_info.blit(m_screen);
 
-    m_screen.output(force);
+    m_screen.output(force, m_synchronized);
 
     auto set_cursor_pos = [](DisplayCoord c) {
         printf("\033[%d;%dH", (int)c.line + 1, (int)c.column + 1);
@@ -1387,17 +1389,14 @@ void TerminalUI::set_ui_options(const Options& options)
             m_assistant = ConstArrayView<StringView>{};
     }
 
-    {
-        auto it = options.find("terminal_status_on_top"_sv);
-        m_status_on_top = it != options.end() and
-            (it->value == "yes" or it->value == "true");
-    }
+    auto get_boolean_option = [&](StringView name, bool default_value) {
+        auto it = options.find(name);
+        return it == options.end() ? default_value
+                                   : (it->value == "yes" or it->value == "true");
+    };
 
-    {
-        auto it = options.find("terminal_set_title"_sv);
-        m_set_title = it == options.end() or
-            (it->value == "yes" or it->value == "true");
-    }
+    m_status_on_top = get_boolean_option("terminal_status_on_top", false);
+    m_set_title = get_boolean_option("terminal_set_title", true);
 
     {
         auto it = options.find("terminal_shift_function_key"_sv);
@@ -1407,10 +1406,7 @@ void TerminalUI::set_ui_options(const Options& options)
     }
 
     {
-        auto enable_mouse_it = options.find("terminal_enable_mouse"_sv);
-        enable_mouse(enable_mouse_it == options.end() or
-                     enable_mouse_it->value == "yes" or
-                     enable_mouse_it->value == "true");
+        enable_mouse(get_boolean_option("terminal_enable_mouse", true));
 
         auto wheel_up_it = options.find("terminal_wheel_up_button"_sv);
         m_wheel_up_button = wheel_up_it != options.end() ?
@@ -1437,11 +1433,8 @@ void TerminalUI::set_ui_options(const Options& options)
             m_padding_char = it->value[0_char];
     }
 
-    {
-        auto it = options.find("terminal_padding_fill"_sv);
-        m_padding_fill = it != options.end() and
-            (it->value == "yes" or it->value == "true");
-    }
+    m_padding_fill = get_boolean_option("terminal_padding_fill", false);
+    m_synchronized = get_boolean_option("terminal_synchronized", false);
 }
 
 }
