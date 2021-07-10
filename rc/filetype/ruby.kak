@@ -16,6 +16,7 @@ hook global WinSetOption filetype=ruby %{
 
     set-option window static_words %opt{ruby_static_words}
 
+    hook window ModeChange pop:insert:.* -group ruby-trim-indent ruby-trim-indent
     hook window InsertChar .* -group ruby-indent ruby-indent-on-char
     hook window InsertChar \n -group ruby-indent ruby-indent-on-new-line
     hook window InsertChar \n -group ruby-insert ruby-insert-on-new-line
