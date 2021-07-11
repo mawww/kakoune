@@ -167,6 +167,8 @@ private:
     static constexpr int default_shift_function_key = 12;
     int m_shift_function_key = default_shift_function_key;
 
+    bool m_ascii = false;
+
     bool m_set_title = true;
 
     DisplayAtom m_padding_char = DisplayAtom("~");
