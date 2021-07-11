@@ -33,6 +33,12 @@ hook global BufSetOption filetype=clojure %{
     set-option buffer comment_block_end ')'
 }
 
+hook global BufSetOption filetype=janet %{
+    set-option buffer comment_line '#'
+    set-option buffer comment_block_begin '(comment '
+    set-option buffer comment_block_end ')'
+}
+
 hook global BufSetOption filetype=coffee %{
     set-option buffer comment_block_begin '###'
     set-option buffer comment_block_end '###'
