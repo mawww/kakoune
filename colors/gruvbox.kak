@@ -62,7 +62,7 @@ evaluate-commands %sh{
         face global MenuForeground     ${bg2},${blue}
         face global MenuBackground     ${fg},${bg2}
         face global MenuInfo           ${bg}
-        face global Information        ${bg},${fg}
+        face global Information        ${fg},${bg2}
         face global Error              ${bg},${red}
         face global StatusLine         ${fg},${bg}
         face global StatusLineMode     ${yellow}+b
