@@ -2,3 +2,7 @@ struct A
 {
     int i;
 };
+
+struct B {
+    int i;
+};
