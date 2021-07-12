@@ -737,6 +737,7 @@ int run_server(StringView session, StringView server_init,
 {
     static bool terminate = false;
     set_signal_handler(SIGTERM, [](int) { terminate = true; });
+    set_signal_handler(SIGINT, [](int) { terminate = true; });
     if ((flags & ServerFlags::Daemon) and session.empty())
     {
         write_stderr("-d needs a session name to be specified with -s\n");
