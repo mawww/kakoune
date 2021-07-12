@@ -1,0 +1,13 @@
+declare-shared-scope testscope
+hook window ScopeLinked .* %{
+    set-register '"' "[Linked %val[hook_param]]"
+    exec P
+}
+hook window ScopeUnlinked .* %{
+    set-register '"' "[Unlinked %val[hook_param]]"
+    exec P
+}
+
+hook testscope InsertChar t %{
+    exec "!"
+}

@@ -1,0 +1,3 @@
+declare-shared-scope testscope
+
+map testscope normal '#' "I#<space><esc>"

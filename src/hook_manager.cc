@@ -60,6 +60,14 @@ CandidateList HookManager::complete_hook_group(StringView prefix, ByteCount pos_
     return res;
 }
 
+void HookManager::add_linked(HookManager& hook_manager) {
+  m_linked.emplace_back(&hook_manager);
+}
+
+void HookManager::remove_linked(HookManager& hook_manager) {
+  unordered_erase(m_linked, SafePtr<HookManager>(&hook_manager));
+}
+
 void HookManager::run_hook(Hook hook, StringView param, Context& context)
 {
     auto& hook_list = m_hooks[to_underlying(hook)];
@@ -77,6 +85,10 @@ void HookManager::run_hook(Hook hook, StringView param, Context& context)
              not regex_match(hook->group.begin(), hook->group.end(), disabled_hooks))
             and regex_match(param.begin(), param.end(), captures, hook->filter))
             hooks_to_run.push_back({ hook.get(), std::move(captures) });
+    }
+
+    for (auto& linked : m_linked) {
+      linked->run_hook(hook, param, context);
     }
 
     if (m_parent)

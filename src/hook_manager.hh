@@ -56,7 +56,9 @@ enum class Hook
     WinResize,
     WinSetOption,
     ModuleLoaded,
-    User
+    User,
+    ScopeLinked,
+    ScopeUnlinked,
 };
 
 constexpr auto enum_desc(Meta::Type<Hook>)
@@ -101,7 +103,9 @@ constexpr auto enum_desc(Meta::Type<Hook>)
         {Hook::WinResize, "WinResize"},
         {Hook::WinSetOption, "WinSetOption"},
         {Hook::ModuleLoaded, "ModuleLoaded"},
-        {Hook::User, "User"}
+        {Hook::User, "User"},
+        {Hook::ScopeLinked, "ScopeLinked"},
+        {Hook::ScopeUnlinked, "ScopeUnlinked"}
     });
 }
 
@@ -125,6 +129,9 @@ public:
     CandidateList complete_hook_group(StringView prefix, ByteCount pos_in_token);
     void run_hook(Hook hook, StringView param, Context& context);
 
+    void add_linked(HookManager& hook_manager);
+    void remove_linked(HookManager& hook_manager);
+
 private:
     HookManager();
     // the only one allowed to construct a root hook manager
@@ -133,6 +140,7 @@ private:
     struct HookData;
 
     SafePtr<HookManager> m_parent;
+    Vector<SafePtr<HookManager>> m_linked;
     Array<Vector<std::unique_ptr<HookData>, MemoryDomain::Hooks>, enum_desc(Meta::Type<Hook>{}).size()> m_hooks;
 
     mutable Vector<std::pair<Hook, StringView>, MemoryDomain::Hooks> m_running_hooks;
