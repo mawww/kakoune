@@ -998,6 +998,89 @@ struct TabulationHighlighter : Highlighter
     }
 };
 
+struct ShowMatchingHighlighter : Highlighter
+{
+    ShowMatchingHighlighter(int offset)
+      : Highlighter{HighlightPass::Move}, m_offset{std::move(offset)}
+      {}
+
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
+    {
+        static const ParameterDesc param_desc{
+            { { "offset", { true, "" } } },
+            ParameterDesc::Flags::None, 0, 0
+        };
+        ParametersParser parser(params, param_desc);    
+
+        int offset = parser.get_switch("offset").map(str_to_int).value_or(0);
+
+        return std::make_unique<ShowMatchingHighlighter>(
+            offset);
+    }
+private:
+        void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange) override
+        {
+            const Face face = context.context.faces()["MatchingChar"];
+            const auto& matching_pairs = context.context.options()["matching_pairs"].get<Vector<Codepoint, MemoryDomain::Options>>();
+            const auto range = display_buffer.range();
+            const auto& buffer = context.context.buffer();
+            for (auto& sel : context.context.selections())
+            {
+                auto pos = sel.cursor();
+                pos.column = pos.column-m_offset;
+                if (pos < range.begin or pos >= range.end)
+                    continue;
+
+                Utf8Iterator it{buffer.iterator_at(pos), buffer};
+                auto match = find(matching_pairs, *it);
+
+                if (match == matching_pairs.end())
+                    continue;
+
+                //if we're looking at an opening bracket
+                int level = 0;
+                if (((match - matching_pairs.begin()) % 2) == 0)
+                {
+                    const Codepoint opening = *match;
+                    const Codepoint closing = *(match+1);
+                    while (it.base().coord() <= range.end)
+                    {
+                        if (*it == opening)
+                            ++level;
+                        else if (*it == closing and --level == 0)
+                        {
+                            highlight_range(display_buffer, it.base().coord(), (it+1).base().coord(),
+                                            false, apply_face(face));
+                            break;
+                        }
+                        ++it;
+                    }
+                }
+                else if (pos > range.begin)
+                {
+                    const Codepoint opening = *(match-1);
+                    const Codepoint closing = *match;
+                    while (true)
+                    {
+                        if (*it == closing)
+                            ++level;
+                        else if (*it == opening and --level == 0)
+                        {
+                            highlight_range(display_buffer, it.base().coord(), (it+1).base().coord(),
+                                            false, apply_face(face));
+                            break;
+                        }
+                        if (it.base().coord() <= range.begin)
+                            break;
+                        --it;
+                    }
+                }
+            }
+        }
+
+    const int m_offset;
+};
+
 struct ShowWhitespacesHighlighter : Highlighter
 {
     ShowWhitespacesHighlighter(String tab, String tabpad, String spc, String lf, String nbsp)
@@ -1190,70 +1273,6 @@ private:
 };
 
 constexpr StringView LineNumbersHighlighter::ms_id;
-
-
-void show_matching_char(HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
-{
-    const Face face = context.context.faces()["MatchingChar"];
-    const auto& matching_pairs = context.context.options()["matching_pairs"].get<Vector<Codepoint, MemoryDomain::Options>>();
-    const auto range = display_buffer.range();
-    const auto& buffer = context.context.buffer();
-    for (auto& sel : context.context.selections())
-    {
-        auto pos = sel.cursor();
-        if (pos < range.begin or pos >= range.end)
-            continue;
-
-        Utf8Iterator it{buffer.iterator_at(pos), buffer};
-        auto match = find(matching_pairs, *it);
-
-        if (match == matching_pairs.end())
-            continue;
-
-        int level = 0;
-        if (((match - matching_pairs.begin()) % 2) == 0)
-        {
-            const Codepoint opening = *match;
-            const Codepoint closing = *(match+1);
-            while (it.base().coord() <= range.end)
-            {
-                if (*it == opening)
-                    ++level;
-                else if (*it == closing and --level == 0)
-                {
-                    highlight_range(display_buffer, it.base().coord(), (it+1).base().coord(),
-                                    false, apply_face(face));
-                    break;
-                }
-                ++it;
-            }
-        }
-        else if (pos > range.begin)
-        {
-            const Codepoint opening = *(match-1);
-            const Codepoint closing = *match;
-            while (true)
-            {
-                if (*it == closing)
-                    ++level;
-                else if (*it == opening and --level == 0)
-                {
-                    highlight_range(display_buffer, it.base().coord(), (it+1).base().coord(),
-                                    false, apply_face(face));
-                    break;
-                }
-                if (it.base().coord() <= range.begin)
-                    break;
-                --it;
-            }
-        }
-    }
-}
-
-std::unique_ptr<Highlighter> create_matching_char_highlighter(HighlighterParameters params, Highlighter*)
-{
-    return make_highlighter(show_matching_char);
-}
 
 void highlight_selections(HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
 {
@@ -2287,8 +2306,9 @@ void register_highlighters()
           "Parameters: -relative, -hlcursor, -separator <separator text>, -cursor-separator <separator text>, -min-digits <cols>\n" } });
     registry.insert({
         "show-matching",
-        { create_matching_char_highlighter,
-          "Apply the MatchingChar face to the char matching the one under the cursor" } });
+        { ShowMatchingHighlighter::create,
+          "Apply the MatchingChar face to the char matching the one under the cursor\n" 
+          "Parameters: -offset <num>\n"} });
     registry.insert({
         "show-whitespaces",
         { ShowWhitespacesHighlighter::create,
