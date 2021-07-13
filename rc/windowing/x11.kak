@@ -34,7 +34,7 @@ A shell command is appended to the one set in this option at runtime} \
 }
 
 define-command x11-terminal -params 1.. -shell-completion -docstring '
-x11-terminal <program> [<arguments>]: create a new terminal as an x11 window
+x11-terminal <program> [<arguments>]: create a new terminal as an X11 window
 The program passed as argument will be executed in the new terminal' \
 %{
     evaluate-commands -save-regs 'a' %{
