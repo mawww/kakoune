@@ -136,7 +136,8 @@ evaluate-commands %sh{
     "
 }
 
-add-highlighter shared/python/code/ regex (?<=[\w\s\d\)\]'"_])(<=|<<|>>|>=|<>?|>|!=|==|\||\^|&|\+|-|\*\*?|//?|%|~) 0:operator
+add-highlighter shared/python/code/ regex (?<=[\w\s\d\)\]'"_])(<=|<<|>>|>=|<|>|!=|==|\||\^|&|\+|-(?!>)|\*\*?|//?|%|~|@(?=\s)) 0:operator
+add-highlighter shared/python/code/ regex (?<=[(,])(/|\*\*?) 0:operator
 add-highlighter shared/python/code/ regex (?<=[\w\s\d'"_])((?<![=<>!]):?=(?![=])|[+*-]=) 0:builtin
 add-highlighter shared/python/code/ regex ^\h*(?:from|import)\h+(\S+) 1:module
 
