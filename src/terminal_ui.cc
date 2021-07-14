@@ -51,14 +51,19 @@ struct TerminalUI::Window::Line
         ColumnCount length() const { return text.column_length() + skip; }
         void resize(ColumnCount size)
         {
-            auto text_len = text.column_length();
-            if (size < text_len)
+            auto it = text.begin(), end = text.end();
+            while (it != end and size > 0)
+                size -= codepoint_width(utf8::read_codepoint(it, end));
+
+            if (size < 0) // possible if resizing to the middle of a double-width codepoint
             {
-                text.resize(text.byte_count_to(size), 0);
-                skip = 0;
+                kak_assert(size == -1);
+                utf8::to_previous(it, text.begin());
+                skip = 1;
             }
             else
-                skip = size - text_len; 
+                skip = size;
+            text.resize(it - text.begin(), 0);
         }
 
         friend bool operator==(const Atom& lhs, const Atom& rhs) { return lhs.text == rhs.text and lhs.skip == rhs.skip and lhs.face == rhs.face; }
@@ -111,10 +116,16 @@ struct TerminalUI::Window::Line
         Pos end = find_col(pos+len);
 
         auto make_tail = [](const Atom& atom, ColumnCount from) {
-            if (atom.text.column_length() > from)
-                return Atom{atom.text.substr(atom.text.byte_count_to(from)).str(), atom.skip, atom.face};
-            else
-                return Atom{{}, atom.length() - from, atom.face};
+            auto it = atom.text.begin(), end = atom.text.end();
+            while (it != end and from > 0)
+                from -= codepoint_width(utf8::read_codepoint(it, end));
+
+            if (from < 0) // can happen if tail starts in the middle of a double-width codepoint
+            {
+                kak_assert(from == -1);
+                return Atom{" " + StringView{it, end}, atom.skip, atom.face};
+            }
+            return Atom{{it, end}, atom.skip - from, atom.face};
         };
 
         if (begin.it == end.it)
