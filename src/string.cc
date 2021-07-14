@@ -6,13 +6,6 @@
 namespace Kakoune
 {
 
-String::Data::Data(String::NoCopy, const char* data, size_t size)
-{
-    l.ptr = const_cast<char*>(data);
-    l.size = size;
-    l.capacity = 0;
-}
-
 String::Data::Data(const char* data, size_t size, size_t capacity)
 {
     if (capacity > Short::capacity)

@@ -56,7 +56,7 @@ evaluate-commands %sh{
     # Grammar
     keywords="abstract|do|import|super|as|in|switch|assert|else|interface|async"
     keywords="${keywords}|enum|is|this|export|library|throw|await|external|mixin|break|extends"
-    keywords="${keywords}|new|try|case|factory|typedef|catch|operator|class|final|part"
+    keywords="${keywords}|new|try|case|factory|typedef|catch|operator|class|final|part|extension"
     keywords="${keywords}|const|finally|rethrow|while|continue|for|return|with|covariant"
     keywords="${keywords}|get|set|yield|default|if|static|deferred|implements"
     generator_keywords="async\*|sync\*|yield\*"

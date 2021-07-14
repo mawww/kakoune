@@ -55,12 +55,13 @@ evaluate-commands %sh{
   done
 }
 
-add-highlighter shared/markdown/codeblock region -match-capture \
+add-highlighter shared/markdown/inline/codeblock region -match-capture \
     ^(\h*)```\h* \
     ^(\h*)```\h*$ \
     fill meta
+add-highlighter shared/markdown/codeblock region "^( {4}|\t)" "$" fill meta
 
-add-highlighter shared/markdown/listblock region ^\h*[-*]\s ^\h*((?=[-*])|$) regions
+add-highlighter shared/markdown/listblock region ^\h*[-*]\s ^(?=\S) regions
 add-highlighter shared/markdown/listblock/g default-region group
 add-highlighter shared/markdown/listblock/g/ ref markdown/inline
 add-highlighter shared/markdown/listblock/g/marker regex ^\h*([-*])\s 1:bullet
@@ -90,9 +91,6 @@ add-highlighter shared/markdown/inline/text/ regex (?<!\*)(\*\*([^\s*]|([^\s*](\
 add-highlighter shared/markdown/inline/text/ regex (?<!_)(__([^\s_]|([^\s_](\n?[^\n_])*[^\s_]))__)(?!_) 1:+b
 add-highlighter shared/markdown/inline/text/ regex ^\h*(>\h*)+ 0:comment
 add-highlighter shared/markdown/inline/text/ regex "\H( {2,})$" 1:+r@meta
-
-# Inline code
-add-highlighter shared/markdown/inline/text/ regex "^( {4}|\t)+([^\n]+)" 2:meta
 
 # Commands
 # ‾‾‾‾‾‾‾‾

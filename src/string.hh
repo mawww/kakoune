@@ -178,7 +178,8 @@ public:
         } s;
 
         Data() { set_empty(); }
-        Data(NoCopy, const char* data, size_t size);
+        Data(NoCopy, const char* data, size_t size) : l{const_cast<char*>(data), size, 0} {}
+
         Data(const char* data, size_t size, size_t capacity);
         Data(const char* data, size_t size) : Data(data, size, size) {}
         Data(const Data& other) : Data{other.data(), other.size()} {}

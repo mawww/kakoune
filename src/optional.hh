@@ -68,12 +68,20 @@ public:
         return m_value;
     }
 
-    T& operator*()
+    T& operator*() &
     {
         kak_assert(m_valid);
         return m_value;
     }
-    const T& operator*() const { return *const_cast<Optional&>(*this); }
+
+    T&& operator*() &&
+    {
+        kak_assert(m_valid);
+        return std::move(m_value);
+    }
+
+    const T& operator*() const & { return *const_cast<Optional&>(*this); }
+    const T& operator*() const && { return *const_cast<Optional&>(*this); }
 
     T* operator->()
     {

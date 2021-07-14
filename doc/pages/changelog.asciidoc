@@ -5,6 +5,9 @@ released versions.
 
 == Development version
 
+* command and response fifo support
+  (See <<expansions#command-and-response-fifo,`:doc expansions command-and-response-fifo`>>)
+
 * Shell expansions only trim the last trailing newline instead of all of
   them to make is possible to losslessly pass text through `%sh{...}`. 
 
@@ -22,6 +25,8 @@ released versions.
   `repl-new` and `repl-send-text`.
 
 * Daemon mode (`-d` switch) does not fork anymore.
+
+* Replace NCursesUI with a custom terminal UI implementation
 
 == Kakoune 2020.08.04
 

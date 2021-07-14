@@ -61,21 +61,12 @@ struct Token
     bool terminated = false;
 };
 
-struct Reader
+struct ParseState
 {
-public:
-    Reader(StringView s) : str{s}, pos{s.begin()} {}
-
-    Codepoint operator*() const;
-    Codepoint peek_next() const;
-    Reader& operator++();
-    Reader&  next_byte();
-
-    explicit operator bool() const { return pos < str.end(); }
-    StringView substr_from(const char* start) const { return {start, pos}; }
-
     StringView str;
     const char* pos;
+
+    operator bool() const { return pos != str.end(); }
 };
 
 class CommandParser
@@ -84,11 +75,11 @@ public:
     CommandParser(StringView command_line);
     Optional<Token> read_token(bool throw_on_unterminated);
 
-    const char* pos() const { return m_reader.pos; }
-    bool done() const { return not m_reader; }
+    const char* pos() const { return m_state.pos; }
+    bool done() const { return not m_state; }
 
 private:
-    Reader m_reader;
+    ParseState m_state;
 };
 
 class CommandManager : public Singleton<CommandManager>

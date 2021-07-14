@@ -46,6 +46,7 @@ String to_json(Attribute attributes)
         { Attribute::FinalFg, "final_fg" },
         { Attribute::FinalBg, "final_bg" },
         { Attribute::FinalAttr, "final_attr" },
+        { Attribute::Strikethrough, "strikethrough" },
     };
 
     return "[" + join(attrs |

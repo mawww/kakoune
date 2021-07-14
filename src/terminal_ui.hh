@@ -1,5 +1,5 @@
-#ifndef ncurses_hh_INCLUDED
-#define ncurses_hh_INCLUDED
+#ifndef terminal_hh_INCLUDED
+#define terminal_hh_INCLUDED
 
 #include "array_view.hh"
 #include "coord.hh"
@@ -18,16 +18,14 @@ namespace Kakoune
 
 struct DisplayAtom;
 
-struct NCursesWin;
-
-class NCursesUI : public UserInterface, public Singleton<NCursesUI>
+class TerminalUI : public UserInterface, public Singleton<TerminalUI>
 {
 public:
-    NCursesUI();
-    ~NCursesUI() override;
+    TerminalUI();
+    ~TerminalUI() override;
 
-    NCursesUI(const NCursesUI&) = delete;
-    NCursesUI& operator=(const NCursesUI&) = delete;
+    TerminalUI(const TerminalUI&) = delete;
+    TerminalUI& operator=(const TerminalUI&) = delete;
 
     bool is_ok() const override { return (bool)m_window; }
 
@@ -58,7 +56,8 @@ public:
     void set_on_key(OnKeyCallback callback) override;
     void set_ui_options(const Options& options) override;
 
-    static void abort();
+    static void setup_terminal();
+    static void restore_terminal();
 
     void suspend();
 
@@ -74,50 +73,35 @@ private:
 
     Optional<Key> get_next_key();
 
-    struct Palette
-    {
-    private:
-        static const std::initializer_list<HashMap<Kakoune::Color, int>::Item> default_colors;
-
-        using ColorPair = std::pair<Color, Color>;
-        HashMap<Color, int, MemoryDomain::Faces> m_colors = default_colors;
-        HashMap<ColorPair, int, MemoryDomain::Faces> m_colorpairs;
-        int m_next_color = 16;
-        int m_next_pair = 1;
-        bool m_change_colors = true;
-
-        int get_color(Color color);
-
-    public:
-        int get_color_pair(const Face& face);
-        bool get_change_colors() const { return m_change_colors; }
-        bool set_change_colors(bool change_colors);
-    };
-
-    Palette m_palette;
-
     struct Window : Rect
     {
         void create(const DisplayCoord& pos, const DisplayCoord& size);
         void destroy();
-        void refresh(bool force);
-        void move_cursor(DisplayCoord coord);
-        void draw(Palette& palette, ConstArrayView<DisplayAtom> atoms,
-                  const Face& default_face);
+        void blit(Window& target);
+        void draw(DisplayCoord pos, ConstArrayView<DisplayAtom> atoms, const Face& default_face);
 
-        explicit operator bool() const { return win; }
+        explicit operator bool() const { return not lines.empty(); }
 
-        NCursesWin* win = nullptr;
-        int m_active_pair = -1;
+        struct Line;
+        Vector<Line> lines;
+    };
+
+    struct Screen : Window
+    {
+        void output(bool force, bool synchronized);
+        void set_face(const Face& face);
+
+        Vector<size_t> hashes;
+        Face m_active_face;
     };
 
     Window m_window;
+    Screen m_screen;
 
     DisplayCoord m_dimensions;
     termios m_original_termios{};
 
-    void set_terminal_mode() const;
-    void restore_terminal_mode() const;
+    void set_raw_mode() const;
 
     struct Menu : Window
     {
@@ -168,8 +152,9 @@ private:
     int m_shift_function_key = default_shift_function_key;
 
     bool m_set_title = true;
+    bool m_synchronized = false;
 
-    DisplayAtom m_padding_char = DisplayAtom("~");
+    Codepoint m_padding_char = '~';
     bool m_padding_fill = false;
 
     bool m_dirty = false;
@@ -182,4 +167,4 @@ private:
 
 }
 
-#endif // ncurses_hh_INCLUDED
+#endif // terminal_hh_INCLUDED

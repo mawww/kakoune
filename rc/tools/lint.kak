@@ -209,11 +209,11 @@ define-command \
 
         # A fifo to send the results back to a Kakoune buffer.
         mkfifo "$dir"/fifo
-        printf 'lint-open-output-buffer %s' "$(kakquote "$dir")" | kak -p "$kak_session"
-
-        # We are done here. Send the results to Kakoune,
-        # and clean up.
-        cat "$dir"/result > "$dir"/fifo
+        # Send the results to kakoune if the session is still valid.
+        if printf 'lint-open-output-buffer %s' "$(kakquote "$dir")" | kak -p "$kak_session"; then
+            cat "$dir"/result > "$dir"/fifo
+        fi
+        # Clean up.
         rm -rf "$dir"
 
         } & ) >"$dir"/stderr 2>&1 </dev/null

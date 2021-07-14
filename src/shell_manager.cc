@@ -4,6 +4,7 @@
 #include "client.hh"
 #include "clock.hh"
 #include "context.hh"
+#include "command_manager.hh"
 #include "display_buffer.hh"
 #include "event_manager.hh"
 #include "face_registry.hh"
@@ -134,7 +135,8 @@ pid_t spawn_shell(const char* shell, StringView cmdline,
     return -1;
 }
 
-Vector<String> generate_env(StringView cmdline, const Context& context, const ShellContext& shell_context)
+template<typename GetValue>
+Vector<String> generate_env(StringView cmdline, const Context& context, GetValue&& get_value)
 {
     static const Regex re(R"(\bkak_(quoted_)?(\w+)\b)");
 
@@ -153,31 +155,28 @@ Vector<String> generate_env(StringView cmdline, const Context& context, const Sh
 
         try
         {
-            Quoting quoting = match[1].matched ? Quoting::Shell : Quoting::Raw;
-            auto var_it = shell_context.env_vars.find(name);
-            String value = var_it != shell_context.env_vars.end() ?
-                var_it->value : join(ShellManager::instance().get_val(name, context) | transform(quoter(quoting)), ' ', false);
-
             StringView quoted{match[1].first, match[1].second};
-            env.push_back(format("kak_{}{}={}", quoted, name, value));
+            Quoting quoting = match[1].matched ? Quoting::Shell : Quoting::Raw;
+            env.push_back(format("kak_{}{}={}", quoted, name, get_value(name, quoting)));
         } catch (runtime_error&) {}
     }
 
     return env;
 }
 
-FDWatcher make_pipe_reader(Pipe& pipe, String& contents)
+template<typename OnClose>
+FDWatcher make_reader(int fd, String& contents, OnClose&& on_close)
 {
-    return {pipe.read_fd(), FdEvents::Read, EventMode::Urgent,
-            [&contents, &pipe](FDWatcher& watcher, FdEvents, EventMode) {
+    return {fd, FdEvents::Read, EventMode::Urgent,
+            [fd, &contents, on_close](FDWatcher& watcher, FdEvents, EventMode) {
         char buffer[1024];
-        while (fd_readable(pipe.read_fd()))
+        while (fd_readable(fd))
         {
-            size_t size = ::read(pipe.read_fd(), buffer, sizeof(buffer));
+            size_t size = ::read(fd, buffer, sizeof(buffer));
             if (size <= 0)
             {
-                pipe.close_read_fd();
                 watcher.disable();
+                on_close();
                 return;
             }
             contents += StringView{buffer, buffer+size};
@@ -209,6 +208,41 @@ FDWatcher make_pipe_writer(Pipe& pipe, StringView contents)
     }};
 }
 
+struct CommandFifos
+{
+    String base_dir;
+    String command;
+    FDWatcher command_watcher;
+
+    CommandFifos(Context& context, const ShellContext& shell_context)
+      : base_dir(format("{}/kak-fifo.XXXXXX", tmpdir())),
+        command_watcher([&] {
+            mkdtemp(base_dir.data()),
+            mkfifo(command_fifo_path().c_str(), 0600);
+            mkfifo(response_fifo_path().c_str(), 0600);
+            int fd = open(command_fifo_path().c_str(), O_RDONLY | O_NONBLOCK);
+            return make_reader(fd, command, [&, fd] {
+                close(fd);
+                CommandManager::instance().execute(command, context, shell_context);
+                command.clear();
+                command_watcher.reset_fd(open(command_fifo_path().c_str(), O_RDONLY | O_NONBLOCK));
+            });
+        }())
+    {
+    }
+
+    ~CommandFifos()
+    {
+        command_watcher.close_fd();
+        unlink(command_fifo_path().c_str());
+        unlink(response_fifo_path().c_str());
+        rmdir(base_dir.c_str());
+    }
+
+    String command_fifo_path() const { return format("{}/command-fifo", base_dir); }
+    String response_fifo_path() const { return format("{}/response-fifo", base_dir); }
+};
+
 }
 
 std::pair<String, int> ShellManager::eval(
@@ -222,7 +256,21 @@ std::pair<String, int> ShellManager::eval(
 
     auto start_time = profile ? Clock::now() : Clock::time_point{};
 
-    auto kak_env = generate_env(cmdline, context, shell_context);
+    Optional<CommandFifos> command_fifos;
+
+    auto kak_env = generate_env(cmdline, context, [&](StringView name, Quoting quoting) {
+        if (name == "command_fifo" or name == "response_fifo")
+        {
+            if (not command_fifos)
+                command_fifos.emplace(const_cast<Context&>(context), shell_context);
+            return name == "command_fifo" ?
+                command_fifos->command_fifo_path() : command_fifos->response_fifo_path();
+        }
+
+        if (auto it = shell_context.env_vars.find(name); it != shell_context.env_vars.end())
+            return it->value;
+        return join(get_val(name, context) | transform(quoter(quoting)), ' ', false);
+    });
 
     auto spawn_time = profile ? Clock::now() : Clock::time_point{};
 
@@ -258,8 +306,8 @@ std::pair<String, int> ShellManager::eval(
     auto wait_time = Clock::now();
 
     String stdout_contents, stderr_contents;
-    auto stdout_reader = make_pipe_reader(child_stdout, stdout_contents);
-    auto stderr_reader = make_pipe_reader(child_stderr, stderr_contents);
+    auto stdout_reader = make_reader(child_stdout.read_fd(), stdout_contents, [&]{ child_stdout.close_read_fd(); });
+    auto stderr_reader = make_reader(child_stderr.read_fd(), stderr_contents, [&]{ child_stderr.close_read_fd(); });
     auto stdin_writer = make_pipe_writer(child_stdin, input);
 
     // block SIGCHLD to make sure we wont receive it before
@@ -273,34 +321,43 @@ std::pair<String, int> ShellManager::eval(
     int status = 0;
     // check for termination now that SIGCHLD is blocked
     bool terminated = waitpid(pid, &status, WNOHANG) != 0;
+    bool failed = false;
 
     using namespace std::chrono;
     static constexpr seconds wait_timeout{1};
     Optional<DisplayLine> previous_status;
-    Timer wait_timer{wait_time + wait_timeout, [&](Timer& timer)
-    {
-        auto wait_duration = Clock::now() - wait_time;
-        if (context.has_client())
-        {
-            auto& client = context.client();
-            if (not previous_status)
-                previous_status = client.current_status();
+    Timer wait_timer{wait_time + wait_timeout, [&](Timer& timer) {
+        if (not context.has_client())
+            return;
 
-            client.print_status({ format("waiting for shell command to finish ({}s)",
-                                          duration_cast<seconds>(wait_duration).count()),
-                                    context.faces()["Information"] });
-            client.redraw_ifn();
-        }
-        timer.set_next_date(Clock::now() + wait_timeout);
+        const auto now = Clock::now();
+        timer.set_next_date(now + wait_timeout);
+        auto& client = context.client();
+        if (not previous_status)
+            previous_status = client.current_status();
+
+        client.print_status({format("waiting for shell command to finish{} ({}s)",
+                                     terminated ? " (shell terminated)" : "",
+                                     duration_cast<seconds>(now - wait_time).count()),
+                             context.faces()[failed ? "Error" : "Information"]});
+        client.redraw_ifn();
     }, EventMode::Urgent};
 
     while (not terminated or child_stdin.write_fd() != -1 or
            ((flags & Flags::WaitForStdout) and
             (child_stdout.read_fd() != -1 or child_stderr.read_fd() != -1)))
     {
-        EventManager::instance().handle_next_events(EventMode::Urgent, &orig_mask);
+        try
+        {
+            EventManager::instance().handle_next_events(EventMode::Urgent, &orig_mask);
+        }
+        catch (runtime_error& error)
+        {
+            write_to_debug_buffer(format("error while waiting for shell: {}", error.what()));
+            failed = true;
+        }
         if (not terminated)
-            terminated = waitpid(pid, &status, WNOHANG) != 0;
+            terminated = waitpid(pid, &status, WNOHANG) == pid;
     }
 
     if (not stderr_contents.empty())

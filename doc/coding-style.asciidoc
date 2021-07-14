@@ -3,7 +3,7 @@ C++ Coding Style
 
 Kakoune is written in C++14, here are the main coding style points:
 
- * Avoid external dependencies besides posix/stdc++/ncurses
+ * Avoid external dependencies besides posix/stdc++
 
  * 4 spaces for indentation, no tabs
 
