@@ -364,13 +364,13 @@ void expand_token(Token&& token, const Context& context, const ShellContext& she
                 throw runtime_error("invalid argument index");
             auto argn = arg1 < params.size() ? params.begin() + arg1 : params.end();
             if constexpr (single)
-                return join(Vector<String>{argn, params.end()}, ' ', false);
+                return set_target(join(Vector<String>{argn, params.end()}, ' ', false));
             else
-                return Vector<String>{argn, params.end()};
+                return set_target(Vector<String>{argn, params.end()});
         }
         else if (content == '#')
         {
-            return {String{to_string(params.size())}};
+            return set_target(String{to_string(params.size())});
         }
 
         const int arg = str_to_int(content)-1;
