@@ -1,50 +1,57 @@
 # Kakoune default color scheme
+#
+# Template: "%val{runtime}/colors/default.kak"
+# Documentation: "%val{runtime}/doc/faces.asciidoc"
 
-# For Code
-face global value red
-face global type yellow
-face global variable green
-face global module green
-face global function cyan
-face global string magenta
-face global keyword blue
-face global operator yellow
-face global attribute green
-face global comment cyan
-face global documentation comment
-face global meta magenta
-face global builtin default+b
+# For code
+set-face global value red
+set-face global type yellow
+set-face global variable green
+set-face global module green
+set-face global function cyan
+set-face global string magenta
+set-face global keyword blue
+set-face global operator yellow
+set-face global attribute green
+set-face global comment cyan
+set-face global documentation comment
+set-face global meta magenta
+set-face global builtin default+b
 
 # For markup
-face global title blue
-face global header cyan
-face global mono green
-face global block magenta
-face global link cyan
-face global bullet cyan
-face global list yellow
+set-face global title blue
+set-face global header cyan
+set-face global mono green
+set-face global block magenta
+set-face global link cyan
+set-face global bullet cyan
+set-face global list yellow
 
-# builtin faces
-face global Default default,default
-face global PrimarySelection white,blue+fg
-face global SecondarySelection black,blue+fg
-face global PrimaryCursor black,white+fg
-face global SecondaryCursor black,white+fg
-face global PrimaryCursorEol black,cyan+fg
-face global SecondaryCursorEol black,cyan+fg
-face global LineNumbers default,default
-face global LineNumberCursor default,default+r
-face global MenuForeground white,blue
-face global MenuBackground blue,white
-face global MenuInfo cyan
-face global Information black,yellow
-face global Error black,red
-face global StatusLine cyan,default
-face global StatusLineMode yellow,default
-face global StatusLineInfo blue,default
-face global StatusLineValue green,default
-face global StatusCursor black,cyan
-face global Prompt yellow,default
-face global MatchingChar default,default+b
-face global Whitespace default,default+f
-face global BufferPadding blue,default
+# Builtin faces
+set-face global Default default,default
+set-face global PrimarySelection white,blue+fg
+set-face global SecondarySelection black,blue+fg
+set-face global PrimaryCursor black,white+fg
+set-face global SecondaryCursor black,white+fg
+set-face global PrimaryCursorEol black,cyan+fg
+set-face global SecondaryCursorEol black,cyan+fg
+set-face global MenuForeground white,blue
+set-face global MenuBackground blue,white
+set-face global MenuInfo cyan
+set-face global Information black,yellow
+set-face global Error black,red
+set-face global StatusLine cyan,default
+set-face global StatusLineMode yellow,default
+set-face global StatusLineInfo blue,default
+set-face global StatusLineValue green,default
+set-face global StatusCursor black,cyan
+set-face global Prompt yellow,default
+set-face global BufferPadding blue,default
+
+# Builtin highlighter faces
+set-face global LineNumbers default,default
+set-face global LineNumberCursor default,default+r
+set-face global LineNumbersWrapped default,default+i
+set-face global MatchingChar default,default+b
+set-face global Whitespace default,default+f
+set-face global WrapMarker Whitespace
