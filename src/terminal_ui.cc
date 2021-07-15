@@ -611,13 +611,22 @@ void TerminalUI::draw_status(const DisplayLine& status_line,
         constexpr char suffix[] = " - Kakoune\007";
         writer.write("\033]2;");
         // Fill title escape sequence buffer, removing non ascii characters
-        for (auto& atom : mode_line)
+        if (m_title_line.empty())
         {
-            const auto str = atom.content();
-            for (auto it = str.begin(), end = str.end(); it != end; utf8::to_next(it, end))
-                writer.write((*it >= 0x20 and *it <= 0x7e) ? *it : '?');
+            for (auto& atom : mode_line)
+            {
+                const auto str = atom.content();
+                for (auto it = str.begin(), end = str.end(); it != end; utf8::to_next(it, end))
+                    writer.write((*it >= 0x20 and *it <= 0x7e) ? *it : '?');
+            }
+            writer.write(suffix);
         }
-        writer.write(suffix);
+        else
+        {
+            for (auto it = m_title_line.begin(), end = m_title_line.end(); it != end; utf8::to_next(it, end))
+                writer.write((*it >= 0x20 and *it <= 0x7e) ? *it : '?');
+            writer.write("\007");
+        }
     }
 
     m_dirty = true;
@@ -1518,7 +1527,17 @@ void TerminalUI::set_ui_options(const Options& options)
     auto to_bool = [](StringView s) { return s == "yes" or s == "true"; };
 
     m_status_on_top = find("terminal_status_on_top").map(to_bool).value_or(false);
-    m_set_title = find("terminal_set_title").map(to_bool).value_or(true);
+
+    auto title_config = find("terminal_set_title").value_or("yes");
+    if (title_config != "yes" and title_config != "no" and title_config != "true" and title_config != "false")
+    {
+        m_set_title = true;
+        m_title_line = String(title_config);
+    }
+    else {
+        m_set_title = to_bool(title_config);
+        m_title_line = "";
+    }
 
     auto synchronized = find("terminal_synchronized").map(to_bool);
     m_synchronized.set = (bool)synchronized;
