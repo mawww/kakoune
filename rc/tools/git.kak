@@ -267,6 +267,13 @@ define-command -params 1.. \
 			$@
 		EOF
 
+        # Is there anything to commit?
+        staged_files=$(git diff --name-only)
+        if [ "$staged_files" = '' ]; then
+            echo "fail 'Nothing to commit! Please stage some changes first e.g. :git add <some-file>'"
+            exit
+        fi
+
         # fails, and generate COMMIT_EDITMSG
         GIT_EDITOR='' EDITOR='' git commit "$@" > /dev/null 2>&1
         msgfile="$(git rev-parse --git-dir)/COMMIT_EDITMSG"
