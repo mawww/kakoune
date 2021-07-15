@@ -335,8 +335,12 @@ are exclusively available to built-in options.
     interface implementation. The NCurses UI support the following options:
 
         *terminal_set_title*:::
-            if *yes* or *true*, the terminal emulator title will
-            be changed
+            If set to *no* or *false*, the terminal emulator title won't
+            be changed. If set to *yes* or *true*, each window's title will
+            mirror the contents of the window's modeline (as set by the 
+            `modelinefmt` option), replacing non-ASCII characters with question
+            marks. Otherwise, each window will use the value of this option at
+            window scope as the title text, without further expansion.
 
         *terminal_status_on_top*:::
             if *yes*, or *true* the status line will be placed

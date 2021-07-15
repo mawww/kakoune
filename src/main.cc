@@ -542,7 +542,7 @@ void register_options()
                        "    <key>:                        <value>:\n"
                        "    terminal_assistant             clippy|cat|dilbert|none|off\n"
                        "    terminal_status_on_top         bool\n"
-                       "    terminal_set_title             bool\n"
+                       "    terminal_set_title             string|bool\n"
                        "    terminal_enable_mouse          bool\n"
                        "    terminal_change_colors         bool\n"
                        "    terminal_wheel_up_button       int\n"

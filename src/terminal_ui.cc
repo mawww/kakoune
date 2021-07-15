@@ -540,19 +540,35 @@ void TerminalUI::draw_status(const DisplayLine& status_line,
 
     if (m_set_title)
     {
-        constexpr char suffix[] = " - Kakoune\007";
         char buf[4 + 511 + 2] = "\033]2;";
-        // Fill title escape sequence buffer, removing non ascii characters
-        auto buf_it = &buf[4], buf_end = &buf[4 + 511 - (sizeof(suffix) - 2)];
-        for (auto& atom : mode_line)
+
+        if (not m_title_line.empty())
         {
-            const auto str = atom.content();
-            for (auto it = str.begin(), end = str.end();
-                 it != end and buf_it != buf_end; utf8::to_next(it, end))
-                *buf_it++ = (*it >= 0x20 and *it <= 0x7e) ? *it : '?';
+            auto buf_it = &buf[4];
+            auto buf_end = &buf[511 + 1];
+            for (auto ch: m_title_line)
+            {
+                if (buf_it + 1 == buf_end)
+                    break;
+                *buf_it++ = ch;
+            }
+            *buf_it = '\007';
         }
-        for (auto c : suffix)
-            *buf_it++ = c;
+        else
+        {
+            constexpr char suffix[] = " - Kakoune\007";
+            auto buf_it = &buf[4], buf_end = &buf[4 + 511 - (sizeof(suffix) - 2)];
+            // Fill title escape sequence buffer, removing non ascii characters
+            for (auto& atom : mode_line)
+            {
+                const auto str = atom.content();
+                for (auto it = str.begin(), end = str.end();
+                     it != end and buf_it != buf_end; utf8::to_next(it, end))
+                    *buf_it++ = (*it >= 0x20 and *it <= 0x7e) ? *it : '?';
+            }
+            for (auto c : suffix)
+                *buf_it++ = c;
+        }
 
         fputs(buf, stdout);
         fflush(stdout);
@@ -1407,7 +1423,16 @@ void TerminalUI::set_ui_options(const Options& options)
     auto to_bool = [](StringView s) { return s == "yes" or s == "true"; };
 
     m_status_on_top = find("terminal_status_on_top").map(to_bool).value_or(false);
-    m_set_title = find("terminal_set_title").map(to_bool).value_or(true);
+
+    auto title_config = find("terminal_set_title").value_or("yes");
+    if (title_config != "yes" && title_config != "no" && title_config != "true" && title_config != "false") {
+        m_set_title = true;
+        m_title_line = String(title_config);
+    } else {
+        m_set_title = to_bool(title_config);
+		m_title_line = "";
+    }
+
     m_synchronized = find("terminal_synchronized").map(to_bool).value_or(false);
 
     m_shift_function_key = find("terminal_shift_function_key").map(str_to_int_ifp).value_or(default_shift_function_key);
