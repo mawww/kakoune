@@ -21,6 +21,7 @@ public:
 
     virtual void set(Context& context, ConstArrayView<String> values, bool restoring = false) = 0;
     virtual ConstArrayView<String> get(const Context& context) = 0;
+    virtual ConstArrayView<String> get_for_pasting(Context& context) { return this->get(context); }
     virtual const String& get_main(const Context& context, size_t main_index) = 0;
 
     using RestoreInfo = Vector<String, MemoryDomain::Registers>;
@@ -82,6 +83,8 @@ public:
 
     void set(Context& context, ConstArrayView<String> values, bool restoring) override;
     const String& get_main(const Context&, size_t) override;
+    ConstArrayView<String> get_for_pasting(Context&) override;
+    const String& last_entry() const;
 };
 
 template<typename Func>

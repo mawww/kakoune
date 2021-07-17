@@ -708,7 +708,7 @@ template<InsertMode mode>
 void paste(Context& context, NormalParams params)
 {
     const char reg = params.reg ? params.reg : '"';
-    auto strings = RegisterManager::instance()[reg].get(context);
+    auto strings = RegisterManager::instance()[reg].get_for_pasting(context);
     const bool linewise = any_of(strings, [](StringView str) {
         return not str.empty() and str.back() == '\n';
     });

@@ -53,6 +53,16 @@ void HistoryRegister::set(Context& context, ConstArrayView<String> values, bool 
 
 const String& HistoryRegister::get_main(const Context&, size_t)
 {
+    return last_entry();
+}
+
+ConstArrayView<String> HistoryRegister::get_for_pasting(Context&)
+{
+    return last_entry();
+}
+
+const String& HistoryRegister::last_entry() const
+{
     return m_content.empty() ? String::ms_empty : m_content.back();
 }
 

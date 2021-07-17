@@ -1353,7 +1353,7 @@ public:
                     auto cp = key.codepoint();
                     if (not cp or key == Key::Escape)
                         return;
-                    insert(RegisterManager::instance()[*cp].get(context()));
+                    insert(RegisterManager::instance()[*cp].get_for_pasting(context()));
                 }, "enter register name", register_doc.str());
             update_completions = false;
         }
