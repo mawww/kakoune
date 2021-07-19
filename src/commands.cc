@@ -2656,7 +2656,8 @@ const CommandDesc require_module_cmd = {
 void register_commands()
 {
     CommandManager& cm = CommandManager::instance();
-    cm.register_command("nop", [](const ParametersParser&, Context&, const ShellContext&){}, "do nothing", {});
+    cm.register_command("nop", [](const ParametersParser&, Context&, const ShellContext&){}, "do nothing",
+        {{}, ParameterDesc::Flags::IgnoreUnknownSwitches});
 
     auto register_command = [&](const CommandDesc& c)
     {
