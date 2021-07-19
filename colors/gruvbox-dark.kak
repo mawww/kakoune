@@ -1,4 +1,4 @@
-# gruvbox theme
+# gruvbox-dark theme
 
 evaluate-commands %sh{
     gray="rgb:928374"
