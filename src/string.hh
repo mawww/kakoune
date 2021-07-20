@@ -156,45 +156,28 @@ public:
     // capacity must be pair, on little endian systems that means the allocated
     // capacity cannot use its most significant byte, so we effectively limit
     // capacity to 2^24 on 32bit arch, and 2^60 on 64.
-    union Data
+    struct Data
     {
         using Alloc = Allocator<char, MemoryDomain::String>;
 
-        struct Long
-        {
-            static constexpr size_t max_capacity =
-                (size_t)1 << 8 * (sizeof(size_t) - 1);
-
-            char* ptr;
-            size_t size;
-            size_t capacity;
-        } l;
-
-        struct Short
-        {
-            static constexpr size_t capacity = sizeof(Long) - 2;
-            char string[capacity+1];
-            unsigned char size;
-        } s;
-
         Data() { set_empty(); }
-        Data(NoCopy, const char* data, size_t size) : l{const_cast<char*>(data), size, 0} {}
+        Data(NoCopy, const char* data, size_t size) : u{Long{const_cast<char*>(data), size, 0}} {}
 
         Data(const char* data, size_t size, size_t capacity);
         Data(const char* data, size_t size) : Data(data, size, size) {}
         Data(const Data& other) : Data{other.data(), other.size()} {}
 
         ~Data() { release(); }
-        Data(Data&& other) noexcept;
+        Data(Data&& other) noexcept : u{other.u} { other.set_empty(); }
         Data& operator=(const Data& other);
         Data& operator=(Data&& other) noexcept;
 
-        bool is_long() const { return (s.size & 1) == 0; }
-        size_t size() const { return is_long() ? l.size : (s.size >> 1); }
-        size_t capacity() const { return is_long() ? l.capacity : Short::capacity; }
+        bool is_long() const { return (u.s.size & 1) == 0; }
+        size_t size() const { return is_long() ? u.l.size : (u.s.size >> 1); }
+        size_t capacity() const { return is_long() ? u.l.capacity : Short::capacity; }
 
-        const char* data() const { return is_long() ? l.ptr : s.string; }
-        char* data() { return is_long() ? l.ptr : s.string; }
+        const char* data() const { return is_long() ? u.l.ptr : u.s.string; }
+        char* data() { return is_long() ? u.l.ptr : u.s.string; }
 
         template<bool copy = true>
         void reserve(size_t new_capacity);
@@ -204,8 +187,36 @@ public:
         void clear();
 
     private:
-        void release();
-        void set_empty() { s.size = 1; s.string[0] = 0; }
+        struct Long
+        {
+            static constexpr size_t max_capacity =
+                (size_t)1 << 8 * (sizeof(size_t) - 1);
+
+            char* ptr;
+            size_t size;
+            size_t capacity;
+        };
+
+        struct Short
+        {
+            static constexpr size_t capacity = sizeof(Long) - 2;
+            char string[capacity+1];
+            unsigned char size;
+        };
+
+        union
+        {
+            Long l;
+            Short s;
+        } u;
+
+        void release()
+        {
+            if (is_long() and u.l.capacity != 0)
+                Alloc{}.deallocate(u.l.ptr, u.l.capacity+1);
+        }
+
+        void set_empty() { u.s.size = 1; u.s.string[0] = 0; }
         void set_short(const char* data, size_t size);
     };
 

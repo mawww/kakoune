@@ -87,12 +87,12 @@ class String:
 
     def to_string(self):
         data = self.val["m_data"]
-        if (data["s"]["size"] & 1) != 1:
-            ptr = data["l"]["ptr"]
-            len = data["l"]["size"]
+        if (data["u"]["s"]["size"] & 1) != 1:
+            ptr = data["u"]["l"]["ptr"]
+            len = data["u"]["l"]["size"]
         else:
-            ptr = data["s"]["string"]
-            len = data["s"]["size"] >> 1
+            ptr = data["u"]["s"]["string"]
+            len = data["u"]["s"]["size"] >> 1
         return "\"%s\"" % (ptr.string("utf-8", "ignore", len))
 
 
