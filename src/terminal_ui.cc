@@ -71,7 +71,7 @@ struct TerminalUI::Window::Line
         friend size_t hash_value(const Atom& atom) { return hash_values(atom.text, atom.skip, atom.face); }
     };
 
-    void append(String text, ColumnCount skip, Face face)
+    void append(StringView text, ColumnCount skip, Face face)
     {
         if (not atoms.empty() and atoms.back().face == face and (atoms.back().skip == 0 or text.empty()))
         {
@@ -79,7 +79,7 @@ struct TerminalUI::Window::Line
             atoms.back().skip += skip;
         }
         else
-            atoms.push_back({std::move(text), skip, face});
+            atoms.push_back({text.str(), skip, face});
     }
 
     void resize(ColumnCount width)
@@ -180,9 +180,9 @@ void TerminalUI::Window::draw(DisplayCoord pos,
 
         auto face = merge_faces(default_face, atom.face);
         if (content.back() == '\n')
-            lines[(int)pos.line].append(content.substr(0, content.length()-1).str(), 1, face);
+            lines[(int)pos.line].append(content.substr(0, content.length()-1), 1, face);
         else
-            lines[(int)pos.line].append(content.str(), 0, face);
+            lines[(int)pos.line].append(content, 0, face);
         pos.column += content.column_length();
     }
 
