@@ -156,6 +156,12 @@ struct UseMemoryDomain
         return ::operator new(size);
     }
 
+    static void* operator new[](size_t size)
+    {
+        on_alloc(Domain, size);
+        return ::operator new[](size);
+    }
+
     static void* operator new(size_t size, void* ptr)
     {
         return ::operator new(size, ptr);
@@ -165,6 +171,12 @@ struct UseMemoryDomain
     {
         on_dealloc(Domain, size);
         ::operator delete(ptr);
+    }
+
+    static void operator delete[](void* ptr, size_t size)
+    {
+        on_dealloc(Domain, size);
+        ::operator delete[](ptr);
     }
 };
 
