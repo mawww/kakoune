@@ -9,8 +9,6 @@
 namespace Kakoune
 {
 
-class MappedFile;
-
 class BufferManager : public Singleton<BufferManager>
 {
 public:
