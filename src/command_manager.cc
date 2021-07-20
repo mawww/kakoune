@@ -131,7 +131,8 @@ ParseResult parse_quoted(ParseState& state, Codepoint delimiter)
     return {str, false};
 }
 
-ParseResult parse_quoted_balanced(ParseState& state, char opening_delimiter, char closing_delimiter)
+template<char opening_delimiter, char closing_delimiter>
+ParseResult parse_quoted_balanced(ParseState& state)
 {
     int level = 1;
     const char* pos = state.pos;
@@ -255,8 +256,11 @@ Token parse_percent_token(ParseState& state, bool throw_on_unterminated)
 
     Token::Type type = token_type(type_name, throw_on_unterminated);
 
-    constexpr struct CharPair { char opening; char closing; } matching_pairs[] = {
-        { '(', ')' }, { '[', ']' }, { '{', '}' }, { '<', '>' }
+    constexpr struct CharPair { char opening; char closing; ParseResult (*parse_func)(ParseState&); } matching_pairs[] = {
+        { '(', ')', parse_quoted_balanced<'(', ')'> },
+        { '[', ']', parse_quoted_balanced<'[', ']'> },
+        { '{', '}', parse_quoted_balanced<'{', '}'> },
+        { '<', '>', parse_quoted_balanced<'<', '>'> }
     };
 
     auto start = state.pos;
@@ -265,14 +269,13 @@ Token parse_percent_token(ParseState& state, bool throw_on_unterminated)
     if (auto it = find_if(matching_pairs, [=](const CharPair& cp) { return opening_delimiter == cp.opening; });
         it != std::end(matching_pairs))
     {
-        const Codepoint closing_delimiter = it->closing;
-        auto quoted = parse_quoted_balanced(state, opening_delimiter, closing_delimiter);
+        auto quoted = it->parse_func(state);
         if (throw_on_unterminated and not quoted.terminated)
         {
             auto coord = compute_coord({state.str.begin(), start});
             throw parse_error{format("{}:{}: unterminated string '%{}{}...{}'",
                                      coord.line+1, coord.column+1, type_name,
-                                     opening_delimiter, closing_delimiter)};
+                                     it->opening, it->closing)};
         }
 
         return {type, byte_pos, std::move(quoted.content), quoted.terminated};
@@ -801,16 +804,16 @@ UnitTest test_command_parsing{[]
     check_quoted("'abc''def", false, "abc'def");
     check_quoted("'abc''def'''", true, "abc'def'");
 
-    auto check_balanced = [](StringView str, Codepoint opening, Codepoint closing, bool terminated, StringView content)
+    auto check_balanced = [](StringView str, bool terminated, StringView content)
     {
         ParseState state{str, str.begin()+1};
-        auto quoted = parse_quoted_balanced(state, opening, closing);
+        auto quoted = parse_quoted_balanced<'{', '}'>(state);
         kak_assert(quoted.terminated == terminated);
         kak_assert(quoted.content == content);
     };
-    check_balanced("{abc}", '{', '}', true, "abc");
-    check_balanced("{abc{def}}", '{', '}', true, "abc{def}");
-    check_balanced("{{abc}{def}", '{', '}', false, "{abc}{def}");
+    check_balanced("{abc}", true, "abc");
+    check_balanced("{abc{def}}", true, "abc{def}");
+    check_balanced("{{abc}{def}", false, "{abc}{def}");
 
     auto check_unquoted = [](StringView str, StringView content)
     {
