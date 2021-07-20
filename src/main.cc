@@ -45,6 +45,7 @@ struct {
     StringView notes;
 } constexpr version_notes[] = { {
         0,
+        "» {+u}write <filename>{} will refuse to overwrite without {+u}-force{}\n"
         "» {+u}$kak_command_fifo{} support\n"
         "» {+u}set-option -remove{} support\n"
         "» prompts auto select {+i}menu{} completions on space\n"

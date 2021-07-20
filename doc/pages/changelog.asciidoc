@@ -19,6 +19,9 @@ released versions.
 * `write -atomic` was replaced with `write -method [replace|overwrite]` to
   make both write methods available explicitly
 
+* `write <filename>` will fail if the given filename already exists and is
+  a regular file. Use the `-force` switch to override that behaviour.
+
 == Kakoune 2020.09.01
 
 * The `repl` and `send-text` aliases have been renamed respectively into
