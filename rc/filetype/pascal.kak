@@ -54,7 +54,7 @@ evaluate-commands %sh¶
 
         add-highlighter shared/pascal/routine/parameters  region -recurse \( \( \) regions
         add-highlighter shared/pascal/property/parameters region -recurse \[ \[ \] regions
-    EOF
+EOF
 
     # Used to highlight "var1, var2, var3, var4 : type" declarations
     x="(?:$id,\s*)?"
@@ -66,7 +66,7 @@ evaluate-commands %sh¶
                 "(?i)(?:(constref|const|var|out|univ)\s+)?$x$x$x$x$x$id(?:$type)?" \
                 1:attribute 2:variable 3:variable 4:variable 5:variable 6:variable 7:variable 8:attribute 9:keyword 10:module 11:type
             add-highlighter shared/pascal/$r/default default-region group
-        EOF
+EOF
     done
 
     cat <<EOF
@@ -77,7 +77,7 @@ evaluate-commands %sh¶
             "(?i)$type" 1:attribute 2:keyword 3:module 4:type
         add-highlighter shared/pascal/routine/default/ regex \
             "(?i)(of\s+object|is\s+nested)" 1:keyword
-    EOF
+EOF
 
     for r in property/default simple_property; do
         cat <<EOF
@@ -87,7 +87,7 @@ evaluate-commands %sh¶
             # https://www.freepascal.org/docs-html/ref/refsu33.html
             add-highlighter shared/pascal/$r/specifier regex \
                 "\b(?i)(index|read|write|implements|(no)?default|stored)\b" 0:attribute
-        EOF
+EOF
     done
 
     for r in pascal pascal/routine pascal/routine/parameters pascal/property; do
@@ -104,7 +104,7 @@ evaluate-commands %sh¶
             add-highlighter shared/$r/comment_old region -recurse \(\* \(\* \*\) fill comment
             add-highlighter shared/$r/comment_new region -recurse \{ \{  \} fill comment
             add-highlighter shared/$r/comment_oneline region // $ fill comment
-        EOF
+EOF
     done
 
 
@@ -171,7 +171,7 @@ evaluate-commands %sh¶
             (?i)(?<!\.)\b($(join "$modifiers"))\b(?!\()|message\s+(?!:) 0:attribute
         add-highlighter shared/pascal/code/index regex \
             '\b(?i)(index)\s+\w+\s*;' 1:attribute
-    EOF
+EOF
 
     for r in code routine/parameters/default routine/default property/default simple_property; do
         cat <<EOF
@@ -181,11 +181,11 @@ evaluate-commands %sh¶
 
             # numbers (https://www.freepascal.org/docs-html/ref/refse6.html)
             add-highlighter shared/pascal/$r/decimal regex \b\d+([eE][+-]?\d+)?\b 0:value
-            add-highlighter shared/pascal/$r/hex     regex \\$[\da-fA-F]+\b 0:value
+            add-highlighter shared/pascal/$r/hex     regex \\\$[\da-fA-F]+\b 0:value
             add-highlighter shared/pascal/$r/octal   regex &[0-7]+\b 0:value
             add-highlighter shared/pascal/$r/binary  regex \%[01]+\b 0:value
             add-highlighter shared/pascal/$r/char    regex '#\d+\b' 0:value
-        EOF
+EOF
     done
 ¶
 
