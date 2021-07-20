@@ -81,6 +81,7 @@ void write_buffer_to_backup_file(Buffer& buffer);
 
 String find_file(StringView filename, StringView buf_dir, ConstArrayView<String> paths);
 bool file_exists(StringView filename);
+bool regular_file_exists(StringView filename);
 
 Vector<String> list_files(StringView directory);
 

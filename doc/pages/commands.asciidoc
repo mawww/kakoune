@@ -58,12 +58,16 @@ of the file onto the filesystem
         Otherwise, does nothing.
 
 
-*write[!]* [-sync] [-method <writemethod>] [<filename>]::
+*write[!]* [-force] [-sync] [-method <writemethod>] [<filename>]::
     *alias* w +
     write buffer to <filename> or use its name if filename is not
     given. If the file is write-protected, its permissions are temporarily
     changed to allow saving the buffer and restored afterwards when
     the write! command is used.
+
+    *-force*:::
+        Equivalent to `!`, allow overwiting existing files if `<filename>`
+        is given and set permissions temporarily if necessary.
 
     *-sync*:::
         Synchronise the filesystem after the write

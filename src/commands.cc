@@ -460,6 +460,7 @@ const ParameterDesc write_params{
     {
         { "sync", { false, "force the synchronization of the file onto the filesystem" } },
         { "method", { true, "explicit writemethod (replace|overwrite)" } },
+        { "force", { false, "Allow overwriting existing file with explicit filename" } },
     },
     ParameterDesc::Flags::SwitchesOnlyAtStart, 0, 1
 };
@@ -488,7 +489,12 @@ void do_write_buffer(Context& context, Optional<String> filename, WriteFlags fla
         (not filename or real_path(*filename) == buffer.name()))
         throw runtime_error("cannot overwrite the buffer when in readonly mode");
 
-    auto effective_filename = not filename ? buffer.name() : parse_filename(*filename);
+    auto effective_filename = filename ? parse_filename(*filename) : buffer.name();
+    if (filename and not (flags & WriteFlags::Force) and
+        real_path(effective_filename) != buffer.name() and
+        regular_file_exists(effective_filename))
+        throw runtime_error("cannot overwrite existing file without -force");
+
     auto method = write_method.value_or_compute([&] { return context.options()["writemethod"].get<WriteMethod>(); });
 
     context.hooks().run_hook(Hook::BufWritePre, effective_filename, context);
@@ -502,7 +508,7 @@ void write_buffer(const ParametersParser& parser, Context& context, const ShellC
     return do_write_buffer(context,
                            parser.positional_count() > 0 ? parser[0] : Optional<String>{},
                            (parser.get_switch("sync") ? WriteFlags::Sync : WriteFlags::None) |
-                           (force ? WriteFlags::Force : WriteFlags::None),
+                           (parser.get_switch("force") or force ? WriteFlags::Force : WriteFlags::None),
                            parser.get_switch("method").map(parse_write_method));
 }
 

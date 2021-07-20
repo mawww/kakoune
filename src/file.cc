@@ -247,6 +247,13 @@ bool file_exists(StringView filename)
     return stat(filename.zstr(), &st) == 0;
 }
 
+bool regular_file_exists(StringView filename)
+{
+    struct stat st;
+    return stat(filename.zstr(), &st) == 0 and
+           (st.st_mode & S_IFMT) == S_IFREG;
+}
+
 void write(int fd, StringView data)
 {
     const char* ptr = data.data();

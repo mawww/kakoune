@@ -16,7 +16,7 @@ main() {
         try %{ source rc }
         hook global RuntimeError .+ %{
             echo -debug -- error: %val{hook_param}
-            eval -buffer *debug* write debug
+            eval -buffer *debug* write -force debug
             quit!
         }
         try %{ exec -with-maps -with-hooks "%sh{cat cmd}" }
@@ -151,14 +151,14 @@ show_diff() {
 
 finished_commands() {
   printf %s 'eval -client client0 %{
-               eval -buffer *debug* write debug
+               eval -buffer *debug* write -force debug
                nop %sh{
             '
   for env_var in $env_vars; do
     printf 'printf %%s\\\\n "$%s" >%s\n' "$env_var" "$env_var"
   done
   printf %s '  }
-               write out
+               write -force out
                quit!
              }
             '
