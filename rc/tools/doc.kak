@@ -206,7 +206,12 @@ define-command -params 1.. -docstring %{
     -shell-script-candidates %{
         case "${kak_token_to_complete}" in
             0) ;;
-            *) ls -1 -- "${kak_runtime}"/doc/*.asciidoc | awk '{gsub("^.+/|\\..+$", ""); print}';;
+            *) find -L \
+                "${kak_config}/autoload/" \
+                "${kak_runtime}/doc/" \
+                "${kak_runtime}/rc/" \
+                -type f -name "*.asciidoc" 2>/dev/null |
+                sed 's,.*/,,; s/\.[^.]*$//';;
         esac
     } doc-search %{
     set-option global doc_search_matches
@@ -216,19 +221,32 @@ define-command -params 1.. -docstring %{
 
         shift
         if [ $# -eq 0 ]; then
-            set -- $(ls -1 -- "${kak_runtime}"/doc/*.asciidoc | awk '{gsub("^.+/|\\..+$", ""); print}')
+            set -- $(find -L \
+                        "${kak_config}/autoload/" \
+                        "${kak_runtime}/doc/" \
+                        "${kak_runtime}/rc/" \
+                        -type f -name "*.asciidoc" 2>/dev/null)
         else
-            for topic; do
-                if [ ! -e "${kak_runtime}/doc/${topic}.asciidoc" ]; then
-                    printf 'fail No such topic %%{%s}' "${topic}"
-                    exit 1
-                fi
-            done
+            set -- $(
+                for topic; do
+                    path_doc=$(find -L \
+                                "${kak_config}/autoload/" \
+                                "${kak_runtime}/doc/" \
+                                "${kak_runtime}/rc/" \
+                                -type f -name "${topic}.asciidoc" 2>/dev/null)
+                    if [ -z "${path_doc}" ]; then
+                        printf 'fail No such topic %%{%s}' "${topic}"
+                        exit 1
+                    else
+                        printf %s\\n "${path_doc}"
+                    fi
+                done
+            )
         fi
 
-        for topic; do
+        for path_doc; do
             SEARCH_PATTERN_ESC=$(printf %s "${SEARCH_PATTERN}" | sed "s/'/&&/g")
-            printf "doc-search-impl '%s' '%s'\n" "${topic}" "${SEARCH_PATTERN_ESC}"
+            printf "doc-search-impl '%s' '%s'\n" "${path_doc}" "${SEARCH_PATTERN_ESC}"
         done
     }
 
@@ -238,7 +256,8 @@ define-command -params 1.. -docstring %{
         eval "set -- ${kak_quoted_opt_doc_search_matches}"
 
         while [ $# -gt 0 ]; do
-            candidates="${candidates} $(kakquote "{MenuInfo}${1}{default}{\\} ${3}") 'doc ${1}; select $2'"
+            topic=$(basename "${1}" .asciidoc)
+            candidates="${candidates} $(kakquote "{MenuInfo}${1}{default}{\\} ${3}") 'doc ${topic}; select $2'"
             shift 3
         done
 
@@ -255,7 +274,7 @@ define-command -hidden -params 2 doc-search-impl %{
     edit -scratch
 
     try %{
-        doc-render "%val{runtime}/doc/%arg{1}.asciidoc"
+        doc-render %arg{1}
 
         execute-keys gg / "%arg{2}" <ret> %opt{doc_max_search_results} N <a-n> )
 
