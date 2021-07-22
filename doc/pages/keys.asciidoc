@@ -374,10 +374,10 @@ The default command comes from the *|* register by default (See <<registers#,`:d
     ignore its output.
 
 *!*::
-    insert command output before each selection.
+    insert and select command output before each selection.
 
 *<a-!>*::
-    append command output after each selection.
+    append and select command output after each selection.
 
 == Searching
 

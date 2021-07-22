@@ -765,6 +765,7 @@ void insert_output(Context& context, NormalParams params)
             auto& selections = context.selections();
             auto& buffer = context.buffer();
             const size_t old_main = selections.main_index();
+            Vector<BufferRange> ins_range;
 
             selections.for_each([&](size_t index, Selection& sel) {
                 selections.set_main_index(index);
@@ -772,10 +773,16 @@ void insert_output(Context& context, NormalParams params)
                     cmdline, context, content(context.buffer(), sel),
                     ShellManager::Flags::WaitForStdout);
 
-                insert(buffer, sel, paste_pos(buffer, sel, mode, false), out);
+                auto range = insert(buffer, sel, paste_pos(buffer, sel, mode, false), out);
+                ins_range.push_back(range);
             });
 
-            selections.set_main_index(old_main);
+            selections.set(ins_range | transform([&buffer](auto& range) {
+                if (range.empty())
+                    return Selection{range.begin, range.end};
+                return Selection{range.begin,
+                                 buffer.char_prev(range.end)};
+            }) | gather<Vector>(), old_main);
         });
 }
 

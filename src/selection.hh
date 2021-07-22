@@ -75,7 +75,7 @@ void merge_overlapping_selections(Vector<Selection>& selections, size_t& main);
 void clamp_selections(Vector<Selection>& sel, const Buffer& buffer);
 
 void replace(Buffer& buffer, Selection& sel, StringView content);
-void insert(Buffer& buffer, Selection& sel, BufferCoord pos, StringView content);
+BufferRange insert(Buffer& buffer, Selection& sel, BufferCoord pos, StringView content);
 
 struct SelectionList
 {

@@ -399,11 +399,12 @@ void replace(Buffer& buffer, Selection& sel, StringView content)
     max = range.end > range.begin ? buffer.char_prev(range.end) : range.begin;
 }
 
-void insert(Buffer& buffer, Selection& sel, BufferCoord pos, StringView content)
+BufferRange insert(Buffer& buffer, Selection& sel, BufferCoord pos, StringView content)
 {
     auto range = buffer.insert(pos, content);
     sel.anchor() = buffer.clamp(update_insert(sel.anchor(), range.begin, range.end));
     sel.cursor() = buffer.clamp(update_insert(sel.cursor(), range.begin, range.end));
+    return range;
 }
 
 void SelectionList::replace(ConstArrayView<String> strings)
