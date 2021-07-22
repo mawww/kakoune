@@ -146,7 +146,7 @@ struct SelectionList
     void force_timestamp(size_t timestamp) { m_timestamp = timestamp; }
 
     void insert(ConstArrayView<String> strings, InsertMode mode,
-                Vector<BufferCoord>* out_insert_pos = nullptr);
+                Vector<BufferRange>* out_insert_range = nullptr);
     void erase();
 
 private:

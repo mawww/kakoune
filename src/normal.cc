@@ -648,6 +648,7 @@ void insert_output(Context& context, NormalParams params)
             ScopedEdition edition(context);
             auto& selections = context.selections();
             const size_t old_main = selections.main_index();
+            Vector<BufferRange> ins_range;
 
             auto ins = selections | transform([&, i=0](auto& sel) mutable {
                 selections.set_main_index(i++);
@@ -656,8 +657,13 @@ void insert_output(Context& context, NormalParams params)
                     ShellManager::Flags::WaitForStdout).first;
             }) | gather<Vector>();
 
-            selections.set_main_index(old_main);
-            selections.insert(ins, mode);
+            selections.insert(ins, mode, &ins_range);
+            selections.set(ins_range | transform([&context](auto& range) {
+                if (range.empty())
+                    return Selection{range.begin, range.end};
+                return Selection{range.begin,
+                                 context.buffer().char_prev(range.end)};
+            }) | gather<Vector>(), old_main);
         });
 }
 
@@ -737,7 +743,7 @@ void paste_all(Context& context, NormalParams params)
         offsets.push_back(all.length());
     }
 
-    Vector<BufferCoord> insert_pos;
+    Vector<BufferRange> insert_pos;
     auto& selections = context.selections();
     {
         ScopedEdition edition(context);
@@ -749,7 +755,7 @@ void paste_all(Context& context, NormalParams params)
     for (auto& ins_pos : insert_pos)
     {
         ByteCount pos_offset = 0;
-        BufferCoord pos = ins_pos;
+        BufferCoord pos = ins_pos.begin;
         for (auto offset : offsets)
         {
             BufferCoord end = buffer.advance(pos, offset - pos_offset - 1);

@@ -386,7 +386,7 @@ static void fix_overflowing_selections(Vector<Selection>& selections,
 }
 
 void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
-                           Vector<BufferCoord>* out_insert_pos)
+                           Vector<BufferRange>* out_insert_range)
 {
     if (strings.empty())
         return;
@@ -415,9 +415,10 @@ void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
         const auto pos = (mode == InsertMode::Replace) ?
             sel.min() : changes_tracker.get_new_coord(insert_pos[index]);
 
+        BufferRange range;
         if (mode == InsertMode::Replace)
         {
-            auto range = replace(*m_buffer, sel, str);
+            range = replace(*m_buffer, sel, str);
             // we want min and max from *before* we do any change
             auto& min = sel.min();
             auto& max = sel.max();
@@ -426,14 +427,14 @@ void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
         }
         else
         {
-            auto range = m_buffer->insert(pos, str);
+            range = m_buffer->insert(pos, str);
             sel.anchor() = m_buffer->clamp(update_insert(sel.anchor(), range.begin, range.end));
             sel.cursor() = m_buffer->clamp(update_insert(sel.cursor(), range.begin, range.end));
         }
 
         changes_tracker.update(*m_buffer, m_timestamp);
-        if (out_insert_pos)
-            out_insert_pos->push_back(pos);
+        if (out_insert_range)
+            out_insert_range->push_back(range);
     }
 
     // We might just have been deleting text if strings were empty,
