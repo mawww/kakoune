@@ -311,7 +311,11 @@ void expand_token(Token&& token, const Context& context, const ShellContext& she
             target.insert(target.end(), s.begin(), s.end());
     };
 
-    auto&& content = token.content;
+    const bool trim_token = token.type == Token::Type::RegisterExpand
+                            || token.type == Token::Type::OptionExpand
+                            || token.type == Token::Type::ValExpand
+                            || token.type == Token::Type::ArgExpand;
+    auto&& content = trim_token ? trim_whitespaces(token.content).str() : token.content;
     switch (token.type)
     {
     case Token::Type::ShellExpand:
@@ -684,8 +688,23 @@ Completions CommandManager::complete(const Context& context,
         return completions;
     };
 
-    const ByteCount start = token.pos;
+    auto whitespace_count = [](StringView str) {
+        size_t n;
+
+        for (n = 0; n < str.length(); n++)
+            if (not is_blank(str[n]))
+                break;
+
+        return n;
+    };
+    const bool trim_token = token.type == Token::Type::RegisterExpand
+                            || token.type == Token::Type::OptionExpand
+                            || token.type == Token::Type::ValExpand
+                            || token.type == Token::Type::ArgExpand;
+    const ByteCount nb_whitespace = whitespace_count(token.content);
+    const ByteCount start = token.pos + (trim_token ? nb_whitespace : 0);
     const ByteCount pos_in_token = cursor_pos - start;
+    auto&& content = trim_token ? token.content.substr(nb_whitespace) : token.content;
 
     // command name completion
     if (tokens.size() == 1 and (token.type == Token::Type::Raw or
@@ -700,21 +719,21 @@ Completions CommandManager::complete(const Context& context,
     case Token::Type::RegisterExpand:
         return {start , cursor_pos,
                 RegisterManager::instance().complete_register_name(
-                    token.content, pos_in_token) };
+                    content, pos_in_token) };
 
     case Token::Type::OptionExpand:
         return {start , cursor_pos,
                 GlobalScope::instance().option_registry().complete_option_name(
-                    token.content, pos_in_token) };
+                    content, pos_in_token) };
 
     case Token::Type::ShellExpand:
-        return offset_pos(shell_complete(context, flags, token.content,
+        return offset_pos(shell_complete(context, flags, content,
                                          pos_in_token), start);
 
     case Token::Type::ValExpand:
         return {start , cursor_pos,
                 ShellManager::instance().complete_env_var(
-                    token.content, pos_in_token) };
+                    content, pos_in_token) };
 
     case Token::Type::FileExpand:
     {
@@ -739,9 +758,9 @@ Completions CommandManager::complete(const Context& context,
 
         auto& command = command_it->value;
 
-        if (token.content.substr(0_byte, 1_byte) == "-")
+        if (content.substr(0_byte, 1_byte) == "-")
         {
-            auto switches = Kakoune::complete(token.content.substr(1_byte), pos_in_token,
+            auto switches = Kakoune::complete(content.substr(1_byte), pos_in_token,
                                               command.param_desc.switches |
                                               transform(&SwitchMap::Item::key));
             if (not switches.empty())
