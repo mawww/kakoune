@@ -30,19 +30,27 @@ evaluate-commands %sh{
     values="TRUE|FALSE|NULL|Inf|NaN|NA|NA_integer_|NA_real_|NA_complex_|NA_character_|\.{3}|\.{2}\d+|"
     keywords="if|else|repeat|while|function|for|in|next|break"
 
+    # see base::Ops and methods::Ops
+    math_functions="abs|sign|sqrt|floor|ceiling|trunc|round|signif|exp|log|expm1|log1p|cos|sin|tan|cospi|sinpi|tanpi|acos|asin|atan|cosh|sinh|tanh|acosh|asinh|atanh|lgamma|gamma|digamma|trigamma"
+    summary_functions="all|any|sum|prod|min|max|range"
+    complex_functions="Arg|Conj|Im|Mod|Re"
+
     # Add the language's grammar to the static completion list
     printf %s\\n "hook global WinSetOption filetype=python %{
-        set-option window static_words ${values} ${keywords}
+        set-option window static_words ${values} ${keywords} ${math_functions} ${summary_functions} ${complex_functions}
     }" | tr '|' ' '
 
     printf %s "
         add-highlighter shared/r/code/ regex '\b(${values})\b' 0:value
         add-highlighter shared/r/code/ regex '\b(${keywords})\b' 0:keyword
+        add-highlighter shared/r/code/ regex '\b(${math_functions})\b' 0:function
+        add-highlighter shared/r/code/ regex '\b(${summary_functions})\b' 0:function
+        add-highlighter shared/r/code/ regex '\b(${complex_functions})\b' 0:function
     "
 }
 
 # see base::Syntax
-add-highlighter shared/r/code/ regex (?<=[\w\s\d'"_)])(\$|@|\^|-|\+|%[^%]+%|\*|/|<(?![<-])|(?<![->])>|<=|>=|==|!=|!|&{1,2}|\|{1,2}|~|\?) 0:operator
+add-highlighter shared/r/code/ regex (?<=[\w\s\d'"_)])(\$|@|\^|-|\+|%[^%^\n]+%|\*|/|<|>|<=|>=|!|&{1,2}|\|{1,2}|~|\?|:{1,3}|\[{1,2}|\]{1,2}|={1,2}|<{1,2}-|->{1,2}|!=|%%) 0:operator
 
 
 # Commands
