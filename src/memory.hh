@@ -150,29 +150,35 @@ template<MemoryDomain d>
 struct UseMemoryDomain
 {
     static constexpr MemoryDomain Domain = d;
+
+    [[gnu::always_inline]]
     static void* operator new(size_t size)
     {
         on_alloc(Domain, size);
         return ::operator new(size);
     }
 
+    [[gnu::always_inline]]
     static void* operator new[](size_t size)
     {
         on_alloc(Domain, size);
         return ::operator new[](size);
     }
 
+    [[gnu::always_inline]]
     static void* operator new(size_t size, void* ptr)
     {
         return ::operator new(size, ptr);
     }
 
+    [[gnu::always_inline]]
     static void operator delete(void* ptr, size_t size)
     {
         on_dealloc(Domain, size);
         ::operator delete(ptr);
     }
 
+    [[gnu::always_inline]]
     static void operator delete[](void* ptr, size_t size)
     {
         on_dealloc(Domain, size);
