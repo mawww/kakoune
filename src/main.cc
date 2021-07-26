@@ -769,6 +769,7 @@ int run_server(StringView session, StringView server_init,
 
     write_to_debug_buffer("*** This is the debug buffer, where debug info will be written ***");
 
+#ifdef KAK_DEBUG
     const auto start_time = Clock::now();
     UnitTest::run_all_tests();
 
@@ -778,6 +779,7 @@ int run_server(StringView session, StringView server_init,
         write_to_debug_buffer(format("running the unit tests took {} ms",
                                      duration_cast<milliseconds>(Clock::now() - start_time).count()));
     }
+#endif
 
     GlobalScope::instance().options().get_local_option("readonly").set<bool>(flags & ServerFlags::ReadOnly);
 
