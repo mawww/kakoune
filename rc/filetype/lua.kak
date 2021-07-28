@@ -53,6 +53,7 @@ add-highlighter shared/lua/code/value regex \b(false|nil|true|[0-9]+(:?\.[0-9])?
 add-highlighter shared/lua/code/operator regex (\+|-|\*|/|%|\^|==?|~=|<=?|>=?|\.\.|\.\.\.|#) 0:operator
 add-highlighter shared/lua/code/builtin regex \b(_G|_ENV)\b 0:builtin
 add-highlighter shared/lua/code/module regex \b(_G|_ENV)\b 0:module
+add-highlighter shared/lua/code/attribute regex \B(<[a-zA-Z_]\w*>)\B 0:attribute
 
 # Commands
 # ‾‾‾‾‾‾‾‾
