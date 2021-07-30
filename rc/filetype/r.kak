@@ -43,9 +43,7 @@ evaluate-commands %sh{
     printf %s "
         add-highlighter shared/r/code/ regex '\b(${values})\b' 0:value
         add-highlighter shared/r/code/ regex '\b(${keywords})\b' 0:keyword
-        add-highlighter shared/r/code/ regex '\b(${math_functions})\b' 0:function
-        add-highlighter shared/r/code/ regex '\b(${summary_functions})\b' 0:function
-        add-highlighter shared/r/code/ regex '\b(${complex_functions})\b' 0:function
+        add-highlighter shared/r/code/ regex '\b(${math_functions}|${summary_functions}|${complex_functions})\b' 0:function
     "
 }
 
