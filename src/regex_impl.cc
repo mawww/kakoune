@@ -1241,17 +1241,14 @@ namespace
 template<RegexMode mode = RegexMode::Forward>
 struct TestVM : CompiledRegex, ThreadedRegexVM<const char*, mode>
 {
-    using VMType = ThreadedRegexVM<const char*, mode>;
-
-    TestVM(StringView re, bool dump = false)
-        : CompiledRegex{compile_regex(re, mode & RegexMode::Forward ?
-                                          RegexCompileFlags::None : RegexCompileFlags::Backward)},
-          VMType{(const CompiledRegex&)*this}
-    { if (dump) puts(dump_regex(*this).c_str()); }
+    TestVM(StringView re)
+      : CompiledRegex{compile_regex(re, mode & RegexMode::Forward ? RegexCompileFlags::None : RegexCompileFlags::Backward)},
+        TestVM::ThreadedRegexVM{static_cast<const CompiledRegex&>(*this)}
+    {}
 
     bool exec(StringView re, RegexExecFlags flags = RegexExecFlags::None)
     {
-        return VMType::exec(re.begin(), re.end(), re.begin(), re.end(), flags);
+        return TestVM::ThreadedRegexVM::exec(re.begin(), re.end(), re.begin(), re.end(), flags);
     }
 };
 }
