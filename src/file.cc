@@ -279,43 +279,6 @@ void write_to_file(StringView filename, StringView data)
     write(fd, data);
 }
 
-struct BufferedWriter
-{
-    BufferedWriter(int fd)
-      : m_fd{fd}, m_exception_count{std::uncaught_exceptions()} {}
-
-    ~BufferedWriter() noexcept(false)
-    {
-        if (m_pos != 0 and m_exception_count == std::uncaught_exceptions())
-            Kakoune::write(m_fd, {m_buffer, m_pos});
-    }
-
-    void write(StringView data)
-    {
-        while (not data.empty())
-        {
-            const ByteCount length = data.length();
-            const ByteCount write_len = std::min(length, size - m_pos);
-            memcpy(m_buffer + (int)m_pos, data.data(), (int)write_len);
-            m_pos += write_len;
-            if (m_pos == size)
-            {
-                Kakoune::write(m_fd, {m_buffer, size});
-                m_pos = 0;
-            }
-            data = data.substr(write_len);
-        }
-    }
-
-private:
-    static constexpr ByteCount size = 4096;
-    int m_fd;
-    int m_exception_count;
-    ByteCount m_pos = 0;
-    char m_buffer[(int)size];
-};
-
-
 void write_buffer_to_fd(Buffer& buffer, int fd)
 {
     auto eolformat = buffer.options()["eolformat"].get<EolFormat>();
