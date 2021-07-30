@@ -359,6 +359,11 @@ StringView format_to(ArrayView<char> buffer, StringView fmt, ArrayView<const Str
     return { buffer.begin(), ptr };
 }
 
+void format_with(FunctionRef<void (StringView)> append, StringView fmt, ArrayView<const StringView> params)
+{
+    format_impl(fmt, params, append);
+}
+
 String format(StringView fmt, ArrayView<const StringView> params)
 {
     ByteCount size = fmt.length();

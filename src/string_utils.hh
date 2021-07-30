@@ -6,6 +6,7 @@
 #include "vector.hh"
 #include "ranges.hh"
 #include "optional.hh"
+#include "utils.hh"
 
 namespace Kakoune
 {
@@ -159,6 +160,14 @@ template<typename... Types>
 StringView format_to(ArrayView<char> buffer, StringView fmt, Types&&... params)
 {
     return format_to(buffer, fmt, ArrayView<const StringView>{detail::format_param(std::forward<Types>(params))...});
+}
+
+void format_with(FunctionRef<void (StringView)> append, StringView fmt, ArrayView<const StringView> params);
+
+template<typename... Types>
+void format_with(FunctionRef<void (StringView)> append, StringView fmt, Types&&... params)
+{
+    return format_with(append, fmt, ArrayView<const StringView>{detail::format_param(std::forward<Types>(params))...});
 }
 
 String double_up(StringView s, StringView characters);
