@@ -131,7 +131,7 @@ struct BufferedWriter
     ~BufferedWriter() noexcept(false)
     {
         if (m_pos != 0 and m_exception_count == std::uncaught_exceptions())
-            Kakoune::write(m_fd, {m_buffer, m_pos});
+            flush();
     }
 
     void write(StringView data)
@@ -143,12 +143,15 @@ struct BufferedWriter
             memcpy(m_buffer + (int)m_pos, data.data(), (int)write_len);
             m_pos += write_len;
             if (m_pos == size)
-            {
-                Kakoune::write(m_fd, {m_buffer, size});
-                m_pos = 0;
-            }
+                flush();
             data = data.substr(write_len);
         }
+    }
+
+    void flush()
+    {
+        Kakoune::write(m_fd, {m_buffer, m_pos});
+        m_pos = 0;
     }
 
 private:

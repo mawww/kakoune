@@ -17,6 +17,7 @@ namespace Kakoune
 {
 
 struct DisplayAtom;
+struct Writer;
 
 class TerminalUI : public UserInterface, public Singleton<TerminalUI>
 {
@@ -88,8 +89,8 @@ private:
 
     struct Screen : Window
     {
-        void output(bool force, bool synchronized);
-        void set_face(const Face& face);
+        void output(bool force, bool synchronized, Writer& writer);
+        void set_face(const Face& face, Writer& writer);
 
         Vector<size_t> hashes;
         Face m_active_face;

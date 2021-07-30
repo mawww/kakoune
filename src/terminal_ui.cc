@@ -13,7 +13,6 @@
 
 #include <fcntl.h>
 #include <csignal>
-#include <stdio.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <strings.h>
@@ -190,32 +189,44 @@ void TerminalUI::Window::draw(DisplayCoord pos,
         lines[(int)pos.line].append({}, size.column - pos.column, default_face);
 }
 
-void TerminalUI::Screen::set_face(const Face& face)
+struct Writer : BufferedWriter<>
+{
+    using Writer::BufferedWriter::BufferedWriter;
+    ~Writer() noexcept(false) = default;
+};
+
+template<typename... Args>
+static void format_with(Writer& writer, StringView format, Args&&... args)
+{
+    format_with([&](StringView s) { writer.write(s); }, format, std::forward<Args>(args)...);
+}
+
+void TerminalUI::Screen::set_face(const Face& face, Writer& writer)
 {
     static constexpr int fg_table[]{ 39, 30, 31, 32, 33, 34, 35, 36, 37, 90, 91, 92, 93, 94, 95, 96, 97 };
     static constexpr int bg_table[]{ 49, 40, 41, 42, 43, 44, 45, 46, 47, 100, 101, 102, 103, 104, 105, 106, 107 };
     static constexpr int attr_table[]{ 0, 4, 7, 5, 1, 2, 3, 9 };
 
-    auto set_color = [](bool fg, const Color& color, bool join) {
+    auto set_color = [&](bool fg, const Color& color, bool join) {
         if (join)
-            fputs(";", stdout);
+            writer.write(";");
         if (color.isRGB())
-            printf("%d;2;%d;%d;%d", fg ? 38 : 48, color.r, color.g, color.b);
+            format_with(writer, "{};2;{};{};{}", fg ? 38 : 48, color.r, color.g, color.b);
         else
-            printf("%d", (fg ? fg_table : bg_table)[(int)(char)color.color]);
+            format_with(writer, "{}", (fg ? fg_table : bg_table)[(int)(char)color.color]);
     };
 
     if (m_active_face == face)
         return;
 
-    fputs("\033[", stdout);
+    writer.write("\033[");
     bool join = false;
     if (face.attributes != m_active_face.attributes)
     {
         for (int i = 0; i < std::size(attr_table); ++i)
         {
             if (face.attributes & (Attribute)(1 << i))
-                printf(";%d", attr_table[i]);
+                format_with(writer, ";{}", attr_table[i]);
         }
         m_active_face = Face{{}, {}, face.attributes};
         join = true;
@@ -227,24 +238,24 @@ void TerminalUI::Screen::set_face(const Face& face)
     }
     if (m_active_face.bg != face.bg)
         set_color(false, face.bg, join);
-    fputs("m", stdout);
+    writer.write("m");
 
     m_active_face = face;
 }
 
-void TerminalUI::Screen::output(bool force, bool synchronized)
+void TerminalUI::Screen::output(bool force, bool synchronized, Writer& writer)
 {
     if (lines.empty())
         return;
 
     // iTerm2 "begin synchronized update" sequence
     if (synchronized)
-        printf("\033P=1s\033\\");
+        writer.write("\033P=1s\033\\");
 
     if (force)
     {
         hashes.clear();
-        printf("\033[m");
+        writer.write("\033[m");
         m_active_face = Face{};
     }
 
@@ -275,7 +286,7 @@ void TerminalUI::Screen::output(bool force, bool synchronized)
         line += change.keep;
         if (int del = change.del - change.add; del > 0)
         {
-            printf("\033[%dH\033[%dM", line + 1, del);
+            format_with(writer, "\033[{}H\033[{}M", line + 1, del);
             line -= del;
         }
         line += change.del;
@@ -288,9 +299,9 @@ void TerminalUI::Screen::output(bool force, bool synchronized)
         for (int i = 0; i < change.add; ++i)
         {
             if (int add = change.add - change.del; i == 0 and add > 0)
-                printf("\033[%dH\033[%dL", line + 1, add);
+                format_with(writer, "\033[{}H\033[{}L", line + 1, add);
             else
-                printf("\033[%dH", line + 1);
+                format_with(writer, "\033[{}H", line + 1);
 
             ColumnCount pending_move = 0;
             for (auto& [text, skip, face] : lines[line++].atoms)
@@ -300,25 +311,25 @@ void TerminalUI::Screen::output(bool force, bool synchronized)
 
                 if (pending_move != 0)
                 {
-                    printf("\033[%dC", (int)pending_move);
+                    format_with(writer, "\033[{}C", (int)pending_move);
                     pending_move = 0;
                 }
-                set_face(face);
-                fputs(text.c_str(), stdout);
+                set_face(face, writer);
+                writer.write(text.c_str());
                 if (skip > 3 and face.attributes == Attribute{})
                 {
-                    fputs("\033[K", stdout);
+                    writer.write("\033[K");
                     pending_move = skip;
                 }
                 else if (skip > 0)
-                    fputs(String{' ', skip}.c_str(), stdout);
+                    writer.write(String{' ', skip}.c_str());
             }
         }
     }
 
     // iTerm2 "end synchronized update" sequence
     if (synchronized)
-        printf("\033P=2s\033\\");
+        writer.write("\033P=2s\033\\");
 }
 
 constexpr int TerminalUI::default_shift_function_key;
@@ -463,10 +474,11 @@ void TerminalUI::redraw(bool force)
 
     m_info.blit(m_screen);
 
-    m_screen.output(force, m_synchronized);
+    Writer writer{STDOUT_FILENO};
+    m_screen.output(force, m_synchronized, writer);
 
-    auto set_cursor_pos = [](DisplayCoord c) {
-        printf("\033[%d;%dH", (int)c.line + 1, (int)c.column + 1);
+    auto set_cursor_pos = [&](DisplayCoord c) {
+        format_with(writer, "\033[{};{}H", (int)c.line + 1, (int)c.column + 1);
     };
     if (m_cursor.mode == CursorMode::Prompt)
         set_cursor_pos({m_status_on_top ? 0 : m_dimensions.line, m_cursor.coord.column});
@@ -540,22 +552,17 @@ void TerminalUI::draw_status(const DisplayLine& status_line,
 
     if (m_set_title)
     {
+        Writer writer{STDOUT_FILENO};
         constexpr char suffix[] = " - Kakoune\007";
-        char buf[4 + 511 + 2] = "\033]2;";
+        writer.write("\033]2;");
         // Fill title escape sequence buffer, removing non ascii characters
-        auto buf_it = &buf[4], buf_end = &buf[4 + 511 - (sizeof(suffix) - 2)];
         for (auto& atom : mode_line)
         {
             const auto str = atom.content();
-            for (auto it = str.begin(), end = str.end();
-                 it != end and buf_it != buf_end; utf8::to_next(it, end))
-                *buf_it++ = (*it >= 0x20 and *it <= 0x7e) ? *it : '?';
+            for (auto it = str.begin(), end = str.end(); it != end; utf8::to_next(it, end))
+                writer.write((*it >= 0x20 and *it <= 0x7e) ? *it : '?');
         }
-        for (auto c : suffix)
-            *buf_it++ = c;
-
-        fputs(buf, stdout);
-        fflush(stdout);
+        writer.write(suffix);
     }
 
     m_dirty = true;
@@ -1333,33 +1340,27 @@ void TerminalUI::set_resize_pending()
 
 void TerminalUI::setup_terminal()
 {
-    // enable alternative screen buffer
-    fputs("\033[?1049h", stdout);
-    // enable focus notify
-    fputs("\033[?1004h", stdout);
-    // request CSI u style key reporting
-    fputs("\033[>4;1m", stdout);
-    // save the current window title
-    fputs("\033[22t", stdout);
-    // hide cursor
-    fputs("\033[?25l", stdout);
-    // set application keypad mode, so the keypad keys send unique codes
-    fputs("\033=", stdout);
-    fflush(stdout);
+    write(STDOUT_FILENO,
+        "\033[?1049h" // enable alternative screen buffer
+        "\033[?1004h" // enable focus notify
+        "\033[>4;1m"  // request CSI u style key reporting
+        "\033[22t"    // save the current window title
+        "\033[?25l"   // hide cursor
+        "\033="       // set application keypad mode, so the keypad keys send unique codes
+    );
 }
 
 void TerminalUI::restore_terminal()
 {
-    fputs("\033>", stdout);
-    fputs("\033[?25h", stdout);
-    fputs("\033[23t", stdout);
-    fputs("\033[>4;0m", stdout);
-    fputs("\033[?1004l", stdout);
-    fputs("\033[?1049l", stdout);
-
-    // set the terminal output back to default colours and style 
-    fputs("\033[m", stdout);
-    fflush(stdout);
+    write(STDOUT_FILENO,
+        "\033>"
+        "\033[?25h"
+        "\033[23t"
+        "\033[>4;0m"
+        "\033[?1004l"
+        "\033[?1049l"
+        "\033[m" // set the terminal output back to default colours and style
+    );
 }
 
 void TerminalUI::enable_mouse(bool enabled)
@@ -1370,20 +1371,20 @@ void TerminalUI::enable_mouse(bool enabled)
     m_mouse_enabled = enabled;
     if (enabled)
     {
-        // force SGR mode
-        fputs("\033[?1006h", stdout);
-        // enable mouse
-        fputs("\033[?1000h", stdout);
-        // force enable report mouse position
-        fputs("\033[?1002h", stdout);
+        write(STDOUT_FILENO,
+            "\033[?1006h" // force SGR mode
+            "\033[?1000h" // enable mouse
+            "\033[?1002h" // force enable report mouse position
+        );
     }
     else
     {
-        fputs("\033[?1002l", stdout);
-        fputs("\033[?1000l", stdout);
-        fputs("\033[?1006l", stdout);
+        write(STDOUT_FILENO,
+            "\033[?1002l"
+            "\033[?1000l"
+            "\033[?1006l"
+        );
     }
-    fflush(stdout);
 }
 
 void TerminalUI::set_ui_options(const Options& options)
