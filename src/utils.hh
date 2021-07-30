@@ -173,7 +173,7 @@ public:
         }}
     {}
 
-    template<typename Target>
+    template<typename Target, typename = std::enable_if_t<!std::is_same_v<FunctionRef, std::decay_t<Target>>>>
     FunctionRef(Target&& target)
       : m_target{&target},
         m_invoker{[](void* target, Args... args) {
