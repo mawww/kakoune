@@ -125,14 +125,14 @@ not handled well. If you express your object wrongly with a delete verb,
 the wrong text will get deleted, you will need to undo, and try again.
 
 Kakoune's grammar is *object* followed by *verb*, combined with instantaneous
-feedback, that means you always see the current object (In Kakoune we call
+feedback. That means you always see the current object (in Kakoune we call
 that the selection) before you apply your change, which allows you to correct
 errors on the go.
 
 Kakoune tries hard to fix one of the big problems with the vi model: its
 lack of interactivity. Because of the *verb* followed by *object* grammar,
 vi changes are made in the dark, we don't see their effect until the whole
-editing *sentence* is finished. `5dw` will delete to next five words, if
+editing *sentence* is finished. `5dw` will delete to next five words; if
 you then realize that was one word too many, you need to undo, go back to
 your initial position, and try again with `4dw`. In Kakoune, you would do
 `5W`, see immediately that one more word than expected was selected, type
@@ -140,7 +140,7 @@ your initial position, and try again with `4dw`. In Kakoune, you would do
 step you get visual feedback, and have the opportunity to correct it.
 
 At the lower level, the problem is that vi treats moving around and selecting
-an object as two different things. Kakoune unifies that, moving *is* selecting.
+an object as two different things. Kakoune unifies that: moving *is* selecting.
 `w` does not just go to the next word, it selects from current position to
 the next word. By convention, capital commands tend to expand the selection,
 so `W` would expand the current selection to the next word.
@@ -203,7 +203,7 @@ video::video/regroup.webm[align="center", options="autoplay,loop"]
 Interactive, predictable and fast
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A design goal of Kakoune is to beat vim at its own game, while providing a
+A design goal of Kakoune is to beat Vim at its own game, while providing a
 cleaner editing model. The combination of multiple selections and cleaned up
 grammar shows that it's possible to have text edition that is interactive,
 predictable, and fast at the same time.
@@ -232,7 +232,7 @@ using much more idiomatic commands.
 Discoverability
 ~~~~~~~~~~~~~~~
 
-Keyboard oriented programs tend to be at a disadvantage compared to GUI
+Keyboard-oriented programs tend to be at a disadvantage compared to GUI
 applications because they are less discoverable; there is no menu bar on
 which to click to see the available options, no tooltip appearing when you
 hover above a button explaining what it does.
@@ -253,9 +253,9 @@ command does, what optional switches it can take, what they do...
 .Command discoverability
 video::video/discoverability.webm[align="center", options="autoplay,loop"]
 
-That information box gets displayed in other cases, for example if the `g`
-key is hit, which then waits for another key (`g` is the *goto* commands
-prefix), an information box will display all the recognized keys, informing
+That information box gets displayed in other cases. For example, if the `g`
+key is hit, which then waits for another key (`g` is the prefix for *goto*
+commands), an information box will display all the recognized keys, informing
 the user that Kakoune is waiting on a keystroke, and listing the available
 options.
 
@@ -266,13 +266,13 @@ explaining what the key pressed just did.
 Extensive completion support
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Keyboard oriented programs are much easier to work with when they provide
-extensive completion support. For a long time, completion has been prefix
-based, and that has been working very well.
+Keyboard-oriented programs are much easier to work with when they provide
+extensive completion support. For a long time, completion has been prefix-based,
+and that has been working very well.
 
 More recently, we started to see more and more programs using the so called
-fuzzy completion. Fuzzy completion tends to be subsequence based, instead
-of prefix based, which means the typed query needs to be a subsequence of
+fuzzy completion. Fuzzy completion tends to be subsequence-based, instead
+of prefix-based, which means the typed query needs to be a subsequence of
 a candidate to be considered matching, instead of a prefix. That will generate
 more candidates (all prefix matches are also subsequence matches), so it
 needs a good ranking algorithm to sort the matches and put the best ones first.
@@ -288,7 +288,7 @@ buffer, it can complete words from the buffer, or from all buffers, lines,
 filenames, or get completion candidates from an external source, making it
 possible to implement intelligent code completion.
 
-.Language specific completion support
+.Language-specific completion support
 video::video/cpp-completion.webm[align="center", options="autoplay,loop"]
 
 Prompt completion is displayed whenever we enter command mode, and provides
@@ -340,7 +340,7 @@ multiple clients can connect to that session to display different buffers.
 .Asynchronous make and multiple clients in tmux
 video::video/async.webm[align="center", options="autoplay,loop"]
 
-Final Thoughts
+Final thoughts
 --------------
 
 Kakoune provides an efficient code editing environment, both very predictable,
