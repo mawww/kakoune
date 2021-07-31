@@ -81,10 +81,10 @@ private:
         void blit(Window& target);
         void draw(DisplayCoord pos, ConstArrayView<DisplayAtom> atoms, const Face& default_face);
 
-        explicit operator bool() const { return not lines.empty(); }
+        explicit operator bool() const { return (bool)lines; }
 
         struct Line;
-        Vector<Line> lines;
+        std::unique_ptr<Line[]> lines;
     };
 
     struct Screen : Window
@@ -92,7 +92,7 @@ private:
         void output(bool force, bool synchronized, Writer& writer);
         void set_face(const Face& face, Writer& writer);
 
-        Vector<size_t> hashes;
+        std::unique_ptr<size_t[]> hashes;
         Face m_active_face;
     };
 

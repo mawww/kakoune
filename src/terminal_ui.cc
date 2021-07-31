@@ -23,22 +23,6 @@ namespace Kakoune
 using std::min;
 using std::max;
 
-void TerminalUI::Window::create(const DisplayCoord& p, const DisplayCoord& s)
-{
-    kak_assert(p.line >= 0 and p.column >= 0);
-    kak_assert(s.line >= 0 and s.column >= 0);
-    pos = p;
-    size = s;
-    lines.resize((int)size.line);
-}
-
-void TerminalUI::Window::destroy()
-{
-    pos = DisplayCoord{};
-    size = DisplayCoord{};
-    lines.clear();
-}
-
 struct TerminalUI::Window::Line
 {
     struct Atom
@@ -148,17 +132,33 @@ struct TerminalUI::Window::Line
     Vector<Atom> atoms;
 };
 
+void TerminalUI::Window::create(const DisplayCoord& p, const DisplayCoord& s)
+{
+    kak_assert(p.line >= 0 and p.column >= 0);
+    kak_assert(s.line >= 0 and s.column >= 0);
+    pos = p;
+    size = s;
+    lines.reset(new Line[(int)size.line]);
+}
+
+void TerminalUI::Window::destroy()
+{
+    pos = DisplayCoord{};
+    size = DisplayCoord{};
+    lines.reset();
+}
+
 void TerminalUI::Window::blit(Window& target)
 {
-    kak_assert(pos.line < target.lines.size());
-    auto target_line = target.lines.begin() + (size_t)pos.line;
-    for (auto& line : lines)
+    kak_assert(pos.line < target.size.line);
+    LineCount line_index = pos.line;
+    for (auto& line : ArrayView{lines.get(), (size_t)size.line})
     {
         line.resize(size.column);
-        target_line->resize(target.size.column);
-        target_line->atoms.insert(target_line->erase_range(pos.column, size.column),
-                                  line.atoms.begin(), line.atoms.end());
-        if (++target_line == target.lines.end())
+        auto& target_line = target.lines[(size_t)line_index];
+        target_line.resize(target.size.column);
+        target_line.atoms.insert(target_line.erase_range(pos.column, size.column), line.atoms.begin(), line.atoms.end());
+        if (++line_index == target.size.line)
             break;
     }
 }
@@ -167,7 +167,7 @@ void TerminalUI::Window::draw(DisplayCoord pos,
                               ConstArrayView<DisplayAtom> atoms,
                               const Face& default_face)
 {
-    if (pos.line >= lines.size()) // We might receive an out of date draw command after a resize
+    if (pos.line >= size.line) // We might receive an out of date draw command after a resize
         return;
 
     lines[(size_t)pos.line].resize(pos.column);
@@ -245,7 +245,7 @@ void TerminalUI::Screen::set_face(const Face& face, Writer& writer)
 
 void TerminalUI::Screen::output(bool force, bool synchronized, Writer& writer)
 {
-    if (lines.empty())
+    if (not lines)
         return;
 
     // iTerm2 "begin synchronized update" sequence
@@ -254,16 +254,20 @@ void TerminalUI::Screen::output(bool force, bool synchronized, Writer& writer)
 
     if (force)
     {
-        hashes.clear();
+        std::fill_n(hashes.get(), (size_t)size.line, 0);
         writer.write("\033[m");
         m_active_face = Face{};
     }
 
+    auto hash_line = [](const Line& line) {
+        return (hash_value(line.atoms) << 1) | 1; // ensure non-zero
+    };
+
     struct Change { int keep; int add; int del; };
     Vector<Change> changes{Change{}};
-    auto new_hashes = lines | transform([](auto& line) { return hash_value(line.atoms); }) | gather<Vector>();
-    for_each_diff(hashes.begin(), hashes.size(),
-                  new_hashes.begin(), new_hashes.size(),
+    auto new_hashes = ArrayView{lines.get(), (size_t)size.line} | transform(hash_line);
+    for_each_diff(hashes.get(), (int)size.line,
+                  new_hashes.begin(), (int)size.line,
                   [&changes](DiffOp op, int len) mutable {
         switch (op)
         {
@@ -278,7 +282,7 @@ void TerminalUI::Screen::output(bool force, bool synchronized, Writer& writer)
                 break;
         }
     });
-    hashes = std::move(new_hashes);
+    std::copy(new_hashes.begin(), new_hashes.end(), hashes.get());
 
     int line = 0;
     for (auto& change : changes)
@@ -590,7 +594,7 @@ void TerminalUI::check_resize(bool force)
 
     m_window.create({0, 0}, terminal_size);
     m_screen.create({0, 0}, terminal_size);
-    m_screen.hashes.clear();
+    m_screen.hashes.reset(new size_t[(int)terminal_size.line]{});
     kak_assert(m_window);
 
     m_dimensions = terminal_size - 1_line;
