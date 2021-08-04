@@ -580,9 +580,9 @@ void TerminalUI::check_resize(bool force)
         return;
     auto close_fd = on_scope_end([fd]{ ::close(fd); });
 
-    winsize ws;
-    if (::ioctl(fd, TIOCGWINSZ, &ws) != 0)
-        return;
+    DisplayCoord terminal_size{24_line, 80_col};
+    if (winsize ws; ioctl(fd, TIOCGWINSZ, &ws) == 0 and ws.ws_row > 0 and ws.ws_col > 0)
+        terminal_size = {ws.ws_row, ws.ws_col};
 
     const bool info = (bool)m_info;
     const bool menu = (bool)m_menu;
@@ -590,12 +590,12 @@ void TerminalUI::check_resize(bool force)
     if (info) m_info.destroy();
     if (menu) m_menu.destroy();
 
-    m_window.create({0, 0}, {ws.ws_row, ws.ws_col});
-    m_screen.create({0, 0}, {ws.ws_row, ws.ws_col});
+    m_window.create({0, 0}, terminal_size);
+    m_screen.create({0, 0}, terminal_size);
     m_screen.hashes.clear();
     kak_assert(m_window);
 
-    m_dimensions = DisplayCoord{ws.ws_row-1, ws.ws_col};
+    m_dimensions = terminal_size - 1_line;
 
     // if (char* csr = tigetstr((char*)"csr"))
     //     putp(tparm(csr, 0, ws.ws_row));
