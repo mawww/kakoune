@@ -50,7 +50,8 @@ add-highlighter shared/lua/code/function_declaration regex \b(?:function\h+)(?:\
 add-highlighter shared/lua/code/function_call regex \b([a-zA-Z_]\w*)\h*(?=[\(\{]) 1:function
 add-highlighter shared/lua/code/keyword regex \b(break|do|else|elseif|end|for|function|goto|if|in|local|repeat|return|then|until|while)\b 0:keyword
 add-highlighter shared/lua/code/value regex \b(false|nil|true|[0-9]+(:?\.[0-9])?(:?[eE]-?[0-9]+)?|0x[0-9a-fA-F])\b 0:value
-add-highlighter shared/lua/code/operator regex (\+|-|\*|/|%|\^|==?|~=|<=?|>=?|\.\.|\.\.\.|#|\band\b|\bor\b|\bnot\b) 0:operator
+add-highlighter shared/lua/code/symbolic_operator regex (\+|-|\*|/|%|\^|==?|~=|<=?|>=?|\.\.|\.\.\.|#) 0:operator
+add-highlighter shared/lua/code/keyword_operator regex \b(and|or|not)\b 0:operator
 add-highlighter shared/lua/code/builtin regex \b(_G|_ENV)\b 0:builtin
 add-highlighter shared/lua/code/module regex \b(_G|_ENV)\b 0:module
 add-highlighter shared/lua/code/attribute regex \B(<[a-zA-Z_]\w*>)\B 0:attribute
