@@ -484,8 +484,6 @@ void TerminalUI::redraw(bool force)
         set_cursor_pos({m_status_on_top ? 0 : m_dimensions.line, m_cursor.coord.column});
     else
         set_cursor_pos(m_cursor.coord + content_line_offset());
-
-    fflush(stdout);
 }
 
 void TerminalUI::set_cursor(CursorMode mode, DisplayCoord coord)
