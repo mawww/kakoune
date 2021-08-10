@@ -389,7 +389,7 @@ Vector<String> ShellManager::get_val(StringView name, const Context& context) co
     });
 
     if (env_var == m_env_vars.end())
-        throw runtime_error("no such env var: " + name);
+        throw runtime_error("no such variable: " + name);
 
     return env_var->func(name, context);
 }
