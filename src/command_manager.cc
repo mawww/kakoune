@@ -245,8 +245,9 @@ Token parse_percent_token(ParseState& state, bool throw_on_unterminated)
         ++state.pos;
     StringView type_name{type_start, state.pos};
 
+    bool at_end = state.pos == state.str.end();
     const Codepoint opening_delimiter = utf8::read_codepoint(state.pos, state.str.end());
-    if (not state or iswalpha(opening_delimiter))
+    if (at_end or iswalpha(opening_delimiter))
     {
         if (throw_on_unterminated)
             throw parse_error{format("expected a string delimiter after '%{}'",
