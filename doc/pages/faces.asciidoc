@@ -123,7 +123,7 @@ areas of the user interface:
 *BufferPadding*::
     face applied on the `~` characters that follow the last line of a buffer
 
-=== Builtin highlighters faces
+=== Builtin highlighter faces
 
 The following faces are used by builtin highlighters if enabled.
 (See <<highlighters#,`:doc highlighters`>>).
