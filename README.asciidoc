@@ -118,7 +118,7 @@ Installing
 ~~~~~~~~~~
 
 In order to install kak on your system, rather than running it directly from
-its source directory, type *make install*, you can specify the `PREFIX` and
+its source directory, type *make install*. You can specify the `PREFIX` and
 `DESTDIR` if needed.
 
 [TIP]
@@ -299,6 +299,14 @@ It can be installed with
 -------------------
 pkg install kakoune
 -------------------
+====
+
+[TIP]
+.Nix
+====
+--------------------------------
+nix-env -iA nixpkgs.kakoune
+--------------------------------
 ====
 
 Running
