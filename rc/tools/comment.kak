@@ -50,7 +50,7 @@ hook global BufSetOption filetype=d %{
     set-option buffer comment_block_end '+/'
 }
 
-hook global BufSetOption filetype=(gas|ini) %{
+hook global BufSetOption filetype=(fennel|gas|ini) %{
     set-option buffer comment_line ';'
 }
 
