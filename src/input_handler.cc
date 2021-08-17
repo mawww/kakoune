@@ -575,12 +575,12 @@ public:
         const Face cursor_face = m_faces["StatusCursor"];
 
         if (m_cursor_pos == str.char_length())
-            return DisplayLine{{ { fix_atom_text(str.substr(m_display_pos, width-1)), line_face },
+            return DisplayLine{{ { str.substr(m_display_pos, width-1).str(), line_face },
                                  { " "_str, cursor_face} } };
         else
-            return DisplayLine({ { fix_atom_text(str.substr(m_display_pos, m_cursor_pos - m_display_pos)), line_face },
-                                 { fix_atom_text(str.substr(m_cursor_pos,1)), cursor_face },
-                                 { fix_atom_text(str.substr(m_cursor_pos+1, width - m_cursor_pos + m_display_pos - 1)), line_face } });
+            return DisplayLine({ { str.substr(m_display_pos, m_cursor_pos - m_display_pos).str(), line_face },
+                                 { str.substr(m_cursor_pos,1).str(), cursor_face },
+                                 { str.substr(m_cursor_pos+1, width - m_cursor_pos + m_display_pos - 1).str(), line_face } });
     }
 private:
     CharCount  m_cursor_pos = 0;

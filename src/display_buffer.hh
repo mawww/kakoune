@@ -156,7 +156,6 @@ private:
 using DisplayLineList = Vector<DisplayLine>;
 class FaceRegistry;
 
-String fix_atom_text(StringView str);
 DisplayLine parse_display_line(StringView line, const FaceRegistry& faces, const HashMap<String, DisplayLine>& builtins = {});
 
 class DisplayBuffer : public UseMemoryDomain<MemoryDomain::Display>

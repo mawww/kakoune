@@ -332,22 +332,4 @@ DisplayLine parse_display_line(StringView line, const FaceRegistry& faces, const
     return res;
 }
 
-String fix_atom_text(StringView str)
-{
-    String res;
-    auto pos = str.begin();
-    for (auto it = str.begin(), end = str.end(); it != end; ++it)
-    {
-        char c = *it;
-        if (c >= 0 and c <= 0x1F)
-        {
-            res += StringView{pos, it};
-            res += String{Codepoint{(uint32_t)(0x2400 + c)}};
-            pos = it+1;
-        }
-    }
-    res += StringView{pos, str.end()};
-    return res;
-}
-
 }

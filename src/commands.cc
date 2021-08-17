@@ -1359,13 +1359,12 @@ const CommandDesc echo_cmd = {
         if (auto filename = parser.get_switch("to-file"))
             return write_to_file(*filename, message);
 
-        message = fix_atom_text(message);
         if (parser.get_switch("debug"))
             write_to_debug_buffer(message);
         else if (parser.get_switch("markup"))
             context.print_status(parse_display_line(message, context.faces()));
         else
-            context.print_status({replace(message, '\t', ' '), context.faces()["StatusLine"]});
+            context.print_status({message, context.faces()["StatusLine"]});
     }
 };
 
@@ -2161,7 +2160,7 @@ const CommandDesc prompt_cmd = {
                 }
                 catch (Kakoune::runtime_error& error)
                 {
-                    context.print_status({fix_atom_text(error.what()), context.faces()["Error"]});
+                    context.print_status({error.what().str(), context.faces()["Error"]});
                     context.hooks().run_hook(Hook::RuntimeError, error.what(), context);
                 }
             });
@@ -2542,7 +2541,7 @@ const CommandDesc fail_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context&, const ShellContext&)
     {
-        throw failure{fix_atom_text(join(parser, " "))};
+        throw failure{join(parser, " ")};
     }
 };
 
