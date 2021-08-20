@@ -81,7 +81,8 @@ struct ParsedRegex
         NodeIndex children_end;
         Codepoint value;
         Quantifier quantifier;
-    };
+        uint16_t filler = 0;
+    } __attribute__((packed));
     static_assert(sizeof(Node) == 16, "");
 
     Vector<Node, MemoryDomain::Regex> nodes;
