@@ -14,6 +14,14 @@
 #include <cstring>
 #include <limits>
 
+#ifndef __packed
+#if defined(__GNUC__)
+#define __packed	__attribute__((packed))
+#else
+#define __packed
+#endif
+#endif
+
 namespace Kakoune
 {
 
@@ -82,7 +90,7 @@ struct ParsedRegex
         Codepoint value;
         Quantifier quantifier;
         uint16_t filler = 0;
-    } __attribute__((packed));
+    } __packed;
     static_assert(sizeof(Node) == 16, "");
 
     Vector<Node, MemoryDomain::Regex> nodes;
