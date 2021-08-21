@@ -1182,23 +1182,16 @@ void indent(Context& context, NormalParams params)
     String indent = indent_width == 0 ? String{'\t', count} : String{' ', indent_width * count};
 
     auto& buffer = context.buffer();
-    Vector<Selection> sels;
     LineCount last_line = 0;
     for (auto& sel : context.selections())
     {
         for (auto line = std::max(last_line, sel.min().line); line < sel.max().line+1; ++line)
         {
             if (indent_empty or buffer[line].length() > 1)
-                sels.emplace_back(line, line);
+                buffer.insert(line, indent);
         }
         // avoid reindenting the same line if multiple selections are on it
         last_line = sel.max().line+1;
-    }
-    if (not sels.empty())
-    {
-        ScopedEdition edition(context);
-        SelectionList selections{buffer, std::move(sels)};
-        selections.insert(indent, InsertMode::Insert);
     }
 }
 
@@ -1212,8 +1205,7 @@ void deindent(Context& context, NormalParams params)
         indent_width = tabstop;
     indent_width = indent_width * count;
 
-    const auto& buffer = context.buffer();
-    Vector<Selection> sels;
+    auto& buffer = context.buffer();
     LineCount last_line = 0;
     for (auto& sel : context.selections())
     {
@@ -1232,24 +1224,18 @@ void deindent(Context& context, NormalParams params)
                 else
                 {
                     if (deindent_incomplete and width != 0)
-                        sels.emplace_back(line, BufferCoord{line, column-1});
+                        buffer.erase(line, BufferCoord{line, column});
                     break;
                 }
                 if (width >= indent_width)
                 {
-                    sels.emplace_back(line, BufferCoord{line, column});
+                    buffer.erase(line, BufferCoord{line, column+1});
                     break;
                 }
             }
         }
         // avoid reindenting the same line if multiple selections are on it
         last_line = sel.max().line + 1;
-    }
-    if (not sels.empty())
-    {
-        ScopedEdition edition(context);
-        SelectionList selections{context.buffer(), std::move(sels)};
-        selections.erase();
     }
 }
 
