@@ -385,12 +385,18 @@ static void fix_overflowing_selections(Vector<Selection>& selections,
     }
 }
 
-void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
-                           Vector<BufferCoord>* out_insert_pos)
+void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode)
 {
     if (strings.empty())
         return;
 
+    insert([&](size_t index, BufferCoord) {
+        return String::no_copy(strings[std::min(strings.size()-1, index)]);
+    }, mode);
+}
+
+void SelectionList::insert(ContentFunc get_content, InsertMode mode)
+{
     update();
 
     Vector<BufferCoord> insert_pos;
@@ -410,10 +416,10 @@ void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
         kak_assert(m_buffer->is_valid(sel.anchor()) and
                    m_buffer->is_valid(sel.cursor()));
 
-        const String& str = strings[std::min(index, strings.size()-1)];
-
         const auto pos = (mode == InsertMode::Replace) ?
             sel.min() : changes_tracker.get_new_coord(insert_pos[index]);
+
+        String str = get_content(index, pos);
 
         if (mode == InsertMode::Replace)
         {
@@ -432,8 +438,6 @@ void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
         }
 
         changes_tracker.update(*m_buffer, m_timestamp);
-        if (out_insert_pos)
-            out_insert_pos->push_back(pos);
     }
 
     // We might just have been deleting text if strings were empty,

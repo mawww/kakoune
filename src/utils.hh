@@ -173,7 +173,11 @@ public:
         }}
     {}
 
-    template<typename Target, typename = std::enable_if_t<!std::is_same_v<FunctionRef, std::decay_t<Target>>>>
+    template<typename Target,
+             typename = std::enable_if_t<
+                 not std::is_same_v<FunctionRef, std::decay_t<Target>> and
+                 std::is_convertible_v<decltype(std::declval<Target>()(std::declval<Args>()...)), Res>
+             >>
     FunctionRef(Target&& target)
       : m_target{&target},
         m_invoker{[](void* target, Args... args) {

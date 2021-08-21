@@ -124,6 +124,8 @@ public:
     struct NoCopy{};
     String(NoCopy, StringView str);
 
+    static String no_copy(StringView str);
+
     [[gnu::always_inline]]
     char* data() { return m_data.data(); }
 
@@ -274,6 +276,7 @@ template<> struct HashCompatible<StringView, String> : std::true_type {};
 
 inline String::String(StringView str) : String{str.begin(), str.length()} {}
 inline String::String(NoCopy, StringView str) : m_data{NoCopy{}, str.begin(), (size_t)str.length()} {}
+inline String String::no_copy(StringView str) { return {NoCopy{}, str}; }
 
 template<typename Type, typename CharType>
 inline StringView StringOps<Type, CharType>::substr(ByteCount from, ByteCount length) const

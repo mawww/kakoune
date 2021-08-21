@@ -414,13 +414,10 @@ void replace_with_char(Context& context, NormalParams)
         ScopedEdition edition(context);
         Buffer& buffer = context.buffer();
         SelectionList& selections = context.selections();
-        Vector<String> strings;
-        for (auto& sel : selections)
-        {
-            CharCount count = char_length(buffer, sel);
-            strings.emplace_back(*cp, count);
-        }
-        selections.insert(strings, InsertMode::Replace);
+        selections.insert([&](size_t index, BufferCoord) {
+            CharCount count = char_length(buffer, selections[index]);
+            return String{*cp, count};
+        }, InsertMode::Replace);
     }, "replace with char", "enter char to replace with\n");
 }
 
@@ -438,18 +435,16 @@ void for_each_codepoint(Context& context, NormalParams)
     ScopedEdition edition(context);
     Buffer& buffer = context.buffer();
     SelectionList& selections = context.selections();
-    Vector<String> strings;
-    for (auto& sel : selections)
-    {
+
+    selections.insert([&](size_t index, BufferCoord) {
+        auto& sel = selections[index];
         String str;
         for (auto begin = Utf8It{buffer.iterator_at(sel.min()), buffer},
                   end = Utf8It{buffer.iterator_at(sel.max()), buffer}+1;
              begin != end; ++begin)
             utf8::dump(std::back_inserter(str), func(*begin));
-
-        strings.push_back(std::move(str));
-    }
-    selections.insert(strings, InsertMode::Replace);
+        return str;
+    }, InsertMode::Replace);
 }
 
 void command(const Context& context, EnvVarMap env_vars, char reg = 0)
@@ -649,15 +644,15 @@ void insert_output(Context& context, NormalParams params)
             auto& selections = context.selections();
             const size_t old_main = selections.main_index();
 
-            auto ins = selections | transform([&, i=0](auto& sel) mutable {
-                selections.set_main_index(i++);
-                return ShellManager::instance().eval(
-                    cmdline, context, content(context.buffer(), sel),
-                    ShellManager::Flags::WaitForStdout).first;
-            }) | gather<Vector>();
+            selections.insert([&](size_t index, BufferCoord) {
+                selections.set_main_index(index);
+                auto [out, status] = ShellManager::instance().eval(
+                    cmdline, context, content(context.buffer(), selections[index]),
+                    ShellManager::Flags::WaitForStdout);
+                return out;
+            }, mode);
 
             selections.set_main_index(old_main);
-            selections.insert(ins, mode);
         });
 }
 
@@ -741,7 +736,10 @@ void paste_all(Context& context, NormalParams params)
     auto& selections = context.selections();
     {
         ScopedEdition edition(context);
-        selections.insert(all, effective_mode, &insert_pos);
+        selections.insert([&](size_t, BufferCoord pos) {
+            insert_pos.push_back(pos);
+            return String::no_copy(all);
+        }, effective_mode);
     }
 
     const Buffer& buffer = context.buffer();
