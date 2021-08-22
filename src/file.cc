@@ -597,7 +597,7 @@ FsStatus get_fs_status(StringView filename)
 String get_kak_binary_path()
 {
     char buffer[2048];
-#if defined(__linux__) or defined(__CYGWIN__)
+#if defined(__linux__) or defined(__CYGWIN__) or defined(__gnu_hurd__)
     ssize_t res = readlink("/proc/self/exe", buffer, 2048);
     kak_assert(res != -1);
     buffer[res] = '\0';
