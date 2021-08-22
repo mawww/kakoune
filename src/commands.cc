@@ -395,7 +395,7 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
         if (parser.get_switch("readonly"))
         {
             buffer->flags() |= Buffer::Flags::ReadOnly;
-            buffer->options()["readonly"].set(true);
+            buffer->options().get_local_option("readonly").set(true);
         }
     }
 

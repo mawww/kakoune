@@ -781,8 +781,6 @@ int run_server(StringView session, StringView server_init,
     }
 #endif
 
-    GlobalScope::instance().options().get_local_option("readonly").set<bool>(flags & ServerFlags::ReadOnly);
-
     bool startup_error = false;
     if (not (flags & ServerFlags::IgnoreKakrc)) try
     {
@@ -824,7 +822,10 @@ int run_server(StringView session, StringView server_init,
             {
                 Buffer *buffer = open_or_create_file_buffer(file);
                 if (flags & ServerFlags::ReadOnly)
+                {
                     buffer->flags() |= Buffer::Flags::ReadOnly;
+                    buffer->options().get_local_option("readonly").set(true);
+                }
             }
             catch (runtime_error& error)
             {
