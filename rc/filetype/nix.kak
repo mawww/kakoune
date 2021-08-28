@@ -79,7 +79,7 @@ add-highlighter shared/nix/code/ regex \bor\b      0:operator
 
 # override any operators matched before
 # path:
-add-highlighter shared/nix/code/ regex '\s\(*(\.?\.?/[-A-Za-z0-9/_+.]+)[;?]?' 1:meta
+add-highlighter shared/nix/code/ regex '\s\(*(\.?\.?[-A-Za-z0-9/_+.]*/[-A-Za-z0-9/_+.]*)[;?]?' 1:meta
 # imported path:
 add-highlighter shared/nix/code/ regex <[-A-Za-z0-9/_+.]+> 0:meta
 # RFC 2396 URIs can be used without quoting. Strangely, "string" ends URL but ''indented'' one doesn't
