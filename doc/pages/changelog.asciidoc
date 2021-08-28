@@ -3,7 +3,7 @@
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
-== Development version
+== Kakoune 2021.08.28
 
 * command and response fifo support
   (See <<expansions#command-and-response-fifo,`:doc expansions command-and-response-fifo`>>)
