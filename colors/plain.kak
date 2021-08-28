@@ -1,3 +1,4 @@
+
 # Kakoune simple colors, mostly default
 
 # For default
@@ -29,14 +30,14 @@ face global PrimarySelection white,blue
 face global SecondarySelection black,blue
 face global PrimaryCursor black,white
 face global SecondaryCursor white,blue
-face global PrimaryCursorEol default
+face global PrimaryCursorEol white,blue
 face global SecondaryCursorEol default
 face global LineNumbers default
 face global LineNumberCursor default
-face global MenuForeground default
-face global MenuBackground default
+face global MenuForeground black,blue
+face global MenuBackground blue,black
 face global MenuInfo default
-face global Information default
+face global Information blue,black
 face global Error default
 face global StatusLine default
 face global StatusLineMode default
@@ -46,3 +47,4 @@ face global StatusCursor default+r
 face global Prompt default
 face global MatchingChar default
 face global BufferPadding default
+ace global BufferPadding default
