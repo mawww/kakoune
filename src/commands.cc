@@ -2299,11 +2299,7 @@ const CommandDesc info_cmd = {
         auto title = parser.get_switch("title").value_or(StringView{});
         if (parser.get_switch("markup"))
             context.client().info_show(parse_display_line(title, context.faces()),
-                                       parser[0] | split<StringView>('\n')
-                                                 | transform([&](StringView s) {
-                                                       return parse_display_line(s, context.faces());
-                                                   })
-                                                 | gather<DisplayLineList>(),
+                                       parse_display_line_list(parser[0], context.faces()),
                                        pos, style);
         else
             context.client().info_show(title.str(), parser[0], pos, style);

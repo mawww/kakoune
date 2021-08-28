@@ -257,13 +257,12 @@ void DisplayBuffer::optimize()
         line.optimize();
 }
 
-DisplayLine parse_display_line(StringView line, const FaceRegistry& faces, const HashMap<String, DisplayLine>& builtins)
+DisplayLine parse_display_line(StringView line, Face& face, const FaceRegistry& faces, const HashMap<String, DisplayLine>& builtins)
 {
     DisplayLine res;
     bool was_antislash = false;
     auto pos = line.begin();
     String content;
-    Face face;
     for (auto it = line.begin(), end = line.end(); it != end; ++it)
     {
         const char c = *it;
@@ -330,6 +329,21 @@ DisplayLine parse_display_line(StringView line, const FaceRegistry& faces, const
     if (not content.empty())
         res.push_back({std::move(content), face});
     return res;
+}
+
+DisplayLine parse_display_line(StringView line, const FaceRegistry& faces, const HashMap<String, DisplayLine>& builtins)
+{
+    Face face{};
+    return parse_display_line(line, face, faces, builtins);
+}
+
+DisplayLineList parse_display_line_list(StringView content, const FaceRegistry& faces, const HashMap<String, DisplayLine>& builtins)
+{
+    return content | split<StringView>('\n')
+                   | transform([&, face=Face{}](StringView s) mutable {
+                         return parse_display_line(s, face, faces, builtins);
+                     })
+                   | gather<DisplayLineList>();
 }
 
 }
