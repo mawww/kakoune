@@ -105,7 +105,7 @@ Building
 
 Kakoune dependencies are:
 
- * A {cpp}17 compliant compiler (GCC >= 7 or clang >= 6) along with its
+ * A {cpp}17 compliant compiler (GCC >= 8 or clang >= 6) along with its
    associated {cpp} standard library (libstdc{pp} or libc{pp})
 
 To build, just type *make* in the src directory.
