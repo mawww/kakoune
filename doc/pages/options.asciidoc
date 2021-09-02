@@ -369,7 +369,7 @@ are exclusively available to built-in options.
             instead of displaying a single character at the beginning of the
             padding line (defaults to *false*)
 
-        *terminal_synchronize*:::
+        *terminal_synchronized*:::
             if *yes* or *true*, emit iterm2 synchronized output escape sequences
             during redraw to reduce flickering (defaults to *false*)
 
