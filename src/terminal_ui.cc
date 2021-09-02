@@ -337,14 +337,14 @@ void TerminalUI::Screen::output(bool force, bool synchronized, Writer& writer)
                     pending_move = 0;
                 }
                 set_face(face, writer);
-                writer.write(text.c_str());
+                writer.write(text);
                 if (skip > 3 and face.attributes == Attribute{})
                 {
                     writer.write("\033[K");
                     pending_move = skip;
                 }
                 else if (skip > 0)
-                    writer.write(String{' ', skip}.c_str());
+                    writer.write(String{' ', skip});
             }
         }
     }
