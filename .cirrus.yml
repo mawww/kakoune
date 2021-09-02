@@ -29,7 +29,7 @@ linux_task:
               CXX: clang++
         - name: linux_gcc
           container:
-              image: gcc:7
+              image: gcc:8
     test_script: make -j4 test
     env:
         LC_ALL: en_US.UTF-8
@@ -42,7 +42,7 @@ macos_task:
           env:
               CXX: clang++
         - name: macos_gcc
-          gcc_script: brew install gcc@7
+          gcc_script: brew install gcc@8
           env:
-              CXX: g++-7
+              CXX: g++-8
     test_script: make -j4 test
