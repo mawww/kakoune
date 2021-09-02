@@ -546,8 +546,6 @@ void register_options()
                        "    terminal_set_title             bool\n"
                        "    terminal_enable_mouse          bool\n"
                        "    terminal_change_colors         bool\n"
-                       "    terminal_wheel_up_button       int\n"
-                       "    terminal_wheel_down_button     int\n"
                        "    terminal_wheel_scroll_amount   int\n"
                        "    terminal_shift_function_key    int\n",
                        UserInterface::Options{});

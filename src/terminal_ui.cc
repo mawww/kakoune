@@ -1434,8 +1434,6 @@ void TerminalUI::set_ui_options(const Options& options)
     m_shift_function_key = find("terminal_shift_function_key").map(str_to_int_ifp).value_or(default_shift_function_key);
 
     enable_mouse(find("terminal_enable_mouse").map(to_bool).value_or(true));
-    m_wheel_up_button = find("terminal_wheel_up_button").map(str_to_int_ifp).value_or(4);
-    m_wheel_down_button = find("terminal_wheel_down_button").map(str_to_int_ifp).value_or(5);
     m_wheel_scroll_amount = find("terminal_wheel_scroll_amount").map(str_to_int_ifp).value_or(3);
 
     m_padding_char = find("terminal_padding_char").map([](StringView s) { return s.column_length() < 1 ? ' ' : s[0_char]; }).value_or(Codepoint{'~'});

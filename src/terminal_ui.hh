@@ -144,8 +144,6 @@ private:
     void enable_mouse(bool enabled);
 
     bool m_mouse_enabled = false;
-    int m_wheel_up_button = 4;
-    int m_wheel_down_button = 5;
     int m_wheel_scroll_amount = 3;
     int m_mouse_state = 0;
 

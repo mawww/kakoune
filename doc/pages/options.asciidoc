@@ -353,9 +353,6 @@ are exclusively available to built-in options.
             boolean option that can disable color palette changing if the
             terminfo enables it but the terminal does not support it.
 
-        *terminal_wheel_down_button*, *terminal_wheel_up_button*:::
-            specify which button send for wheel down/up events
-
         *terminal_shift_function_key*:::
             Function key from which shifted function key start, if the
             terminal sends F13 for <s-F1>, this should be set to 12.
