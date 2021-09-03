@@ -31,11 +31,9 @@ define-command editorconfig-load -params ..1 -docstring "editorconfig-load [file
                     END {
                         if (indent_style == "tab") {
                             print "set-option buffer indentwidth 0"
-                            print "set-option buffer aligntab true"
                         }
                         if (indent_style == "space") {
                             print "set-option buffer indentwidth " indent_size
-                            print "set-option buffer aligntab false"
                         }
                         if (indent_size || tab_width) {
                             print "set-option buffer tabstop " (tab_width ? tab_width : indent_size)
