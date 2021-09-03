@@ -174,12 +174,12 @@ named pipe can be opened and closed multiple times which makes it possible
 to interleave shell and Kakoune commands. `$kak_response_fifo` refers to
 a named pipe that can be used to return data from Kakoune.
 
----
+----
 %sh{
     echo "write $kak_response_fifo" > $kak_command_fifo
     content="$(cat $kak_response_fifo)"
 }
----
+----
 
 This also makes it possible to pass data bigger than the system environment
 size limit.
