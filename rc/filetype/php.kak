@@ -85,7 +85,7 @@ define-command -hidden php-indent-on-char %<
 define-command -hidden php-insert-on-new-line %<
     evaluate-commands -draft -itersel %<
         # copy // comments or docblock * prefix and following white spaces
-        try %{ execute-keys -draft s [^/] <ret> k <a-x> s ^\h*\K(?://|[*][^/])\h* <ret> y gh j P
+        try %{ execute-keys -draft s [^/] <ret> k <a-x> s ^\h*\K(?://|[*][^/])\h* <ret> y gh j P }
         # append " * " on lines starting a multiline /** or /* comment
         try %{ execute-keys -draft k <a-x> s ^\h*/[*][* ]? <ret> j gi i <space>*<space> }
     >
