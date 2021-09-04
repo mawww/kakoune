@@ -48,7 +48,7 @@ add-highlighter shared/crystal/comment region '#(?!\{)' '$' fill comment
 
 # String
 # https://crystal-lang.org/reference/syntax_and_semantics/literals/string.html
-add-highlighter shared/crystal/string region '"' '(?<!\\)"' regions
+add-highlighter shared/crystal/string region '"' '(?<!\\)(\\\\)*"' regions
 
 # Percent string literals
 # https://crystal-lang.org/reference/syntax_and_semantics/literals/string.html#percent-string-literals
@@ -78,12 +78,12 @@ add-highlighter shared/crystal/raw-heredoc/interpolation region -recurse '\{' '#
 
 # Symbol
 # https://crystal-lang.org/reference/syntax_and_semantics/literals/symbol.html
-add-highlighter shared/crystal/quoted-symbol region ':"' '(?<!\\)"' fill value
+add-highlighter shared/crystal/quoted-symbol region ':"' '(?<!\\)(\\\\)*"' fill value
 
 # Regular expressions
 # https://crystal-lang.org/reference/syntax_and_semantics/literals/regex.html
 # https://crystal-lang.org/reference/syntax_and_semantics/literals/regex.html#modifiers
-add-highlighter shared/crystal/regex region '/' '(?<!\\)/[imx]*' regions
+add-highlighter shared/crystal/regex region '/' '(?<!\\)(\\\\)*/[imx]*' regions
 # Avoid unterminated regular expression
 add-highlighter shared/crystal/division region ' / ' '.\K' group
 
@@ -97,7 +97,7 @@ add-highlighter shared/crystal/pipe-regex region '%r?\|' '\|[imx]*' regions
 
 # Command
 # https://crystal-lang.org/reference/syntax_and_semantics/literals/command.html
-add-highlighter shared/crystal/command region '`' '(?<!\\)`' regions
+add-highlighter shared/crystal/command region '`' '(?<!\\)(\\\\)*`' regions
 
 # Percent command literals
 add-highlighter shared/crystal/parenthesis-command region -recurse '\(' '%x?\(' '\)' regions
