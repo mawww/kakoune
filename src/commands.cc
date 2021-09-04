@@ -2385,7 +2385,7 @@ const CommandDesc set_face_cmd = {
     "colors are either a color name, rgb:######, or rgba:######## values.\n"
     "attributes is a combination of:\n"
     "    u: underline, i: italic, b: bold, r: reverse,\n"
-    "    B: blink, d: dim,\n"
+    "    s: strikethrough, B: blink, d: dim,\n"
     "    f: final foreground, g: final background,\n"
     "    a: final attributes, F: same as +fga\n"
     "facespec can as well just be the name of another face.\n"
