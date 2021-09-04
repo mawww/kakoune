@@ -70,6 +70,7 @@ String to_string(Attribute attributes)
         { Attribute::Bold, "b" },
         { Attribute::Dim, "d" },
         { Attribute::Italic, "i" },
+        { Attribute::Strikethrough, "s" },
         { Attribute::Final, "F" },
         { Attribute::FinalFg, "f" },
         { Attribute::FinalBg, "g" },
