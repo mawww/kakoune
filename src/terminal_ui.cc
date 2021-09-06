@@ -223,7 +223,8 @@ void TerminalUI::Screen::set_face(const Face& face, Writer& writer)
 {
     static constexpr int fg_table[]{ 39, 30, 31, 32, 33, 34, 35, 36, 37, 90, 91, 92, 93, 94, 95, 96, 97 };
     static constexpr int bg_table[]{ 49, 40, 41, 42, 43, 44, 45, 46, 47, 100, 101, 102, 103, 104, 105, 106, 107 };
-    static constexpr int attr_table[]{ 0, 4, 7, 5, 1, 2, 3, 9 };
+    static constexpr int ul_table[]{ 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+    static constexpr const char* attr_table[]{ "0", "4", "4:3", "7", "5", "1", "2", "3", "9" };
 
     auto set_color = [&](bool fg, const Color& color, bool join) {
         if (join)
@@ -255,7 +256,24 @@ void TerminalUI::Screen::set_face(const Face& face, Writer& writer)
         join = true;
     }
     if (m_active_face.bg != face.bg)
+    {
         set_color(false, face.bg, join);
+        join = true;
+    }
+    if (m_active_face.underline != face.underline)
+    {
+        if (join)
+            writer.write(";");
+        if (face.underline != Color::Default)
+        {
+            if (face.underline.isRGB())
+                format_with(writer, "58:2::{}:{}:{}", face.underline.r, face.underline.g, face.underline.b);
+            else
+                format_with(writer, "58:5:{}", ul_table[(int)(char)face.underline.color]);
+        }
+        else
+            format_with(writer, "59");
+    }
     writer.write("m");
 
     m_active_face = face;

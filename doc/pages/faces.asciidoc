@@ -6,11 +6,11 @@ A 'face' determines how text is displayed, it has a foreground
 color, a background color, and some attributes. The value of a face has the
 following format:
 
------------------------------------------
-[fg_color][,bg_color][+attributes][@base]
------------------------------------------
+-----------------------------------------------------------
+[fg_color][,bg_color[,underline_color]][+attributes][@base]
+-----------------------------------------------------------
 
-'fg_color', 'bg_color'::
+'fg_color', 'bg_color', 'underline_color'::
     a color whose value can be expressed in the following formats:
         *black*, *red*, *green*, *yellow*, *blue*, *magenta*, *cyan*, *white*:::
         *bright-black*, *bright-red*, *bright-green*, *bright-yellow*:::
@@ -22,7 +22,7 @@ following format:
             hexadecimal value
         *rgba:RRGGBBAA*:::
             hexadecimal value
-    if unspecified, *default* is used.
+    if unspecified or empty, *default* is used.
     Alpha values are used to blend the face onto either its base or the existing
     color. For technical reasons alpha values must be >16 if specified.
 
@@ -30,6 +30,9 @@ following format:
     string whose individual letters set an attribute:
         *u*:::
             underline
+        *c*:::
+            curly underline, takes precedence over underline if both are
+            specified
         *r*:::
             reverse
         *b*:::
