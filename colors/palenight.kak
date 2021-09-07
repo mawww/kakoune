@@ -77,6 +77,8 @@ evaluate-commands %sh{
     face global Information        $white,$visual_grey
 
     face global Error              $white,$red
+    face global DiagnosticError    $red
+    face global DiagnosticWarning  $yellow
     face global StatusLine         $white,$black
 
     # Status line

@@ -60,6 +60,8 @@ evaluate-commands %sh{
         face global MenuInfo ${cyan_light}
         face global Information ${black_light},${cyan_light}
         face global Error ${grey_light},${magenta_light}
+        face global DiagnosticError ${magenta_light}
+        face global DiagnosticWarning ${cyan_light}
         face global StatusLine ${grey_light},${black_lighterer}
         face global StatusLineMode ${orange_dark}
         face global StatusLineInfo ${cyan_light}

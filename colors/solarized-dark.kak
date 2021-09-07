@@ -59,6 +59,8 @@ evaluate-commands %sh{
         face global MenuInfo           ${base01}
         face global Information        ${base02},${base1}
         face global Error              ${red},default+b
+        face global DiagnosticError    ${red}
+        face global DiagnosticWarning  ${yellow}
         face global StatusLine         ${base1},${base02}+b
         face global StatusLineMode     ${orange}
         face global StatusLineInfo     ${cyan}

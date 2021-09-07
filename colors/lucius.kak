@@ -62,6 +62,8 @@ evaluate-commands %sh{
         face global MenuInfo ${lucius_grey}
         face global Information ${lucius_lighter_grey},${lucius_dark_green}
         face global Error ${lucius_light_red},${lucius_dark_red}
+        face global DiagnosticError ${lucius_light_red}
+        face global DiagnosticWarning ${lucius_purple}
         face global StatusLine ${lucius_lighter_grey},${lucius_dark_grey}
         face global StatusLineMode ${lucius_lighter_grey},${lucius_dark_green}+b
         face global StatusLineInfo ${lucius_dark_grey},${lucius_lighter_grey}

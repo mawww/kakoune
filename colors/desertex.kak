@@ -54,6 +54,8 @@ face global MenuInfo white,rgb:445599
 face global Information black,yellow
 
 face global Error      white,red
+face global DiagnosticError red
+face global DiagnosticWarning yellow
 face global StatusLine cyan,default
 
 # Status line modes and prompts:
