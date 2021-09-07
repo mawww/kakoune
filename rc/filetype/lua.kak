@@ -40,8 +40,8 @@ provide-module lua %[
 
 add-highlighter shared/lua regions
 add-highlighter shared/lua/code default-region group
-add-highlighter shared/lua/raw_string  region -match-capture '\[(=*)\['   '\](=*)\]'       fill string
-add-highlighter shared/lua/raw_comment region -match-capture '--\[(=*)\[' '\](=*)\]'       fill comment
+add-highlighter shared/lua/raw_string  region -match-capture   '\[(=*)\[' '\](=*)\]' fill string
+add-highlighter shared/lua/raw_comment region -match-capture '--\[(=*)\[' '\](=*)\]' fill comment
 add-highlighter shared/lua/double_string region '"'   (?<!\\)(?:\\\\)*" fill string
 add-highlighter shared/lua/single_string region "'"   (?<!\\)(?:\\\\)*' fill string
 add-highlighter shared/lua/comment       region '--'  $                 fill comment
