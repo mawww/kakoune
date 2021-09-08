@@ -33,7 +33,7 @@ hook -group lua-highlight global WinSetOption filetype=lua %{
 }
 
 
-provide-module lua %[
+provide-module lua %§
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
@@ -85,42 +85,42 @@ define-command lua-alternative-file -docstring 'Jump to the alternate file (impl
     printf %s\\n "edit $altfile"
 }}
 
-define-command -hidden lua-trim-indent %{
+define-command -hidden lua-trim-indent %[
     # remove trailing whitespaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
-}
+    try %[ execute-keys -draft -itersel <a-x> s \h+$ <ret> d ]
+]
 
-define-command -hidden lua-indent-on-char %{
-    evaluate-commands -no-hooks -draft -itersel %{
+define-command -hidden lua-indent-on-char %[
+    evaluate-commands -no-hooks -draft -itersel %[
         # align middle and end structures to start and indent when necessary, elseif is already covered by else
-        try %{ execute-keys -draft <a-x><a-k>^\h*(else)$<ret><a-semicolon><a-?>^\h*(if)<ret>s\A|.\z<ret>)<a-&> }
-        try %{ execute-keys -draft <a-x><a-k>^\h*(end)$<ret><a-semicolon><a-?>^\h*(for|function|if|while)<ret>s\A|.\z<ret>)<a-&> }
-    }
-}
+        try %[ execute-keys -draft <a-x><a-k>^\h*(else)$<ret><a-semicolon><a-?>^\h*(if)<ret>s\A|.\z<ret>)<a-&> ]
+        try %[ execute-keys -draft <a-x><a-k>^\h*(end)$<ret><a-semicolon><a-?>^\h*(for|function|if|while)<ret>s\A|.\z<ret>)<a-&> ]
+    ]
+]
 
-define-command -hidden lua-indent-on-new-line %{
-    evaluate-commands -no-hooks -draft -itersel %{
+define-command -hidden lua-indent-on-new-line %[
+    evaluate-commands -no-hooks -draft -itersel %[
         # remove trailing white spaces from previous line
-        try %{ execute-keys -draft k : lua-trim-indent <ret> }
+        try %[ execute-keys -draft k : lua-trim-indent <ret> ]
         # preserve previous non-empty line indent
-        try %{ execute-keys -draft <space><a-?>^[^\n]+$<ret>s\A|.\z<ret>)<a-&> }
+        try %[ execute-keys -draft <space><a-?>^[^\n]+$<ret>s\A|.\z<ret>)<a-&> ]
         # indent after start structure
-        try %{ execute-keys -draft <a-?>^[^\n]*\w+[^\n]*$<ret><a-k>\b(else|elseif|for|function|if|while)\b<ret><a-K>\bend\b<ret><a-:><semicolon><a-gt> }
-    }
-}
+        try %[ execute-keys -draft <a-?>^[^\n]*\w+[^\n]*$<ret><a-k>\b(else|elseif|for|function|if|while)\b<ret><a-K>\bend\b<ret><a-:><semicolon><a-gt> ]
+    ]
+]
 
 define-command -hidden lua-insert-on-new-line %[
     evaluate-commands -no-hooks -draft -itersel %[
         # copy -- comment prefix and following white spaces
-        try %{ execute-keys -draft k<a-x>s^\h*\K--\h*<ret> y gh j <a-x><semicolon> P }
+        try %[ execute-keys -draft k<a-x>s^\h*\K--\h*<ret> y gh j <a-x><semicolon> P ]
         # wisely add end structure
         evaluate-commands -save-regs x %[
-            try %{ execute-keys -draft k<a-x>s^\h+<ret>"xy } catch %{ reg x '' } # Save previous line indent in register x
-            try %[ execute-keys -draft k<a-x> <a-k>^<c-r>x\b[^\n]*(for|function|if|while)<ret><a-K>\bend\b<ret> J}iJ<a-x> <a-K>^<c-r>x(else|end|elseif)$<ret> # Validate previous line and that it is not closed yet
+            try %[ execute-keys -draft k<a-x>s^\h+<ret>"xy ] catch %[ reg x '' ] # Save previous line indent in register x
+            try %[ execute-keys -draft k<a-x> <a-k>^<c-r>x\b[^\n]*(do|for|function|if|while)<ret><a-K>\bend\b<ret> J}iJ<a-x> <a-K>^<c-r>x(else|end|elseif)$<ret> # Validate previous line and that it is not closed yet
                    execute-keys -draft o<c-r>xend<esc> # auto insert end
                    execute-keys -draft k<a-x><a-k>\(function\b<ret>jjA)<esc> ] # auto insert ) for anonymous function
         ]
     ]
 ]
 
-]
+§
