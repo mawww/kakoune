@@ -175,6 +175,7 @@ install-strip: install
 
 uninstall:
 	rm -rf $(bindir)/kak \
+		$(libexecdir) \
 		$(sharedir) \
 		$(docdir) \
 		$(mandir)/kak.1.gz \
