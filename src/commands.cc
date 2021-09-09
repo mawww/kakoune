@@ -2229,7 +2229,7 @@ const CommandDesc menu_cmd = {
 const CommandDesc on_key_cmd = {
     "on-key",
     nullptr,
-    "on-key <command>: wait for next user key and then execute <command>, "
+    "on-key [<switches>] <command>: wait for next user key and then execute <command>, "
     "with key available in the `key` value",
     ParameterDesc{
         { { "mode-name", { true, "set mode name to use" } } },
