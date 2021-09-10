@@ -92,9 +92,12 @@ define-command -hidden lua-trim-indent %[
 
 define-command -hidden lua-indent-on-char %[
     evaluate-commands -no-hooks -draft -itersel %[
-        # align middle and end structures to start and indent when necessary, elseif is already covered by else
-        try %[ execute-keys -draft <a-x><a-k>^\h*(else)$<ret><a-semicolon><a-?>^\h*(if)<ret>s\A|.\z<ret>)<a-&> ]
-        try %[ execute-keys -draft <a-x><a-k>^\h*(end)$<ret><a-semicolon><a-?>^\h*(for|function|if|while)<ret>s\A|.\z<ret>)<a-&> ]
+        # unindent middle and end structures
+        try %[ execute-keys -draft \
+            <a-h><a-k>^\h*(\b(end|else|elseif|until)\b|[)}])$<ret> \
+            :lua-indent-on-new-line<ret> \
+            <a-lt>
+        ]
     ]
 ]
 
@@ -103,9 +106,18 @@ define-command -hidden lua-indent-on-new-line %[
         # remove trailing white spaces from previous line
         try %[ execute-keys -draft k : lua-trim-indent <ret> ]
         # preserve previous non-empty line indent
-        try %[ execute-keys -draft <space><a-?>^[^\n]+$<ret>s\A|.\z<ret>)<a-&> ]
-        # indent after start structure
-        try %[ execute-keys -draft <a-?>^[^\n]*\w+[^\n]*$<ret><a-k>\b(else|elseif|for|function|if|while)\b<ret><a-K>\bend\b<ret><a-:><semicolon><a-gt> ]
+        try %[ execute-keys -draft <space>gh<a-?>^[^\n]+$<ret>s\A|.\z<ret>)<a-&> ]
+        # add one indentation level if the previous line is not a comment and:
+        #     - starts with a block keyword that is not closed on the same line,
+        #     - or contains an unclosed function expression,
+        #     - or ends with an enclosed '(' or '{'
+        try %[ execute-keys -draft \
+            <space> K<a-x> \
+            <a-K>\A\h*--<ret> \
+            <a-K>\A[^\n]*\b(end|until)\b<ret> \
+            <a-k>\A(\h*\b(do|else|elseif|for|function|if|repeat|while)\b|[^\n]*[({]$|[^\n]*\bfunction\b\h*[(])<ret> \
+            <a-:><semicolon><a-gt>
+        ]
     ]
 ]
 
