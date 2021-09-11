@@ -252,7 +252,7 @@ Building on OpenBSD 6.7 amd64.
 # gmake install
 --------------------------------------------------
 
-Kakoune is available in the 6.7-current port tree as 
+Kakoune is available in the 6.7-current port tree as
 http://cvsweb.openbsd.org/cgi-bin/cvsweb/ports/editors/kakoune/[editors/kakoune]
 
 A binary package is also available for -current snapshot and can be installed with
@@ -263,7 +263,7 @@ A binary package is also available for -current snapshot and can be installed wi
 Running with support for plugins.
 --------------------------------------------------
 # pkg_add dash
-$ export KAKOUNE_POSIX_SHELL=/usr/local/bin/dash 
+$ export KAKOUNE_POSIX_SHELL=/usr/local/bin/dash
 $ kak
 --------------------------------------------------
 ====
@@ -746,11 +746,12 @@ your local autoload directory.
 Color Schemes
 ~~~~~~~~~~~~~
 
-Kakoune ships with some color schemes that are installed to
-`../share/kak/colors/`. If `$XDG_CONFIG_HOME/kak/colors/` is present
-the builtin command `colorscheme` will offer completion for those
-color schemes. If a scheme is duplicated in userspace, it will take
-precedence.
+Kakoune's builtin `colorscheme` command will provide completion for
+color schemes installed to the directories defined in the
+`colorscheme_sources` option. By default, it will source colorschemes
+from `../share/kak/colors/`, then `$XDG_CONFIG_HOME/kak/colors/`
+(if it exists). Schemes duplicated in later directories in this list
+will take precedence.
 
 Options
 -------
