@@ -281,7 +281,6 @@ void goto_commands(Context& context, NormalParams params)
                 if (not target)
                 {
                     throw runtime_error("no last buffer");
-                    break;
                 }
                 context.push_jump();
                 context.change_buffer(*target);
