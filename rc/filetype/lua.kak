@@ -127,10 +127,21 @@ define-command -hidden lua-insert-on-new-line %[
         try %[ execute-keys -draft k<a-x>s^\h*\K--\h*<ret> y gh j <a-x><semicolon> P ]
         # wisely add end structure
         evaluate-commands -save-regs x %[
-            try %[ execute-keys -draft k<a-x>s^\h+<ret>"xy ] catch %[ reg x '' ] # Save previous line indent in register x
-            try %[ execute-keys -draft k<a-x> <a-k>^<c-r>x\b[^\n]*(do|for|function|if|while)<ret><a-K>\bend\b<ret> J}iJ<a-x> <a-K>^<c-r>x(else|end|elseif)$<ret> # Validate previous line and that it is not closed yet
-                   execute-keys -draft o<c-r>xend<esc> # auto insert end
-                   execute-keys -draft k<a-x><a-k>\(function\b<ret>jjA)<esc> ] # auto insert ) for anonymous function
+            # save previous line indent in register x
+            try %[ execute-keys -draft k<a-x>s^\h+<ret>"xy ] catch %[ reg x '' ]
+            try %[
+                # check that starts with a block keyword that is not closed on the same line
+                execute-keys -draft \
+                    k<a-x> \
+                    <a-k>^\h*\b(else|elseif|do|for|function|if|while)\b|[^\n]\bfunction\b\h*[(]<ret> \
+                    <a-K>\bend\b<ret>
+                # check that the block is empty and is not closed on a different line
+                execute-keys -draft <a-a>i <a-K>^[^\n]*\n[^\n]*\n<ret> j<a-x> <a-K>^<c-r>x\b(else|elseif|end)\b<ret>
+                # auto insert end
+                execute-keys -draft o<c-r>xend<esc>
+                # auto insert ) for anonymous function
+                execute-keys -draft k<a-x><a-k>\([^)\n]*function\b<ret>jjA)<esc>
+            ]
         ]
     ]
 ]
