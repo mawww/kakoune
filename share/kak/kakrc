@@ -3,7 +3,6 @@ decl -docstring "A list of directories that will be sourced for the `colorscheme
 
 def -override -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
     -shell-script-candidates %{
-    # TODO: This don't work!
     eval set -- "$kak_quoted_opt_colorscheme_sources"
     find -L "$@" -type f -name '*\.kak' \
         | while read -r filename; do
