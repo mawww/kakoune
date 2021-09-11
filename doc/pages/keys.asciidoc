@@ -552,7 +552,8 @@ to skim through the jump list using:
     jump backward
 
 *<c-s>*::
-    save selections
+    create a jump step, but also save the current selection to have it be
+    restored when the step is subsequently cycled through
 
 == Multiple selections
 
