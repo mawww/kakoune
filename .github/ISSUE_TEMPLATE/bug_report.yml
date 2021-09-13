@@ -34,3 +34,16 @@ body:
           description: "What was the expected outcome of the reproducing steps above?"
       validations:
         required: true
+
+    - type: textarea
+      attributes:
+          label: "Additional information"
+          description: "Any other information that may be relevant to diagnosing the issue should be documented here"
+          placeholder: |
+              Examples of relevant information:
+
+              * What OS and distribution are you using?
+              * Are you running an experimental branch (i.e. not `master`)?
+              * Is the issue reproducible in other terminals?
+      validations:
+        required: false
