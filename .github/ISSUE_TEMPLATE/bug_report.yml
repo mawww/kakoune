@@ -1,0 +1,28 @@
+name: Bug report
+description: Report an unexpected behaviour with the editor
+labels: bug
+title: "[BUG] "
+body:
+
+    - type: textarea
+      attributes:
+          label: "Reproducer"
+          description: "What are the steps to follow to reproduce the issue?"
+          placeholder: |
+              If any specific configuration or environment settings are required to reproduce the issue, also describe them here.
+      validations:
+        required: true
+
+    - type: textarea
+      attributes:
+          label: "Outcome"
+          description: "What is the outcome of the reproducing steps above?"
+      validations:
+        required: true
+
+    - type: textarea
+      attributes:
+          label: "Expectations"
+          description: "What was the expected outcome of the reproducing steps above?"
+      validations:
+        required: true
