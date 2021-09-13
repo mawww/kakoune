@@ -4,6 +4,14 @@ labels: bug
 title: "[BUG] "
 body:
 
+    - type: input
+      attributes:
+          label: "Version of Kakoune"
+          description: "If unsure, use the output of command: `kak -version`"
+          placeholder: "v2020.12.31"
+      validations:
+          required: true
+
     - type: textarea
       attributes:
           label: "Reproducer"
