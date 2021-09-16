@@ -141,7 +141,7 @@ define-command -params 0..2 \
                 "${kak_config}/autoload/" \
                 "${kak_runtime}/doc/" \
                 "${kak_runtime}/rc/" \
-                -type f -name "*.asciidoc" |
+                -type f -name "*.asciidoc" 2>/dev/null |
                 sed 's,.*/,,; s/\.[^.]*$//'
         elif [ "$kak_token_to_complete" -eq 1 ]; then
             page=$(
@@ -149,7 +149,7 @@ define-command -params 0..2 \
                     "${kak_config}/autoload/" \
                     "${kak_runtime}/doc/" \
                     "${kak_runtime}/rc/" \
-                    -type f -name "$1.asciidoc" |
+                    -type f -name "$1.asciidoc" 2>/dev/null |
                     head -1
             )
             if [ -f "${page}" ]; then
@@ -176,7 +176,7 @@ define-command -params 0..2 \
                 "${kak_config}/autoload/" \
                 "${kak_runtime}/doc/" \
                 "${kak_runtime}/rc/" \
-                -type f -name "$topic.asciidoc" |
+                -type f -name "$topic.asciidoc" 2>/dev/null |
                 head -1
         )
         if [ -f "${page}" ]; then
