@@ -1031,6 +1031,22 @@ void signal_handler(int signal)
         abort();
 }
 
+static int describe_sessions(bool verbose)
+{
+    bool found_dead = false;
+
+    for (auto& session : list_files(session_directory()))
+    {
+        const bool valid = check_session(session);
+        if (not valid)
+            found_dead = true;
+
+        write_stdout(format("{}{}\n", session, valid ? "" : " (dead)"));
+    }
+
+    return found_dead ? 1 : 0;
+}
+
 }
 
 int main(int argc, char* argv[])
@@ -1103,14 +1119,7 @@ int main(int argc, char* argv[])
 
         const bool list_sessions = (bool)parser.get_switch("l");
         if (list_sessions)
-        {
-            for (auto& session : list_files(session_directory()))
-            {
-                const bool valid = check_session(session);
-                write_stdout(format("{}{}\n", session, valid ? "" : " (dead)"));
-            }
-            return 0;
-        }
+            return describe_sessions(false);
 
         const bool clear_sessions = (bool)parser.get_switch("clear");
         if (clear_sessions)

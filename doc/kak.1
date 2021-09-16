@@ -79,7 +79,8 @@ Do not load the system's kakrc.
 .Pq often, Pa /usr/share/kak/kakrc
 .
 .It Fl l
-List existing sessions.
+List existing sessions, return 1 if dead sessions were detected, -1 on error,
+0 otherwise.
 .
 .It Fl d
 Run as a headless session
