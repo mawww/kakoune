@@ -1102,15 +1102,23 @@ int main(int argc, char* argv[])
         }
 
         const bool list_sessions = (bool)parser.get_switch("l");
-        const bool clear_sessions = (bool)parser.get_switch("clear");
-        if (list_sessions or clear_sessions)
+        if (list_sessions)
         {
             for (auto& session : list_files(session_directory()))
             {
                 const bool valid = check_session(session);
-                if (list_sessions)
-                    write_stdout(format("{}{}\n", session, valid ? "" : " (dead)"));
-                if (not valid and clear_sessions)
+                write_stdout(format("{}{}\n", session, valid ? "" : " (dead)"));
+            }
+            return 0;
+        }
+
+        const bool clear_sessions = (bool)parser.get_switch("clear");
+        if (clear_sessions)
+        {
+            for (auto& session : list_files(session_directory()))
+            {
+                const bool valid = check_session(session);
+                if (not valid)
                     unlink(session_path(session).c_str());
             }
             return 0;
