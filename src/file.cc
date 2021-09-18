@@ -40,17 +40,6 @@
 namespace Kakoune
 {
 
-struct file_access_error : runtime_error
-{
-public:
-    file_access_error(StringView filename,
-                      StringView error_desc)
-        : runtime_error(format("{}: {}", filename, error_desc)) {}
-
-    file_access_error(int fd, StringView error_desc)
-        : runtime_error(format("fd {}: {}", fd, error_desc)) {}
-};
-
 String parse_filename(StringView filename, StringView buf_dir)
 {
     auto prefix = filename.substr(0_byte, 2_byte);
@@ -583,7 +572,12 @@ timespec get_fs_timestamp(StringView filename)
 {
     struct stat st;
     if (stat(filename.zstr(), &st) != 0)
-        return InvalidTime;
+    {
+        if (errno == ENOENT)
+            throw file_inexistent(filename, strerror(errno));
+        throw file_access_error(filename, strerror(errno));
+    }
+
     return st.st_mtim;
 }
 

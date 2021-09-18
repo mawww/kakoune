@@ -359,15 +359,27 @@ void Client::check_if_buffer_needs_reloading()
         return;
 
     const String& filename = buffer.name();
-    const timespec ts = get_fs_timestamp(filename);
-    const auto status = buffer.fs_status();
+    try
+    {
+        const timespec ts = get_fs_timestamp(filename);
+        const auto status = buffer.fs_status();
 
-    if (ts == InvalidTime or ts == status.timestamp)
-        return;
+        if (ts == status.timestamp)
+            return;
 
-    if (MappedFile fd{filename};
-        fd.st.st_size == status.file_size and hash_data(fd.data, fd.st.st_size) == status.hash)
+        if (MappedFile fd{filename};
+            fd.st.st_size == status.file_size and hash_data(fd.data, fd.st.st_size) == status.hash)
+            return;
+    }
+    catch (const file_inexistent& e)
+    {
         return;
+    }
+    catch (const file_access_error& e)
+    {
+        write_to_debug_buffer(format("Could not probe file '{}': {}", filename, e.what()));
+        return;
+    }
 
     if (reload == Autoreload::Ask)
     {

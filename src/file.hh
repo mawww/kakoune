@@ -7,6 +7,8 @@
 #include "string.hh"
 #include "units.hh"
 #include "vector.hh"
+#include "exception.hh"
+#include "string_utils.hh"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -34,6 +36,28 @@ StringView homedir();
 std::pair<StringView, StringView> split_path(StringView path);
 
 String get_kak_binary_path();
+
+struct file_access_error : runtime_error
+{
+public:
+    file_access_error(StringView filename,
+                      StringView error_desc)
+        : runtime_error(format("{}: {}", filename, error_desc)) {}
+
+    file_access_error(int fd, StringView error_desc)
+        : runtime_error(format("fd {}: {}", fd, error_desc)) {}
+};
+
+struct file_inexistent : file_access_error
+{
+public:
+    file_inexistent(StringView filename,
+                    StringView error_desc)
+        : file_access_error(filename, error_desc) {}
+
+    file_inexistent(int fd, StringView error_desc)
+        : file_access_error(fd, error_desc) {}
+};
 
 bool fd_readable(int fd);
 bool fd_writable(int fd);
