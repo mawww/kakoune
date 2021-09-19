@@ -57,7 +57,15 @@ public:
     void force_redraw();
     void redraw_ifn();
 
-    void check_if_buffer_needs_reloading();
+    class BufferDialog
+    {
+    public:
+        virtual ~BufferDialog() {}
+        virtual void ask() const = 0;
+        virtual void handle_input(const std::function<void()>& on_done) const = 0;
+        virtual void resolve(bool yes) const = 0;
+    };
+    void check_if_buffer_needs_user_input();
 
     Context& context() { return m_input_handler.context(); }
     const Context& context() const { return m_input_handler.context(); }
@@ -76,9 +84,7 @@ public:
 private:
     void on_option_changed(const Option& option) override;
 
-    void on_buffer_reload_key(Key key);
-    void close_buffer_reload_dialog();
-    void reload_buffer();
+    void close_buffer_dialog();
 
     DisplayLine generate_mode_line() const;
 
@@ -129,7 +135,7 @@ private:
 
     Vector<Key, MemoryDomain::Client> m_pending_keys;
 
-    bool m_buffer_reload_dialog_opened = false;
+    std::unique_ptr<BufferDialog> m_buffer_dialog;
 };
 
 enum class Autoreload

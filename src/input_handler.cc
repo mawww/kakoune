@@ -186,7 +186,7 @@ public:
                            context().flags() & Context::Flags::Draft ?
                             Timer::Callback{} : Timer::Callback{[this](Timer& timer) {
               if (context().has_client())
-                  context().client().check_if_buffer_needs_reloading();
+                  context().client().check_if_buffer_needs_user_input();
               timer.set_next_date(Clock::now() + get_fs_check_timeout(context()));
           }}},
           m_state(single_command ? State::SingleCommand : State::Normal)
@@ -200,7 +200,7 @@ public:
         if (not (context().flags() & Context::Flags::Draft))
         {
             if (context().has_client())
-                context().client().check_if_buffer_needs_reloading();
+                context().client().check_if_buffer_needs_user_input();
 
             m_fs_check_timer.set_next_date(Clock::now() + get_fs_check_timeout(context()));
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));

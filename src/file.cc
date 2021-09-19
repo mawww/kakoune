@@ -199,7 +199,11 @@ MappedFile::MappedFile(StringView filename)
 {
     fd = open(filename.zstr(), O_RDONLY | O_NONBLOCK);
     if (fd == -1)
+    {
+        if (errno == ENOENT)
+            throw file_inexistent(filename, strerror(errno));
         throw file_access_error(filename, strerror(errno));
+    }
 
     fstat(fd, &st);
     if (S_ISDIR(st.st_mode))

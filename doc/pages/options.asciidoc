@@ -290,7 +290,8 @@ are exclusively available to built-in options.
 
 *autoreload* `enum(yes|no|ask)`::
     _default_ ask +
-    auto reload the buffers when an external modification is detected
+    reload or delete the buffers when the associated file was respectively
+    modified or removed externally.
 
 *writemethod* `enum(overwrite|replace)`::
     _default_ overwrite +
