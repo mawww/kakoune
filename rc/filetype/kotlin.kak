@@ -84,8 +84,8 @@ add-highlighter shared/kotlin/code/numbers     regex \b((0(x|X)[0-9a-fA-F]*)|(([
 
 # Generics need improvement, as after a colon will match as a constant only.
 # val program: IOU = XXXX; val cat: DOG = XXXX. matches IOU or DOG as a
-# CONSTANT when it could be generics. See: https://regex101.com/r/VPO5LE/7
-add-highlighter shared/kotlin/code/constants_and_generics regex ((?<==\h)\([A-Z][A-Z0-9_]+\b(?=[<:\;])|\b(?<!<)[A-Z][A-Z0-9_]+(?=[^>\)]))\b|\b((?<!=\s)(?<!\.)[A-Z]+\d*?(?![\(\;:])(?=[,\)>\s]))\b 1:meta 2:type
+# CONSTANT when it could be generics. See: https://regex101.com/r/VPO5LE/10
+add-highlighter shared/kotlin/code/constants_and_generics regex \b((?<==\h)\([A-Z][A-Z0-9_]+(?=[<:\;])|(?<!<)[A-Z][A-Z0-9_]+\b(?!<[>\)]))|\b((?<!=\s)(?<!\.)[A-Z]+\d*?(?![\(\;:])(?=[,\)>\s]))\b 1:meta 2:type
 
 add-highlighter shared/kotlin/code/target regex @(delegate|field|file|get|param|property|receiver|set|setparam)(?=:) 0:meta
 add-highlighter shared/kotlin/code/soft   regex \b(by|catch|constructor|dynamic|finally|get|import|init|set|where)\b 1:keyword
@@ -146,6 +146,14 @@ define-command -hidden kotlin-indent-on-closing-curly-brace %[
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 # macro: 93le<a-;>i<ret><esc><esc>
 evaluate-commands %sh{
+
+  kotlin_keywords='abstract actual annotation as break by catch class companion const
+    constructor continue crossinline data delegate do dynamic else enum expect external
+    false field file final finally for fun get if import in infix init inline inner
+    interface internal is lateinit noinline null object open operator out override
+    package param private property protected public receiver reified return sealed set
+    setparam super suspend tailrec this throw true try typealias val var vararg when where while'
+
   kotlin_types='Annotation Any Boolean BooleanArray Byte ByteArray Char Character CharArray
     CharSequence Class ClassLoader Cloneable Comparable Compiler DeprecationLevel Double
     DoubleArray Enum Float FloatArray Function Int IntArray Integer Lazy LazyThreadSafetyMode
@@ -169,7 +177,7 @@ evaluate-commands %sh{
 
   # ------------------------------------------------------------------------------------------------ #
 
-  printf %s\\n "declare-option str-list kotlin_static_words $(join "${kotlin_types} ${kotlin_kdocs} ${kotlin_errors_exceptions}" ' ')"
+  printf %s\\n "declare-option str-list kotlin_static_words $(join "${kotlin_keywords} ${kotlin_types} ${kotlin_kdocs} ${kotlin_errors_exceptions}" ' ')"
 
   # ------------------------------------------------------------------------------------------------ #
 
