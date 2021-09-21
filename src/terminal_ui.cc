@@ -286,7 +286,7 @@ void TerminalUI::Screen::output(bool force, bool synchronized, Writer& writer)
 
     // iTerm2 "begin synchronized update" sequence
     if (synchronized)
-        writer.write("\033P=1s\033\\");
+        writer.write("\033[?2026h");
 
     if (force)
     {
@@ -299,77 +299,41 @@ void TerminalUI::Screen::output(bool force, bool synchronized, Writer& writer)
         return (hash_value(line.atoms) << 1) | 1; // ensure non-zero
     };
 
-    struct Change { int keep; int add; int del; };
-    Vector<Change> changes{Change{}};
-    auto new_hashes = ArrayView{lines.get(), (size_t)size.line} | transform(hash_line);
-    for_each_diff(hashes.get(), (int)size.line,
-                  new_hashes.begin(), (int)size.line,
-                  [&changes](DiffOp op, int len) mutable {
-        switch (op)
-        {
-            case DiffOp::Keep:
-                changes.push_back({len, 0, 0});
-                break;
-            case DiffOp::Add:
-                changes.back().add += len;
-                break;
-            case DiffOp::Remove:
-                changes.back().del += len;
-                break;
-        }
-    });
-    std::copy(new_hashes.begin(), new_hashes.end(), hashes.get());
-
-    int line = 0;
-    for (auto& change : changes)
+    for (int line = 0; line < (int)size.line; ++line)
     {
-        line += change.keep;
-        if (int del = change.del - change.add; del > 0)
-        {
-            format_with(writer, "\033[{}H\033[{}M", line + 1, del);
-            line -= del;
-        }
-        line += change.del;
-    }
+        auto hash = hash_line(lines[line]); 
+        if (hash == hashes[line])
+            continue;
+        hashes[line] = hash;
 
-    line = 0;
-    for (auto& change : changes)
-    {
-        line += change.keep;
-        for (int i = 0; i < change.add; ++i)
-        {
-            if (int add = change.add - change.del; i == 0 and add > 0)
-                format_with(writer, "\033[{}H\033[{}L", line + 1, add);
-            else
-                format_with(writer, "\033[{}H", line + 1);
+        format_with(writer, "\033[{}H", line + 1);
 
-            ColumnCount pending_move = 0;
-            for (auto& [text, skip, face] : lines[line++].atoms)
+        ColumnCount pending_move = 0;
+        for (auto& [text, skip, face] : lines[line].atoms)
+        {
+            if (text.empty() and skip == 0)
+                continue;
+
+            if (pending_move != 0)
             {
-                if (text.empty() and skip == 0)
-                    continue;
-
-                if (pending_move != 0)
-                {
-                    format_with(writer, "\033[{}C", (int)pending_move);
-                    pending_move = 0;
-                }
-                set_face(face, writer);
-                writer.write(text);
-                if (skip > 3 and face.attributes == Attribute{})
-                {
-                    writer.write("\033[K");
-                    pending_move = skip;
-                }
-                else if (skip > 0)
-                    writer.write(String{' ', skip});
+                format_with(writer, "\033[{}C", (int)pending_move);
+                pending_move = 0;
             }
+            set_face(face, writer);
+            writer.write(text);
+            if (skip > 3 and face.attributes == Attribute{})
+            {
+                writer.write("\033[K");
+                pending_move = skip;
+            }
+            else if (skip > 0)
+                writer.write(String{' ', skip});
         }
     }
 
     // iTerm2 "end synchronized update" sequence
     if (synchronized)
-        writer.write("\033P=2s\033\\");
+        writer.write("\033[?2026l");
 }
 
 constexpr int TerminalUI::default_shift_function_key;
