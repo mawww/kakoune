@@ -103,7 +103,13 @@ areas of the user interface:
     face for the informations windows and information messages
 
 *Error*::
-    face of error messages
+    face of errors reported by Kakoune in the status line
+
+*DiagnosticError*::
+    face of errors reported by external tools in the buffer
+
+*DiagnosticWarning*::
+    face of warnings reported by external tools in the buffer
 
 *StatusLine*::
     face used for the status line

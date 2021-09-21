@@ -41,6 +41,8 @@ face global MenuForeground rgb:434343,rgb:CDCDFD
 face global MenuBackground rgb:F8F8FF,rgb:808080
 face global Information rgb:F8F8FF,rgb:4078C0
 face global Error rgb:F8F8FF,rgb:BD2C00
+face global DiagnosticError rgb:CF222E
+face global DiagnosticWarning rgb:9A6700
 face global StatusLine rgb:434343,rgb:DDDDDD
 face global StatusCursor rgb:434343,rgb:CDCDFD
 face global Prompt rgb:F8F8FF,rgb:4078C0

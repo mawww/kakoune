@@ -124,6 +124,8 @@ evaluate-commands %sh{
 
     set-face global Information ${black},${muted_sand}
     set-face global Error ${white},${vibrant_red}
+    set-face global DiagnosticError ${high_contrast_red}
+    set-face global DiagnosticWarning ${high_contrast_yellow}
     set-face global BufferPadding ${vibrant_grey}
 
 EOF

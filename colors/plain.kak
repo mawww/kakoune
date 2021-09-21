@@ -39,6 +39,8 @@ face global MenuBackground blue,black
 face global MenuInfo default
 face global Information blue,black
 face global Error default
+face global DiagnosticError default
+face global DiagnosticWarning default
 face global StatusLine default
 face global StatusLineMode default
 face global StatusLineInfo default

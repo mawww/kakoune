@@ -184,6 +184,8 @@ FaceRegistry::FaceRegistry()
         { "MenuInfo", {Face{ Color::Cyan, Color::Default }} },
         { "Information", {Face{ Color::Black, Color::Yellow }} },
         { "Error", {Face{ Color::Black, Color::Red }} },
+        { "DiagnosticError", {Face{ Color::Red, Color::Default }} },
+        { "DiagnosticWarning", {Face{ Color::Yellow, Color::Default }} },
         { "StatusLine", {Face{ Color::Cyan, Color::Default }} },
         { "StatusLineMode", {Face{ Color::Yellow, Color::Default }} },
         { "StatusLineInfo", {Face{ Color::Blue, Color::Default }} },

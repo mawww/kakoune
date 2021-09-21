@@ -66,6 +66,8 @@ evaluate-commands %sh{
 
     set-face global Information ${grey_light_2},${grey_dark_2}
     set-face global Error ${grey_light_2},${grey_dark_3}
+    set-face global DiagnosticError ${grey_dark_3}
+    set-face global DiagnosticWarning ${grey_dark_2}
     set-face global BufferPadding ${grey_light_1}
 
 EOF

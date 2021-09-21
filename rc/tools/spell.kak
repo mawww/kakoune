@@ -59,7 +59,7 @@ define-command -params ..1 -docstring %{
                     else if (/^[#&]/) {
                         word_len = length($2)
                         word_pos = substr($0, 1, 1) == "&" ? substr($4, 1, length($4) - 1) : $3;
-                        regions = regions " " line_num "." word_pos "+" word_len "|Error"
+                        regions = regions " " line_num "." word_pos "+" word_len "|DiagnosticError"
                     }
 
                     else {
