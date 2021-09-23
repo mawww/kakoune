@@ -9,18 +9,20 @@ declare-option -docstring "shell command to run" str readcscopecmd "cscope -d -L
 
 define-command -params 1..2 \
     -shell-script-candidates %{
-        realpath() { ( cd "$(dirname "$1")"; printf "%s/%s\n" "$(pwd -P)" "$(basename "$1")" ) }
-        eval "set -- ${kak_quoted_opt_ctagsfiles}"
-        for candidate in "$@"; do
-            [ -f "$candidate" ] && realpath "$candidate"
-        done | awk '!x[$0]++' | # remove duplicates
-        while read -r tags; do
-            namecache="${tags%/*}/.kak.${tags##*/}.namecache"
-            if [ -z "$(find "$namecache" -prune -newer "$tags")" ]; then
-                cut -f 1 "$tags" | grep -v '^!' | uniq > "$namecache"
-            fi
-            cat "$namecache"
-        done} \
+        if [ $kak_token_to_complete -eq 1 ]; then
+            realpath() { ( cd "$(dirname "$1")"; printf "%s/%s\n" "$(pwd -P)" "$(basename "$1")" ) }
+            eval "set -- ${kak_quoted_opt_ctagsfiles}"
+            for candidate in "$@"; do
+                [ -f "$candidate" ] && realpath "$candidate"
+            done | awk '!x[$0]++' | # remove duplicates
+            while read -r tags; do
+                namecache="${tags%/*}/.kak.${tags##*/}.namecache"
+                if [ -z "$(find "$namecache" -prune -newer "$tags")" ]; then
+                    cut -f 1 "$tags" | grep -v '^!' | uniq > "$namecache"
+                fi
+                cat "$namecache"
+            done
+        fi} \
     -docstring %{
         cscope-search <query> [<symbol>]: jump to symbol's use
         query: a digit as below
@@ -104,7 +106,7 @@ define-command -params ..1 \
 
             # generate the candidate
             pushd $(dirname $cscope)
-            if ${kak_opt_cscopecmd} -f ${cscope}.kaktmp -s $(dirname $cscope); then
+            if ${kak_opt_cscopecmd} -f ${cscope}.kaktmp; then
                 mv ${cscope}.kaktmp $cscope
                 mv ${cscope}.kaktmp.in $cscope.in
                 mv ${cscope}.kaktmp.po $cscope.po
