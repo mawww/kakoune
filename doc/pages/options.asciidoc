@@ -349,10 +349,6 @@ are exclusively available to built-in options.
         *terminal_enable_mouse*:::
             boolean option that enables mouse support
 
-        *terminal_change_colors*:::
-            boolean option that can disable color palette changing if the
-            terminfo enables it but the terminal does not support it.
-
         *terminal_shift_function_key*:::
             Function key from which shifted function key start, if the
             terminal sends F13 for <s-F1>, this should be set to 12.
@@ -367,8 +363,9 @@ are exclusively available to built-in options.
             padding line (defaults to *false*)
 
         *terminal_synchronized*:::
-            if *yes* or *true*, emit iterm2 synchronized output escape sequences
-            during redraw to reduce flickering (defaults to *false*)
+            if *yes* or *true*, emit synchronized output escape sequences and
+            reduce terminal output with sequences that could trigger flickering
+            if unsynchronized (defaults to *false*)
 
 [[startup-info]]
 *startup_info_version* `int`::
