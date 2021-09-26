@@ -17,7 +17,7 @@ hook global WinSetOption filetype=latex %(
     hook window InsertChar \n -group latex-indent %{ latex-indent-newline }
     hook window InsertChar \} -group latex-indent %{ latex-indent-closing-brace }
     hook window ModeChange pop:insert:.* -group latex-indent %{ latex-trim-indent }
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks latex-indent }
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window latex-indent }
     hook window InsertChar \n -group latex-insert latex-insert-on-new-line
 )
 
