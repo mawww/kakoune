@@ -136,7 +136,7 @@ define-command -hidden lua-insert-on-new-line %[
                     <a-k>^\h*\b(else|elseif|do|for|function|if|while)\b|[^\n]\bfunction\b\h*[(]<ret> \
                     <a-K>\bend\b<ret>
                 # check that the block is empty and is not closed on a different line
-                execute-keys -draft <a-a>i <a-K>^[^\n]*\n[^\n]*\n<ret> j<a-x> <a-K>^<c-r>x\b(else|elseif|end)\b<ret>
+                execute-keys -draft <a-a>i <a-K>^[^\n]+\n[^\n]+\n<ret> j<a-x> <a-K>^<c-r>x\b(else|elseif|end)\b<ret>
                 # auto insert end
                 execute-keys -draft o<c-r>xend<esc>
                 # auto insert ) for anonymous function
