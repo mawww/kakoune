@@ -143,6 +143,8 @@ String generate_context_info(const Context& context)
         s += "[fifo]";
     if (context.buffer().flags() & Buffer::Flags::Debug)
         s += "[debug]";
+    if (context.buffer().flags() & Buffer::Flags::ReadOnly)
+        s += "[readonly]";
     return s;
 }
 
