@@ -136,29 +136,30 @@ define-command -params 1 -hidden doc-render %{
 
 define-command -params 0..2 \
     -shell-script-candidates %{
-        if [ "$kak_token_to_complete" -eq 0 ]; then
-            find -L \
-                "${kak_config}/autoload/" \
-                "${kak_runtime}/doc/" \
-                "${kak_runtime}/rc/" \
-                -type f -name "*.asciidoc" |
-                sed 's,.*/,,; s/\.[^.]*$//'
-        elif [ "$kak_token_to_complete" -eq 1 ]; then
-            page=$(
+        case "$kak_token_to_complete" in
+            0)
                 find -L \
                     "${kak_config}/autoload/" \
                     "${kak_runtime}/doc/" \
                     "${kak_runtime}/rc/" \
-                    -type f -name "$1.asciidoc" |
-                    head -1
-            )
-            if [ -f "${page}" ]; then
-                awk '
-                    /^==+ +/ { sub(/^==+ +/, ""); print }
-                    /^\[\[[^\]]+\]\]/ { sub(/^\[\[/, ""); sub(/\]\].*/, ""); print }
-                ' < $page | tr '[A-Z ]' '[a-z-]'
-            fi
-        fi
+                    -type f -name "*.asciidoc" 2>/dev/null |
+                    sed 's,.*/,,; s/\.[^.]*$//';;
+            1)
+                page=$(
+                    find -L \
+                        "${kak_config}/autoload/" \
+                        "${kak_runtime}/doc/" \
+                        "${kak_runtime}/rc/" \
+                        -type f -name "$1.asciidoc" 2>/dev/null |
+                        head -1
+                )
+                if [ -f "${page}" ]; then
+                    awk '
+                        /^==+ +/ { sub(/^==+ +/, ""); print }
+                        /^\[\[[^\]]+\]\]/ { sub(/^\[\[/, ""); sub(/\]\].*/, ""); print }
+                    ' < $page | tr '[A-Z ]' '[a-z-]'
+                fi;;
+        esac
     } \
     doc -docstring %{
         doc <topic> [<keyword>]: open a buffer containing documentation about a given topic
@@ -176,7 +177,7 @@ define-command -params 0..2 \
                 "${kak_config}/autoload/" \
                 "${kak_runtime}/doc/" \
                 "${kak_runtime}/rc/" \
-                -type f -name "$topic.asciidoc" |
+                -type f -name "$topic.asciidoc" 2>/dev/null |
                 head -1
         )
         if [ -f "${page}" ]; then
