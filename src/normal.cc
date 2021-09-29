@@ -413,11 +413,10 @@ void replace_with_char(Context& context, NormalParams)
             return;
         ScopedEdition edition(context);
         Buffer& buffer = context.buffer();
-        SelectionList& selections = context.selections();
-        selections.insert([&](size_t index, BufferCoord) {
-            CharCount count = char_length(buffer, selections[index]);
-            return String{*cp, count};
-        }, InsertMode::Replace);
+        context.selections().for_each([&](size_t index, Selection& sel) {
+            CharCount count = char_length(buffer, sel);
+            replace(buffer, sel, String{*cp, count});
+        });
     }, "replace with char", "enter char to replace with\n");
 }
 
@@ -434,17 +433,15 @@ void for_each_codepoint(Context& context, NormalParams)
 
     ScopedEdition edition(context);
     Buffer& buffer = context.buffer();
-    SelectionList& selections = context.selections();
 
-    selections.insert([&](size_t index, BufferCoord) {
-        auto& sel = selections[index];
+    context.selections().for_each([&](size_t index, Selection& sel) {
         String str;
         for (auto begin = Utf8It{buffer.iterator_at(sel.min()), buffer},
                   end = Utf8It{buffer.iterator_at(sel.max()), buffer}+1;
              begin != end; ++begin)
             utf8::dump(std::back_inserter(str), func(*begin));
-        return str;
-    }, InsertMode::Replace);
+        replace(buffer, sel, str);
+    });
 }
 
 void command(const Context& context, EnvVarMap env_vars, char reg = 0)
@@ -642,15 +639,17 @@ void insert_output(Context& context, NormalParams params)
 
             ScopedEdition edition(context);
             auto& selections = context.selections();
+            auto& buffer = context.buffer();
             const size_t old_main = selections.main_index();
 
-            selections.insert([&](size_t index, BufferCoord) {
+            selections.for_each([&](size_t index, Selection& sel) {
                 selections.set_main_index(index);
                 auto [out, status] = ShellManager::instance().eval(
-                    cmdline, context, content(context.buffer(), selections[index]),
+                    cmdline, context, content(context.buffer(), sel),
                     ShellManager::Flags::WaitForStdout);
-                return out;
-            }, mode);
+
+                insert(buffer, sel, out, mode);
+            });
 
             selections.set_main_index(old_main);
         });
@@ -688,15 +687,19 @@ void change(Context& context, NormalParams params)
     enter_insert_mode<InsertMode::Replace>(context, params);
 }
 
-InsertMode adapt_for_linewise(InsertMode mode)
+InsertMode adapt_for_linewise(InsertMode mode, bool linewise)
 {
+    if (not linewise)
+        return mode;
+
     switch (mode)
     {
         case InsertMode::Append: return InsertMode::InsertAtNextLineBegin;
         case InsertMode::Insert: return InsertMode::InsertAtLineBegin;
-        case InsertMode::Replace: return InsertMode::Replace;
-        default: return InsertMode::Insert;
+        default: break;
     }
+    kak_assert(false);
+    return InsertMode::Insert;
 }
 
 template<InsertMode mode>
@@ -707,10 +710,12 @@ void paste(Context& context, NormalParams params)
     const bool linewise = any_of(strings, [](StringView str) {
         return not str.empty() and str.back() == '\n';
     });
-    const auto effective_mode = linewise ? adapt_for_linewise(mode) : mode;
 
     ScopedEdition edition(context);
-    context.selections().insert(strings, effective_mode);
+    if (mode == InsertMode::Replace)
+        context.selections().replace(strings);
+    else
+        context.selections().insert(strings, adapt_for_linewise(mode, linewise));
 }
 
 template<InsertMode mode>
@@ -718,7 +723,7 @@ void paste_all(Context& context, NormalParams params)
 {
     const char reg = params.reg ? params.reg : '"';
     auto strings = RegisterManager::instance()[reg].get(context);
-    InsertMode effective_mode = mode;
+    bool linewise = false;
     String all;
     Vector<ByteCount> offsets;
     for (auto& str : strings)
@@ -727,37 +732,35 @@ void paste_all(Context& context, NormalParams params)
             continue;
 
         if (str.back() == '\n')
-            effective_mode = adapt_for_linewise(mode);
+            linewise = true;
         all += str;
         offsets.push_back(all.length());
     }
 
-    Vector<BufferCoord> insert_pos;
+    InsertMode effective_mode = adapt_for_linewise(mode, linewise);
+
+    Buffer& buffer = context.buffer();
+    Vector<Selection> result;
     auto& selections = context.selections();
     {
         ScopedEdition edition(context);
-        selections.insert([&](size_t, BufferCoord pos) {
-            insert_pos.push_back(pos);
-            return String::no_copy(all);
-        }, effective_mode);
-    }
+        selections.for_each([&](size_t, const Selection& sel) {
+            auto range = (mode == InsertMode::Replace) ?
+                buffer.replace(sel.min(), buffer.char_next(sel.max()), all)
+              : buffer.insert(get_insert_pos(buffer, sel, effective_mode), all);
 
-    const Buffer& buffer = context.buffer();
-    Vector<Selection> result;
-    for (auto& ins_pos : insert_pos)
-    {
-        ByteCount pos_offset = 0;
-        BufferCoord pos = ins_pos;
-        for (auto offset : offsets)
-        {
-            BufferCoord end = buffer.advance(pos, offset - pos_offset - 1);
-            result.emplace_back(pos, end);
-            pos = buffer.next(end);
-            pos_offset = offset;
-        }
+            ByteCount pos_offset = 0;
+            BufferCoord pos = range.begin;
+            for (auto offset : offsets)
+            {
+                BufferCoord end = buffer.advance(pos, offset - pos_offset - 1);
+                result.emplace_back(pos, end);
+                pos = buffer.next(end);
+                pos_offset = offset;
+            }
+        });
     }
-    if (not result.empty())
-        selections = std::move(result);
+    selections = std::move(result);
 }
 
 constexpr RegexCompileFlags direction_flags(RegexMode mode)
@@ -1079,7 +1082,7 @@ void join_lines_select_spaces(Context& context, NormalParams)
         return;
     context.selections_write_only() = std::move(selections);
     ScopedEdition edition(context);
-    context.selections().insert(" "_str, InsertMode::Replace);
+    context.selections().replace({" "_str});
 }
 
 void join_lines(Context& context, NormalParams params)
@@ -1478,7 +1481,7 @@ void rotate_selections_content(Context& context, NormalParams params)
             main = main < new_beg ? end - (new_beg - main) : it + (main - new_beg);
         it = end;
     }
-    selections.insert(strings, InsertMode::Replace);
+    selections.replace(strings);
     selections.set_main_index(main - strings.begin());
 }
 
@@ -1696,7 +1699,7 @@ void tabs_to_spaces(Context& context, NormalParams params)
         }
     }
     if (not tabs.empty())
-        SelectionList{ buffer, std::move(tabs) }.insert(spaces, InsertMode::Replace);
+        SelectionList{ buffer, std::move(tabs) }.replace(spaces);
 }
 
 void spaces_to_tabs(Context& context, NormalParams params)
@@ -1732,7 +1735,7 @@ void spaces_to_tabs(Context& context, NormalParams params)
         }
     }
     if (not spaces.empty())
-        SelectionList{ buffer, std::move(spaces) }.insert("\t"_str, InsertMode::Replace);
+        SelectionList{ buffer, std::move(spaces) }.replace("\t"_str);
 }
 
 void trim_selections(Context& context, NormalParams)

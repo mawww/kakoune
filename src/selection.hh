@@ -87,6 +87,12 @@ enum class InsertMode : unsigned
     OpenLineAbove
 };
 
+BufferCoord get_insert_pos(const Buffer& buffer, const Selection& sel, InsertMode mode);
+
+void replace(Buffer& buffer, Selection& sel, StringView content);
+void insert(Buffer& buffer, Selection& sel, StringView content, InsertMode mode);
+
+
 struct SelectionList
 {
     static constexpr MemoryDomain Domain = MemoryDomain::Selections;
@@ -145,9 +151,12 @@ struct SelectionList
     size_t timestamp() const { return m_timestamp; }
     void force_timestamp(size_t timestamp) { m_timestamp = timestamp; }
 
+    using ApplyFunc = FunctionRef<void (size_t index, Selection& sel)>;
+    void for_each(ApplyFunc apply);
+
     void insert(ConstArrayView<String> strings, InsertMode mode);
-    using ContentFunc = FunctionRef<String (size_t index, BufferCoord insert_pos)>;
-    void insert(ContentFunc get_content, InsertMode mode);
+    void replace(ConstArrayView<String> strings);
+
     void erase();
 
 private:

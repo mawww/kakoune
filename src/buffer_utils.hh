@@ -20,11 +20,6 @@ inline BufferCoord erase(Buffer& buffer, const Selection& range)
     return buffer.erase(range.min(), buffer.char_next(range.max()));
 }
 
-inline BufferRange replace(Buffer& buffer, const Selection& range, StringView content)
-{
-    return buffer.replace(range.min(), buffer.char_next(range.max()), content);
-}
-
 void replace(Buffer& buffer, ArrayView<BufferRange> ranges, ConstArrayView<String> strings);
 
 inline CharCount char_length(const Buffer& buffer, const Selection& range)

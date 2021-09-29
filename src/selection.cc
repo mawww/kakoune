@@ -367,7 +367,7 @@ BufferCoord get_insert_pos(const Buffer& buffer, const Selection& sel,
     case InsertMode::AppendAtLineEnd:
         return {sel.max().line, buffer[sel.max().line].length() - 1};
     case InsertMode::InsertAtNextLineBegin:
-        return sel.max().line+1;
+        return std::min(buffer.line_count(), sel.max().line+1);
     default:
         kak_assert(false);
         return {};
@@ -390,21 +390,14 @@ void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode)
     if (strings.empty())
         return;
 
-    insert([&](size_t index, BufferCoord) {
-        return String::no_copy(strings[std::min(strings.size()-1, index)]);
-    }, mode);
+    for_each([&](size_t index, Selection& sel) {
+        Kakoune::insert(*m_buffer, sel, strings[std::min(strings.size()-1, index)], mode);
+    });
 }
 
-void SelectionList::insert(ContentFunc get_content, InsertMode mode)
+void SelectionList::for_each(ApplyFunc func)
 {
     update();
-
-    Vector<BufferCoord> insert_pos;
-    if (mode != InsertMode::Replace)
-    {
-        for (auto& sel : m_selections)
-            insert_pos.push_back(get_insert_pos(*m_buffer, sel, mode));
-    }
 
     ForwardChangesTracker changes_tracker;
     for (size_t index = 0; index < m_selections.size(); ++index)
@@ -413,40 +406,47 @@ void SelectionList::insert(ContentFunc get_content, InsertMode mode)
 
         sel.anchor() = changes_tracker.get_new_coord_tolerant(sel.anchor());
         sel.cursor() = changes_tracker.get_new_coord_tolerant(sel.cursor());
-        kak_assert(m_buffer->is_valid(sel.anchor()) and
-                   m_buffer->is_valid(sel.cursor()));
+        kak_assert(m_buffer->is_valid(sel.anchor()) and m_buffer->is_valid(sel.cursor()));
 
-        const auto pos = (mode == InsertMode::Replace) ?
-            sel.min() : changes_tracker.get_new_coord(insert_pos[index]);
-
-        String str = get_content(index, pos);
-
-        if (mode == InsertMode::Replace)
-        {
-            auto range = replace(*m_buffer, sel, str);
-            // we want min and max from *before* we do any change
-            auto& min = sel.min();
-            auto& max = sel.max();
-            min = range.begin;
-            max = range.end > range.begin ? m_buffer->char_prev(range.end) : range.begin;
-        }
-        else
-        {
-            auto range = m_buffer->insert(pos, str);
-            sel.anchor() = m_buffer->clamp(update_insert(sel.anchor(), range.begin, range.end));
-            sel.cursor() = m_buffer->clamp(update_insert(sel.cursor(), range.begin, range.end));
-        }
+        func(index, sel);
 
         changes_tracker.update(*m_buffer, m_timestamp);
     }
 
     // We might just have been deleting text if strings were empty,
     // in which case we could have some selections pushed out of the buffer
-    if (mode == InsertMode::Replace)
-        fix_overflowing_selections(m_selections, *m_buffer);
+    fix_overflowing_selections(m_selections, *m_buffer);
 
     check_invariant();
     m_buffer->check_invariant();
+}
+
+
+void replace(Buffer& buffer, Selection& sel, StringView content)
+{
+    // we want min and max from *before* we do any change
+    auto& min = sel.min();
+    auto& max = sel.max();
+    BufferRange range = buffer.replace(min, buffer.char_next(max), content);
+    min = range.begin;
+    max = range.end > range.begin ? buffer.char_prev(range.end) : range.begin;
+}
+
+void insert(Buffer& buffer, Selection& sel, StringView content, InsertMode mode)
+{
+    auto range = buffer.insert(get_insert_pos(buffer, sel, mode), content);
+    sel.anchor() = buffer.clamp(update_insert(sel.anchor(), range.begin, range.end));
+    sel.cursor() = buffer.clamp(update_insert(sel.cursor(), range.begin, range.end));
+}
+
+void SelectionList::replace(ConstArrayView<String> strings)
+{
+    if (strings.empty())
+        return;
+
+    for_each([&](size_t index, Selection& sel) {
+        Kakoune::replace(*m_buffer, sel, strings[std::min(strings.size()-1, index)]);
+    });
 }
 
 void SelectionList::erase()
