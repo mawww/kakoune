@@ -55,16 +55,20 @@ evaluate-commands %sh{
   done
 }
 
-add-highlighter shared/markdown/inline/codeblock region -match-capture \
-    ^(\h*)```\h* \
-    ^(\h*)```\h*$ \
-    fill meta
-add-highlighter shared/markdown/codeblock region "^( {4}|\t)" "$" fill meta
-
 add-highlighter shared/markdown/listblock region ^\h*[-*]\s ^(?=\S) regions
 add-highlighter shared/markdown/listblock/g default-region group
 add-highlighter shared/markdown/listblock/g/ ref markdown/inline
 add-highlighter shared/markdown/listblock/g/marker regex ^\h*([-*])\s 1:bullet
+
+add-highlighter shared/markdown/codeblock region -match-capture \
+    ^(\h*)```\h* \
+    ^(\h*)```\h*$ \
+    fill meta
+add-highlighter shared/markdown/listblock/codeblock region -match-capture \
+    ^(\h*)```\h* \
+    ^(\h*)```\h*$ \
+    fill meta
+add-highlighter shared/markdown/codeline region "^( {4}|\t)" "$" fill meta
 
 # https://spec.commonmark.org/0.29/#link-destination
 add-highlighter shared/markdown/angle_bracket_url region (?<=<)([a-z]+://|(mailto|magnet|xmpp):) (?!\\).(?=>)|\n fill link
