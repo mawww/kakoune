@@ -327,6 +327,8 @@ void goto_commands(Context& context, NormalParams params)
                 select_coord<mode>(buffer, *pos, context.selections());
                 break;
             }
+            default:
+                throw runtime_error("key not mapped");
             }
         }, (mode == SelectMode::Extend ? "goto (extend to)" : "goto"),
         build_autoinfo_for_mapping(context, KeymapMode::Goto,
@@ -391,6 +393,8 @@ void view_commands(Context& context, NormalParams params)
         case 'l':
             window.scroll( std::max<ColumnCount>(1, count));
             break;
+        default:
+            throw runtime_error("key not mapped");
         }
     }, lock ? "view (lock)" : "view",
     build_autoinfo_for_mapping(context, KeymapMode::View,
