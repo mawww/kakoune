@@ -1,4 +1,5 @@
 # Line comments
+# If the language has no line comments, set to ''
 declare-option -docstring "characters inserted at the beginning of a commented line" \
     str comment_line '#'
 
@@ -97,6 +98,7 @@ hook global BufSetOption filetype=markdown %{
 }
 
 hook global BufSetOption filetype=(ocaml|coq) %{
+    set-option buffer comment_line ''
     set-option buffer comment_block_begin '(* '
     set-option buffer comment_block_end ' *)'
 }
