@@ -228,7 +228,7 @@ void goto_commands(Context& context, NormalParams params)
             if (not cp or key == Key::Escape)
                 return;
             auto& buffer = context.buffer();
-            switch (to_lower(*cp))
+            switch (*cp)
             {
             case 'g':
             case 'k':
@@ -365,7 +365,7 @@ void view_commands(Context& context, NormalParams params)
 
         const BufferCoord cursor = context.selections().main().cursor();
         Window& window = context.window();
-        switch (to_lower(*cp))
+        switch (*cp)
         {
         case 'v':
         case 'c':
