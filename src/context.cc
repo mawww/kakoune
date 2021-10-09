@@ -172,12 +172,6 @@ void Context::change_buffer(Buffer& buffer)
     if (has_buffer() and m_edition_level > 0)
        this->buffer().commit_undo_group();
 
-    if (has_buffer())
-    {
-        auto* current = &this->buffer();
-        m_last_buffer = contains(BufferManager::instance(), current) ? current : nullptr;
-    }
-
     if (has_client())
     {
         client().info_hide();
@@ -197,8 +191,6 @@ void Context::change_buffer(Buffer& buffer)
 void Context::forget_buffer(Buffer& buffer)
 {
     m_jump_list.forget_buffer(buffer);
-    if (m_last_buffer.get() == &buffer)
-        m_last_buffer = nullptr;
 
     if (&this->buffer() != &buffer)
         return;
@@ -206,7 +198,29 @@ void Context::forget_buffer(Buffer& buffer)
     if (is_editing() && has_input_handler())
         input_handler().reset_normal_mode();
 
-    change_buffer(m_last_buffer ? *m_last_buffer : BufferManager::instance().get_first_buffer());
+    auto last_buffer = this->last_buffer();
+    change_buffer(last_buffer ? *last_buffer : BufferManager::instance().get_first_buffer());
+}
+
+Buffer* Context::last_buffer() const
+{
+    const auto jump_list = m_jump_list.get_as_list();
+    if (jump_list.empty())
+        return nullptr;
+
+    auto predicate = [this](const auto& sels) {
+        return &sels.buffer() != &this->buffer();
+    };
+
+    auto next_buffer = find_if(jump_list.subrange(m_jump_list.current_index()-1),
+                               predicate);
+    if (next_buffer != jump_list.end())
+        return &next_buffer->buffer();
+
+    auto previous_buffer = find_if(jump_list.subrange(0, m_jump_list.current_index()) | reverse(),
+                                   predicate);
+
+    return previous_buffer != jump_list.rend() ? &previous_buffer->buffer() : nullptr;
 }
 
 SelectionList& Context::selections()
