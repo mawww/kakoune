@@ -351,29 +351,6 @@ void SelectionList::sort_and_merge_overlapping()
     merge_overlapping();
 }
 
-BufferCoord get_insert_pos(const Buffer& buffer, const Selection& sel,
-                           InsertMode mode)
-{
-    switch (mode)
-    {
-    case InsertMode::Insert:
-        return sel.min();
-    case InsertMode::InsertCursor:
-        return sel.cursor();
-    case InsertMode::Append:
-        return buffer.char_next(sel.max());
-    case InsertMode::InsertAtLineBegin:
-        return sel.min().line;
-    case InsertMode::AppendAtLineEnd:
-        return {sel.max().line, buffer[sel.max().line].length() - 1};
-    case InsertMode::InsertAtNextLineBegin:
-        return std::min(buffer.line_count(), sel.max().line+1);
-    default:
-        kak_assert(false);
-        return {};
-    }
-}
-
 static void fix_overflowing_selections(Vector<Selection>& selections,
                                        const Buffer& buffer)
 {
@@ -383,16 +360,6 @@ static void fix_overflowing_selections(Vector<Selection>& selections,
         sel.cursor() = std::min(buffer.clamp(sel.cursor()), back_coord);
         sel.anchor() = std::min(buffer.clamp(sel.anchor()), back_coord);
     }
-}
-
-void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode)
-{
-    if (strings.empty())
-        return;
-
-    for_each([&](size_t index, Selection& sel) {
-        Kakoune::insert(*m_buffer, sel, strings[std::min(strings.size()-1, index)], mode);
-    });
 }
 
 void SelectionList::for_each(ApplyFunc func)
@@ -432,9 +399,9 @@ void replace(Buffer& buffer, Selection& sel, StringView content)
     max = range.end > range.begin ? buffer.char_prev(range.end) : range.begin;
 }
 
-void insert(Buffer& buffer, Selection& sel, StringView content, InsertMode mode)
+void insert(Buffer& buffer, Selection& sel, BufferCoord pos, StringView content)
 {
-    auto range = buffer.insert(get_insert_pos(buffer, sel, mode), content);
+    auto range = buffer.insert(pos, content);
     sel.anchor() = buffer.clamp(update_insert(sel.anchor(), range.begin, range.end));
     sel.cursor() = buffer.clamp(update_insert(sel.cursor(), range.begin, range.end));
 }

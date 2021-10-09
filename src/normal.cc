@@ -619,45 +619,6 @@ void pipe(Context& context, NormalParams params)
         });
 }
 
-template<InsertMode mode>
-void insert_output(Context& context, NormalParams params)
-{
-    const char* prompt = mode == InsertMode::Insert ? "insert-output:" : "append-output:";
-    String default_command = context.main_sel_register_value(params.reg ? params.reg : '|').str();
-
-    context.input_handler().prompt(
-        prompt, {}, default_command, context.faces()["Prompt"],
-        PromptFlags::DropHistoryEntriesWithBlankPrefix, '|',
-        shell_complete,
-        [default_command](StringView cmdline, PromptEvent event, Context& context)
-        {
-            if (event != PromptEvent::Validate)
-                return;
-
-            if (cmdline.empty())
-                cmdline = default_command;
-
-            if (cmdline.empty())
-                return;
-
-            ScopedEdition edition(context);
-            auto& selections = context.selections();
-            auto& buffer = context.buffer();
-            const size_t old_main = selections.main_index();
-
-            selections.for_each([&](size_t index, Selection& sel) {
-                selections.set_main_index(index);
-                auto [out, status] = ShellManager::instance().eval(
-                    cmdline, context, content(context.buffer(), sel),
-                    ShellManager::Flags::WaitForStdout);
-
-                insert(buffer, sel, out, mode);
-            });
-
-            selections.set_main_index(old_main);
-        });
-}
-
 void yank(Context& context, NormalParams params)
 {
     const char reg = params.reg ? params.reg : '"';
@@ -690,22 +651,28 @@ void change(Context& context, NormalParams params)
     enter_insert_mode<InsertMode::Replace>(context, params);
 }
 
-InsertMode adapt_for_linewise(InsertMode mode, bool linewise)
+enum class PasteMode
 {
-    if (not linewise)
-        return mode;
+    Append,
+    Insert,
+    Replace
+};
 
+BufferCoord paste_pos(Buffer& buffer, const Selection& sel, PasteMode mode, bool linewise)
+{
     switch (mode)
     {
-        case InsertMode::Append: return InsertMode::InsertAtNextLineBegin;
-        case InsertMode::Insert: return InsertMode::InsertAtLineBegin;
-        default: break;
+        case PasteMode::Append:
+            return linewise ? std::min(buffer.line_count(), sel.max().line+1) : buffer.char_next(sel.max());
+        case PasteMode::Insert:
+            return linewise ? sel.min().line : sel.min();
+        default:
+            kak_assert(false);
+            return {};
     }
-    kak_assert(false);
-    return InsertMode::Insert;
 }
 
-template<InsertMode mode>
+template<PasteMode mode>
 void paste(Context& context, NormalParams params)
 {
     const char reg = params.reg ? params.reg : '"';
@@ -714,14 +681,18 @@ void paste(Context& context, NormalParams params)
         return not str.empty() and str.back() == '\n';
     });
 
+    auto& buffer = context.buffer();
     ScopedEdition edition(context);
-    if (mode == InsertMode::Replace)
-        context.selections().replace(strings);
-    else
-        context.selections().insert(strings, adapt_for_linewise(mode, linewise));
+    context.selections().for_each([&](size_t index, Selection& sel) {
+        auto& str = strings[std::min(strings.size()-1, index)];
+        if (mode == PasteMode::Replace)
+            replace(buffer, sel, str);
+        else
+            insert(buffer, sel, paste_pos(buffer, sel, mode, linewise), str);
+    });
 }
 
-template<InsertMode mode>
+template<PasteMode mode>
 void paste_all(Context& context, NormalParams params)
 {
     const char reg = params.reg ? params.reg : '"';
@@ -740,17 +711,15 @@ void paste_all(Context& context, NormalParams params)
         offsets.push_back(all.length());
     }
 
-    InsertMode effective_mode = adapt_for_linewise(mode, linewise);
-
     Buffer& buffer = context.buffer();
     Vector<Selection> result;
     auto& selections = context.selections();
     {
         ScopedEdition edition(context);
         selections.for_each([&](size_t, const Selection& sel) {
-            auto range = (mode == InsertMode::Replace) ?
+            auto range = (mode == PasteMode::Replace) ?
                 buffer.replace(sel.min(), buffer.char_next(sel.max()), all)
-              : buffer.insert(get_insert_pos(buffer, sel, effective_mode), all);
+              : buffer.insert(paste_pos(buffer, sel, mode, linewise), all);
 
             ByteCount pos_offset = 0;
             BufferCoord pos = range.begin;
@@ -764,6 +733,45 @@ void paste_all(Context& context, NormalParams params)
         });
     }
     selections = std::move(result);
+}
+
+template<PasteMode mode>
+void insert_output(Context& context, NormalParams params)
+{
+    const char* prompt = mode == PasteMode::Insert ? "insert-output:" : "append-output:";
+    String default_command = context.main_sel_register_value(params.reg ? params.reg : '|').str();
+
+    context.input_handler().prompt(
+        prompt, {}, default_command, context.faces()["Prompt"],
+        PromptFlags::DropHistoryEntriesWithBlankPrefix, '|',
+        shell_complete,
+        [default_command](StringView cmdline, PromptEvent event, Context& context)
+        {
+            if (event != PromptEvent::Validate)
+                return;
+
+            if (cmdline.empty())
+                cmdline = default_command;
+
+            if (cmdline.empty())
+                return;
+
+            ScopedEdition edition(context);
+            auto& selections = context.selections();
+            auto& buffer = context.buffer();
+            const size_t old_main = selections.main_index();
+
+            selections.for_each([&](size_t index, Selection& sel) {
+                selections.set_main_index(index);
+                auto [out, status] = ShellManager::instance().eval(
+                    cmdline, context, content(context.buffer(), sel),
+                    ShellManager::Flags::WaitForStdout);
+
+                insert(buffer, sel, paste_pos(buffer, sel, mode, false), out);
+            });
+
+            selections.set_main_index(old_main);
+        });
 }
 
 constexpr RegexCompileFlags direction_flags(RegexMode mode)
@@ -2235,12 +2243,12 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
     { {'V'}, {"move view (locked)", view_commands<true>} },
 
     { {'y'}, {"yank selected text", yank} },
-    { {'p'}, {"paste after selected text", repeated<paste<InsertMode::Append>>} },
-    { {'P'}, {"paste before selected text", repeated<paste<InsertMode::Insert>>} },
-    { {alt('p')}, {"paste every yanked selection after selected text", paste_all<InsertMode::Append>} },
-    { {alt('P')}, {"paste every yanked selection before selected text", paste_all<InsertMode::Insert>} },
-    { {'R'}, {"replace selected text with yanked text", paste<InsertMode::Replace>} },
-    { {alt('R')}, {"replace selected text with every yanked text", paste_all<InsertMode::Replace>} },
+    { {'p'}, {"paste after selected text", repeated<paste<PasteMode::Append>>} },
+    { {'P'}, {"paste before selected text", repeated<paste<PasteMode::Insert>>} },
+    { {alt('p')}, {"paste every yanked selection after selected text", paste_all<PasteMode::Append>} },
+    { {alt('P')}, {"paste every yanked selection before selected text", paste_all<PasteMode::Insert>} },
+    { {'R'}, {"replace selected text with yanked text", paste<PasteMode::Replace>} },
+    { {alt('R')}, {"replace selected text with every yanked text", paste_all<PasteMode::Replace>} },
 
     { {'s'}, {"select regex matches in selected text", select_regex} },
     { {'S'}, {"split selected text on regex matches", split_regex} },
@@ -2255,8 +2263,8 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
     { {':'}, {"enter command prompt", command} },
     { {'|'}, {"pipe each selection through filter and replace with output", pipe<true>} },
     { {alt('|')}, {"pipe each selection through command and ignore output", pipe<false>} },
-    { {'!'}, {"insert command output", insert_output<InsertMode::Insert>} },
-    { {alt('!')}, {"append command output", insert_output<InsertMode::Append>} },
+    { {'!'}, {"insert command output", insert_output<PasteMode::Insert>} },
+    { {alt('!')}, {"append command output", insert_output<PasteMode::Append>} },
 
     { {' '}, {"remove all selections except main", keep_selection} },
     { {alt(' ')}, {"remove main selection", remove_selection} },

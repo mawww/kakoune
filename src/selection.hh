@@ -74,24 +74,8 @@ void sort_selections(Vector<Selection>& selections, size_t& main);
 void merge_overlapping_selections(Vector<Selection>& selections, size_t& main);
 void clamp_selections(Vector<Selection>& sel, const Buffer& buffer);
 
-enum class InsertMode : unsigned
-{
-    Insert,
-    InsertCursor,
-    Append,
-    Replace,
-    InsertAtLineBegin,
-    InsertAtNextLineBegin,
-    AppendAtLineEnd,
-    OpenLineBelow,
-    OpenLineAbove
-};
-
-BufferCoord get_insert_pos(const Buffer& buffer, const Selection& sel, InsertMode mode);
-
 void replace(Buffer& buffer, Selection& sel, StringView content);
-void insert(Buffer& buffer, Selection& sel, StringView content, InsertMode mode);
-
+void insert(Buffer& buffer, Selection& sel, BufferCoord pos, StringView content);
 
 struct SelectionList
 {
@@ -154,7 +138,6 @@ struct SelectionList
     using ApplyFunc = FunctionRef<void (size_t index, Selection& sel)>;
     void for_each(ApplyFunc apply);
 
-    void insert(ConstArrayView<String> strings, InsertMode mode);
     void replace(ConstArrayView<String> strings);
 
     void erase();

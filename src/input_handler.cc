@@ -1467,13 +1467,19 @@ private:
 
     void insert(ConstArrayView<String> strings)
     {
-        context().selections().insert(strings, InsertMode::InsertCursor);
+        context().selections().for_each([strings, &buffer=context().buffer()]
+                                        (size_t index, Selection& sel) {
+            Kakoune::insert(buffer, sel, sel.cursor(), strings[std::min(strings.size()-1, index)]);
+        });
     }
 
     void insert(Codepoint key)
     {
         String str{key};
-        context().selections().insert(str, InsertMode::InsertCursor);
+        context().selections().for_each([&buffer=context().buffer(), &str]
+                                        (size_t index, Selection& sel) {
+            Kakoune::insert(buffer, sel, sel.cursor(), str);
+        });
         context().hooks().run_hook(Hook::InsertChar, str, context());
     }
 
@@ -1551,10 +1557,6 @@ private:
                 sel.set(pos);
             }
             break;
-        case InsertMode::InsertAtNextLineBegin:
-        case InsertMode::InsertCursor:
-             kak_assert(false); // invalid for interactive insert
-             break;
         }
         selections.check_invariant();
         buffer.check_invariant();
