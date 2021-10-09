@@ -28,7 +28,7 @@ enum class HighlightPass
 };
 constexpr bool with_bit_ops(Meta::Type<HighlightPass>) { return true; }
 
-// An Highlighter is a function which mutates a DisplayBuffer in order to
+// A Highlighter is a function which mutates a DisplayBuffer in order to
 // change the visual representation of a file. It could be changing text
 // color, adding information text (line numbering for example) or replacing
 // buffer content (folding for example)
