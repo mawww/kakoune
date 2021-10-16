@@ -46,11 +46,12 @@ add-highlighter shared/asciidoc/ regex ^\.[^\h\W][^\n]*$ 0:title
 add-highlighter shared/asciidoc/ regex ^\h*(?<bullet>[-\*])\h+[^\n]+$ 0:list bullet:bullet
 add-highlighter shared/asciidoc/ regex ^\h*(?<bullet>[-\*]+)\h+[^\n]+(\n\h+[^-\*\n]*)?$ 0:list bullet:bullet
 
-# Blocks
-add-highlighter shared/asciidoc/ regex ^(-{3,})\n[^\n\h].*?\n(-{3,})$ 0:block
-add-highlighter shared/asciidoc/ regex ^(={3,})\n[^\n\h].*?\n(={3,})$ 0:block
-add-highlighter shared/asciidoc/ regex ^(~{3,})\n[^\n\h].*?\n(~{3,})$ 0:block
-add-highlighter shared/asciidoc/ regex ^(\*{3,})\n[^\n\h].*?\n(\*{3,})$ 0:block
+# Delimited blocks
+# https://docs.asciidoctor.org/asciidoc/latest/blocks/delimited/
+add-highlighter shared/asciidoc/ regex ^(-{4,})\n[^\n\h].*?\n(-{4,})$ 0:block
+add-highlighter shared/asciidoc/ regex ^(={4,})\n[^\n\h].*?\n(={4,})$ 0:block
+add-highlighter shared/asciidoc/ regex ^(~{4,})\n[^\n\h].*?\n(~{4,})$ 0:block
+add-highlighter shared/asciidoc/ regex ^(\*{4,})\n[^\n\h].*?\n(\*{4,})$ 0:block
 
 # Monospaced text
 add-highlighter shared/asciidoc/ regex \B(?:\+[^\n]+?\+|`[^\n]+?`)\B 0:mono
