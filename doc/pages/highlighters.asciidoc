@@ -262,8 +262,8 @@ highlighter as root:
 
 -----------------------------------------------------------------
 add-highlighter <path>/<lang> regions
-add-highlighter <path>/<lang>/string '"' '"' fill string
-add-highlighter <path>/<lang>/comment '//' '$' fill comment
+add-highlighter <path>/<lang>/string region '"' '"' fill string
+add-highlighter <path>/<lang>/comment region '//' '$' fill comment
 add-highlighter <path>/<lang>/code default-region group
 add-highlighter <path>/<lang>/code/variable regex ...
 add-highlighter <path>/<lang>/code/function regex ...
