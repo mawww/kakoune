@@ -164,16 +164,16 @@ struct EnumerateView
     struct Iterator : std::iterator<std::forward_iterator_tag,
                                     typename std::iterator_traits<RangeIt>::value_type>
     {
-        Iterator(size_t index, RangeIt it, RangeIt end)
-            : m_index{index}, m_it{std::move(it)}, m_end{std::move(end)} {}
+        Iterator(size_t index, RangeIt it)
+            : m_index{index}, m_it{std::move(it)} {}
 
-        decltype(auto) operator*() { return std::make_tuple(m_index, *m_it); }
+        decltype(auto) operator*() { return std::tuple<size_t, decltype(*m_it)>(m_index, *m_it); }
         Iterator& operator++() { ++m_index; ++m_it; return *this; }
         Iterator operator++(int) { auto copy = *this; ++(*this); return copy; }
 
         friend bool operator==(const Iterator& lhs, const Iterator& rhs)
         {
-            return lhs.m_index == rhs.m_index and lhs.m_it == rhs.m_it;
+            return lhs.m_it == rhs.m_it;
         }
 
         friend bool operator!=(const Iterator& lhs, const Iterator& rhs)
@@ -186,11 +186,10 @@ struct EnumerateView
     private:
         size_t m_index;
         RangeIt m_it;
-        RangeIt m_end;
     };
 
-    Iterator begin() const { return {0, std::begin(m_range), std::end(m_range)}; }
-    Iterator end()   const { return {std::size(m_range), std::end(m_range), std::end(m_range)}; }
+    Iterator begin() const { return {0, std::begin(m_range)}; }
+    Iterator end()   const { return {(size_t)-1, std::end(m_range)}; }
 
     Range m_range;
 };
