@@ -2281,33 +2281,29 @@ void register_highlighters()
     HighlighterRegistry& registry = HighlighterRegistry::instance();
 
     registry.insert({
-        "number-lines",
-        { LineNumbersHighlighter::create,
-          "Display line numbers \n"
-          "Parameters: -relative, -hlcursor, -separator <separator text>, -cursor-separator <separator text>, -min-digits <cols>\n" } });
+        "column",
+        { create_column_highlighter,
+          "Parameters: <value string> <face>\n"
+          "Highlight the column given by evaluating <value string> with <face>" } });
     registry.insert({
-        "show-matching",
-        { create_matching_char_highlighter,
-          "Apply the MatchingChar face to the char matching the one under the cursor" } });
-    registry.insert({
-        "show-whitespaces",
-        { ShowWhitespacesHighlighter::create,
-          "Display whitespaces using symbols \n"
-          "Parameters: -tab <separator> -tabpad <separator> -lf <separator> -spc <separator> -nbsp <separator>\n" } });
-    registry.insert({
-        "fill",
-        { create_fill_highlighter,
-          "Fill the whole highlighted range with the given face" } });
-    registry.insert({
-        "regex",
-        { RegexHighlighter::create,
-          "Parameters: <regex> <capture num>:<face> <capture num>:<face>...\n"
-          "Highlights the matches for captures from the regex with the given faces" } });
+        "default-region",
+        { RegionsHighlighter::create_default_region,
+          "Parameters: <delegate_type> <delegate_params>...\n"
+          "Define the default region of a regions highlighter" } });
     registry.insert({
         "dynregex",
         { create_dynamic_regex_highlighter,
           "Parameters: <expr> <capture num>:<face> <capture num>:<face>...\n"
           "Evaluate expression at every redraw to gather a regex" } });
+    registry.insert({
+        "fill",
+        { create_fill_highlighter,
+          "Fill the whole highlighted range with the given face" } });
+    registry.insert({
+        "flag-lines",
+        { FlagLinesHighlighter::create,
+          "Parameters: <face> <option name>\n"
+          "Display flags specified in the line-spec option <option name> with <face>"} });
     registry.insert({
         "group",
         { create_highlighter_group,
@@ -2316,40 +2312,21 @@ void register_highlighters()
           "<passes> is a flags(colorize|move|wrap) defaulting to colorize\n"
           "which specify what kind of highlighters can be put in the group" } });
     registry.insert({
-        "flag-lines",
-        { FlagLinesHighlighter::create,
-          "Parameters: <face> <option name>\n"
-          "Display flags specified in the line-spec option <option name> with <face>"} });
+        "line",
+        { create_line_highlighter,
+          "Parameters: <value string> <face>\n"
+          "Highlight the line given by evaluating <value string> with <face>" } });
+    registry.insert({
+        "number-lines",
+        { LineNumbersHighlighter::create,
+          "Display line numbers \n"
+          "Parameters: -relative, -hlcursor, -separator <separator text>, -cursor-separator <separator text>, -min-digits <cols>\n" } });
     registry.insert({
         "ranges",
         { RangesHighlighter::create,
           "Parameters: <option name>\n"
           "Use the range-specs option given as parameter to highlight buffer\n"
           "each spec is interpreted as a face to apply to the range\n" } });
-    registry.insert({
-        "replace-ranges",
-        { ReplaceRangesHighlighter::create,
-          "Parameters: <option name>\n"
-          "Use the range-specs option given as parameter to highlight buffer\n"
-          "each spec is interpreted as a display line to display in place of the range\n" } });
-    registry.insert({
-        "line",
-        { create_line_highlighter,
-          "Parameters: <value string> <face>\n"
-          "Highlight the line given by evaluating <value string> with <face>" } });
-    registry.insert({
-        "column",
-        { create_column_highlighter,
-          "Parameters: <value string> <face>\n"
-          "Highlight the column given by evaluating <value string> with <face>" } });
-    registry.insert({
-        "wrap",
-        { WrapHighlighter::create,
-          "Parameters: [-word] [-indent] [-width <max_width>] [-marker <marker_text>]\n"
-          "Wrap lines to window width, or max_width if given and window is wider,\n"
-          "wrap at word boundaries instead of codepoint boundaries if -word is given\n"
-          "insert marker_text at start of wrapped lines if given\n"
-          "preserve line indent in wrapped parts if -indent is given\n"} });
     registry.insert({
         "ref",
         { ReferenceHighlighter::create,
@@ -2358,13 +2335,10 @@ void register_highlighters()
           "<passes> is a flags(colorize|move|wrap) defaulting to colorize\n"
           "which specify what kind of highlighters can be referenced" } });
     registry.insert({
-        "regions",
-        { RegionsHighlighter::create,
-          "Parameters: None\n"
-          "Holds child region highlighters and segments the buffer in ranges based on those regions\n"
-          "definitions. The regions highlighter finds the next region to start by finding which\n"
-          "of its child region has the leftmost starting point from current position. In between\n"
-          "regions, the default-region child highlighter is applied (if such a child exists)" } });
+        "regex",
+        { RegexHighlighter::create,
+          "Parameters: <regex> <capture num>:<face> <capture num>:<face>...\n"
+          "Highlights the matches for captures from the regex with the given faces" } });
     registry.insert({
         "region",
         { RegionsHighlighter::create_region,
@@ -2377,10 +2351,36 @@ void register_highlighters()
           "If -match-capture is specified, then regions end/recurse matches must have\n"
           "the same \\1 capture content as the begin match to be considered"} });
     registry.insert({
-        "default-region",
-        { RegionsHighlighter::create_default_region,
-          "Parameters: <delegate_type> <delegate_params>...\n"
-          "Define the default region of a regions highlighter" } });
+        "regions",
+        { RegionsHighlighter::create,
+          "Parameters: None\n"
+          "Holds child region highlighters and segments the buffer in ranges based on those regions\n"
+          "definitions. The regions highlighter finds the next region to start by finding which\n"
+          "of its child region has the leftmost starting point from current position. In between\n"
+          "regions, the default-region child highlighter is applied (if such a child exists)" } });
+    registry.insert({
+        "replace-ranges",
+        { ReplaceRangesHighlighter::create,
+          "Parameters: <option name>\n"
+          "Use the range-specs option given as parameter to highlight buffer\n"
+          "each spec is interpreted as a display line to display in place of the range\n" } });
+    registry.insert({
+        "show-matching",
+        { create_matching_char_highlighter,
+          "Apply the MatchingChar face to the char matching the one under the cursor" } });
+    registry.insert({
+        "show-whitespaces",
+        { ShowWhitespacesHighlighter::create,
+          "Display whitespaces using symbols \n"
+          "Parameters: -tab <separator> -tabpad <separator> -lf <separator> -spc <separator> -nbsp <separator>\n" } });
+    registry.insert({
+        "wrap",
+        { WrapHighlighter::create,
+          "Parameters: [-word] [-indent] [-width <max_width>] [-marker <marker_text>]\n"
+          "Wrap lines to window width, or max_width if given and window is wider,\n"
+          "wrap at word boundaries instead of codepoint boundaries if -word is given\n"
+          "insert marker_text at start of wrapped lines if given\n"
+          "preserve line indent in wrapped parts if -indent is given\n"} });
 }
 
 }
