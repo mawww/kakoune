@@ -531,7 +531,7 @@ void TerminalUI::redraw(bool force)
     m_info.blit(m_screen);
 
     Writer writer{STDOUT_FILENO};
-    m_screen.output(force, m_synchronized, writer);
+    m_screen.output(force, (bool)m_synchronized, writer);
 
     auto set_cursor_pos = [&](DisplayCoord c) {
         format_with(writer, "\033[{};{}H", (int)c.line + 1, (int)c.column + 1);
@@ -808,6 +808,12 @@ Optional<Key> TerminalUI::get_next_key()
         switch (c)
         {
         case '$':
+            if (private_mode == '?' and next_char() == 'y') // DECRPM
+            {
+                if (params[0] == 2026)
+                    m_synchronized.supported = (params[0] != 0);
+                return {Key::Invalid};
+            }
             switch (params[0])
             {
             case 23: case 24:
@@ -1401,6 +1407,7 @@ void TerminalUI::setup_terminal()
         "\033[22t"    // save the current window title
         "\033[?25l"   // hide cursor
         "\033="       // set application keypad mode, so the keypad keys send unique codes
+        "\033[?2026$p" // query support for synchronize output
     );
 }
 
@@ -1463,7 +1470,10 @@ void TerminalUI::set_ui_options(const Options& options)
 
     m_status_on_top = find("terminal_status_on_top").map(to_bool).value_or(false);
     m_set_title = find("terminal_set_title").map(to_bool).value_or(true);
-    m_synchronized = find("terminal_synchronized").map(to_bool).value_or(false);
+
+    auto synchronized = find("terminal_synchronized").map(to_bool);
+    m_synchronized.set = (bool)synchronized;
+    m_synchronized.requested = synchronized.value_or(false);
 
     m_shift_function_key = find("terminal_shift_function_key").map(str_to_int_ifp).value_or(default_shift_function_key);
 

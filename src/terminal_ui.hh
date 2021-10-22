@@ -151,7 +151,15 @@ private:
     int m_shift_function_key = default_shift_function_key;
 
     bool m_set_title = true;
-    bool m_synchronized = false;
+
+    struct Synchronized
+    {
+        bool supported : 1;
+        bool set : 1;
+        bool requested : 1;
+
+        explicit operator bool() const { return set ? requested : supported; }
+    } m_synchronized{};
 
     Codepoint m_padding_char = '~';
     bool m_padding_fill = false;
