@@ -51,7 +51,7 @@ public:
             return m_parent->user_modes();
         return m_user_modes;
     }
-    void add_user_mode(const String user_mode_name);
+    void add_user_mode(String user_mode_name);
 
 private:
     KeymapManager()

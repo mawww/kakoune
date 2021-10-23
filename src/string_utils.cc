@@ -21,7 +21,7 @@ String trim_indent(StringView str)
 
     utf8::iterator it{str.begin(), str};
     while (it != str.end() and is_horizontal_blank(*it))
-        it++;
+        ++it;
 
     const StringView indent{str.begin(), it.base()};
     return accumulate(str | split_after<StringView>('\n') | transform([&](auto&& line) {
