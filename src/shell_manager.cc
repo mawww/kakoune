@@ -53,9 +53,13 @@ ShellManager::ShellManager(ConstArrayView<EnvVarDesc> builtin_env_vars)
     }
     else // Get a guaranteed to be POSIX shell binary
     {
+        #if defined(_CS_PATH)
         auto size = confstr(_CS_PATH, nullptr, 0);
         String path; path.resize(size-1, 0);
         confstr(_CS_PATH, path.data(), size);
+        #else
+        StringView path = "/bin:/usr/bin";
+        #endif
         for (auto dir : StringView{path} | split<StringView>(':'))
         {
             auto candidate = format("{}/sh", dir);
