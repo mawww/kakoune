@@ -864,7 +864,9 @@ const CommandDesc rename_buffer_cmd = {
         if (parser.get_switch("file"))
             buffer.flags() |= Buffer::Flags::File;
 
-        if (not buffer.set_name(parser[0]))
+        const bool is_file = (buffer.flags() & Buffer::Flags::File);
+
+        if (not buffer.set_name(is_file ? parse_filename(parser[0]) : parser[0]))
             throw runtime_error(format("unable to change buffer name to '{}': a buffer with this name already exists", parser[0]));
     }
 };
