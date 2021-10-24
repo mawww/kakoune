@@ -288,30 +288,39 @@ void goto_commands(Context& context, NormalParams params)
             }
             case 'f':
             {
-                auto filename = content(buffer, context.selections().main());
                 static constexpr char forbidden[] = { '\'', '\\', '\0' };
-                if (any_of(filename, [](char c){ return contains(forbidden, c); }))
-                    return;
+                const auto& paths_opt = context.options()["path"].get<Vector<String, MemoryDomain::Options>>();
+                const auto paths = context.selections() | transform([&](const auto& sel) {
+                    auto filename = content(buffer, sel);
+                    if (any_of(filename, [](char c){ return contains(forbidden, c); }))
+                        throw runtime_error(format("filename contains invalid characters: '{}'", filename));
 
-                auto paths = context.options()["path"].get<Vector<String, MemoryDomain::Options>>();
-                const StringView buffer_dir = split_path(buffer.name()).first;
-                String path = find_file(filename, buffer_dir, paths);
-                if (path.empty())
-                    throw runtime_error(format("unable to find file '{}'", filename));
+                    const StringView buffer_dir = split_path(buffer.name()).first;
+                    String path = find_file(filename, buffer_dir, paths_opt);
+                    if (path.empty())
+                        throw runtime_error(format("unable to find file '{}'", filename));
 
-                Buffer* buffer = BufferManager::instance().get_buffer_ifp(path);
-                if (not buffer)
-                {
-                    buffer = open_file_buffer(path, context.hooks_disabled() ?
-                                                      Buffer::Flags::NoHooks
-                                                    : Buffer::Flags::None);
-                    buffer->flags() &= ~Buffer::Flags::NoHooks;
+                    return path;
+                });
+
+                Buffer* buffer_main = nullptr;
+                for (auto&& [i, path] : paths | enumerate()) {
+                    Buffer* buffer = BufferManager::instance().get_buffer_ifp(path);
+                    if (not buffer)
+                    {
+                        buffer = open_file_buffer(path, context.hooks_disabled() ?
+                                                          Buffer::Flags::NoHooks
+                                                        : Buffer::Flags::None);
+                        buffer->flags() &= ~Buffer::Flags::NoHooks;
+                    }
+
+                    if (i == context.selections().main_index())
+                        buffer_main = buffer;
                 }
-
-                if (buffer != &context.buffer())
+                if (buffer_main and buffer_main != &context.buffer())
                 {
                     context.push_jump();
-                    context.change_buffer(*buffer);
+                    context.change_buffer(*buffer_main);
                 }
                 break;
             }
