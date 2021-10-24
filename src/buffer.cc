@@ -654,11 +654,11 @@ void Buffer::run_hook_in_own_context(Hook hook, StringView param, String client_
     hooks().run_hook(hook, param, hook_handler.context());
 }
 
-Optional<BufferCoord> Buffer::last_modification_coord() const
+const Buffer::UndoGroup& Buffer::last_modification_coords() const
 {
     if (m_history_id == HistoryId::First)
-        return {};
-    return current_history_node().undo_group.back().coord;
+        throw runtime_error("no last modification coordinates");
+    return current_history_node().undo_group;
 }
 
 String Buffer::debug_description() const
