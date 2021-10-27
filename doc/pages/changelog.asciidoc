@@ -3,6 +3,11 @@
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
+== Kakoune 2021.10.28
+
+* `g` and `v` do not auto lower case the next key, so `GL` needs to be
+  manually mapped to `Gl` for example.
+
 == Kakoune 2021.08.28
 
 * command and response fifo support

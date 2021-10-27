@@ -44,6 +44,9 @@ struct {
     unsigned int version;
     StringView notes;
 } constexpr version_notes[] = { {
+        20211028,
+        "» {+b}g{} and {+b}v{} do not auto-convert to lowercase anymore\n"
+    }, {
         20210828,
         "» {+u}write <filename>{} will refuse to overwrite without {+u}-force{}\n"
         "» {+u}$kak_command_fifo{} support\n"
