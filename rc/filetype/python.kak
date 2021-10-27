@@ -106,6 +106,9 @@ evaluate-commands %sh{
               finally for global if in is lambda nonlocal not or pass print
               raise return try while with yield"
 
+    # Collected from `keyword.softkwlist`
+    soft_keywords="_ case match"
+
     types="bool buffer bytearray bytes complex dict file float frozenset int
            list long memoryview object set str tuple unicode xrange"
 
@@ -129,7 +132,7 @@ evaluate-commands %sh{
         add-highlighter shared/python/code/ regex '\b($(join "${attributes}" '|'))\b' 0:attribute
         add-highlighter shared/python/code/ regex '\bdef\s+($(join "${methods}" '|'))\b' 1:function
         add-highlighter shared/python/code/ regex '\b($(join "${exceptions}" '|'))\b' 0:function
-        add-highlighter shared/python/code/ regex '\b($(join "${keywords}" '|'))\b' 0:keyword
+        add-highlighter shared/python/code/ regex '\b($(join "${keywords} ${soft_keywords}" '|'))\b' 0:keyword
         add-highlighter shared/python/code/ regex '\b($(join "${functions}" '|'))\b\(' 1:builtin
         add-highlighter shared/python/code/ regex '\b($(join "${types}" '|'))\b' 0:type
         add-highlighter shared/python/code/ regex '^\h*(@[\w_.]+))' 1:attribute
