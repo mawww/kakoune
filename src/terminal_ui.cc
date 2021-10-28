@@ -247,7 +247,7 @@ void TerminalUI::Screen::set_face(const Face& face, Writer& writer)
             if (face.attributes & (Attribute)(1 << i))
                 format_with(writer, ";{}", attr_table[i]);
         }
-        m_active_face = Face{{}, {}, face.attributes};
+        m_active_face.fg = m_active_face.bg = Color::Default;
         join = true;
     }
     if (m_active_face.fg != face.fg)
