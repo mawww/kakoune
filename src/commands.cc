@@ -206,6 +206,14 @@ static Completions complete_command_name(const Context& context, CompletionFlags
        context, prefix.substr(0, cursor_pos));
 }
 
+static Completions complete_alias_name(const Context& context, CompletionFlags,
+                                       const String& prefix, ByteCount cursor_pos)
+{
+   return { 0_byte, cursor_pos, complete(prefix, cursor_pos,
+                                           context.aliases().flatten_aliases()
+                                         | transform(&HashItem<String, String>::key)) };
+}
+
 struct ShellScriptCompleter
 {
     ShellScriptCompleter(String shell_script,
@@ -1297,7 +1305,7 @@ const CommandDesc alias_cmd = {
     ParameterDesc{{}, ParameterDesc::Flags::None, 3, 3},
     CommandFlags::None,
     CommandHelper{},
-    make_completer(complete_scope, complete_nothing, complete_command_name),
+    make_completer(complete_scope, complete_alias_name, complete_command_name),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         if (not CommandManager::instance().command_defined(parser[2]))
