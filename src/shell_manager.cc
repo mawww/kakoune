@@ -176,9 +176,12 @@ FDWatcher make_reader(int fd, String& contents, OnClose&& on_close)
         char buffer[1024];
         while (fd_readable(fd))
         {
-            size_t size = ::read(fd, buffer, sizeof(buffer));
+            ssize_t size = ::read(fd, buffer, sizeof(buffer));
             if (size <= 0)
             {
+                if (size < 0 and errno == EAGAIN)
+                    continue; // try again
+
                 watcher.disable();
                 on_close();
                 return;
