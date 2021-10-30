@@ -754,7 +754,7 @@ Optional<Key> TerminalUI::get_next_key()
 
     auto parse_csi = [this, &convert, &parse_mask]() -> Optional<Key> {
         auto next_char = [] { return get_char().value_or((unsigned char)0xff); };
-        int params[16] = {};
+        int params[16][4] = {};
         auto c = next_char();
         char private_mode = 0;
         if (c == '?' or c == '<' or c == '=' or c == '>')
@@ -762,12 +762,17 @@ Optional<Key> TerminalUI::get_next_key()
             private_mode = c;
             c = next_char();
         }
-        for (int count = 0; count < 16 and c >= 0x30 && c <= 0x3f; c = next_char())
+        for (int count = 0, subcount = 0; count < 16 and c >= 0x30 && c <= 0x3f; c = next_char())
         {
             if (isdigit(c))
-                params[count] = params[count] * 10 + c - '0';
+                params[count][subcount] = params[count][subcount] * 10 + c - '0';
+            else if (c == ':' && subcount < 3)
+                ++subcount;
             else if (c == ';')
+            {
                 ++count;
+                subcount = 0;
+            }
             else
                 return {};
         }
@@ -794,13 +799,13 @@ Optional<Key> TerminalUI::get_next_key()
                     (Codepoint)((down ? 1 : -1) * m_wheel_scroll_amount)};
         };
 
-        auto masked_key = [&](Codepoint key) {
-            int mask = std::max(params[1] - 1, 0);
+        auto masked_key = [&](Codepoint key, Codepoint shifted_key = 0) {
+            int mask = std::max(params[1][0] - 1, 0);
             Key::Modifiers modifiers = parse_mask(mask);
-            if (is_basic_alpha(key) and (modifiers & Key::Modifiers::Shift))
+            if (shifted_key != 0 and (modifiers & Key::Modifiers::Shift))
             {
                 modifiers &= ~Key::Modifiers::Shift;
-                key = to_upper(key);
+                key = shifted_key;
             }
             return Key{modifiers, key};
         };
@@ -810,14 +815,14 @@ Optional<Key> TerminalUI::get_next_key()
         case '$':
             if (private_mode == '?' and next_char() == 'y') // DECRPM
             {
-                if (params[0] == 2026)
-                    m_synchronized.supported = (params[1] == 1 or params[1] == 2);
+                if (params[0][0] == 2026)
+                    m_synchronized.supported = (params[1][0] == 1 or params[1][0] == 2);
                 return {Key::Invalid};
             }
-            switch (params[0])
+            switch (params[0][0])
             {
             case 23: case 24:
-                return Key{Key::Modifiers::Shift, Key::F11 + params[0] - 23}; // rxvt style
+                return Key{Key::Modifiers::Shift, Key::F11 + params[0][0] - 23}; // rxvt style
             }
             return {};
         case 'A': return masked_key(Key::Up);
@@ -832,7 +837,7 @@ Optional<Key> TerminalUI::get_next_key()
         case 'R': return masked_key(Key::F3);
         case 'S': return masked_key(Key::F4);
         case '~':
-            switch (params[0])
+            switch (params[0][0])
             {
             case 1: return masked_key(Key::Home);     // VT220/tmux style
             case 2: return masked_key(Key::Insert);
@@ -843,23 +848,24 @@ Optional<Key> TerminalUI::get_next_key()
             case 7: return masked_key(Key::Home);     // rxvt style
             case 8: return masked_key(Key::End);      // rxvt style
             case 11: case 12: case 13: case 14: case 15:
-                return masked_key(Key::F1 + params[0] - 11);
+                return masked_key(Key::F1 + params[0][0] - 11);
             case 17: case 18: case 19: case 20: case 21:
-                return masked_key(Key::F6 + params[0] - 17);
+                return masked_key(Key::F6 + params[0][0] - 17);
             case 23: case 24:
-                return masked_key(Key::F11 + params[0] - 23);
+                return masked_key(Key::F11 + params[0][0] - 23);
             case 25: case 26:
-                return Key{Key::Modifiers::Shift, Key::F3 + params[0] - 25}; // rxvt style
+                return Key{Key::Modifiers::Shift, Key::F3 + params[0][0] - 25}; // rxvt style
             case 28: case 29:
-                return Key{Key::Modifiers::Shift, Key::F5 + params[0] - 28}; // rxvt style
+                return Key{Key::Modifiers::Shift, Key::F5 + params[0][0] - 28}; // rxvt style
             case 31: case 32:
-                return Key{Key::Modifiers::Shift, Key::F7 + params[0] - 31}; // rxvt style
+                return Key{Key::Modifiers::Shift, Key::F7 + params[0][0] - 31}; // rxvt style
             case 33: case 34:
-                return Key{Key::Modifiers::Shift, Key::F9 + params[0] - 33}; // rxvt style
+                return Key{Key::Modifiers::Shift, Key::F9 + params[0][0] - 33}; // rxvt style
             }
             return {};
         case 'u':
-            return masked_key(convert(static_cast<Codepoint>(params[0])));
+            return masked_key(convert(static_cast<Codepoint>(params[0][0])),
+                              convert(static_cast<Codepoint>(params[0][1])));
         case 'Z': return shift(Key::Tab);
         case 'I': return {Key::FocusIn};
         case 'O': return {Key::FocusOut};
@@ -868,9 +874,9 @@ Optional<Key> TerminalUI::get_next_key()
             if (not sgr and c != 'M')
                 return {};
 
-            const Codepoint b = sgr ? params[0] : next_char() - 32;
-            const int x = (sgr ? params[1] : next_char() - 32) - 1;
-            const int y = (sgr ? params[2] : next_char() - 32) - 1;
+            const Codepoint b = sgr ? params[0][0] : next_char() - 32;
+            const int x = (sgr ? params[1][0] : next_char() - 32) - 1;
+            const int y = (sgr ? params[2][0] : next_char() - 32) - 1;
             auto coord = encode_coord({y - content_line_offset(), x});
             Key::Modifiers mod = parse_mask((b >> 2) & 0x7);
             switch (const int code = b & 0x43; code)
@@ -1404,6 +1410,7 @@ void TerminalUI::setup_terminal()
         "\033[?1049h" // enable alternative screen buffer
         "\033[?1004h" // enable focus notify
         "\033[>4;1m"  // request CSI u style key reporting
+        "\033[>5u"    // kitty progressive enhancement - report shifted key codes
         "\033[22t"    // save the current window title
         "\033[?25l"   // hide cursor
         "\033="       // set application keypad mode, so the keypad keys send unique codes
@@ -1417,6 +1424,7 @@ void TerminalUI::restore_terminal()
         "\033>"
         "\033[?25h"
         "\033[23t"
+        "\033[<u"
         "\033[>4;0m"
         "\033[?1004l"
         "\033[?1049l"
