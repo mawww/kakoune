@@ -720,6 +720,9 @@ void paste_all(Context& context, NormalParams params)
         offsets.push_back(all.length());
     }
 
+    if (offsets.empty())
+        throw runtime_error("nothing to paste");
+
     Buffer& buffer = context.buffer();
     Vector<Selection> result;
     auto& selections = context.selections();
