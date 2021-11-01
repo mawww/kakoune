@@ -142,22 +142,22 @@ are exclusively available to built-in options.
     escaped as `\|` or `\\`.
 
 *completions*::
-    a list of `<text>|<select cmd>|<menu text>` candidates,
+    a list of `<text>[|<filter text>]|<select cmd>|<menu text>` candidates,
     except for the first element which follows the
     `<line>.<column>[+<length>]@<timestamp>` format to define where the
     completion apply in the buffer.
     Any `|` or `\` characters that occur within the `<text>`,
-    `<select cmd>`, or `<menu text>` fields should be escaped as `\|`
-    or `\\`.
+    `<filter text>`, `<select cmd>`, or `<menu text>` fields should be
+    escaped as `\|` or `\\`.
 
     Options of this type are are meant to be added to the `completers`
     option to provide insert mode completion. Candidates are shown if the
     text typed by the user (between `<line>.<column>` and the cursor) is a
-    subsequence of `<text>`.
+    subsequence of `<filter text>` (if provided) or `<text>`.
 
-    For each remaining candidate, the completion menu displays
-    `<text>`, followed by `<menu text>`, which is a Markup string (see
-    <<faces#markup-strings,`:doc faces markup-strings`>>).
+    For each remaining candidate, the completion menu displays `<filter text>`
+    (if provided) or `<text>`, followed by `<menu text>`, which is a Markup
+    string (see <<faces#markup-strings,`:doc faces markup-strings`>>).
 
     As the user selects items from the completion menu, the text they typed
     will be replaced with `<text>`, and the Kakoune command in

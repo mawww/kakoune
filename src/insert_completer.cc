@@ -291,8 +291,15 @@ InsertCompletion complete_option(const SelectionList& sels,
         using RankedMatch::operator==;
         using RankedMatch::operator<;
 
+        Optional<StringView> completion;
         StringView on_select;
         DisplayLine menu_entry;
+
+        const StringView &candidate() const {
+            if (completion)
+                return *completion;
+            return RankedMatch::candidate();
+        }
     };
 
     StringView query = buffer.substr(coord, cursor_pos);
@@ -300,14 +307,33 @@ InsertCompletion complete_option(const SelectionList& sels,
 
     for (auto& candidate : opt.list)
     {
-        if (RankedMatchAndInfo match{std::get<0>(candidate), query})
+        StringView completion;
+        Optional<StringView> filter_text;
+        StringView on_select;
+        StringView menu;
+        if (std::holds_alternative<std::tuple<String, String, String, String>>(candidate))
         {
-            match.on_select = std::get<1>(candidate);
-            auto& menu = std::get<2>(candidate);
-            match.menu_entry = not menu.empty() ?
-                parse_display_line(expand_tabs(menu, tabstop, column), faces)
+            auto& cand = std::get<std::tuple<String, String, String, String>>(candidate);
+            completion = std::get<0>(cand);
+            filter_text = {std::get<1>(cand)};
+            on_select = std::get<2>(cand);
+            menu = std::get<3>(cand);
+        }
+        else
+        {
+            auto& cand = std::get<std::tuple<String, String, String>>(candidate);
+            completion = std::get<0>(cand);
+            on_select = std::get<1>(cand);
+            menu = std::get<2>(cand);
+        }
+        if (RankedMatchAndInfo match{filter_text.value_or(completion), query})
+        {
+            if (filter_text)
+                match.completion = completion;
+            match.on_select = on_select;
+            match.menu_entry = not menu.empty()
+              ? parse_display_line(expand_tabs(menu, tabstop, column), faces)
               : DisplayLine{String{}, {}};
-
             matches.push_back(std::move(match));
         }
     }

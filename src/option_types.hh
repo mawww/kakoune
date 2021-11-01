@@ -13,6 +13,7 @@
 #include "units.hh"
 
 #include <tuple>
+#include <variant>
 #include <vector>
 
 namespace Kakoune
@@ -248,6 +249,24 @@ std::tuple<Types...> option_from_string(Meta::Type<std::tuple<Types...>>, String
                                    std::make_index_sequence<sizeof...(Types)>());
 }
 
+// TODO Maybe we should lift this to an arbitrary number of arguments already?
+template<typename A, typename B>
+std::variant<A, B> option_from_string(Meta::Type<std::variant<A, B>>, StringView str)
+{
+    try {
+        return option_from_string(Meta::Type<A>{}, str);
+    } catch(runtime_error &e) { // TODO How should we clean this up?
+        return option_from_string(Meta::Type<B>{}, str);
+    }
+}
+
+template<typename A, typename B>
+String option_to_string(const std::variant<A, B>& opt, Quoting quoting)
+{
+    if (std::holds_alternative<A>(opt))
+        return option_to_string(std::get<A>(opt), quoting);
+    return option_to_string(std::get<B>(opt), quoting);
+}
 template<typename RealType, typename ValueType>
 inline String option_to_string(const StronglyTypedNumber<RealType, ValueType>& opt)
 {

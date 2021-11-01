@@ -8,6 +8,8 @@
 
 #include "optional.hh"
 
+#include <variant>
+
 namespace Kakoune
 {
 
@@ -45,7 +47,7 @@ inline StringView option_type_name(Meta::Type<InsertCompleterDesc>)
     return "completer";
 }
 
-using CompletionCandidate = std::tuple<String, String, String>;
+using CompletionCandidate = std::variant<std::tuple<String, String, String, String>, std::tuple<String, String, String>>;
 using CompletionList = PrefixedList<String, CompletionCandidate>;
 
 inline StringView option_type_name(Meta::Type<CompletionList>)
