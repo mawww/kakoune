@@ -663,6 +663,94 @@ void TerminalUI::check_resize(bool force)
     set_resize_pending();
 }
 
+Key::Modifiers parse_key_modifiers(int mask)
+{
+    Key::Modifiers mod = Key::Modifiers::None;
+    if (mask & 1)
+        mod |= Key::Modifiers::Shift;
+    if (mask & 2)
+        mod |= Key::Modifiers::Alt;
+    if (mask & 4)
+        mod |= Key::Modifiers::Control;
+    return mod;
+}
+
+class CSIKey
+{
+public:
+    inline int param(int index, int subindex = 0) const { return m_params[index][subindex]; }
+    inline char private_mode() const                    { return m_private_mode; }
+    inline char final_byte() const                      { return m_final_byte; }
+    inline bool is_decrpm() const                       { return m_decrpm; }
+    inline bool is_sgr() const                          { return private_mode() == '<'; }
+    inline int mouse_button() const                     { return is_sgr() ? param(0) : m_mouse_button; }
+    inline int mouse_x() const                          { return is_sgr() ? param(1) : m_mouse_x; }
+    inline int mouse_y() const                          { return is_sgr() ? param(2) : m_mouse_y; }
+
+    template<typename NextChar>
+    bool read(NextChar&& next_char)
+    {
+        auto c = next_char();
+        if (c == '?' or c == '<' or c == '=' or c == '>')
+        {
+            m_private_mode = c;
+            c = next_char();
+        }
+        for (int count = 0, subcount = 0; count < 16 and c >= 0x30 && c <= 0x3f; c = next_char())
+        {
+            if (isdigit(c))
+                m_params[count][subcount] = m_params[count][subcount] * 10 + c - '0';
+            else if (c == ':' && subcount < 3)
+                ++subcount;
+            else if (c == ';')
+            {
+                ++count;
+                subcount = 0;
+            }
+            else
+                return false;
+        }
+        if (c != '$' and (c < 0x40 or c > 0x7e))
+            return false;
+        m_final_byte = c;
+
+        if (final_byte() == '$' and private_mode() == '?' and next_char() == 'y')
+            m_decrpm = true;
+
+        if (final_byte() == 'm' and not is_sgr())
+            return false;
+        if (final_byte() == 'M' and not is_sgr())
+        {
+            m_mouse_button = next_char() - 32;
+            m_mouse_x = next_char() - 32 - 1;
+            m_mouse_y = next_char() - 32 - 1;
+        }
+
+        return true;
+    }
+
+    Key masked_key(Codepoint key, Codepoint shifted_key = 0)
+    {
+        int mask = std::max(param(1) - 1, 0);
+        Key::Modifiers modifiers = parse_key_modifiers(mask);
+        if (shifted_key != 0 and (modifiers & Key::Modifiers::Shift))
+        {
+            modifiers &= ~Key::Modifiers::Shift;
+            key = shifted_key;
+        }
+        return Key{modifiers, key};
+    }
+
+private:
+    char m_private_mode = 0;
+    char m_final_byte = 0;
+    int m_params[16][4] = {};
+    bool m_decrpm = false;
+    int m_mouse_button = -1;
+    int m_mouse_x = 0;
+    int m_mouse_y = 0;
+};
+
 Optional<Key> TerminalUI::get_next_key()
 {
     if (stdin_closed)
@@ -741,44 +829,7 @@ Optional<Key> TerminalUI::get_next_key()
        return Key{utf8::codepoint(CharIterator{c}, Sentinel{})};
     };
 
-    auto parse_mask = [](int mask) {
-        Key::Modifiers mod = Key::Modifiers::None;
-        if (mask & 1)
-            mod |= Key::Modifiers::Shift;
-        if (mask & 2)
-            mod |= Key::Modifiers::Alt;
-        if (mask & 4)
-            mod |= Key::Modifiers::Control;
-        return mod;
-    };
-
-    auto parse_csi = [this, &convert, &parse_mask]() -> Optional<Key> {
-        auto next_char = [] { return get_char().value_or((unsigned char)0xff); };
-        int params[16][4] = {};
-        auto c = next_char();
-        char private_mode = 0;
-        if (c == '?' or c == '<' or c == '=' or c == '>')
-        {
-            private_mode = c;
-            c = next_char();
-        }
-        for (int count = 0, subcount = 0; count < 16 and c >= 0x30 && c <= 0x3f; c = next_char())
-        {
-            if (isdigit(c))
-                params[count][subcount] = params[count][subcount] * 10 + c - '0';
-            else if (c == ':' && subcount < 3)
-                ++subcount;
-            else if (c == ';')
-            {
-                ++count;
-                subcount = 0;
-            }
-            else
-                return {};
-        }
-        if (c != '$' and (c < 0x40 or c > 0x7e))
-            return {};
-
+    auto parse_csi = [this, &convert]() -> Optional<Key> {
         auto mouse_button = [this](Key::Modifiers mod, Key::MouseButton button, Codepoint coord, bool release) {
             auto mask = 1 << (int)button;
             if (not release)
@@ -799,92 +850,81 @@ Optional<Key> TerminalUI::get_next_key()
                     (Codepoint)((down ? 1 : -1) * m_wheel_scroll_amount)};
         };
 
-        auto masked_key = [&](Codepoint key, Codepoint shifted_key = 0) {
-            int mask = std::max(params[1][0] - 1, 0);
-            Key::Modifiers modifiers = parse_mask(mask);
-            if (shifted_key != 0 and (modifiers & Key::Modifiers::Shift))
-            {
-                modifiers &= ~Key::Modifiers::Shift;
-                key = shifted_key;
-            }
-            return Key{modifiers, key};
-        };
+        CSIKey csi;
+        if (not csi.read([] { return get_char().value_or((unsigned char)0xff); }))
+            return {};
 
-        switch (c)
+        switch (csi.final_byte())
         {
         case '$':
-            if (private_mode == '?' and next_char() == 'y') // DECRPM
+            if (csi.is_decrpm())
             {
-                if (params[0][0] == 2026)
-                    m_synchronized.supported = (params[1][0] == 1 or params[1][0] == 2);
+                if (csi.param(0) == 2026)
+                    m_synchronized.supported = (csi.param(1) == 1 or csi.param(1) == 2);
                 return {Key::Invalid};
             }
-            switch (params[0][0])
+            switch (csi.param(0))
             {
             case 23: case 24:
-                return Key{Key::Modifiers::Shift, Key::F11 + params[0][0] - 23}; // rxvt style
+                return Key{Key::Modifiers::Shift, Key::F11 + csi.param(0) - 23}; // rxvt style
             }
             return {};
-        case 'A': return masked_key(Key::Up);
-        case 'B': return masked_key(Key::Down);
-        case 'C': return masked_key(Key::Right);
-        case 'D': return masked_key(Key::Left);
-        case 'E': return masked_key('5');        // Numeric keypad 5
-        case 'F': return masked_key(Key::End);   // PC/xterm style
-        case 'H': return masked_key(Key::Home);  // PC/xterm style
-        case 'P': return masked_key(Key::F1);
-        case 'Q': return masked_key(Key::F2);
-        case 'R': return masked_key(Key::F3);
-        case 'S': return masked_key(Key::F4);
+        case 'A': return csi.masked_key(Key::Up);
+        case 'B': return csi.masked_key(Key::Down);
+        case 'C': return csi.masked_key(Key::Right);
+        case 'D': return csi.masked_key(Key::Left);
+        case 'E': return csi.masked_key('5');        // Numeric keypad 5
+        case 'F': return csi.masked_key(Key::End);   // PC/xterm style
+        case 'H': return csi.masked_key(Key::Home);  // PC/xterm style
+        case 'P': return csi.masked_key(Key::F1);
+        case 'Q': return csi.masked_key(Key::F2);
+        case 'R': return csi.masked_key(Key::F3);
+        case 'S': return csi.masked_key(Key::F4);
         case '~':
-            switch (params[0][0])
+            switch (csi.param(0))
             {
-            case 1: return masked_key(Key::Home);     // VT220/tmux style
-            case 2: return masked_key(Key::Insert);
-            case 3: return masked_key(Key::Delete);
-            case 4: return masked_key(Key::End);      // VT220/tmux style
-            case 5: return masked_key(Key::PageUp);
-            case 6: return masked_key(Key::PageDown);
-            case 7: return masked_key(Key::Home);     // rxvt style
-            case 8: return masked_key(Key::End);      // rxvt style
+            case 1: return csi.masked_key(Key::Home);     // VT220/tmux style
+            case 2: return csi.masked_key(Key::Insert);
+            case 3: return csi.masked_key(Key::Delete);
+            case 4: return csi.masked_key(Key::End);      // VT220/tmux style
+            case 5: return csi.masked_key(Key::PageUp);
+            case 6: return csi.masked_key(Key::PageDown);
+            case 7: return csi.masked_key(Key::Home);     // rxvt style
+            case 8: return csi.masked_key(Key::End);      // rxvt style
             case 11: case 12: case 13: case 14: case 15:
-                return masked_key(Key::F1 + params[0][0] - 11);
+                return csi.masked_key(Key::F1 + csi.param(0) - 11);
             case 17: case 18: case 19: case 20: case 21:
-                return masked_key(Key::F6 + params[0][0] - 17);
+                return csi.masked_key(Key::F6 + csi.param(0) - 17);
             case 23: case 24:
-                return masked_key(Key::F11 + params[0][0] - 23);
+                return csi.masked_key(Key::F11 + csi.param(0) - 23);
             case 25: case 26:
-                return Key{Key::Modifiers::Shift, Key::F3 + params[0][0] - 25}; // rxvt style
+                return Key{Key::Modifiers::Shift, Key::F3 + csi.param(0) - 25}; // rxvt style
             case 28: case 29:
-                return Key{Key::Modifiers::Shift, Key::F5 + params[0][0] - 28}; // rxvt style
+                return Key{Key::Modifiers::Shift, Key::F5 + csi.param(0) - 28}; // rxvt style
             case 31: case 32:
-                return Key{Key::Modifiers::Shift, Key::F7 + params[0][0] - 31}; // rxvt style
+                return Key{Key::Modifiers::Shift, Key::F7 + csi.param(0) - 31}; // rxvt style
             case 33: case 34:
-                return Key{Key::Modifiers::Shift, Key::F9 + params[0][0] - 33}; // rxvt style
+                return Key{Key::Modifiers::Shift, Key::F9 + csi.param(0) - 33}; // rxvt style
             }
             return {};
         case 'u':
-            return masked_key(convert(static_cast<Codepoint>(params[0][0])),
-                              convert(static_cast<Codepoint>(params[0][1])));
+            return csi.masked_key(convert(static_cast<Codepoint>(csi.param(0, 0))),
+                                  convert(static_cast<Codepoint>(csi.param(0, 1))));
         case 'Z': return shift(Key::Tab);
         case 'I': return {Key::FocusIn};
         case 'O': return {Key::FocusOut};
         case 'M': case 'm':
-            const bool sgr = private_mode == '<';
-            if (not sgr and c != 'M')
+            if (not csi.is_sgr() and csi.final_byte() != 'M')
                 return {};
 
-            const Codepoint b = sgr ? params[0][0] : next_char() - 32;
-            const int x = (sgr ? params[1][0] : next_char() - 32) - 1;
-            const int y = (sgr ? params[2][0] : next_char() - 32) - 1;
-            auto coord = encode_coord({y - content_line_offset(), x});
-            Key::Modifiers mod = parse_mask((b >> 2) & 0x7);
-            switch (const int code = b & 0x43; code)
+            auto coord = encode_coord({csi.mouse_y() - content_line_offset(), csi.mouse_x()});
+            Key::Modifiers mod = parse_key_modifiers((csi.mouse_button() >> 2) & 0x7);
+            switch (const int code = csi.mouse_button() & 0x43; code)
             {
             case 0: case 1: case 2:
-                return mouse_button(mod, Key::MouseButton{code}, coord, c == 'm');
+                return mouse_button(mod, Key::MouseButton{code}, coord, csi.final_byte() == 'm');
             case 3:
-                if (sgr)
+                if (csi.is_sgr())
                     return {};
                 else if (int guess = ffs(m_mouse_state) - 1; 0 <= guess and guess < 3)
                     return mouse_button(mod, Key::MouseButton{guess}, coord, true);
@@ -897,14 +937,14 @@ Optional<Key> TerminalUI::get_next_key()
         return {};
     };
 
-    auto parse_ss3 = [&parse_mask]() -> Optional<Key> {
+    auto parse_ss3 = []() -> Optional<Key> {
         int raw_mask = 0;
         char code = '0';
         do {
             raw_mask = raw_mask * 10 + (code - '0');
             code = get_char().value_or((unsigned char)0xff);
         } while (code >= '0' and code <= '9');
-        Key::Modifiers mod = parse_mask(std::max(raw_mask - 1, 0));
+        Key::Modifiers mod = parse_key_modifiers(std::max(raw_mask - 1, 0));
 
         switch (code)
         {
