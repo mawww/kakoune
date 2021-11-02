@@ -811,7 +811,7 @@ Optional<Key> TerminalUI::get_next_key()
             if (private_mode == '?' and next_char() == 'y') // DECRPM
             {
                 if (params[0] == 2026)
-                    m_synchronized.supported = (params[0] != 0);
+                    m_synchronized.supported = (params[1] == 1 or params[1] == 2);
                 return {Key::Invalid};
             }
             switch (params[0])
