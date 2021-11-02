@@ -172,7 +172,8 @@ template<typename OnClose>
 FDWatcher make_reader(int fd, String& contents, OnClose&& on_close)
 {
     return {fd, FdEvents::Read, EventMode::Urgent,
-            [fd, &contents, on_close](FDWatcher& watcher, FdEvents, EventMode) {
+            [&contents, on_close](FDWatcher& watcher, FdEvents, EventMode) {
+        const int fd = watcher.fd();
         char buffer[1024];
         while (fd_readable(fd))
         {
@@ -183,7 +184,7 @@ FDWatcher make_reader(int fd, String& contents, OnClose&& on_close)
                     continue; // try again
 
                 watcher.disable();
-                on_close();
+                on_close(size == 0);
                 return;
             }
             contents += StringView{buffer, buffer+size};
@@ -228,11 +229,15 @@ struct CommandFifos
             mkfifo(command_fifo_path().c_str(), 0600);
             mkfifo(response_fifo_path().c_str(), 0600);
             int fd = open(command_fifo_path().c_str(), O_RDONLY | O_NONBLOCK);
-            return make_reader(fd, command, [&, fd] {
-                close(fd);
+            return make_reader(fd, command, [&, fd](bool graceful) {
+                if (not graceful)
+                {
+                    write_to_debug_buffer(format("error reading from command fifo '{}'", strerror(errno)));
+                    return;
+                }
                 CommandManager::instance().execute(command, context, shell_context);
                 command.clear();
-                command_watcher.reset_fd(open(command_fifo_path().c_str(), O_RDONLY | O_NONBLOCK));
+                command_watcher.reset_fd(fd);
             });
         }())
     {
@@ -313,8 +318,8 @@ std::pair<String, int> ShellManager::eval(
     auto wait_time = Clock::now();
 
     String stdout_contents, stderr_contents;
-    auto stdout_reader = make_reader(child_stdout.read_fd(), stdout_contents, [&]{ child_stdout.close_read_fd(); });
-    auto stderr_reader = make_reader(child_stderr.read_fd(), stderr_contents, [&]{ child_stderr.close_read_fd(); });
+    auto stdout_reader = make_reader(child_stdout.read_fd(), stdout_contents, [&](bool){ child_stdout.close_read_fd(); });
+    auto stderr_reader = make_reader(child_stderr.read_fd(), stderr_contents, [&](bool){ child_stderr.close_read_fd(); });
     auto stdin_writer = make_pipe_writer(child_stdin, input);
 
     // block SIGCHLD to make sure we wont receive it before
