@@ -65,6 +65,10 @@ highlighter is replaced with the new one.
         specify a string to separate the line numbers column from
         the rest of the buffer (default is '|')
 
+    *-cursor-separator* <separator text>:::
+        identical to *-separator* but applies only to the line of the cursor
+        (default is the same value passed to *-separator*)
+
     *-min-digits* <num>:::
         always reserve room for at least *num* digits,
         so text doesn't jump around as lines are added or removed
