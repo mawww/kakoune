@@ -221,6 +221,10 @@ auto apply_face = [](const Face& face)
     };
 };
 
+const HighlighterDesc fill_desc = {
+    "Fill the whole highlighted range with the given face",
+    {}
+};
 static std::unique_ptr<Highlighter> create_fill_highlighter(HighlighterParameters params, Highlighter*)
 {
     if (params.size() != 1)
@@ -253,6 +257,11 @@ private:
 
 using FacesSpec = Vector<std::pair<size_t, String>, MemoryDomain::Highlight>;
 
+const HighlighterDesc regex_desc = {
+    "Parameters: <regex> <capture num>:<face> <capture num>:<face>...\n"
+    "Highlights the matches for captures from the regex with the given faces",
+    {}
+};
 class RegexHighlighter : public Highlighter
 {
 public:
@@ -479,6 +488,11 @@ private:
     RegexHighlighter m_highlighter;
 };
 
+const HighlighterDesc dynamic_regex_desc = {
+    "Parameters: <expr> <capture num>:<face> <capture num>:<face>...\n"
+    "Evaluate expression at every redraw to gather a regex",
+    {}
+};
 std::unique_ptr<Highlighter> create_dynamic_regex_highlighter(HighlighterParameters params, Highlighter*)
 {
     if (params.size() < 2)
@@ -544,6 +558,11 @@ std::unique_ptr<Highlighter> create_dynamic_regex_highlighter(HighlighterParamet
     return make_hl(get_regex, get_face);
 }
 
+const HighlighterDesc line_desc = {
+    "Parameters: <value string> <face>\n"
+    "Highlight the line given by evaluating <value string> with <face>",
+    {}
+};
 std::unique_ptr<Highlighter> create_line_highlighter(HighlighterParameters params, Highlighter*)
 {
     if (params.size() != 2)
@@ -591,6 +610,11 @@ std::unique_ptr<Highlighter> create_line_highlighter(HighlighterParameters param
     return make_highlighter(std::move(func));
 }
 
+const HighlighterDesc column_desc = {
+    "Parameters: <value string> <face>\n"
+    "Highlight the column given by evaluating <value string> with <face>",
+    {}
+};
 std::unique_ptr<Highlighter> create_column_highlighter(HighlighterParameters params, Highlighter*)
 {
     if (params.size() != 2)
@@ -651,6 +675,17 @@ std::unique_ptr<Highlighter> create_column_highlighter(HighlighterParameters par
     return make_highlighter(std::move(func));
 }
 
+const HighlighterDesc wrap_desc = {
+    "Parameters: [-word] [-indent] [-width <max_width>] [-marker <marker_text>]\n"
+    "Wrap lines to window width",
+    { {
+        { "word",   { false, "wrap at word boundaries instead of codepoint boundaries" } },
+        { "indent", { false, "preserve line indentation of the wrapped line" } },
+        { "width",  { true, "wrap at the given column instead of the window's width" } },
+        { "marker", { true, "insert the given text at the beginning of the wrapped line" } }, },
+        ParameterDesc::Flags::None, 0, 0
+    }
+};
 struct WrapHighlighter : Highlighter
 {
     WrapHighlighter(ColumnCount max_width, bool word_wrap, bool preserve_indent, String marker)
@@ -915,14 +950,7 @@ struct WrapHighlighter : Highlighter
 
     static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
     {
-        static const ParameterDesc param_desc{
-            { { "word", { false, "" } },
-              { "indent", { false, "" } },
-              { "width", { true, "" } },
-              { "marker", { true, "" } } },
-            ParameterDesc::Flags::None, 0, 0
-        };
-        ParametersParser parser(params, param_desc);
+        ParametersParser parser(params, wrap_desc.params);
         ColumnCount max_width = parser.get_switch("width").map(str_to_int)
             .value_or(std::numeric_limits<int>::max());
 
@@ -998,6 +1026,18 @@ struct TabulationHighlighter : Highlighter
     }
 };
 
+const HighlighterDesc show_whitespace_desc = {
+    "Parameters: [-tab <separator>] [-tabpad <separator>] [-lf <separator>] [-spc <separator>] [-nbsp <separator>]\n"
+    "Display whitespaces using symbols",
+    { {
+        { "tab",    { true, "replace tabulations with the given character" } },
+        { "tabpad", { true, "append as many of the given character as is necessary to honor `tabstop`" } },
+        { "spc",    { true, "replace spaces with the given character" } },
+        { "lf",     { true, "replace line feeds with the given character" } },
+        { "nbsp",   { true, "replace non-breakable spaces with the given character" } } },
+        ParameterDesc::Flags::None, 0, 0
+    }
+};
 struct ShowWhitespacesHighlighter : Highlighter
 {
     ShowWhitespacesHighlighter(String tab, String tabpad, String spc, String lf, String nbsp)
@@ -1007,15 +1047,7 @@ struct ShowWhitespacesHighlighter : Highlighter
 
     static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
     {
-        static const ParameterDesc param_desc{
-            { { "tab", { true, "" } },
-              { "tabpad", { true, "" } },
-              { "spc", { true, "" } },
-              { "lf", { true, "" } },
-              { "nbsp", { true, "" } } },
-            ParameterDesc::Flags::None, 0, 0
-        };
-        ParametersParser parser(params, param_desc);
+        ParametersParser parser(params, show_whitespace_desc.params);
 
         auto get_param = [&](StringView param,  StringView fallback) {
             StringView value = parser.get_switch(param).value_or(fallback);
@@ -1080,6 +1112,18 @@ private:
     const String m_tab, m_tabpad, m_spc, m_lf, m_nbsp;
 };
 
+const HighlighterDesc line_numbers_desc = {
+    "Parameters: [-relative] [-hlcursor] [-separators <separator|separator:cursor|cursor:up:down>] [-min-digits <cols>]\n"
+    "Display line numbers",
+    { {
+        { "relative", { false, "show line numbers relative to the main cursor line" } },
+        { "separator", { true, "string to separate the line numbers column from the rest of the buffer (default '|')" } },
+        { "cursor-separator", { true, "identical to -separator but applies only to the line of the cursor (default is the same value passed to -separator)" } },
+        { "min-digits", { true, "use at least the given number of columns to display line numbers (default 2)" } },
+        { "hlcursor", { false, "highlight the cursor line with a separate face" } } },
+        ParameterDesc::Flags::None, 0, 0
+    }
+};
 struct LineNumbersHighlighter : Highlighter
 {
     LineNumbersHighlighter(bool relative, bool hl_cursor_line, String separator, String cursor_separator, int min_digits)
@@ -1092,15 +1136,7 @@ struct LineNumbersHighlighter : Highlighter
 
     static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
     {
-        static const ParameterDesc param_desc{
-            { { "relative", { false, "" } },
-              { "separator", { true, "" } },
-              { "cursor-separator", { true, "" } },
-              { "min-digits", { true, "" } },
-              { "hlcursor", { false, "" } } },
-            ParameterDesc::Flags::None, 0, 0
-        };
-        ParametersParser parser(params, param_desc);
+        ParametersParser parser(params, line_numbers_desc.params);
 
         StringView separator = parser.get_switch("separator").value_or("│");
         StringView cursor_separator = parser.get_switch("cursor-separator").value_or(separator);
@@ -1192,6 +1228,10 @@ private:
 constexpr StringView LineNumbersHighlighter::ms_id;
 
 
+const HighlighterDesc show_matching_desc = {
+    "Apply the MatchingChar face to the char matching the one under the cursor",
+    {}
+};
 void show_matching_char(HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
 {
     const Face face = context.context.faces()["MatchingChar"];
@@ -1364,6 +1404,11 @@ void option_list_postprocess(Vector<LineAndSpec, MemoryDomain::Options>& opt)
               { return std::get<0>(lhs) < std::get<0>(rhs); });
 }
 
+const HighlighterDesc flag_lines_desc = {
+    "Parameters: <face> <option name>\n"
+    "Display flags specified in the line-spec option <option name> with <face>",
+    {}
+};
 struct FlagLinesHighlighter : Highlighter
 {
     FlagLinesHighlighter(String option_name, String default_face)
@@ -1565,6 +1610,12 @@ bool option_add_from_strings(Vector<RangeAndString, MemoryDomain::Options>& opt,
     return true;
 }
 
+const HighlighterDesc ranges_desc = {
+    "Parameters: <option name>\n"
+    "Use the range-specs option given as parameter to highlight buffer\n"
+    "each spec is interpreted as a face to apply to the range",
+    {}
+};
 struct RangesHighlighter : OptionBasedHighlighter<RangeAndStringList, RangesHighlighter>
 {
     using RangesHighlighter::OptionBasedHighlighter::OptionBasedHighlighter;
@@ -1589,6 +1640,12 @@ private:
     }
 };
 
+const HighlighterDesc replace_ranges_desc = {
+    "Parameters: <option name>\n"
+    "Use the range-specs option given as parameter to highlight buffer\n"
+    "each spec is interpreted as a display line to display in place of the range",
+    {}
+};
 struct ReplaceRangesHighlighter : OptionBasedHighlighter<RangeAndStringList, ReplaceRangesHighlighter, HighlightPass::Move>
 {
     using ReplaceRangesHighlighter::OptionBasedHighlighter::OptionBasedHighlighter;
@@ -1682,18 +1739,34 @@ HighlightPass parse_passes(StringView str)
     return passes;
 }
 
+const HighlighterDesc higlighter_group_desc = {
+    "Parameters: [-passes <passes>]\n"
+    "Creates a group that can contain other highlighters",
+    { {
+        { "passes", { true, "flags(colorize|move|wrap) "
+                            "kind of highlighters can be put in the group "
+                            "(default colorize)" } } },
+        ParameterDesc::Flags::SwitchesOnlyAtStart, 0, 0
+    }
+};
 std::unique_ptr<Highlighter> create_highlighter_group(HighlighterParameters params, Highlighter*)
 {
-    static const ParameterDesc param_desc{
-        { { "passes", { true, "" } } },
-        ParameterDesc::Flags::SwitchesOnlyAtStart, 0, 0
-    };
-    ParametersParser parser{params, param_desc};
+    ParametersParser parser{params, higlighter_group_desc.params};
     HighlightPass passes = parse_passes(parser.get_switch("passes").value_or("colorize"));
 
     return std::make_unique<HighlighterGroup>(passes);
 }
 
+const HighlighterDesc ref_desc = {
+    "Parameters: [-passes <passes>] <path>\n"
+    "Reference the highlighter at <path> in shared highlighters",
+    { {
+        { "passes", { true, "flags(colorize|move|wrap) "
+                            "kind of highlighters that can be referenced "
+                            "(default colorize)" } } },
+        ParameterDesc::Flags::SwitchesOnlyAtStart, 1, 1
+    }
+};
 struct ReferenceHighlighter : Highlighter
 {
     ReferenceHighlighter(HighlightPass passes, String name)
@@ -1701,11 +1774,7 @@ struct ReferenceHighlighter : Highlighter
 
     static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
     {
-        static const ParameterDesc param_desc{
-            { { "passes", { true, "" } } },
-            ParameterDesc::Flags::SwitchesOnlyAtStart, 1, 1
-        };
-        ParametersParser parser{params, param_desc};
+        ParametersParser parser{params, ref_desc.params};
         HighlightPass passes = parse_passes(parser.get_switch("passes").value_or("colorize"));
         return std::make_unique<ReferenceHighlighter>(passes, parser[0]);
     }
@@ -1881,6 +1950,30 @@ struct RegionMatches : UseMemoryDomain<MemoryDomain::Highlight>
     }
 };
 
+const HighlighterDesc default_region_desc = {
+    "Parameters: <delegate_type> <delegate_params>...\n"
+    "Define the default region of a regions highlighter",
+    {}
+};
+const HighlighterDesc region_desc = {
+    "Parameters:  [-match-capture] [-recurse <recurse>] <opening> <closing> <type> <params>...\n"
+    "Define a region for a regions highlighter, and apply the given delegate\n"
+    "highlighter as defined by <type> and eventual <params>...\n"
+    "The region starts at <begin> match and ends at the first <end>",
+    { {
+        { "match-capture", { false, "only consider region ending/recurse delimiters whose first capture group match the region beginning delimiter" } },
+        { "recurse",       { true, "make the region end on the first ending delimiter that does not close the given parameter" } } },
+        ParameterDesc::Flags::SwitchesOnlyAtStart | ParameterDesc::Flags::IgnoreUnknownSwitches,
+        3
+    }
+};
+const HighlighterDesc regions_desc = {
+    "Holds child region highlighters and segments the buffer in ranges based on those regions\n"
+    "definitions. The regions highlighter finds the next region to start by finding which\n"
+    "of its child region has the leftmost starting point from current position. In between\n"
+    "regions, the default-region child highlighter is applied (if such a child exists)",
+    {}
+};
 struct RegionsHighlighter : public Highlighter
 {
 public:
@@ -2015,13 +2108,7 @@ public:
         if (not is_regions(parent))
             throw runtime_error{"region highlighter can only be added to a regions parent"};
 
-        static const ParameterDesc param_desc{
-            { { "match-capture", { false, "" } }, { "recurse", { true, "" } } },
-            ParameterDesc::Flags::SwitchesOnlyAtStart | ParameterDesc::Flags::IgnoreUnknownSwitches,
-            3
-        };
-
-        ParametersParser parser{params, param_desc};
+        ParametersParser parser{params, region_desc.params};
 
         const bool match_capture = (bool)parser.get_switch("match-capture");
         if (parser[0].empty() or parser[1].empty())
@@ -2282,105 +2369,55 @@ void register_highlighters()
 
     registry.insert({
         "column",
-        { create_column_highlighter,
-          "Parameters: <value string> <face>\n"
-          "Highlight the column given by evaluating <value string> with <face>" } });
+        { create_column_highlighter, &column_desc } });
     registry.insert({
         "default-region",
-        { RegionsHighlighter::create_default_region,
-          "Parameters: <delegate_type> <delegate_params>...\n"
-          "Define the default region of a regions highlighter" } });
+        { RegionsHighlighter::create_default_region, &default_region_desc } });
     registry.insert({
         "dynregex",
-        { create_dynamic_regex_highlighter,
-          "Parameters: <expr> <capture num>:<face> <capture num>:<face>...\n"
-          "Evaluate expression at every redraw to gather a regex" } });
+        { create_dynamic_regex_highlighter, &dynamic_regex_desc } });
     registry.insert({
         "fill",
-        { create_fill_highlighter,
-          "Fill the whole highlighted range with the given face" } });
+        { create_fill_highlighter, &fill_desc } });
     registry.insert({
         "flag-lines",
-        { FlagLinesHighlighter::create,
-          "Parameters: <face> <option name>\n"
-          "Display flags specified in the line-spec option <option name> with <face>"} });
+        { FlagLinesHighlighter::create, &flag_lines_desc } });
     registry.insert({
         "group",
-        { create_highlighter_group,
-          "Parameters: [-passes <passes>]\n"
-          "Creates a group that can contain other highlighters,\n"
-          "<passes> is a flags(colorize|move|wrap) defaulting to colorize\n"
-          "which specify what kind of highlighters can be put in the group" } });
+        { create_highlighter_group, &higlighter_group_desc } });
     registry.insert({
         "line",
-        { create_line_highlighter,
-          "Parameters: <value string> <face>\n"
-          "Highlight the line given by evaluating <value string> with <face>" } });
+        { create_line_highlighter, &line_desc } });
     registry.insert({
         "number-lines",
-        { LineNumbersHighlighter::create,
-          "Display line numbers \n"
-          "Parameters: -relative, -hlcursor, -separator <separator text>, -cursor-separator <separator text>, -min-digits <cols>\n" } });
+        { LineNumbersHighlighter::create, &line_numbers_desc } });
     registry.insert({
         "ranges",
-        { RangesHighlighter::create,
-          "Parameters: <option name>\n"
-          "Use the range-specs option given as parameter to highlight buffer\n"
-          "each spec is interpreted as a face to apply to the range\n" } });
+        { RangesHighlighter::create, &ranges_desc } });
     registry.insert({
         "ref",
-        { ReferenceHighlighter::create,
-          "Parameters: [-passes <passes>] <path>\n"
-          "Reference the highlighter at <path> in shared highlighters\n"
-          "<passes> is a flags(colorize|move|wrap) defaulting to colorize\n"
-          "which specify what kind of highlighters can be referenced" } });
+        { ReferenceHighlighter::create, &ref_desc } });
     registry.insert({
         "regex",
-        { RegexHighlighter::create,
-          "Parameters: <regex> <capture num>:<face> <capture num>:<face>...\n"
-          "Highlights the matches for captures from the regex with the given faces" } });
+        { RegexHighlighter::create, &regex_desc } });
     registry.insert({
         "region",
-        { RegionsHighlighter::create_region,
-          "Parameters:  [-match-capture] [-recurse <recurse>] <opening> <closing> <type> <params>...\n"
-          "Define a region for a regions highlighter, and apply the given delegate\n"
-          "highlighter as defined by <type> and eventual <params>...\n"
-          "The region starts at <begin> match and ends at the first <end>\n"
-          "If -recurse is specified, then the region ends at the first <end> that\n"
-          "does not close a <recurse> match.\n"
-          "If -match-capture is specified, then regions end/recurse matches must have\n"
-          "the same \\1 capture content as the begin match to be considered"} });
+        { RegionsHighlighter::create_region, &region_desc } });
     registry.insert({
         "regions",
-        { RegionsHighlighter::create,
-          "Parameters: None\n"
-          "Holds child region highlighters and segments the buffer in ranges based on those regions\n"
-          "definitions. The regions highlighter finds the next region to start by finding which\n"
-          "of its child region has the leftmost starting point from current position. In between\n"
-          "regions, the default-region child highlighter is applied (if such a child exists)" } });
+        { RegionsHighlighter::create, &regions_desc } });
     registry.insert({
         "replace-ranges",
-        { ReplaceRangesHighlighter::create,
-          "Parameters: <option name>\n"
-          "Use the range-specs option given as parameter to highlight buffer\n"
-          "each spec is interpreted as a display line to display in place of the range\n" } });
+        { ReplaceRangesHighlighter::create, &replace_ranges_desc } });
     registry.insert({
         "show-matching",
-        { create_matching_char_highlighter,
-          "Apply the MatchingChar face to the char matching the one under the cursor" } });
+        { create_matching_char_highlighter, &show_matching_desc } });
     registry.insert({
         "show-whitespaces",
-        { ShowWhitespacesHighlighter::create,
-          "Display whitespaces using symbols \n"
-          "Parameters: -tab <separator> -tabpad <separator> -lf <separator> -spc <separator> -nbsp <separator>\n" } });
+        { ShowWhitespacesHighlighter::create, &show_whitespace_desc } });
     registry.insert({
         "wrap",
-        { WrapHighlighter::create,
-          "Parameters: [-word] [-indent] [-width <max_width>] [-marker <marker_text>]\n"
-          "Wrap lines to window width, or max_width if given and window is wider,\n"
-          "wrap at word boundaries instead of codepoint boundaries if -word is given\n"
-          "insert marker_text at start of wrapped lines if given\n"
-          "preserve line indent in wrapped parts if -indent is given\n"} });
+        { WrapHighlighter::create, &wrap_desc } });
 }
 
 }

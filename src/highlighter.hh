@@ -10,6 +10,7 @@
 #include "array_view.hh"
 #include "string.hh"
 #include "utils.hh"
+#include "parameters_parser.hh"
 
 #include <memory>
 
@@ -86,13 +87,19 @@ private:
 using HighlighterParameters = ConstArrayView<String>;
 using HighlighterFactory = std::unique_ptr<Highlighter> (*)(HighlighterParameters params, Highlighter* parent);
 
-struct HighlighterFactoryAndDocstring
+struct HighlighterDesc
 {
-    HighlighterFactory factory;
-    String docstring;
+    const char* docstring;
+    ParameterDesc params;
 };
 
-struct HighlighterRegistry : HashMap<String, HighlighterFactoryAndDocstring, MemoryDomain::Highlight>,
+struct HighlighterFactoryAndDescription
+{
+    HighlighterFactory factory;
+    const HighlighterDesc* description;
+};
+
+struct HighlighterRegistry : HashMap<String, HighlighterFactoryAndDescription, MemoryDomain::Highlight>,
                              Singleton<HighlighterRegistry>
 {};
 
