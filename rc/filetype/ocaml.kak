@@ -18,7 +18,11 @@ hook global WinSetOption filetype=ocaml %{
 
 hook -group ocaml-highlight global WinSetOption filetype=ocaml %{
     add-highlighter window/ocaml ref ocaml
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/ocaml }
+    alias window alt ocaml-alternative-file
+    hook -once -always window WinSetOption filetype=.* %{
+        unalias window alt ocaml-alternative-file
+        remove-highlighter window/ocaml
+    }
 }
 
 provide-module ocaml %{
@@ -72,6 +76,24 @@ evaluate-commands %sh{
   printf %s "
     add-highlighter shared/ocaml/code/ regex \b(${keywords})\b 0:keyword
   "
+}
+
+# Conveniences
+# ‾‾‾‾‾‾‾‾‾‾‾‾
+
+# C has header and source files and you need to often switch between them.
+# Similarly OCaml has .ml (implementation) and .mli (interface files) and
+# one often needs to switch between them.
+#
+# This command provides a simple functionality that allows you to accomplish this.
+define-command ocaml-alternative-file -docstring 'Switch between .ml and .mli file or vice versa' %{
+    evaluate-commands %sh{
+        if [ "${kak_buffile##*.}" = 'ml' ]; then
+            printf "edit -- '%s'" "$(printf %s "${kak_buffile}i" | sed "s/'/''/g")"
+        elif [ "${kak_buffile##*.}" = 'mli' ]; then
+            printf "edit -- '%s'" "$(printf %s "${kak_buffile%i}" | sed "s/'/''/g")"
+        fi
+    }
 }
 
 }
