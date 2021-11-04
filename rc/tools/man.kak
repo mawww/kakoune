@@ -108,8 +108,12 @@ declare-option -hidden regex man_link2 \
 # Define a useful command sequence for searching a given regex
 # and a given sequence of search keys.
 define-command man-search -params 2 %{
-  set-register / %arg[1]
-  execute-keys %arg[2]
+    set-register / %arg[1]
+    try %{
+        execute-keys %arg[2]
+    } catch %{
+        fail "Could not find man page link"
+    }
 }
 
 define-command -docstring 'Go to next man page link' \
