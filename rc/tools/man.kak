@@ -137,11 +137,7 @@ man-jump %{
 # Suggested keymaps for a user mode
 declare-user-mode man
 
-define-command man-mode-map -params 3 %{
-  map global man %arg[1] %arg[2] -docstring %arg[3]
-} -hidden
-
-man-mode-map 'g' ': man-jump<ret>' 'Jump to a man page using selected man page link'
-man-mode-map 'j' ': try %{ man-link-next }<ret>' 'Go to next man page link'
-man-mode-map 'k' ': try %{ man-link-prev }<ret>' 'Go to previous man page link'
-man-mode-map 'm' ': man<space>' 'Look up a man page'
+map global man 'g' -docstring 'Jump to a man page using selected man page link' ': man-jump<ret>'
+map global man 'j' -docstring 'Go to next man page link'                        ': try %{ man-link-next }<ret>'
+map global man 'k' -docstring 'Go to previous man page link'                    ': try %{ man-link-prev }<ret>'
+map global man 'm' -docstring 'Look up a man page'                              ': man<space>'
