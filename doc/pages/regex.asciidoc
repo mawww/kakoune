@@ -2,7 +2,7 @@
 
 == Regex syntax
 
-Kakoune regex syntax is based on ECMAScript syntax, as defined by the
+Kakoune's regex syntax is inspired by ECMAScript, as defined by the
 ECMA-262 standard (see <<regex#compatibility,:doc regex compatibility>>).
 
 Kakoune's regex always runs on Unicode codepoint sequences, not on bytes.
