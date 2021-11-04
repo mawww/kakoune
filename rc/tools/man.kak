@@ -135,10 +135,10 @@ man-jump %{
 }
 
 # Suggested keymaps for a user mode
-declare-user-mode man-mode
+declare-user-mode man
 
 define-command man-mode-map -params 3 %{
-  map global man-mode %arg[1] %arg[2] -docstring %arg[3]
+  map global man %arg[1] %arg[2] -docstring %arg[3]
 } -hidden
 
 man-mode-map 'g' ': man-jump<ret>' 'Jump to a man page using selected man page link'
