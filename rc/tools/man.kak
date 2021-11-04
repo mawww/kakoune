@@ -140,4 +140,4 @@ declare-user-mode man
 map global man 'g' -docstring 'Jump to a man page using selected man page link' ': man-jump<ret>'
 map global man 'j' -docstring 'Go to next man page link'                        ': man-link-next<ret>'
 map global man 'k' -docstring 'Go to previous man page link'                    ': man-link-prev<ret>'
-map global man 'm' -docstring 'Look up a man page'                              ': man<space>'
+map global man 'm' -docstring 'Look up a man page'                              ':man<space>'
