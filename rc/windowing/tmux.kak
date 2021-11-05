@@ -71,6 +71,9 @@ define-command tmux-focus -params ..1 -client-completion -docstring %{
 
 ## The default behaviour for the `new` command is to open an horizontal pane in a tmux session
 alias global focus tmux-focus
-alias global terminal tmux-terminal-horizontal
+alias global terminal            tmux-terminal-horizontal
+alias global terminal-window     tmux-terminal-window
+alias global terminal-horizontal tmux-terminal-horizontal
+alias global terminal-vertical   tmux-terminal-vertical
 
 }

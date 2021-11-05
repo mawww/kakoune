@@ -64,6 +64,9 @@ define-command x11-focus -params ..1 -client-completion -docstring %{
 }
 
 alias global focus x11-focus
-alias global terminal x11-terminal
+alias global terminal            x11-terminal
+alias global terminal-window     x11-terminal
+alias global terminal-horizontal x11-terminal
+alias global terminal-vertical   x11-terminal
 
 }
