@@ -71,12 +71,11 @@ define-command kitty-focus -params ..1 -client-completion -docstring %{
     }
 }
 
+alias global focus               kitty-focus
 alias global terminal            kitty-terminal
 alias global terminal-window     kitty-terminal
 alias global terminal-tab        kitty-terminal-tab
 alias global terminal-horizontal kitty-terminal
 alias global terminal-vertical   kitty-terminal
-
-alias global focus kitty-focus
 
 }

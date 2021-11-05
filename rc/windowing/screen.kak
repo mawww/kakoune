@@ -68,7 +68,7 @@ define-command screen-focus -params ..1 -client-completion -docstring %{
     }
 }
 
-alias global focus screen-focus
+alias global focus               screen-focus
 alias global terminal            screen-terminal-horizontal
 alias global terminal-window     screen-terminal-window
 alias global terminal-tab        screen-terminal-window

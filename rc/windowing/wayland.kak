@@ -50,7 +50,7 @@ define-command wayland-focus -params ..1 -client-completion -docstring %{
     fail There is no way to focus another window on Wayland
 }
 
-alias global focus wayland-focus
+alias global focus               wayland-focus
 alias global terminal            wayland-terminal
 alias global terminal-window     wayland-terminal
 alias global terminal-tab        wayland-terminal
