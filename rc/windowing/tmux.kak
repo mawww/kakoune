@@ -73,6 +73,7 @@ define-command tmux-focus -params ..1 -client-completion -docstring %{
 alias global focus tmux-focus
 alias global terminal            tmux-terminal-horizontal
 alias global terminal-window     tmux-terminal-window
+alias global terminal-tab        tmux-terminal-window
 alias global terminal-horizontal tmux-terminal-horizontal
 alias global terminal-vertical   tmux-terminal-vertical
 

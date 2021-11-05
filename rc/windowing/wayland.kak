@@ -53,6 +53,7 @@ define-command wayland-focus -params ..1 -client-completion -docstring %{
 alias global focus wayland-focus
 alias global terminal            wayland-terminal
 alias global terminal-window     wayland-terminal
+alias global terminal-tab        wayland-terminal
 alias global terminal-horizontal wayland-terminal
 alias global terminal-vertical   wayland-terminal
 

@@ -135,6 +135,7 @@ define-command iterm-focus -params ..1 -client-completion -docstring %{
 alias global focus iterm-focus
 alias global terminal            iterm-terminal-horizontal
 alias global terminal-window     iterm-terminal-window
+alias global terminal-tab        iterm-terminal-tab
 alias global terminal-horizontal iterm-terminal-horizontal
 alias global terminal-vertical   iterm-terminal-vertical
 
