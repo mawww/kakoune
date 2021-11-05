@@ -10,10 +10,10 @@ evaluate-commands %sh{
 
 declare-option -docstring %{window type that kitty creates on new and repl calls (window|os-window)} str kitty_window_type window
 
-define-command kitty-terminal -params 1.. -shell-completion -docstring '
-kitty-terminal <program> [<arguments>]: create a new terminal as a kitty window
-The program passed as argument will be executed in the new terminal' \
-%{
+define-command kitty-terminal -params 1.. -shell-completion -docstring %{
+    kitty-terminal <program> [<arguments>]: create a new terminal as a kitty window
+    The program passed as argument will be executed in the new terminal
+} %{
     nop %sh{
         match=""
         if [ -n "$kak_client_env_KITTY_WINDOW_ID" ]; then
@@ -29,10 +29,10 @@ The program passed as argument will be executed in the new terminal' \
     }
 }
 
-define-command kitty-terminal-tab -params 1.. -shell-completion -docstring '
-kitty-terminal-tab <program> [<arguments>]: create a new terminal as kitty tab
-The program passed as argument will be executed in the new terminal' \
-%{
+define-command kitty-terminal-tab -params 1.. -shell-completion -docstring %{
+    kitty-terminal-tab <program> [<arguments>]: create a new terminal as kitty tab
+    The program passed as argument will be executed in the new terminal
+} %{
     nop %sh{
         match=""
         if [ -n "$kak_client_env_KITTY_WINDOW_ID" ]; then
@@ -48,10 +48,10 @@ The program passed as argument will be executed in the new terminal' \
     }
 }
 
-define-command kitty-focus -params ..1 -client-completion -docstring '
-kitty-focus [<client>]: focus the given client
-If no client is passed then the current one is used' \
-%{
+define-command kitty-focus -params ..1 -client-completion -docstring %{
+    kitty-focus [<client>]: focus the given client
+    If no client is passed then the current one is used
+} %{
     evaluate-commands %sh{
         if [ $# -eq 1 ]; then
             printf "evaluate-commands -client '%s' focus" "$1"
