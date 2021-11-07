@@ -987,7 +987,19 @@ const CommandDesc add_highlighter_cmd = {
             HighlighterRegistry& registry = HighlighterRegistry::instance();
             auto it = registry.find(params[1]);
             if (it != registry.end())
-                return format("{}:\n{}", params[1], indent(it->value.docstring));
+            {
+                auto docstring = it->value.description->docstring;
+                auto desc_params = generate_switches_doc(it->value.description->params.switches);
+
+                if (desc_params.empty())
+                    return format("{}:\n{}", params[1], indent(docstring));
+                else
+                {
+                    auto desc_indent = Vector<String>{docstring, "Switches:", indent(desc_params)}
+                                           | transform([](auto& s) { return indent(s); });
+                    return format("{}:\n{}", params[1], join(desc_indent, "\n"));
+                }
+            }
         }
         return "";
     },
