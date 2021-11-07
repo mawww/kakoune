@@ -3,6 +3,14 @@
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
+== Kakoune 2021.11.07
+
+* Support for curly and separately colored underlines (undocumented in 2021.10.28)
+
+* Fixes for terminal flickering
+
+* Fixes for command and response fifo corner cases
+
 == Kakoune 2021.10.28
 
 * `g` and `v` do not auto lower case the next key, so `GL` needs to be

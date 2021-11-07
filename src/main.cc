@@ -44,6 +44,9 @@ struct {
     unsigned int version;
     StringView notes;
 } constexpr version_notes[] = { {
+        20211107,
+        "» colored and curly underlines support (undocumented in 20210828)\n"
+    }, {
         20211028,
         "» {+b}g{} and {+b}v{} do not auto-convert to lowercase anymore\n"
     }, {
