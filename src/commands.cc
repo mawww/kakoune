@@ -31,6 +31,7 @@
 
 #include <functional>
 #include <utility>
+#include <cerrno>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -2535,6 +2536,24 @@ const CommandDesc change_directory_cmd = {
     }
 };
 
+const CommandDesc present_working_directory_cmd = {
+    "print-working-directory",
+    "pwd",
+    "print-working-directory: print the server's current working directory to the status line",
+    no_params,
+    CommandFlags::None,
+    CommandHelper{},
+    CommandCompleter{},
+    [](const ParametersParser&, Context& context, const ShellContext&)
+    {
+        char cwd[PATH_MAX+1];
+        if (!::getcwd(cwd, sizeof(cwd)))
+            throw runtime_error(format("unable to get the current working directory (errno: {})", ::strerror(errno)));
+
+        context.print_status({cwd, context.faces()["StatusLine"]});
+    }
+};
+
 const CommandDesc rename_session_cmd = {
     "rename-session",
     nullptr,
@@ -2739,6 +2758,7 @@ void register_commands()
     register_command(set_register_cmd);
     register_command(select_cmd);
     register_command(change_directory_cmd);
+    register_command(present_working_directory_cmd);
     register_command(rename_session_cmd);
     register_command(fail_cmd);
     register_command(declare_user_mode_cmd);
