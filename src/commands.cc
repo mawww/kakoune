@@ -2525,11 +2525,14 @@ const CommandDesc change_directory_cmd = {
                                         context.options()["ignored_files"].get<Regex>(),
                                         cursor_pos, FilenameFlags::OnlyDirectories) };
         }),
-    [](const ParametersParser& parser, Context&, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         StringView target = parser.positional_count() == 1 ? StringView{parser[0]} : "~";
-        if (chdir(parse_filename(target).c_str()) != 0)
+        auto dir = parse_filename(target);
+        if (chdir(dir.c_str()) != 0)
             throw runtime_error(format("unable to change to directory: '{}'", target));
+
+        context.print_status({dir, context.faces()["StatusLine"]});
         for (auto& buffer : BufferManager::instance())
             buffer->update_display_name();
     }
