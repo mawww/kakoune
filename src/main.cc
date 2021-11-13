@@ -937,6 +937,7 @@ int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet, 
     ShellManager    shell_manager{builtin_env_vars};
     RegisterManager register_manager;
     BufferManager   buffer_manager;
+    int             exit_code = 0;
 
     register_options();
     register_registers();
@@ -962,7 +963,11 @@ int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet, 
                 if (not quiet)
                     write_stderr(format("error while applying keys to buffer '{}': {}\n",
                                         buffer.display_name(), err.what()));
+                exit_code = 2;
+                return false;
             }
+
+            return true;
         };
 
         for (auto& file : files)
@@ -971,27 +976,28 @@ int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet, 
             if (not suffix_backup.empty())
                 write_buffer_to_file(*buffer, buffer->name() + suffix_backup,
                                      WriteMethod::Overwrite, WriteFlags::None);
-            apply_to_buffer(*buffer);
-            write_buffer_to_file(*buffer, buffer->name(),
-                                 WriteMethod::Overwrite, WriteFlags::None);
+            if (apply_to_buffer(*buffer))
+                write_buffer_to_file(*buffer, buffer->name(),
+                                     WriteMethod::Overwrite, WriteFlags::None);
             buffer_manager.delete_buffer(*buffer);
         }
         if (not isatty(0))
         {
             Buffer& buffer = *create_buffer_from_string(
                 "*stdin*", Buffer::Flags::NoHooks, read_fd(0));
-            apply_to_buffer(buffer);
-            write_buffer_to_fd(buffer, 1);
+            if (apply_to_buffer(buffer))
+                write_buffer_to_fd(buffer, 1);
             buffer_manager.delete_buffer(buffer);
         }
     }
     catch (runtime_error& err)
     {
         write_stderr(format("error: {}\n", err.what()));
+        exit_code = 1;
     }
 
     buffer_manager.clear_buffer_trash();
-    return 0;
+    return exit_code;
 }
 
 int run_pipe(StringView session)
