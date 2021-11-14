@@ -692,7 +692,11 @@ int run_client(StringView session, StringView name, StringView client_init,
     try
     {
         Optional<int> stdin_fd;
-        if (not isatty(0))
+        // json-ui (or dummy) is not intended to be user interactive.
+        // So only worry about making the tty your stdin if:
+        // (a) ui_type is Terminal, *and*
+        // (b) fd 0 is not interactive.
+        if (ui_type == UIType::Terminal && not isatty(0))
         {
             // move stdin to another fd, and restore tty as stdin
             stdin_fd = dup(0);
