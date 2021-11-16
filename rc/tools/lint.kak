@@ -145,7 +145,7 @@ define-command \
 
                 # Mention the column where this problem occurs,
                 # so that information is not lost.
-                msg = msg "(col " $3 ")"
+                msg = msg " (col " $3 ")"
 
                 # Messages will be stored in a line-specs option,
                 # and each record in the option uses "|"
