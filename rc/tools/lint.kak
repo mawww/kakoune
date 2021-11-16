@@ -89,12 +89,14 @@ define-command \
                     '
                         BEGIN { OFS=":"; FS=":" }
 
-                        /:[1-9][0-9]*:[1-9][0-9]*:/ {
+                        /^[^:]+:([1-9][0-9]*:){1,2} / {
                             $1 = ENVIRON["kak_bufname"]
-                            if ( $2 == 1 ) {
+                            $2 += line_offset
+                            if ( $3 ~ /^ / ) {
+                                $2 = $2 FS
+                            } else if ( $2 == 1 + line_offset ) {
                                 $3 += first_line_byte_offset
                             }
-                            $2 += line_offset
                             print $0
                         }
                     ' >>"$dir"/result
@@ -119,7 +121,7 @@ define-command \
                 warning_count = 0
             }
 
-            /:[1-9][0-9]*:[1-9][0-9]*:/ {
+            /^[^:]+:[1-9][0-9]*:([1-9][0-9]*)?: / {
                 # Remember that an error or a warning occurs on this line..
                 if ($4 ~ /[Ee]rror/) {
                     # We definitely have an error on this line.
@@ -145,7 +147,9 @@ define-command \
 
                 # Mention the column where this problem occurs,
                 # so that information is not lost.
-                msg = msg " (col " $3 ")"
+                if ($3 != "") {
+                  msg = msg " (col " $3 ")"
+                }
 
                 # Messages will be stored in a line-specs option,
                 # and each record in the option uses "|"
