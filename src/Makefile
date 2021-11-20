@@ -153,6 +153,9 @@ installdirs:
 		$(sharedir)/doc \
 		$(docdir) \
 		$(mandir)
+ifeq ($(debug),yes)
+	install -d $(sharedir)/gdb
+endif
 
 install: kak man installdirs
 	install -m 0755 kak $(bindir)
@@ -168,6 +171,9 @@ ifeq ($(gzip_man),yes)
 	install -m 0644 ../doc/kak.1.gz $(mandir)
 else
 	install -m 0644 ../doc/kak.1 $(mandir)
+endif
+ifeq ($(debug),yes)
+	install -m 0644 ../gdb/kakoune.py $(sharedir)/gdb
 endif
 
 install-strip: install
