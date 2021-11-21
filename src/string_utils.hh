@@ -95,9 +95,9 @@ struct WrapView
 
 inline auto wrap_at(ColumnCount max_width)
 {
-    return make_view_factory([=](StringView text) {
+    return ViewFactory{[=](StringView text) {
         return WrapView{text, max_width};
-    });
+    }};
 }
 
 int str_to_int(StringView str); // throws on error

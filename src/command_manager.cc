@@ -297,14 +297,15 @@ Token parse_percent_token(ParseState& state, bool throw_on_unterminated)
     }
 }
 
-template<typename Target, typename = std::enable_if_t<std::is_same_v<Target, Vector<String>> or std::is_same_v<Target, String>>>
+template<typename Target>
+    requires (std::is_same_v<Target, Vector<String>> or std::is_same_v<Target, String>)
 void expand_token(Token&& token, const Context& context, const ShellContext& shell_context, Target& target)
 {
     constexpr bool single = std::is_same_v<Target, String>;
     auto set_target = [&](auto&& s) {
         if constexpr (single)
             target = std::move(s);
-        else if constexpr (std::is_same_v<std::decay_t<decltype(s)>, String>)
+        else if constexpr (std::is_same_v<std::remove_cvref_t<decltype(s)>, String>)
             target.push_back(std::move(s));
         else if constexpr (std::is_same_v<decltype(s), Vector<String>&&>)
             target.insert(target.end(), std::make_move_iterator(s.begin()), std::make_move_iterator(s.end()));

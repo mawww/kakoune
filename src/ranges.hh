@@ -15,8 +15,7 @@ namespace Kakoune
 template<typename Func> struct ViewFactory { Func func; };
 
 template<typename Func>
-ViewFactory<std::remove_cvref_t<Func>>
-make_view_factory(Func&& func) { return {std::forward<Func>(func)}; }
+ViewFactory(Func&&) -> ViewFactory<std::remove_cvref_t<Func>>;
 
 template<typename Range, typename Func>
 decltype(auto) operator| (Range&& range, ViewFactory<Func> factory)
@@ -50,10 +49,10 @@ struct ReverseView
 
 inline auto reverse()
 {
-    return make_view_factory([](auto&& range) {
+    return ViewFactory{[](auto&& range) {
         using Range = decltype(range);
         return ReverseView<decay_range<Range>>{std::forward<Range>(range)};
-    });
+    }};
 }
 
 template<typename Range>
@@ -74,10 +73,10 @@ struct SkipView
 
 inline auto skip(size_t count)
 {
-    return make_view_factory([count](auto&& range) {
+    return ViewFactory{[count](auto&& range) {
         using Range = decltype(range);
         return SkipView<decay_range<Range>>{std::forward<Range>(range), count};
-    });
+    }};
 }
 
 template<typename Range>
@@ -92,10 +91,10 @@ struct DropView
 
 inline auto drop(size_t count)
 {
-    return make_view_factory([count](auto&& range) {
+    return ViewFactory{[count](auto&& range) {
         using Range = decltype(range);
         return DropView<decay_range<Range>>{std::forward<Range>(range), count};
-    });
+    }};
 }
 
 template<typename Range, typename Filter>
@@ -150,10 +149,10 @@ struct FilterView
 template<typename Filter>
 inline auto filter(Filter f)
 {
-    return make_view_factory([f = std::move(f)](auto&& range) {
+    return ViewFactory{[f = std::move(f)](auto&& range) {
         using Range = decltype(range);
         return FilterView<decay_range<Range>, Filter>{std::forward<Range>(range), std::move(f)};
-    });
+    }};
 }
 
 template<typename Range>
@@ -196,10 +195,10 @@ struct EnumerateView
 
 inline auto enumerate()
 {
-    return make_view_factory([](auto&& range) {
+    return ViewFactory{[](auto&& range) {
         using Range = decltype(range);
         return EnumerateView<decay_range<Range>>{std::forward<Range>(range)};
-    });
+    }};
 }
 
 template<typename Range, typename Transform>
@@ -255,10 +254,10 @@ struct TransformView
 template<typename Transform>
 inline auto transform(Transform t)
 {
-    return make_view_factory([t = std::move(t)](auto&& range) {
+    return ViewFactory{[t = std::move(t)](auto&& range) {
         using Range = decltype(range);
         return TransformView<decay_range<Range>, Transform>{std::forward<Range>(range), std::move(t)};
-    });
+    }};
 }
 
 template<typename T, typename U>
@@ -363,28 +362,28 @@ struct SplitView
 template<typename ValueType = void, typename Element>
 auto split(Element separator)
 {
-    return make_view_factory([s = std::move(separator)](auto&& range) {
+    return ViewFactory{[s = std::move(separator)](auto&& range) {
         using Range = decltype(range);
         return SplitView<decay_range<Range>, false, false, Element, ValueType>{std::forward<Range>(range), std::move(s), {}};
-    });
+    }};
 }
 
 template<typename ValueType = void, typename Element>
 auto split_after(Element separator)
 {
-    return make_view_factory([s = std::move(separator)](auto&& range) {
+    return ViewFactory{[s = std::move(separator)](auto&& range) {
         using Range = decltype(range);
         return SplitView<decay_range<Range>, false, true, Element, ValueType>{std::forward<Range>(range), std::move(s), {}};
-    });
+    }};
 }
 
 template<typename ValueType = void, typename Element>
 auto split(Element separator, Element escaper)
 {
-    return make_view_factory([s = std::move(separator), e = std::move(escaper)](auto&& range) {
+    return ViewFactory{[s = std::move(separator), e = std::move(escaper)](auto&& range) {
         using Range = decltype(range);
         return SplitView<decay_range<Range>, true, false, Element, ValueType>{std::forward<Range>(range), std::move(s), std::move(e)};
-    });
+    }};
 }
 
 template<typename Range1, typename Range2>
@@ -518,26 +517,26 @@ void for_n_best(Range&& c, size_t count, Compare&& compare, Func&& func)
 template<typename Container>
 auto gather()
 {
-    return make_view_factory([](auto&& range) {
+    return ViewFactory{[](auto&& range) {
         using std::begin; using std::end;
         return Container(begin(range), end(range));
-    });
+    }};
 }
 
 template<template <typename Element> class Container>
 auto gather()
 {
-    return make_view_factory([](auto&& range) {
+    return ViewFactory{[](auto&& range) {
         using std::begin; using std::end;
         using ValueType = std::remove_cv_t<std::remove_reference_t<decltype(*begin(range))>>;
         return Container<ValueType>(begin(range), end(range));
-    });
+    }};
 }
 
 template<typename ExceptionType, bool exact_size, size_t... Indexes>
 auto elements()
 {
-    return make_view_factory([=] (auto&& range) {
+    return ViewFactory{[=] (auto&& range) {
         using std::begin; using std::end;
         auto it = begin(range), end_it = end(range);
         size_t i = 0;
@@ -551,7 +550,7 @@ auto elements()
         if (exact_size and ++it != end_it)
             throw ExceptionType{++i};
         return res;
-    });
+    }};
 }
 
 template<typename ExceptionType, bool exact_size, size_t... Indexes>
