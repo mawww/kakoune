@@ -4,6 +4,7 @@
 #include "assert.hh"
 
 #include <memory>
+#include <concepts>
 
 namespace Kakoune
 {
