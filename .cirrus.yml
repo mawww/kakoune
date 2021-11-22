@@ -1,6 +1,6 @@
 freebsd_task:
     freebsd_instance:
-        image_family: freebsd-12-2
+        image_family: freebsd-13-0
     gmake_script: pkg install -y gmake
     matrix:
         - name: freebsd_clang
@@ -23,8 +23,6 @@ linux_task:
         - name: linux_clang
           container:
               image: silkeh/clang:10
-          clang_script:
-              - apt-get -y install pkg-config libncursesw5-dev
           env:
               CXX: clang++
         - name: linux_gcc
@@ -39,8 +37,9 @@ macos_task:
         image: big-sur-base
     matrix:
         - name: macos_clang
+          clang_script: brew install llvm@13
           env:
-              CXX: clang++
+              CXX: /usr/local/opt/llvm/bin/clang++
         - name: macos_gcc
           gcc_script: brew install gcc@10
           env:
