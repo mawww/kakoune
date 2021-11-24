@@ -391,6 +391,14 @@ std::pair<String, int> ShellManager::eval(
         context.client().redraw_ifn();
     }
 
+    // Allows us to inspect the actual output of the %sh{} blocks
+    // Invoke `kak -debug shell-stdout` on the command line to see shell output in *debug* buffer.
+    // Most likely you will want to do `kak -debug 'shell|shell-stdout'` to see _both_ what %sh{} blocks
+    // were given to execute (shell option) and what result they got back (shell-stdout) option.
+    if (debug_flags & DebugFlags::ShellStdout) {
+        write_to_debug_buffer(format("shell stdout:\n{}\n----\n", stdout_contents));
+    }
+
     return { std::move(stdout_contents), WIFEXITED(status) ? WEXITSTATUS(status) : -1 };
 }
 
