@@ -258,11 +258,21 @@ struct CommandFifos
 }
 
 std::pair<String, int> ShellManager::eval(
-    StringView cmdline, const Context& context, StringView input,
+    StringView initial_cmdline, const Context& context, StringView input,
     Flags flags, const ShellContext& shell_context)
 {
     const DebugFlags debug_flags = context.options()["debug"].get<DebugFlags>();
     const bool profile = debug_flags & DebugFlags::Profile;
+
+    // Check if user wants shell execution to be traced.
+    // Add a `set -x` prelude to each script in that case.
+    String cmdline_with_setx;
+    StringView cmdline{initial_cmdline};
+    if (debug_flags & DebugFlags::ShellTrace) {
+        cmdline_with_setx = "    set -x\n" + initial_cmdline;
+        cmdline = cmdline_with_setx;
+    }
+
     if (debug_flags & DebugFlags::Shell)
         write_to_debug_buffer(format("shell:\n{}\n----\n", cmdline));
 

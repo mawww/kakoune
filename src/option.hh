@@ -74,12 +74,13 @@ using TimestampedList = PrefixedList<size_t, T>;
 
 enum class DebugFlags
 {
-    None     = 0,
-    Hooks    = 1 << 0,
-    Shell    = 1 << 1,
-    Profile  = 1 << 2,
-    Keys     = 1 << 3,
-    Commands = 1 << 4,
+    None        = 0,
+    Hooks       = 1 << 0,
+    Shell       = 1 << 1,
+    Profile     = 1 << 2,
+    Keys        = 1 << 3,
+    Commands    = 1 << 4,
+    ShellTrace  = 1 << 5,
 };
 
 constexpr bool with_bit_ops(Meta::Type<DebugFlags>) { return true; }
@@ -89,6 +90,7 @@ constexpr auto enum_desc(Meta::Type<DebugFlags>)
     return make_array<EnumDesc<DebugFlags>>({
         { DebugFlags::Hooks, "hooks" },
         { DebugFlags::Shell, "shell" },
+        { DebugFlags::ShellTrace, "shell-trace" },
         { DebugFlags::Profile, "profile" },
         { DebugFlags::Keys, "keys" },
         { DebugFlags::Commands, "commands" },
