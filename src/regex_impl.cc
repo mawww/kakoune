@@ -179,11 +179,10 @@ private:
 
     NodeIndex disjunction(uint32_t capture = -1)
     {
-        NodeIndex index = new_node(ParsedRegex::Alternation);
-        get_node(index).value = capture;
+        NodeIndex index = add_node(ParsedRegex::Alternation, capture);
         while (true)
         {
-            alternative();
+            alternative(ParsedRegex::Sequence);
             if (at_end() or *m_pos != '|')
                 break;
             ++m_pos;
@@ -193,10 +192,10 @@ private:
         return index;
     }
 
-    NodeIndex alternative(ParsedRegex::Op op = ParsedRegex::Sequence)
+    NodeIndex alternative(ParsedRegex::Op op)
     {
-        NodeIndex index = new_node(op);
-        while (auto t = term())
+        NodeIndex index = add_node(op);
+        while (term())
         {}
         get_node(index).children_end = m_parsed_regex.nodes.size();
 
@@ -248,18 +247,18 @@ private:
 
         switch (*m_pos)
         {
-            case '^': ++m_pos; return new_node(ParsedRegex::LineStart);
-            case '$': ++m_pos; return new_node(ParsedRegex::LineEnd);
+            case '^': ++m_pos; return add_node(ParsedRegex::LineStart);
+            case '$': ++m_pos; return add_node(ParsedRegex::LineEnd);
             case '\\':
                 if (m_pos+1 == m_regex.end())
                     return {};
                 switch (*(m_pos+1))
                 {
-                    case 'b': m_pos += 2; return new_node(ParsedRegex::WordBoundary);
-                    case 'B': m_pos += 2; return new_node(ParsedRegex::NotWordBoundary);
-                    case 'A': m_pos += 2; return new_node(ParsedRegex::SubjectBegin);
-                    case 'z': m_pos += 2; return new_node(ParsedRegex::SubjectEnd);
-                    case 'K': m_pos += 2; return new_node(ParsedRegex::ResetStart);
+                    case 'b': m_pos += 2; return add_node(ParsedRegex::WordBoundary);
+                    case 'B': m_pos += 2; return add_node(ParsedRegex::NotWordBoundary);
+                    case 'A': m_pos += 2; return add_node(ParsedRegex::SubjectBegin);
+                    case 'z': m_pos += 2; return add_node(ParsedRegex::SubjectEnd);
+                    case 'K': m_pos += 2; return add_node(ParsedRegex::ResetStart);
                 }
                 break;
             case '(':
@@ -306,10 +305,7 @@ private:
         {
             case '.':
                 ++m_pos;
-                if (m_flags & Flags::DotMatchesNewLine)
-                    return new_node(ParsedRegex::AnyChar);
-                else
-                    return new_node(ParsedRegex::AnyCharExceptNewLine);
+                return add_node((m_flags & Flags::DotMatchesNewLine) ? ParsedRegex::AnyChar : ParsedRegex::AnyCharExceptNewLine);
             case '(':
             {
                 uint32_t capture_group = -1;
@@ -347,7 +343,7 @@ private:
                 if (contains("^$.*+?[]{}", cp) or (cp >= 0xF0000 and cp <= 0xFFFFF))
                     parse_error(format("unexpected '{}'", cp));
                 ++m_pos;
-                return new_node(ParsedRegex::Literal, cp);
+                return add_node(ParsedRegex::Literal, cp);
         }
     }
 
@@ -380,12 +376,12 @@ private:
 
         if (cp == 'Q')
         {
-            auto escaped_sequence = new_node(ParsedRegex::Sequence);
+            auto escaped_sequence = add_node(ParsedRegex::Sequence);
             constexpr StringView end_mark{"\\E"};
 
             auto quote_end = std::search(m_pos.base(), m_regex.end(), end_mark.begin(), end_mark.end());
             while (m_pos != quote_end)
-                new_node(ParsedRegex::Literal, *m_pos++);
+                add_node(ParsedRegex::Literal, *m_pos++);
             get_node(escaped_sequence).children_end = m_parsed_regex.nodes.size();
 
             if (quote_end != m_regex.end())
@@ -397,33 +393,33 @@ private:
         // CharacterClassEscape
         auto class_it = find_if(character_class_escapes, [cp](auto& c) { return c.cp == cp; });
         if (class_it != std::end(character_class_escapes))
-            return new_node(ParsedRegex::CharType, (Codepoint)class_it->ctype);
+            return add_node(ParsedRegex::CharType, (Codepoint)class_it->ctype);
 
         // CharacterEscape
         for (auto& control : control_escapes)
         {
             if (control.name == cp)
-                return new_node(ParsedRegex::Literal, control.value);
+                return add_node(ParsedRegex::Literal, control.value);
         }
 
         if (cp == '0')
-            return new_node(ParsedRegex::Literal, '\0');
+            return add_node(ParsedRegex::Literal, '\0');
         else if (cp == 'c')
         {
             if (at_end())
                 parse_error("unterminated control escape");
             Codepoint ctrl = *m_pos++;
             if (('a' <= ctrl and ctrl <= 'z') or ('A' <= ctrl and ctrl <= 'Z'))
-                return new_node(ParsedRegex::Literal, ctrl % 32);
+                return add_node(ParsedRegex::Literal, ctrl % 32);
             parse_error(format("Invalid control escape character '{}'", ctrl));
         }
         else if (cp == 'x')
-            return new_node(ParsedRegex::Literal, read_hex(2));
+            return add_node(ParsedRegex::Literal, read_hex(2));
         else if (cp == 'u')
-            return new_node(ParsedRegex::Literal, read_hex(6));
+            return add_node(ParsedRegex::Literal, read_hex(6));
 
         if (contains("^$\\.*+?()[]{}|", cp)) // SyntaxCharacter
-            return new_node(ParsedRegex::Literal, cp);
+            return add_node(ParsedRegex::Literal, cp);
         parse_error(format("unknown atom escape '{}'", cp));
     }
 
@@ -542,16 +538,16 @@ private:
         if (character_class.ctypes == CharacterType::None and not character_class.negative and
             character_class.ranges.size() == 1 and
             character_class.ranges.front().min == character_class.ranges.front().max)
-            return new_node(ParsedRegex::Literal, character_class.ranges.front().min);
+            return add_node(ParsedRegex::Literal, character_class.ranges.front().min);
 
         if (character_class.ctypes != CharacterType::None and not character_class.negative and
             character_class.ranges.empty())
-            return new_node(ParsedRegex::CharType, (Codepoint)character_class.ctypes);
+            return add_node(ParsedRegex::CharType, (Codepoint)character_class.ctypes);
 
         auto class_id = m_parsed_regex.character_classes.size();
         m_parsed_regex.character_classes.push_back(std::move(character_class));
 
-        return new_node(ParsedRegex::CharClass, class_id);
+        return add_node(ParsedRegex::CharClass, class_id);
     }
 
     ParsedRegex::Quantifier quantifier()
@@ -604,8 +600,7 @@ private:
         }
     }
 
-    NodeIndex new_node(ParsedRegex::Op op, Codepoint value = -1,
-                          ParsedRegex::Quantifier quantifier = {ParsedRegex::Quantifier::One})
+    NodeIndex add_node(ParsedRegex::Op op, Codepoint value = -1, ParsedRegex::Quantifier quantifier = {ParsedRegex::Quantifier::One})
     {
         constexpr auto max_nodes = std::numeric_limits<int16_t>::max();
         const NodeIndex res = m_parsed_regex.nodes.size();
@@ -616,13 +611,12 @@ private:
         return res;
     }
 
-    bool at_end() const { return m_pos == m_regex.end(); }
-
     ParsedRegex::Node& get_node(NodeIndex index)
     {
         return m_parsed_regex.nodes[index];
     }
 
+    bool at_end() const { return m_pos == m_regex.end(); }
 
     [[gnu::noreturn]]
     void parse_error(StringView error) const
