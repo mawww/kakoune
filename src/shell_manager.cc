@@ -396,7 +396,16 @@ std::pair<String, int> ShellManager::eval(
     // Most likely you will want to do `kak -debug 'shell|shell-stdout'` to see _both_ what %sh{} blocks
     // were given to execute (shell option) and what result they got back (shell-stdout) option.
     if (debug_flags & DebugFlags::ShellStdout) {
-        write_to_debug_buffer(format("shell stdout:\n{}\n----\n", stdout_contents));
+        // Enclose stdout contents in a markdown ```kak ``` combo.
+        //
+        // The markdown tag allows us to `:set window/ filetype markdown` on the
+        // *debug* window contents and get syntax higlighting easily.
+        //
+        // Here the assumption is that %sh{} blocks generate kak script code.
+        // This assumption does not _always_ hold true but its OK here because the
+        // at best we get the ability to highlight and at worst we just get visual delimiters
+        // to the shell stdout (which is what we need).
+        write_to_debug_buffer(format("shell stdout:\n```kak{}\n```\n", stdout_contents));
     }
 
     return { std::move(stdout_contents), WIFEXITED(status) ? WEXITSTATUS(status) : -1 };
