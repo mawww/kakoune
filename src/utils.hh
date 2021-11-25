@@ -4,7 +4,6 @@
 #include "assert.hh"
 
 #include <memory>
-#include <concepts>
 
 namespace Kakoune
 {
@@ -175,10 +174,9 @@ public:
     {}
 
     template<typename Target>
-        requires requires (Target t, Args... a) {
-            requires not std::is_same_v<FunctionRef, std::remove_cvref_t<Target>>;
-            { t(a...) } -> std::convertible_to<Res>;
-        }
+        requires (not std::is_same_v<FunctionRef, std::remove_cvref_t<Target>> and
+                      (std::is_void_v<Res> or
+                       requires (Target t, Args... a, void(&func)(Res)) { func(t(a...)); }))
     FunctionRef(Target&& target)
       : m_target{&target},
         m_invoker{[](void* target, Args... args) {
