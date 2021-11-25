@@ -90,7 +90,7 @@ struct parse_error : runtime_error
 namespace
 {
 
-bool is_command_separator(Codepoint c)
+bool is_command_separator(char c)
 {
     return c == ';' or c == '\n';
 }
@@ -101,8 +101,17 @@ struct ParseResult
     bool terminated;
 };
 
-ParseResult parse_quoted(ParseState& state, Codepoint delimiter)
+template<typename Delimiter>
+ParseResult parse_quoted(ParseState& state, Delimiter delimiter)
 {
+    static_assert(std::is_same_v<Delimiter, char> or std::is_same_v<Delimiter, Codepoint>);
+    auto read = [](const char*& it, const char* end) {
+        if constexpr (std::is_same_v<Delimiter, Codepoint>)
+            return utf8::read_codepoint(it, end);
+        else
+            return *it++;
+    };
+
     const char* beg = state.pos;
     const char* end = state.str.end();
     String str;
@@ -110,11 +119,11 @@ ParseResult parse_quoted(ParseState& state, Codepoint delimiter)
     while (state.pos != end)
     {
         const char* cur = state.pos;
-        const Codepoint c = utf8::read_codepoint(state.pos, end);
+        const auto c = read(state.pos, end);
         if (c == delimiter)
         {
             auto next = state.pos;
-            if (utf8::read_codepoint(next, end) != delimiter)
+            if (read(next, end) != delimiter)
             {
                 if (str.empty())
                     return {String{String::NoCopy{}, {beg, cur}}, true};
@@ -283,7 +292,8 @@ Token parse_percent_token(ParseState& state, bool throw_on_unterminated)
     }
     else
     {
-        auto quoted = parse_quoted(state, opening_delimiter);
+        const bool is_ascii = opening_delimiter < 128;
+        auto quoted = is_ascii ? parse_quoted(state, (char)opening_delimiter) : parse_quoted(state, opening_delimiter);
 
         if (throw_on_unterminated and not quoted.terminated)
         {
