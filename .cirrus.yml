@@ -37,7 +37,7 @@ macos_task:
         image: big-sur-base
     matrix:
         - name: macos_clang
-          clang_script: brew install llvm@13
+          clang_script: brew install llvm@11
           env:
               CXX: /usr/local/opt/llvm/bin/clang++
         - name: macos_gcc
