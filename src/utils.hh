@@ -162,6 +162,9 @@ auto to_underlying(E value)
 
 template<typename> class FunctionRef;
 
+template<typename From, typename To>
+concept ConvertibleTo = std::is_convertible_v<From, To>;
+
 template<typename Res, typename... Args>
 class FunctionRef<Res(Args...)>
 {
@@ -174,9 +177,10 @@ public:
     {}
 
     template<typename Target>
-        requires (not std::is_same_v<FunctionRef, std::remove_cvref_t<Target>> and
-                      (std::is_void_v<Res> or
-                       requires (Target t, Args... a, void(&func)(Res)) { func(t(a...)); }))
+        requires requires (Target t, Args... a) {
+            requires not std::is_same_v<FunctionRef, std::remove_cvref_t<Target>>;
+            { t(a...) } -> ConvertibleTo<Res>;
+        }
     FunctionRef(Target&& target)
       : m_target{&target},
         m_invoker{[](void* target, Args... args) {
