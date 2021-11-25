@@ -39,7 +39,7 @@ macos_task:
         - name: macos_clang
           clang_script: brew install llvm@11
           env:
-              CXX: /usr/local/opt/llvm/bin/clang++
+              CXX: /usr/local/opt/llvm@11/bin/clang++
         - name: macos_gcc
           gcc_script: brew install gcc@10
           env:
