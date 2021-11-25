@@ -6,6 +6,7 @@ face global type yellow
 face global variable green
 face global module green
 face global function cyan
+face global functionPrivate yellow
 face global string magenta
 face global keyword blue
 face global operator yellow
