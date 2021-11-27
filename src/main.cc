@@ -214,6 +214,28 @@ static const EnvVarDesc builtin_env_vars[] = { {
         "history_id", false,
         [](StringView name, const Context& context) -> Vector<String>
         { return {to_string((size_t)context.buffer().current_history_id())}; }
+    },{
+        "jumplist", false,
+        [](StringView name, const Context& context)  -> Vector<String>
+        {
+            Vector<String> vec{};
+            auto jumplist = context.jump_list_readonly().get_as_list();
+            for (auto item = jumplist.begin(); item != jumplist.end(); item++) {
+                vec.push_back(item->buffer().display_name());
+                auto cur = item->main().cursor();
+                vec.push_back(format("{}.{}", cur.line + 1, cur.column + 1));
+            }
+            return vec;
+        }
+    },{
+        "jumplist_pos", false,
+        [](StringView name, const Context& context)  -> Vector<String>
+        {
+            Vector<String> vec;
+            // To be consistent with user facing <c-i> <c-o>, the index is 0 based.
+            auto current = context.jump_list_readonly().current_index();
+            return {format("{}", current)};
+        }
     }, {
         "selection", false,
         [](StringView name, const Context& context) -> Vector<String>

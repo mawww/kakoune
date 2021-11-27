@@ -126,6 +126,7 @@ public:
     Flags flags() const { return m_flags; }
 
     JumpList& jump_list() { return m_jump_list; }
+    const JumpList& jump_list_readonly() const { return m_jump_list; }
     void push_jump(bool force = false)
     {
         if (force or not (m_flags & Flags::Draft))
