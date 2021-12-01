@@ -3,6 +3,11 @@
 *.pyc
 *.1-r
 .*.kak.*
+.cache
+compile_commands.json
+.idea
+**/.gdb_history
+**/.kak_history
 src/kak
 src/kak.debug
 src/kak.opt
