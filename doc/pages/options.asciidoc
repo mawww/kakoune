@@ -114,7 +114,7 @@ are exclusively available to built-in options.
           is empty, but still valid.
 
         * _string_ is an arbitrary string which is associated with
-          the range.
+          the range. Any `|` or `\` characters must be escaped as `\|` or `\\`.
 
     All numeric fields are 1-based.
 
@@ -137,6 +137,9 @@ are exclusively available to built-in options.
 
     `set -add` appends the new specs to the list. +
     `set -remove` removes the given specs from the list. +
+
+    Any `|` or `\` characters that occur within `<flag text>` must be
+    escaped as `\|` or `\\`.
 
 *completions*::
     a list of `<text>|<select cmd>|<menu text>` candidates,
