@@ -45,9 +45,15 @@ add-highlighter shared/erlang/default/funtion_call regex '\b[a-z][\w@]*(?=\()' 0
 add-highlighter shared/erlang/default/keywords regex '\b(after|begin|case|try|catch|end|fun|if|of|receive|when|andalso|orelse|bnot|not|div|rem|band|and|bor|bxor|bsl|bsr|or|xor)\b' 0:keyword
 add-highlighter shared/erlang/default/variable_name regex '\b(?<!\?)[A-Z_][\w@]*\b' 0:variable
 add-highlighter shared/erlang/default/module_prefix regex '\b([a-z][\w_@]+)(?=:)' 1:value
-add-highlighter shared/erlang/default/erlang_ref regex '#Ref' 0:value
-add-highlighter shared/erlang/default/floatish regex '\b(?<!/)(\d+(?:\.\d+)*)\b' 1:value
-add-highlighter shared/erlang/default/base_number regex '\b\d+#[a-zA-Z0-9]+\b' 0:value
+# e.g. #Ref<0.1380825548.292038421.197518>
+add-highlighter shared/erlang/default/ref regex '#Ref<\d+\.\d+\.\d+\.\d+>' 0:value
+# e.g. #Port<0.1>
+add-highlighter shared/erlang/default/port regex '#Port<\d+\.\d+>' 0:value
+# e.g. <0.401.0>
+add-highlighter shared/erlang/default/pid regex '<\d+\.\d+\.\d+>' 0:value
+add-highlighter shared/erlang/default/base_number regex '\b(\d[_\d]*(?<!_)#[a-zA-Z0-9][a-z_A-Z0-9]*(?<!_)(?!\{))\b' 1:value
+add-highlighter shared/erlang/default/float regex '\b(?<![\.])(\d[\d_]*(?<!_)\.\d[\d_]*(?<!_)(?:e[+-]?\d[\d_]*(?<!_))?)\b' 1:value
+add-highlighter shared/erlang/default/integer regex '\b(?<!/)(\d[\d_]*)(?<!_)\b' 1:value
 # e.g $\xff
 add-highlighter shared/erlang/default/dollar_hex regex '\$\\x[0-9a-f][0-9a-f]' 0:value
 # e.g. $\^a $\^C
