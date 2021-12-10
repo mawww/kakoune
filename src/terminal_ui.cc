@@ -705,6 +705,8 @@ Optional<Key> TerminalUI::get_next_key()
             return Key::Return;
         if (c == control('i'))
             return Key::Tab;
+        if (c == ' ')
+            return Key::Space;
         if (c == m_original_termios.c_cc[VERASE])
             return Key::Backspace;
         if (c == 127) // when it's not backspace
@@ -719,7 +721,7 @@ Optional<Key> TerminalUI::get_next_key()
         // Special case: you can type NUL with Ctrl-2 or Ctrl-Shift-2 or
         // Ctrl-Backtick, but the most straightforward way is Ctrl-Space.
         if (c == 0)
-            return ctrl(' ');
+            return ctrl(Key::Space);
         // Represent Ctrl-letter combinations in lower-case, to be clear
         // that Shift is not involved.
         if (c < 27)
@@ -908,7 +910,7 @@ Optional<Key> TerminalUI::get_next_key()
 
         switch (code)
         {
-        case ' ': return Key{mod, ' '};
+        case ' ': return Key{mod, Key::Space};
         case 'A': return Key{mod, Key::Up};
         case 'B': return Key{mod, Key::Down};
         case 'C': return Key{mod, Key::Right};

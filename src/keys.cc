@@ -49,6 +49,8 @@ Optional<Codepoint> Key::codepoint() const
         return '\n';
     if (*this == Key::Tab)
         return '\t';
+    if (*this == Key::Space)
+        return ' ';
     if (*this == Key::Escape)
         return 0x1B;
     if (modifiers == Modifiers::None and key > 27 and
@@ -60,7 +62,7 @@ Optional<Codepoint> Key::codepoint() const
 struct KeyAndName { const char* name; Codepoint key; };
 static constexpr KeyAndName keynamemap[] = {
     { "ret", Key::Return },
-    { "space", ' ' },
+    { "space", Key::Space },
     { "tab", Key::Tab },
     { "lt", '<' },
     { "gt", '>' },
@@ -99,6 +101,7 @@ KeyList parse_keys(StringView str)
                     case '\r':   return Key::Return;
                     case '\b':   return Key::Backspace;
                     case '\t':   return Key::Tab;
+                    case ' ':    return Key::Space;
                     case '\033': return Key::Escape;
                     default:     return cp;
                 }
@@ -225,9 +228,9 @@ String key_to_str(Key key)
 UnitTest test_keys{[]()
 {
     KeyList keys{
-         { ' ' },
+         {Key::Space},
          { 'c' },
-         { Key::Up },
+         {Key::Up},
          alt('j'),
          ctrl('r'),
          shift(Key::Up),
