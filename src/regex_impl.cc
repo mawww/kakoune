@@ -340,7 +340,7 @@ private:
             case '|': case ')':
                 return {};
             default:
-                if (contains("^$.*+?[]{}", cp) or (cp >= 0xF0000 and cp <= 0xFFFFF))
+                if (contains(StringView{"^$.*+?[]{}"}, cp) or (cp >= 0xF0000 and cp <= 0xFFFFF))
                     parse_error(format("unexpected '{}'", cp));
                 ++m_pos;
                 return add_node(ParsedRegex::Literal, cp);
