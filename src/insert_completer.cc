@@ -348,7 +348,14 @@ InsertCompletion complete_line(const SelectionList& sels,
     const ColumnCount tabstop = options["tabstop"].get<int>();
     const ColumnCount column = get_column(buffer, tabstop, cursor_pos);
 
-    String prefix = trim_indent(buffer[cursor_pos.line].substr(0_byte, cursor_pos.column));
+    auto trim_leading_whitespaces = [](StringView s) {
+        utf8::iterator it{s.begin(), s};
+        while (it != s.end() and is_horizontal_blank(*it))
+            ++it;
+        return StringView{it.base(), s.end()};
+    };
+
+    StringView prefix = trim_leading_whitespaces(buffer[cursor_pos.line].substr(0_byte, cursor_pos.column));
     BufferCoord replace_begin = buffer.advance(cursor_pos, -prefix.length());
     InsertCompletion::CandidateList candidates;
 
@@ -358,15 +365,15 @@ InsertCompletion complete_line(const SelectionList& sels,
             if (buf.name() == buffer.name() && l == cursor_pos.line)
                 continue;
 
-            String line = trim_indent(buf[l]);
+            StringView line = buf[l];
+            StringView candidate = trim_leading_whitespaces(line.substr(0_byte, line.length()-1));
 
-            if (line.length() == 0)
+            if (candidate.length() == 0)
               continue;
 
-            if (prefix == line.substr(0_byte, prefix.length()))
+            if (prefix == candidate.substr(0_byte, prefix.length()))
             {
-                String candidate = trim_indent(line.substr(0_byte, line.length()));
-                candidates.push_back({candidate, "", {expand_tabs(candidate, tabstop, column), {}} });
+                candidates.push_back({candidate.str(), "", {expand_tabs(candidate, tabstop, column), {}} });
                 // perf: it's unlikely the user intends to search among >10 candidates anyway
                 if (candidates.size() == 100)
                     break;
