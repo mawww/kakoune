@@ -1443,8 +1443,9 @@ public:
         auto main_index = context().selections().main_index();
         return {AtomList{ { "insert", context().faces()["StatusLineMode"] },
                           { " ", context().faces()["StatusLine"] },
-                          { format( "{} sels ({})", num_sel, main_index + 1),
-                             context().faces()["StatusLineInfo"] } }};
+                          { num_sel == 1 ? format("{} sel", num_sel)
+                              : format("{} sels ({})", num_sel, main_index + 1),
+                            context().faces()["StatusLineInfo"] } }};
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Insert; }
