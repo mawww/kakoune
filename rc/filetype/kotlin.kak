@@ -71,7 +71,7 @@ add-highlighter shared/kotlin/string/ regex \$\{.*?\} 0:value
 
 # Character
 add-highlighter shared/kotlin/character/ fill value
-add-highlighter shared/kotlin/character/ regex ('.{1})(.+)(') 2:red
+add-highlighter shared/kotlin/character/ regex ('.{1})(.+)(') 2:meta
 
 # As at 15 March 2021, method see: https://regex101.com/r/Mhy4HG/1
 add-highlighter shared/kotlin/code/methods     regex ::([A-Za-z_][\w]*)|\.([A-Za-z_][\w]*)\s*?[\(\{]|\.([A-Za-z_][\w]*)[\s\)\}>](?=[^\(\{]) 1:function 2:function 3:function
