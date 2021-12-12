@@ -96,10 +96,24 @@ Execute
 after the server initialization phase.
 .
 .It Fl f Ar keys
-Enter in
-.Sq filter mode :
-select the whole file, then execute
-.Ar keys .
+Run Kakoune in
+.Sq filter mode ,
+like
+.Xr sed 1 .
+For standard input and each file named on the command line,
+the whole buffer is selected
+(as with
+.Li % )
+then
+.Ar keys
+are executed.
+The filtered version of standard input
+is written to standard output.
+Any files mentioned on the command line
+are modified in-place,
+but if
+.Fl i
+is provided then Kakoune makes a backup of the original version.
 .
 .It Fl i Ar suffix
 Backup the files on which a filter is applied, using the given suffix.
