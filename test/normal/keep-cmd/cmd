@@ -1,1 +1,1 @@
-%<a-s>H$grep 'foo\|bar'<ret>
+%<a-s>H$grep -E 'foo|bar'<ret>
