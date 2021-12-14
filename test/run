@@ -33,7 +33,7 @@ main() {
   for dir in $(find "${@:-.}" -type d | sort); do
     cd $root/$dir;
     mkdir -p $work/$dir
-    for file in in cmd rc; do
+    for file in in cmd rc enabled; do
       [ -f $file ] && cp $file $work/$dir/
     done
     cd $work/$dir;
