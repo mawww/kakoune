@@ -1104,6 +1104,7 @@ void join_lines_select_spaces(Context& context, NormalParams)
     if (selections.empty())
         return;
     context.selections_write_only() = std::move(selections);
+    context.selections().merge_consecutive();
     ScopedEdition edition(context);
     context.selections().replace({" "_str});
 }
