@@ -60,8 +60,8 @@ define-command -hidden modeline-parse-impl %{
 
         # Pass a few whitelisted options to kakoune directly
         translate_opt_kakoune() {
-            readonly key="$1"
-            readonly value="$2"
+            key="$1"
+            value="$2"
 
             case "${key}" in
                 scrolloff|tabstop|indentwidth|autowrap_column|eolformat|filetype|BOM|spell_lang);;
