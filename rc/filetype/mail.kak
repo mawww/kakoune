@@ -4,6 +4,10 @@ hook global BufCreate .+\.eml %{
 
 hook global WinSetOption filetype=mail %{
     require-module mail
+    map buffer normal <ret> %{: diff-jump<ret>}
+    hook -once -always window WinSetOption filetype=.* %{
+        unmap buffer normal <ret> %{: diff-jump<ret>}
+    }
 }
 
 hook -group mail-highlight global WinSetOption filetype=mail %{
@@ -13,6 +17,8 @@ hook -group mail-highlight global WinSetOption filetype=mail %{
 
 
 provide-module mail %{
+
+require-module diff
 
 add-highlighter shared/mail group
 add-highlighter shared/mail/ regex ^(From|To|Cc|Bcc|Subject|Reply-To|In-Reply-To|References|Date):([^\n]*(?:\n\h+[^\n]+)*)$ 1:keyword 2:attribute
