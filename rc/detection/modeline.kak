@@ -14,6 +14,7 @@ define-command -hidden modeline-parse-impl %{
     evaluate-commands %sh{
         kakquote() { printf "%s" "$*" | sed "s/'/''/g; 1s/^/'/; \$s/\$/'/"; }
 
+        last_vim_et="" last_vim_sw="" last_vim_ts=""
         # Translate a vim option into the corresponding kakoune one
         translate_opt_vim() {
             key="$1"
@@ -27,8 +28,10 @@ define-command -hidden modeline-parse-impl %{
                 siso|sidescrolloff)
                     key="scrolloff";
                     value="${kak_opt_scrolloff%%,*},${value}";;
-                ts|tabstop) key="tabstop";;
-                sw|shiftwidth) key="indentwidth";;
+                ts|tabstop)    key="tabstop"    ; last_vim_ts="${value}";;
+                sw|shiftwidth) key="indentwidth"; last_vim_sw="${value}";;
+                et|expandtab)     last_vim_et="1"; return;;
+                noet|noexpandtab) last_vim_et="0"; return;;
                 tw|textwidth) key="autowrap_column";;
                 ff|fileformat)
                     key="eolformat";
@@ -73,6 +76,23 @@ define-command -hidden modeline-parse-impl %{
             printf 'set-option buffer %s %s\n' "${key}" "$(kakquote "${value}")"
         }
 
+        after_loop_ends() {
+            # This does _not_ automatically convert tabs to spaces in insert mode, it only sets
+            # `indentwidth` to indent with tabs or spaces (<lt> and <gt>).
+            if [ "${type_selection}" = "vim" ]; then
+                if [ "${last_vim_et}" = 0 ]; then
+                    # vim `noexpandtab`: use tabs for indentation
+                    printf 'set-option buffer %s %s\n' "indentwidth" "0"
+                elif [ "${last_vim_et}" = 1 ]; then
+                    # vim `expandtab`: use spaces for indentation.
+                    # If `sw` is `0`, indent with spaces with the size of a tabstop.
+                    if [ "${last_vim_sw}" = 0 ]; then
+                        printf 'set-option buffer %s %s\n' "indentwidth" "%opt{tabstop}"
+                    fi
+                fi
+            fi
+        }
+
         case "${kak_selection}" in
             *vi:*|*vim:*) type_selection="vim";;
             *kak:*|*kakoune:*) type_selection="kakoune";;
@@ -86,13 +106,18 @@ define-command -hidden modeline-parse-impl %{
         # - the trailing text after the last option, and an optional ':' sign before it
         # It will also convert the ':' seperators beween the option=value pairs
         # More info: http://vimdoc.sourceforge.net/htmldoc/options.html#modeline
+        stop_looping=0
         printf %s "${kak_selection}" | sed          \
                 -e 's/^[^:]\{1,\}://'               \
                 -e 's/[ \t]*set\{0,1\}[ \t]//'      \
                 -e 's/:[^a-zA-Z0-9_=-]*$//'         \
                 -e 's/:/ /g'                        \
                 | tr ' ' '\n'                       \
-                | while read -r option; do
+                | while read -r option || stop_looping=1; do
+            if [ "${stop_looping}" = 1 ]; then
+                after_loop_ends
+                break
+            fi
             name_option="${option%%=*}"
             value_option="${option#*=}"
 
