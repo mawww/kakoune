@@ -86,12 +86,12 @@ define-command -hidden modeline-parse-impl %{
         # - the trailing text after the last option, and an optional ':' sign before it
         # It will also convert the ':' seperators beween the option=value pairs
         # More info: http://vimdoc.sourceforge.net/htmldoc/options.html#modeline
-        printf %s "${kak_selection}" | sed          \
-                -e 's/^[^:]\{1,\}://'               \
-                -e 's/[ \t]*set\{0,1\}[ \t]//'      \
-                -e 's/:[^a-zA-Z0-9_=-]*$//'         \
-                -e 's/:/ /g'                        \
-                | tr ' ' '\n'                       \
+        printf %s "${kak_selection}" | sed                      \
+                -e 's/^[^:]\{1,\}://'                           \
+                -e 's/[ \t]*set\{0,1\}[ \t]\([^:]*\).*$/\1/'    \
+                -e 's/:[^a-zA-Z0-9_=-]*$//'                     \
+                -e 's/:/ /g'                                    \
+                | tr ' ' '\n'                                   \
                 | while read -r option; do
             name_option="${option%%=*}"
             value_option="${option#*=}"
