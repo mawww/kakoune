@@ -461,12 +461,12 @@ void InsertCompleter::select(int index, bool relative, Vector<Key>& keystrokes)
 
 void InsertCompleter::update(bool allow_implicit)
 {
+    m_enabled = allow_implicit or m_explicit_completer;
     if (m_explicit_completer and try_complete(m_explicit_completer))
         return;
 
     reset();
-    if (allow_implicit)
-        setup_ifn();
+    setup_ifn();
 }
 
 auto& get_first(BufferRange& range) { return range.begin; }
@@ -500,6 +500,8 @@ void InsertCompleter::reset()
 
 bool InsertCompleter::setup_ifn()
 {
+    if (!m_enabled)
+        return false;
     using namespace std::placeholders;
     if (not m_completions.is_valid())
     {
