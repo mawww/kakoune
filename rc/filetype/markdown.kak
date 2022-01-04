@@ -31,6 +31,15 @@ hook -group markdown-highlight global WinSetOption filetype=markdown %{
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/markdown }
 }
 
+declare-option \
+    -docstring "map of supported languages in fenced code blocks. Keys determine which languages are recognised. The value names the corresponding highligher, if empty the key is used instead." \
+    str-to-str-map markdown_supported_languages \
+    awk= c= cabal= clojure= coffee= cpp= crystal= css= cucumber= d= diff= dockerfile= elixir= erlang= fish= \
+    gas= go= haml= haskell= html= ini= java= javascript= json= julia= kak=kakrc kickstart= \
+    latex= lisp= lua= makefile= markdown= moon= objc= ocaml= perl= pug= python= ragel= \
+    ruby= rust= sass= scala= scss= sh= swift= toml= tupfile= typescript= yaml= sql=
+
+
 
 provide-module markdown %{
 
@@ -42,16 +51,12 @@ add-highlighter shared/markdown/inline default-region regions
 add-highlighter shared/markdown/inline/text default-region group
 
 evaluate-commands %sh{
-  languages="
-    awk c cabal clojure coffee cpp crystal css cucumber d diff dockerfile elixir erlang fish
-    gas go haml haskell html ini java javascript json julia kak kickstart
-    latex lisp lua makefile markdown moon objc ocaml perl pug python ragel
-    ruby rust sass scala scss sh swift toml tupfile typescript yaml sql
-  "
-  for lang in ${languages}; do
+  for kv in ${kak_opt_markdown_supported_languages}; do
+    ref=${kv##*=}
+    lang=${kv%%=*}
+    [ -n "$ref" ] || ref=$lang
     printf 'add-highlighter shared/markdown/%s region -match-capture ^(\h*)```\h*(%s\\b|\\{[.=]?%s\\})   ^(\h*)``` regions\n' "${lang}" "${lang}" "${lang}"
     printf 'add-highlighter shared/markdown/%s/ default-region fill meta\n' "${lang}"
-    [ "${lang}" = kak ] && ref=kakrc || ref="${lang}"
     printf 'add-highlighter shared/markdown/%s/inner region \A```[^\\n]*\K (?=```) ref %s\n' "${lang}" "${ref}"
   done
 }
