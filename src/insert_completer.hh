@@ -107,6 +107,7 @@ private:
     InsertCompletion    m_completions;
     Vector<BufferRange> m_inserted_ranges;
     int                 m_current_candidate = -1;
+    bool                m_enabled = true;
 
     using CompleteFunc = InsertCompletion (const SelectionList& sels,
                                            const OptionManager& options,
