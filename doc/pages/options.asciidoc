@@ -150,12 +150,19 @@ are exclusively available to built-in options.
     `<select cmd>`, or `<menu text>` fields should be escaped as `\|`
     or `\\`.
 
-    Select commands are arbitrary Kakoune commands that will be executed
-    each time the element is selected in the menu. The common use case is
-    to display element specific documentation.
+    Options of this type are are meant to be added to the `completers`
+    option to provide insert mode completion. Candidates are shown if the
+    text typed by the user (between `<line>.<column>` and the cursor) is a
+    subsequence of `<text>`.
 
-    Markup can be used in the menu text.
-    (see <<faces#markup-strings,`:doc faces markup-strings`>>)
+    For each remaining candidate, the completion menu displays
+    `<text>`, followed by `<menu text>`, which is a Markup string (see
+    <<faces#markup-strings,`:doc faces markup-strings`>>).
+
+    As the user selects items from the completion menu, the text they typed
+    will be replaced with `<text>`, and the Kakoune command in
+    `<select cmd>` is executed. The common use case is to display element
+    specific documentation.
 
     `set -add` adds given completions to the list. +
     `set -remove` removes given completions from the list. +
