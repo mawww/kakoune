@@ -19,14 +19,13 @@
 #  * focus - focus the specified client, defaulting to the current client
 #
 
-declare-option -docstring \
-"Ordered list of windowing modules to try and load. An empty list disables
-both automatic module loading and environment detection, enabling complete
-manual control of the module loading." \
-str-list windowing_modules 'tmux' 'screen' 'kitty' 'iterm' 'wayland' 'x11'
+declare-option -docstring %{
+    Ordered list of windowing modules to try and load. An empty list disables
+    both automatic module loading and environment detection, enabling complete
+    manual control of the module loading.
+} str-list windowing_modules 'tmux' 'screen' 'kitty' 'iterm' 'wayland' 'x11'
 
 hook -group windowing global KakBegin .* %{
-
     evaluate-commands %sh{
         set -- ${kak_opt_windowing_modules}
         if [ $# -gt 0 ]; then

@@ -33,10 +33,10 @@ A shell command is appended to the one set in this option at runtime} \
     done
 }
 
-define-command x11-terminal -params 1.. -shell-completion -docstring '
-x11-terminal <program> [<arguments>]: create a new terminal as an X11 window
-The program passed as argument will be executed in the new terminal' \
-%{
+define-command x11-terminal -params 1.. -shell-completion -docstring %{
+    x11-terminal <program> [<arguments>]: create a new terminal as an X11 window
+    The program passed as argument will be executed in the new terminal
+} %{
     evaluate-commands -save-regs 'a' %{
         set-register a %arg{@}
         evaluate-commands %sh{
@@ -49,10 +49,10 @@ The program passed as argument will be executed in the new terminal' \
     }
 }
 
-define-command x11-focus -params ..1 -client-completion -docstring '
-x11-focus [<kakoune_client>]: focus a given client''s window
-If no client is passed, then the current client is used' \
-%{
+define-command x11-focus -params ..1 -client-completion -docstring %{
+    x11-focus [<kakoune_client>]: focus a given client's window
+    If no client is passed, then the current client is used
+} %{
     evaluate-commands %sh{
         if [ $# -eq 1 ]; then
             printf "evaluate-commands -client '%s' focus" "$1"
@@ -63,7 +63,11 @@ If no client is passed, then the current client is used' \
     }
 }
 
-alias global focus x11-focus
-alias global terminal x11-terminal
+alias global focus               x11-focus
+alias global terminal            x11-terminal
+alias global terminal-window     x11-terminal
+alias global terminal-tab        x11-terminal
+alias global terminal-horizontal x11-terminal
+alias global terminal-vertical   x11-terminal
 
 }

@@ -27,10 +27,10 @@ A shell command is appended to the one set in this option at runtime} \
     done
 }
 
-define-command wayland-terminal -params 1.. -shell-completion -docstring '
-wayland-terminal <program> [<arguments>]: create a new terminal as a Wayland window
-The program passed as argument will be executed in the new terminal' \
-%{
+define-command wayland-terminal -params 1.. -shell-completion -docstring %{
+    wayland-terminal <program> [<arguments>]: create a new terminal as a Wayland window
+    The program passed as argument will be executed in the new terminal
+} %{
     evaluate-commands -save-regs 'a' %{
         set-register a %arg{@}
         evaluate-commands %sh{
@@ -43,14 +43,19 @@ The program passed as argument will be executed in the new terminal' \
     }
 }
 
-define-command wayland-focus -params ..1 -client-completion -docstring '
-wayland-focus [<kakoune_client>]: focus a given client''s window
-If no client is passed, then the current client is used' \
-%{
+define-command wayland-focus -params ..1 -client-completion -docstring %{
+    wayland-focus [<kakoune_client>]: focus a given client's window
+    If no client is passed, then the current client is used
+} %{
     fail There is no way to focus another window on Wayland
 }
 
-alias global focus wayland-focus
-alias global terminal wayland-terminal
+alias global focus               wayland-focus
+alias global terminal            wayland-terminal
+alias global terminal-window     wayland-terminal
+alias global terminal-tab        wayland-terminal
+alias global terminal-horizontal wayland-terminal
+alias global terminal-vertical   wayland-terminal
+
 
 }

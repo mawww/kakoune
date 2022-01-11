@@ -36,25 +36,25 @@ define-command -hidden -params 2.. iterm-terminal-split-impl %{
     }
 }
 
-define-command iterm-terminal-vertical -params 1.. -shell-completion -docstring '
-iterm-terminal-vertical <program> [<arguments>]: create a new terminal as an iterm pane
-The current pane is split into two, left and right
-The program passed as argument will be executed in the new terminal'\
-%{
+define-command iterm-terminal-vertical -params 1.. -shell-completion -docstring %{
+    iterm-terminal-vertical <program> [<arguments>]: create a new terminal as an iterm pane
+    The current pane is split into two, left and right
+    The program passed as argument will be executed in the new terminal
+} %{
     iterm-terminal-split-impl 'vertically' %arg{@}
 }
-define-command iterm-terminal-horizontal -params 1.. -shell-completion -docstring '
-iterm-terminal-horizontal <program> [<arguments>]: create a new terminal as an iterm pane
-The current pane is split into two, top and bottom
-The program passed as argument will be executed in the new terminal'\
-%{
+define-command iterm-terminal-horizontal -params 1.. -shell-completion -docstring %{
+    iterm-terminal-horizontal <program> [<arguments>]: create a new terminal as an iterm pane
+    The current pane is split into two, top and bottom
+    The program passed as argument will be executed in the new terminal
+} %{
     iterm-terminal-split-impl 'horizontally' %arg{@}
 }
 
-define-command iterm-terminal-tab -params 1.. -shell-completion -docstring '
-iterm-terminal-tab <program> [<arguments>]: create a new terminal as an iterm tab
-The program passed as argument will be executed in the new terminal'\
-%{
+define-command iterm-terminal-tab -params 1.. -shell-completion -docstring %{
+    iterm-terminal-tab <program> [<arguments>]: create a new terminal as an iterm tab
+    The program passed as argument will be executed in the new terminal
+} %{
     nop %sh{
         # see above
         args=$(
@@ -77,10 +77,10 @@ The program passed as argument will be executed in the new terminal'\
     }
 }
 
-define-command iterm-terminal-window -params 1.. -shell-completion -docstring '
-iterm-terminal-window <program> [<arguments>]: create a new terminal as an iterm window
-The program passed as argument will be executed in the new terminal'\
-%{
+define-command iterm-terminal-window -params 1.. -shell-completion -docstring %{
+    iterm-terminal-window <program> [<arguments>]: create a new terminal as an iterm window
+    The program passed as argument will be executed in the new terminal
+} %{
     nop %sh{
         # see above
         args=$(
@@ -101,10 +101,10 @@ The program passed as argument will be executed in the new terminal'\
     }
 }
 
-define-command iterm-focus -params ..1 -client-completion -docstring '
-iterm-focus [<client>]: focus the given client
-If no client is passed then the current one is used' \
-%{
+define-command iterm-focus -params ..1 -client-completion -docstring %{
+    iterm-focus [<client>]: focus the given client
+    If no client is passed then the current one is used
+} %{
     evaluate-commands %sh{
         if [ $# -eq 1 ]; then
             printf %s\\n "evaluate-commands -client '$1' focus"
@@ -132,7 +132,11 @@ If no client is passed then the current one is used' \
     }
 }
 
-alias global focus iterm-focus
-alias global terminal iterm-terminal-vertical
+alias global focus               iterm-focus
+alias global terminal            iterm-terminal-horizontal
+alias global terminal-window     iterm-terminal-window
+alias global terminal-tab        iterm-terminal-tab
+alias global terminal-horizontal iterm-terminal-horizontal
+alias global terminal-vertical   iterm-terminal-vertical
 
 }
