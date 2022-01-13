@@ -39,7 +39,12 @@ add-highlighter shared/php/doc_comment2  region /\*\*  \*/             ref php/d
 add-highlighter shared/php/comment1      region //     '$'             fill comment
 add-highlighter shared/php/comment2      region /\*    \*/             fill comment
 add-highlighter shared/php/comment3      region '#'    '$'             fill comment
-
+# Example PHP heredoc:
+# echo <<<SOMETHING
+#  some text
+#  more text etc.
+# SOMETHING;
+add-highlighter shared/php/heredoc       region -match-capture '<<<(.*?)$' '^\h*(.*?);' fill string
 
 
 add-highlighter shared/php/code/ regex &?\$\w* 0:variable
