@@ -1,7 +1,7 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate .*[.](php) %{
+hook global BufCreate .*[.](phpt?) %{
     set-option buffer filetype php
 }
 
