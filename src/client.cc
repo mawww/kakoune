@@ -157,8 +157,7 @@ DisplayLine Client::generate_mode_line() const
         HashMap<String, DisplayLine> atoms{{ "mode_info", context().client().input_handler().mode_line() },
                                            { "context_info", {generate_context_info(context()),
                                                               context().faces()["Information"]}}};
-        auto expanded = expand(modelinefmt, context(), ShellContext{},
-                               [](String s) { return escape(s, '{', '\\'); });
+        auto expanded = expand(modelinefmt, context(), ShellContext{});
         modeline = parse_display_line(expanded, context().faces(), atoms);
     }
     catch (runtime_error& err)
