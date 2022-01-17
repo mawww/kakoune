@@ -3,6 +3,8 @@
 *.pyc
 *.1-r
 .*.kak.*
+.ccls-cache
+compile_commands.json
 src/kak
 src/kak.debug
 src/kak.opt
