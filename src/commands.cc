@@ -1815,6 +1815,11 @@ const CommandDesc map_key_cmd = {
         if (key.size() != 1)
             throw runtime_error("only a single key can be mapped");
 
+        KeymapMode lower_case_only_modes[] = {KeymapMode::Goto};
+        if (key[0].codepoint().map(iswupper).value_or(true) and
+            contains(lower_case_only_modes, keymap_mode))
+            throw runtime_error("mode only supports lower case mappings");
+
         KeyList mapping = parse_keys(parser[3]);
         keymaps.map_key(key[0], keymap_mode, std::move(mapping),
                         trim_indent(parser.get_switch("docstring").value_or("")));

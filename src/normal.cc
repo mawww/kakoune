@@ -228,7 +228,7 @@ void goto_commands(Context& context, NormalParams params)
             if (not cp or key == Key::Escape)
                 return;
             auto& buffer = context.buffer();
-            switch (*cp)
+            switch (to_lower(*cp))
             {
             case 'g':
             case 'k':
