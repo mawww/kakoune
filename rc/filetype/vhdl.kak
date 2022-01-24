@@ -93,7 +93,7 @@ evaluate-commands %sh[
 
     types="
         bit bit_vector
-        boolean
+        boolean boolean_vector
         character
         file_open_state file_origin_kind
         integer natural positive
