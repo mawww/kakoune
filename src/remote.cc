@@ -849,7 +849,7 @@ Server::Server(String session_name, bool is_daemon)
     : m_session{std::move(session_name)}, m_is_daemon{is_daemon}
 {
     if (not all_of(m_session, is_identifier))
-        throw runtime_error{format("invalid session name: '{}'", session_name)};
+        throw runtime_error{format("invalid session name: '{}'", m_session)};
 
     int listen_sock = socket(AF_UNIX, SOCK_STREAM, 0);
     fcntl(listen_sock, F_SETFD, FD_CLOEXEC);
