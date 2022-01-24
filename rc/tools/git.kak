@@ -2,6 +2,7 @@ declare-option -docstring "name of the client in which documentation is to be di
     str docsclient
 
 hook -group git-log-highlight global WinSetOption filetype=git-log %{
+    require-module diff
     add-highlighter window/git-log group
     add-highlighter window/git-log/ regex '^([*|\\ /_.-])*' 0:keyword
     add-highlighter window/git-log/ regex '^( ?[*|\\ /_.-])*\h{,3}(commit )?(\b[0-9a-f]{4,40}\b)' 2:keyword 3:comment
@@ -12,6 +13,7 @@ hook -group git-log-highlight global WinSetOption filetype=git-log %{
 }
 
 hook -group git-status-highlight global WinSetOption filetype=git-status %{
+    require-module diff
     add-highlighter window/git-status group
     add-highlighter window/git-status/ regex '^## ' 0:comment
     add-highlighter window/git-status/ regex '^## (\S*[^\s\.@])' 1:green

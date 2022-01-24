@@ -35,6 +35,7 @@ hook -group git-rebase-highlight global WinSetOption filetype=git-rebase %{
 
 
 provide-module git-commit %{
+require-module diff
 add-highlighter shared/git-commit regions
 add-highlighter shared/git-commit/diff region '^diff --git' '^(?=diff --git)' ref diff # highlight potential diffs from the -v option
 add-highlighter shared/git-commit/comments region ^# $ group
