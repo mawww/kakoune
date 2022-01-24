@@ -582,10 +582,6 @@ void pipe(Context& context, NormalParams params)
                     const auto end = changes_tracker.get_new_coord_tolerant(sel.max());
 
                     String in = buffer.string(beg, buffer.char_next(end));
-                    const bool insert_eol = in.back() != '\n';
-                    if (insert_eol)
-                        in += '\n';
-
                     // Needed in case we read selections inside the cmdline
                     context.selections_write_only().set({keep_direction(Selection{beg, end}, sel)}, 0);
 
@@ -593,12 +589,9 @@ void pipe(Context& context, NormalParams params)
                         cmdline, context, in,
                         ShellManager::Flags::WaitForStdout).first;
 
-                    if (insert_eol)
-                    {
-                        in.resize(in.length()-1, 0);
-                        if (not out.empty() and out.back() == '\n')
-                            out.resize(out.length()-1, 0);
-                    }
+                    if (in.back() != '\n' and not out.empty() and out.back() == '\n')
+                        out.resize(out.length()-1, 0);
+
                     auto new_end = apply_diff(buffer, beg, in, out);
                     if (new_end != beg)
                         new_sels.push_back(keep_direction({beg, buffer.char_prev(new_end), std::move(sel.captures())}, sel));
