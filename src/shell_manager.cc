@@ -134,7 +134,7 @@ pid_t spawn_shell(const char* shell, StringView cmdline,
 
     execve(shell, (char* const*)execparams.data(), (char* const*)envptrs.data());
     char buffer[1024];
-    write(STDERR_FILENO, format_to(buffer, "execve failed: {}\n", errno));
+    write(STDERR_FILENO, format_to(buffer, "execve failed: {}\n", strerror(errno)));
     _exit(-1);
     return -1;
 }
