@@ -14,6 +14,7 @@ A shell command is appended to the one set in this option at runtime} \
     str termcmd %sh{
     for termcmd in 'alacritty      -e sh -c' \
                    'kitty             sh -c' \
+                   'foot              sh -c' \
                    'termite        -e      ' \
                    'wterm          -e sh -c' \
                    'gnome-terminal -e      ' \
