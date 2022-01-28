@@ -111,21 +111,27 @@ define-command -params 1.. \
                       set-option buffer=$kak_bufname git_blame_flags '$kak_timestamp'
                   }" | kak -p ${kak_session}
                   git blame "$@" --incremental ${kak_buffile} | awk '
-                  function send_flags(text, flag, i) {
+                  function send_flags(flush,    text, i) {
                       if (line == "") { return; }
                       text=substr(sha,1,8) " " dates[sha] " " authors[sha]
                       # gsub("|", "\\|", text)
                       gsub("~", "~~", text)
-                      flag="%~" line "|" text "~"
-                      for ( i=1; i < count; i++ ) {
-                          flag=flag " %~" line+i "|" text "~"
+                      for ( i=0; i < count; i++ ) {
+                          flags = flags " %~" line+i "|" text "~"
+                      }
+                      now = systime()
+                      # Send roughly one update per second, to avoid creating too many kak processes.
+                      if (!flush && now - last_sent < 1) {
+                          return
                       }
                       cmd = "kak -p " ENVIRON["kak_session"]
-                      print "set-option -add buffer=" ENVIRON["kak_bufname"] " git_blame_flags " flag | cmd
+                      print "set-option -add buffer=" ENVIRON["kak_bufname"] " git_blame_flags " flags | cmd
                       close(cmd)
+                      flags = ""
+                      last_sent = now
                   }
                   /^([0-9a-f]+) ([0-9]+) ([0-9]+) ([0-9]+)/ {
-                      send_flags()
+                      send_flags(0)
                       sha=$1
                       line=$3
                       count=$4
@@ -136,7 +142,7 @@ define-command -params 1.. \
                        cmd | getline dates[sha]
                        close(cmd)
                   }
-                  END { send_flags(); }'
+                  END { send_flags(1); }'
         ) > /dev/null 2>&1 < /dev/null &
     }
 
