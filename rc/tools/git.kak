@@ -2,6 +2,7 @@ declare-option -docstring "name of the client in which documentation is to be di
     str docsclient
 
 hook -group git-log-highlight global WinSetOption filetype=git-log %{
+    require-module diff
     add-highlighter window/git-log group
     add-highlighter window/git-log/ regex '^([*|\\ /_.-])*' 0:keyword
     add-highlighter window/git-log/ regex '^( ?[*|\\ /_.-])*\h{,3}(commit )?(\b[0-9a-f]{4,40}\b)' 2:keyword 3:comment
@@ -12,6 +13,7 @@ hook -group git-log-highlight global WinSetOption filetype=git-log %{
 }
 
 hook -group git-status-highlight global WinSetOption filetype=git-status %{
+    require-module diff
     add-highlighter window/git-status group
     add-highlighter window/git-status/ regex '^## ' 0:comment
     add-highlighter window/git-status/ regex '^## (\S*[^\s\.@])' 1:green
@@ -337,107 +339,9 @@ define-command -params 1.. \
     esac
 }}
 
-# Options needed by git-diff-goto-source command
-declare-option -hidden str git_diff_hunk_filename
-declare-option -hidden int git_diff_hunk_line_num_start
-declare-option -hidden int git_diff_go_to_line_num
-declare-option -hidden str git_diff_git_dir
-declare-option -hidden str git_diff_section_heading
-declare-option -hidden int git_diff_cursor_column
-
 # Works within :git diff and :git show
 define-command git-diff-goto-source \
     -docstring 'Navigate to source by pressing the enter key in hunks when git diff is displayed. Works within :git diff and :git show' %{
-    try %{
-        set-option global git_diff_git_dir %sh{
-           git rev-parse --show-toplevel
-        }
-        # We will need this later. Need to subtract 1 because a diff has an initial column
-        # for -,+,<space>
-        set-option global git_diff_cursor_column %sh{ echo $(($kak_cursor_column-1)) }
-
-        # This function works_within a hunk or in the diff header.
-        #   - On a context line or added line, it will navigate to that line.
-        #   - On a deleted line, it will navigate to the context line or added line just above.
-        #   - On a @@ line (i.e. a "hunk header") this will navigate to section heading (see below).
-        #   - A diff header contains lines starting with "diff", "index", "+++", and "---".
-        #     Inside a diff header, this will navigate to the first line of the file.
-        execute-keys -draft 'x<a-k>^[@ +-]|^diff|^index<ret>'
-
-        # Find the source filename for the current hunk (reverse search)
-        evaluate-commands -draft %{
-            # First look for the "diff" line. because "+++" may be part of a diff.
-            execute-keys 'x<semicolon><a-/>^diff<ret></>^\+\+\+ \w([^\n]*)<ret>'
-            set-option global git_diff_hunk_filename %reg{1}
-        }
-
-        try %{
-            # Are we inside the diff header? If so simply go to the first line of the file.
-            # The diff header is everything before the first hunk header.
-            execute-keys -draft 'x<semicolon><a-?>^diff<ret><a-K>^@@<ret>'
-            edit -existing "%opt{git_diff_git_dir}%opt{git_diff_hunk_filename}" 1
-        } catch %{
-            # Find the source line at which the current hunk starts (reverse search)
-            evaluate-commands -draft %{
-                execute-keys 'x<semicolon><a-/>^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@<ret>'
-                set-option buffer git_diff_hunk_line_num_start %reg{1}
-            }
-            # If we're already on a hunk header (i.e. a line that starts with @@) then
-            # our behavior changes slightly: we need to go look for the section heading.
-            # For example take this hunk header:  @@ -123,4 +123,4 @@ fn some_function_name_possibly
-            # Here the section heading is "fn some_function_name_possibly". Please note that the section
-            # heading is NOT necessarily at the hunk start line so we can't trivially extract that.
-            try %{
-                # First things first, are we on a hunk header? If not, head to the nearest `catch`
-                execute-keys -draft 'x<a-k>^@@<ret>'
-                evaluate-commands -try-client %opt{jumpclient} %{
-                    # Now attempt to find the section heading!
-                    try %{
-                        # First extract the section heading.
-                        evaluate-commands -draft %{
-                            execute-keys 'xs^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@ ([^\n]*)<ret>'
-                            set-option global git_diff_section_heading %reg{2}
-                        }
-                        # Go to the hunk start in the source file. The section header will be above us.
-                        edit -existing "%opt{git_diff_git_dir}%opt{git_diff_hunk_filename}" %opt{git_diff_hunk_line_num_start}
-                        # Search for the raw text of the section, like "fn some_function_name_possibly". That should work most of the time.
-                        set-register / "\Q%opt{git_diff_section_heading}"
-                        # Search backward from where the cursor is now.
-                        # Note that the hunk line number is NOT located at the same place as the section heading.
-                        # After we have found it, adjust the cursor and center the viewport as if we had directly jumped
-                        # to the first character of the section header with and `edit` command.
-                        execute-keys "<a-/><ret><a-semicolon><semicolon>vc"
-                    } catch %{
-                        # There is no section heading, or we can't find it in the source file,
-                        # so just go to the hunk start line.
-                        # NOTE that we DONT go to the saved cursor column,
-                        # because our cursor column will be fixed to the start of the section heading
-                        edit -existing "%opt{git_diff_git_dir}%opt{git_diff_hunk_filename}" %opt{git_diff_hunk_line_num_start}
-                    }
-                }
-           } catch %{
-                # This catch deals with the typical case. We're somewhere on either:
-                # (a) A context line i.e. lines starting with ' '
-                # or (b) On a line removal i.e. lines starting with '-'
-                # or (c) On a line addition i.e. lines starting with '+'
-                # So now try to figure out a line offset + git_diff_hunk_line_num_start that we need to go to
-                # Ignoring any diff lines starting with `-`, how many lines from where we
-                # pressed <ret> till the start of the hunk?
-                evaluate-commands -draft %{
-                   execute-keys '<a-?>^@@<ret>J<a-s><a-K>^-<ret>'
-                   set-option global git_diff_go_to_line_num %sh{
-                       set -- $kak_reg_hash
-                       line=$(($#+$kak_opt_git_diff_hunk_line_num_start-1))
-                       echo $line
-                   }
-                }
-                evaluate-commands -try-client %opt{jumpclient} %{
-                    # Open the source file at the appropriate line number and cursor column
-                    edit -existing "%opt{git_diff_git_dir}%opt{git_diff_hunk_filename}" %opt{git_diff_go_to_line_num} %opt{git_diff_cursor_column}
-                }
-            }
-        }
-    } catch %{
-        fail "git-diff-goto-source: unable to navigate to source. Use only inside a diff"
-    }
+    require-module diff
+    diff-jump %sh{ git rev-parse --show-toplevel }
 }
