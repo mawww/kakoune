@@ -161,7 +161,7 @@ define-command \
             execute-keys '"ez'
         } catch %{
             execute-keys '"oz'
-        fail 'Not in a diff file'
+            fail 'Not in a diff file'
         }
     }
 }
