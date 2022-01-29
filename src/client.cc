@@ -172,8 +172,8 @@ DisplayLine Client::generate_mode_line() const
 
 void Client::change_buffer(Buffer& buffer)
 {
-    if (m_buffer_reload_dialog_opened)
-        close_buffer_reload_dialog();
+    if (m_buffer_dialog)
+        m_buffer_dialog.reset();
 
     auto& client_manager = ClientManager::instance();
     WindowAndSelections ws = client_manager.get_free_window(buffer);
@@ -279,112 +279,224 @@ void Client::force_redraw()
         (m_info.content.empty() ? InfoHide : InfoShow);
 }
 
-void Client::reload_buffer()
+struct BufferDialogFileReloaded : public Client::BufferDialog
 {
-    Buffer& buffer = context().buffer();
-    try
-    {
-        reload_file_buffer(buffer);
-        context().print_status({ format("'{}' reloaded", buffer.display_name()),
-                                 context().faces()["Information"] });
+    Client& client;
 
-        m_window->hooks().run_hook(Hook::BufReload, buffer.name(), context());
-    }
-    catch (runtime_error& error)
+    BufferDialogFileReloaded(Client& client) : client(client) {}
+    ~BufferDialogFileReloaded()
     {
-        context().print_status({ format("error while reloading buffer: '{}'", error.what()),
-                                 context().faces()["Error"] });
-        buffer.set_fs_status(get_fs_status(buffer.name()));
+        // Reset first as this might check for reloading.
+        client.input_handler().reset_normal_mode();
+        client.info_hide(true);
     }
-}
 
-void Client::on_buffer_reload_key(Key key)
+    void ask() const override
+    {
+        Buffer& buffer = client.context().buffer();
+
+        client.info_show(format("reload '{}' ?", buffer.display_name()),
+                         format("'{}' was modified externally\n"
+                                " y, <ret>: reload | n, <esc>: keep\n"
+                                " Y: always reload | N: always keep\n",
+                                buffer.name()), {}, InfoStyle::Modal);
+    }
+
+    void handle_input(const std::function<void()>& on_done) const override
+    {
+        InputHandler& input_handler = client.input_handler();
+
+        input_handler.on_next_key("buffer-reload", KeymapMode::None,
+            [this, &input_handler, on_done](Key key, Context& context){
+            auto set_autoreload = [&context](Autoreload autoreload) {
+                auto* option = &context.options()["autoreload"];
+                // Do not touch global autoreload, set it at least at buffer level
+                if (&option->manager() == &GlobalScope::instance().options())
+                    option = &context.buffer().options().get_local_option("autoreload");
+                option->set(autoreload);
+            };
+
+            if (key == 'y' or key == 'Y' or key == Key::Return)
+            {
+                resolve(true);
+                if (key == 'Y')
+                    set_autoreload(Autoreload::Yes);
+            }
+            else if (key == 'n' or key == 'N' or key == Key::Escape)
+            {
+                resolve(false);
+                if (key == 'N')
+                    set_autoreload(Autoreload::No);
+            }
+            else
+            {
+                context.print_status({ format("'{}' is not a valid choice", key_to_str(key)),
+                               context.faces()["Error"] });
+                input_handler.on_next_key("buffer-reload", KeymapMode::None, [this, on_done](Key key, Context&){ handle_input(on_done); });
+                return;
+            }
+
+            if (on_done)
+                on_done();
+        });
+    }
+
+    void resolve(bool yes) const override
+    {
+        Context& context = client.context();
+        Buffer& buffer = context.buffer();
+
+        if (yes)
+        {
+            try
+            {
+                reload_file_buffer(buffer);
+                context.print_status({ format("'{}' reloaded", buffer.display_name()),
+                                       context.faces()["Information"] });
+
+                context.window().hooks().run_hook(Hook::BufReload, buffer.name(), context);
+            }
+            catch (runtime_error& error)
+            {
+                context.print_status({ format("error while reloading buffer: '{}'", error.what()),
+                                       context.faces()["Error"] });
+                buffer.set_fs_status(get_fs_status(buffer.name()));
+            }
+        }
+        else
+        {
+            // reread timestamp in case the file was modified again
+            buffer.set_fs_status(get_fs_status(buffer.name()));
+            context.print_status({ format("'{}' kept", buffer.display_name()),
+                                   context.faces()["Information"] });
+        }
+    }
+};
+
+struct BufferDialogFileRemoved : public Client::BufferDialog
 {
-    auto& buffer = context().buffer();
+    Client& client;
 
-    auto set_autoreload = [this](Autoreload autoreload) {
-        auto* option = &context().options()["autoreload"];
-        // Do not touch global autoreload, set it at least at buffer level
-        if (&option->manager() == &GlobalScope::instance().options())
-            option = &context().buffer().options().get_local_option("autoreload");
-        option->set(autoreload);
-    };
+    BufferDialogFileRemoved(Client& client) : client(client) {}
+    ~BufferDialogFileRemoved()
+    {
+        // Reset first as this might check for reloading.
+        client.input_handler().reset_normal_mode();
+        client.info_hide(true);
+    }
 
-    if (key == 'y' or key == 'Y' or key == Key::Return)
+    void ask() const override
     {
-        reload_buffer();
-        if (key == 'Y')
-            set_autoreload(Autoreload::Yes);
+        Buffer& buffer = client.context().buffer();
+
+        client.info_show(format("delete buffer '{}' ?", buffer.display_name()),
+                         format("file '{}' was removed from disk\n"
+                                " y, <ret>: delete | n, <esc>: keep\n",
+                                buffer.name()), {}, InfoStyle::Modal);
     }
-    else if (key == 'n' or key == 'N' or key == Key::Escape)
+
+    void handle_input(const std::function<void()>& on_done) const override
     {
-        // reread timestamp in case the file was modified again
-        buffer.set_fs_status(get_fs_status(buffer.name()));
-        print_status({ format("'{}' kept", buffer.display_name()),
-                       context().faces()["Information"] });
-        if (key == 'N')
-            set_autoreload(Autoreload::No);
+        InputHandler& input_handler = client.input_handler();
+        input_handler.on_next_key("buffer-reload", KeymapMode::None,
+            [this, &input_handler, on_done](Key key, Context& context){
+            if (key == 'y' or key == Key::Return)
+                resolve(true);
+            else if (key == 'n' or key == Key::Escape)
+                resolve(false);
+            else
+            {
+                context.print_status({ format("'{}' is not a valid choice", key_to_str(key)),
+                               context.faces()["Error"] });
+                input_handler.on_next_key("buffer-reload", KeymapMode::None, [this, on_done](Key key, Context&){ handle_input(on_done); });
+                return;
+            }
+
+            if (on_done)
+                on_done();
+        });
     }
-    else
+
+    void resolve(bool yes) const override
     {
-        print_status({ format("'{}' is not a valid choice", key_to_str(key)),
-                       context().faces()["Error"] });
-        m_input_handler.on_next_key("buffer-reload", KeymapMode::None, [this](Key key, Context&){ on_buffer_reload_key(key); });
+        Context& context = client.context();
+        Buffer& buffer = context.buffer();
+        const String& filename = buffer.name();
+
+        if (yes)
+        {
+            BufferManager::instance().delete_buffer(buffer);
+            context.print_status({ format("'{}' deleted", filename),
+                           context.faces()["Information"] });
+        }
+        else
+        {
+            buffer.flags() |= Buffer::Flags::New;
+            context.print_status({ format("'{}' demoted to unsaved buffer", buffer.display_name()),
+                                   context.faces()["Information"] });
+        }
+
+        context.window().hooks().run_hook(Hook::BufReload, filename, context);
+    }
+};
+
+void Client::check_if_buffer_needs_user_input()
+{
+    if (m_buffer_dialog)
         return;
-    }
-
-    for (auto& client : ClientManager::instance())
-    {
-        if (&client->context().buffer() == &buffer and
-            client->m_buffer_reload_dialog_opened)
-            client->close_buffer_reload_dialog();
-    }
-}
-
-void Client::close_buffer_reload_dialog()
-{
-    kak_assert(m_buffer_reload_dialog_opened);
-    // Reset first as this might check for reloading.
-    m_input_handler.reset_normal_mode();
-    m_buffer_reload_dialog_opened = false;
-    info_hide(true);
-}
-
-void Client::check_if_buffer_needs_reloading()
-{
-    if (m_buffer_reload_dialog_opened)
-        return;
 
     Buffer& buffer = context().buffer();
+    auto& flags = buffer.flags();
     auto reload = context().options()["autoreload"].get<Autoreload>();
-    if (not (buffer.flags() & Buffer::Flags::File) or reload == Autoreload::No)
+    if (not (flags & Buffer::Flags::File) or reload == Autoreload::No)
         return;
 
     const String& filename = buffer.name();
-    const timespec ts = get_fs_timestamp(filename);
-    const auto status = buffer.fs_status();
-
-    if (ts == InvalidTime or ts == status.timestamp)
-        return;
-
-    if (MappedFile fd{filename};
-        fd.st.st_size == status.file_size and hash_data(fd.data, fd.st.st_size) == status.hash)
-        return;
-
-    if (reload == Autoreload::Ask)
+    try
     {
-        StringView bufname = buffer.display_name();
-        info_show(format("reload '{}' ?", bufname),
-                  format("'{}' was modified externally\n"
-                         " y, <ret>: reload | n, <esc>: keep\n"
-                         " Y: always reload | N: always keep\n",
-                         bufname), {}, InfoStyle::Modal);
+        const timespec ts = get_fs_timestamp(filename);
+        const auto status = buffer.fs_status();
 
-        m_buffer_reload_dialog_opened = true;
-        m_input_handler.on_next_key("buffer-reload", KeymapMode::None, [this](Key key, Context&){ on_buffer_reload_key(key); });
+        flags |= Buffer::Flags::OnDisk;
+
+        if (ts == status.timestamp)
+            return;
+
+        if (MappedFile fd{filename};
+            fd.st.st_size == status.file_size and hash_data(fd.data, fd.st.st_size) == status.hash)
+            return;
+
+        m_buffer_dialog = std::make_unique<BufferDialogFileReloaded>(*this);
     }
-    else
-        reload_buffer();
+    catch (const file_inexistent& e)
+    {
+        if (flags & Buffer::Flags::OnDisk)
+            m_buffer_dialog = std::make_unique<BufferDialogFileRemoved>(*this);
+        flags &= ~Buffer::Flags::OnDisk;
+    }
+    catch (const file_access_error& e)
+    {
+        write_to_debug_buffer(format("Could not probe file '{}': {}", filename, e.what()));
+        return;
+    }
+
+    if (m_buffer_dialog)
+    {
+        if (reload == Autoreload::Ask)
+        {
+            m_buffer_dialog->ask();
+            m_buffer_dialog->handle_input([this, &buffer]()
+            {
+                for (auto& client : ClientManager::instance())
+                {
+                    if (&client->context().buffer() == &buffer)
+                        client->m_buffer_dialog.reset();
+                }
+            });
+        }
+        else
+            m_buffer_dialog->resolve(true);
+    }
 }
 
 StringView Client::get_env_var(StringView name) const
