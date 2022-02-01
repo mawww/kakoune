@@ -1816,7 +1816,7 @@ const CommandDesc map_key_cmd = {
             throw runtime_error("only a single key can be mapped");
 
         KeymapMode lower_case_only_modes[] = {KeymapMode::Goto};
-        if (key[0].codepoint().map(iswupper).value_or(true) and
+        if (key[0].codepoint().map(iswupper).value_or(false) and
             contains(lower_case_only_modes, keymap_mode))
             throw runtime_error("mode only supports lower case mappings");
 
