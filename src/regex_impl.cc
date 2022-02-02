@@ -757,19 +757,19 @@ private:
             }
             case ParsedRegex::Alternation:
             {
-                auto split_pos = m_program.instructions.size();
                 for (auto child : Children<>{m_parsed_regex, index})
                 {
                     if (child != index+1)
                         push_inst(CompiledRegex::Split);
                 }
+                auto split_pos = m_program.instructions.size();
 
                 const auto end = node.children_end;
                 for (auto child : Children<>{m_parsed_regex, index})
                 {
                     auto node = compile_node<direction>(child);
                     if (child != index+1)
-                        m_program.instructions[split_pos++].param.split = CompiledRegex::Param::Split{.target = node, .prioritize_parent = true};
+                        m_program.instructions[--split_pos].param.split = CompiledRegex::Param::Split{.target = node, .prioritize_parent = true};
                     if (get_node(child).children_end != end)
                     {
                         auto jump = push_inst(CompiledRegex::Jump);
@@ -1350,7 +1350,11 @@ auto test_regex = UnitTest{[]{
         kak_assert(StringView{vm.captures()[0], vm.captures()[1]} == "bar");
         kak_assert(not vm.exec("bar"));
     }
-
+    {
+        TestVM<RegexMode::Forward | RegexMode::Search> vm{R"(foobaz|foo|foobar)"};
+        kak_assert(vm.exec("foobar"));
+        kak_assert(StringView{vm.captures()[0], vm.captures()[1]} == "foo");
+    }
     {
         TestVM<RegexMode::Forward> vm{R"((fo+?).*)"};
         kak_assert(vm.exec("foooo"));
