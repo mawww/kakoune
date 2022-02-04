@@ -225,7 +225,7 @@ using the built-in `:doc` command.
         `---'
         .---,       Note that the default "paste" primitive will insert the
         | P |       contents of the copy register after the current selection,
-        `---'       if you want copied test to be inserted before the current
+        `---'       if you want copied text to be inserted before the current
                     selection then you can use the `P` key.
 
 
