@@ -414,6 +414,7 @@ InsertCompleter::~InsertCompleter()
 
 void InsertCompleter::select(int index, bool relative, Vector<Key>& keystrokes)
 {
+    m_enabled = true;
     if (not setup_ifn())
         return;
 
@@ -461,7 +462,7 @@ void InsertCompleter::select(int index, bool relative, Vector<Key>& keystrokes)
 
 void InsertCompleter::update(bool allow_implicit)
 {
-    m_enabled = allow_implicit or m_explicit_completer;
+    m_enabled = allow_implicit;
     if (m_explicit_completer and try_complete(m_explicit_completer))
         return;
 
