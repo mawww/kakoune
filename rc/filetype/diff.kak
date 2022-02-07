@@ -113,8 +113,10 @@ define-command diff-jump -params .. -docstring %{
                         # there should be no need to strip the directory.
                         $strip = $have_diff_line ? 1 : 0;
                     }
-                    $file =~ s,^([^/]+/+){$strip},, or fail "directory prefix underflow";
-                    $filepath = "$directory/$file";
+                    if ($file !~ m{^/}) {
+                        $file =~ s,^([^/]+/+){$strip},, or fail "directory prefix underflow";
+                        $file = "$directory/$file";
+                    }
 
                     if (defined $line) {
                         $column = $ENV{column} - 1; # Account for [ +-] diff prefix.
@@ -122,7 +124,7 @@ define-command diff-jump -params .. -docstring %{
                         if ($last_line =~ m{^(@@ -\d+(?:,\d+)? \+\d+(?:,\d+) @@ )([^\n]*)}) {
                             $hunk_header_prefix = $1;
                             $hunk_header_from_userdiff = $2;
-                            open FILE, "<", $filepath or fail "failed to open file: $!: $filepath";
+                            open FILE, "<", $file or fail "failed to open file: $!: $file";
                             @lines = <FILE>;
                             for (my $i = $line - 1; $i >= 0 && $i < scalar @lines; $i--) {
                                 if ($lines[$i] !~ m{\Q$hunk_header_from_userdiff}) {
@@ -136,7 +138,7 @@ define-command diff-jump -params .. -docstring %{
                         }
                     }
 
-                    printf "set-register c %s $line $column", quote($filepath);
+                    printf "set-register c %s $line $column", quote($file);
                 ' -- "$@"
         }
         evaluate-commands -client %val{client} %{
