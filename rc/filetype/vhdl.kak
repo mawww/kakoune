@@ -232,6 +232,13 @@ define-command -hidden vhdl-insert-on-new-line %[
                 execute-keys -draft o<c-r>xend<space>protected<semicolon><esc>
             ]
         ]
+        # Wisely add "end protected body;".
+        evaluate-commands %[
+            try %[
+                execute-keys -draft k<a-x> <a-k>^(?i)(\h*type\h+\w+\h+is\h+protected\h+body$)<ret> }i<a-x> <a-K>^<c-r>x(?i)end\h+protected\h+body\b<ret>
+                execute-keys -draft o<c-r>xend<space>protected<space>body<semicolon><esc>
+            ]
+        ]
         # Wisely add "end record;".
         evaluate-commands %[
             try %[
@@ -271,10 +278,10 @@ define-command -hidden vhdl-insert-on-new-line %[
                 execute-keys -draft o<c-r>xbegin<ret><c-r>xend<space>procedure<semicolon><esc>
             ]
             try %[
-            execute-keys -draft k<a-x> <a-k>^(?i)\h*\)\h*\bis$<ret> }i<a-x> <a-K>^<c-r>x(?i)\b(begin|end)\b<ret>
-            # Verify that line with opening parenthesis contains "procedure" keyword.
-            execute-keys -draft k<a-x> s\)<ret> <a-m><semicolon> <a-x><a-k> (?i)\bprocedure\b<ret>
-            execute-keys -draft o<c-r>xbegin<ret><c-r>xend<space>procedure<semicolon><esc>
+                execute-keys -draft k<a-x> <a-k>^(?i)\h*\)\h*\bis$<ret> }i<a-x> <a-K>^<c-r>x(?i)\b(begin|end)\b<ret>
+                # Verify that line with opening parenthesis contains "procedure" keyword.
+                execute-keys -draft k<a-x> s\)<ret> <a-m><semicolon> <a-x><a-k> (?i)\bprocedure\b<ret>
+                execute-keys -draft o<c-r>xbegin<ret><c-r>xend<space>procedure<semicolon><esc>
             ]
         ]
         # Wisely add "end package;".
@@ -375,7 +382,7 @@ define-command -hidden vhdl-indent-on-new-line %{
 
          # Increase indent after some keywords.
         try %[
-            execute-keys -draft k<a-x><a-k> (?i)\b(begin|block|else|for|generate|if|is|loop|process|protected|record|select|then)$ <ret>
+            execute-keys -draft k<a-x><a-k> (?i)\b(begin|block|body|else|for|generate|if|is|loop|process|protected|record|select|then)$ <ret>
             # Does not indent if in comment line.
             execute-keys -draft k<a-x><a-K>(?i)^\h*--<ret>
             # Handle case line in a bit different way.
