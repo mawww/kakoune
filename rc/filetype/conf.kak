@@ -2,6 +2,13 @@ hook global BufCreate .+\.(repo|cfg|properties|desktop) %{
     set-option buffer filetype conf
 }
 
+hook global WinCreate .+\.ini %{
+    try %{
+        execute-keys /^\h*#<ret>
+        set-option buffer filetype conf
+    }
+}
+
 hook global WinSetOption filetype=conf %{
     require-module conf
 }

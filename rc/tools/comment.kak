@@ -45,6 +45,10 @@ hook global BufSetOption filetype=coffee %{
     set-option buffer comment_block_end '###'
 }
 
+hook global BufSetOption filetype=conf %{
+    set-option buffer comment_line '#'
+}
+
 hook global BufSetOption filetype=css %{
     set-option buffer comment_line ''
     set-option buffer comment_block_begin '/*'
