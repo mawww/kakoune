@@ -469,7 +469,7 @@ public:
             m_cursor_pos = 0;
         else if (key == Key::End or key == ctrl('e'))
             m_cursor_pos = m_line.char_length();
-        else if (key == Key::Backspace or key == ctrl('h'))
+        else if (key == Key::Backspace or key == shift(Key::Backspace) or key == ctrl('h'))
         {
             if (m_cursor_pos != 0)
             {
@@ -810,7 +810,7 @@ public:
             return;
         }
         else if (key == Key::Escape or key == ctrl('c') or
-                 ((key == Key::Backspace or key == ctrl('h')) and line.empty()))
+                 ((key == Key::Backspace or key == shift(Key::Backspace) or key == ctrl('h')) and line.empty()))
         {
             history_push(line);
             context().print_status(DisplayLine{});
@@ -1263,7 +1263,7 @@ public:
             m_completer.reset();
             pop_mode();
         }
-        else if (key == Key::Backspace)
+        else if (key == Key::Backspace or key == shift(Key::Backspace))
         {
             Vector<Selection> sels;
             for (auto& sel : context().selections())
