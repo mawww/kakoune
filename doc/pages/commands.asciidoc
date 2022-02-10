@@ -95,6 +95,12 @@ of the file onto the filesystem
     unsaved buffer remaining. If specified, the client exit status
     will be set to <exit status>
 
+*quit-all[!]* [<exit status>]::
+    *alias* qa +
+    exit Kakoune and close all the open clients, use quit-all! to
+    force quitting even if there is some unsaved buffer remaining.
+    If specified, the clients exit status will be set to <exit status>
+
 *write-quit[!]* [-sync] [-method <writemethod>] [<exit status>]::
     *alias* wq +
     write current buffer and quit current client. If specified, the client

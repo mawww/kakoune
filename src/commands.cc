@@ -684,6 +684,44 @@ const CommandDesc force_quit_cmd = {
 };
 
 template<bool force>
+void quit_all(const ParametersParser& parser, Context& context, const ShellContext&)
+{
+    auto& client_manager = ClientManager::instance();
+
+    if (not force and not Server::instance().is_daemon())
+        ensure_all_buffers_are_saved();
+
+    const int status = parser.positional_count() > 0 ? str_to_int(parser[0]) : 0;
+    while (not client_manager.empty())
+        client_manager.remove_client(**client_manager.begin(), true, status);
+}
+
+const CommandDesc quit_all_cmd = {
+    "quit-all",
+    "qa",
+    "quit-all [<exit status>]: quit all clients, and the Kakoune session (if not running in daemon mode). "
+    "An optional integer parameter can set the clients exit status",
+    { {}, ParameterDesc::Flags::SwitchesAsPositional, 0, 1 },
+    CommandFlags::None,
+    CommandHelper{},
+    CommandCompleter{},
+    quit_all<false>
+};
+
+const CommandDesc force_quit_all_cmd = {
+    "quit-all!",
+    "qa!",
+    "quit-all! [<exit status>]: quit all clients, and the Kakoune session (if "
+    "not running in daemon mode). Force quit even if some buffers are not saved. "
+    "An optional integer parameter can set the clients exit status",
+    { {}, ParameterDesc::Flags::SwitchesAsPositional, 0, 1 },
+    CommandFlags::None,
+    CommandHelper{},
+    CommandCompleter{},
+    quit_all<true>
+};
+
+template<bool force>
 void write_quit(const ParametersParser& parser, Context& context,
                 const ShellContext& shell_context)
 {
@@ -2704,6 +2742,8 @@ void register_commands()
     register_command(force_kill_cmd);
     register_command(quit_cmd);
     register_command(force_quit_cmd);
+    register_command(quit_all_cmd);
+    register_command(force_quit_all_cmd);
     register_command(write_quit_cmd);
     register_command(force_write_quit_cmd);
     register_command(buffer_cmd);
