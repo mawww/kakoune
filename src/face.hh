@@ -71,7 +71,7 @@ inline Face merge_faces(const Face& base, const Face& face)
             return base.*color;
         if (face.*color == Color::Default)
             return base.*color;
-        if ((base.*color).isRGB() and (face.*color).isRGB() and (face.*color).a != 255)
+        if ((face.*color).isRGB() and (face.*color).a != 255)
             return alpha_blend(base.*color, face.*color);
         return face.*color;
     };
