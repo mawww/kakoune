@@ -322,7 +322,8 @@ InsertCompletion complete_option(const SelectionList& sels,
     candidates.reserve(matches.size());
     while (candidates.size() < max_count and first != last)
     {
-        if (candidates.empty() or candidates.back().completion != first->candidate())
+        if (candidates.empty() or candidates.back().completion != first->candidate()
+            or candidates.back().on_select != first->on_select)
             candidates.push_back({ first->candidate().str(), first->on_select.str(),
                                    std::move(first->menu_entry) });
         std::pop_heap(first, last--, greater);
