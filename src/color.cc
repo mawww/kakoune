@@ -34,13 +34,6 @@ bool is_color_name(StringView color)
     return contains(color_names, color);
 }
 
-void Color::validate_alpha()
-{
-    static_assert(RGB == 17);
-    if (a < RGB)
-        throw runtime_error("Colors alpha must be > 16");
-}
-
 Color str_to_color(StringView color)
 {
     auto it = find_if(color_names, [&](const char* c){ return color == c; });
