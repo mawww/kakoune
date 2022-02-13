@@ -423,6 +423,10 @@ but not really useful in that context.
 
 == Module commands
 
+In Kakoune, modules are groups of commands that are evaluated all at once. This allows
+lazy loading of complex configurations with a single invocation of *require-moule*.
+The builtin filetype handling for Kakoune is implemented via modules.
+
 *provide-module* [<switches>] <name> <commands>::
     declares a module *name* that is defined by *commands*. *commands* will be
     evaluated as if by source the first time *require-module <name>* is run.
