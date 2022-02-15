@@ -716,7 +716,7 @@ When pressing `:` in normal mode, Kakoune will open a prompt to enter
 a command.  The executed command line is stored in the *:* register
 (See <<registers#,`:doc registers`>>).
 
-During edition, a transient *clipboard* is available, its content is
+During editing, a transient *clipboard* is available, its content is
 empty at the start of prompt edition, and is not preserved afterwards.
 
 The following keys are recognized by this mode to help with editing
