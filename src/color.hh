@@ -1,6 +1,7 @@
 #ifndef color_hh_INCLUDED
 #define color_hh_INCLUDED
 
+#include "exception.hh"
 #include "hash.hh"
 #include "meta.hh"
 #include "assert.hh"
@@ -55,7 +56,11 @@ struct Color
     }
 
 private:
-    void validate_alpha();
+    constexpr void validate_alpha() {
+        static_assert(RGB == 17);
+        if (a < RGB)
+            throw runtime_error("Colors alpha must be > 16");
+    }
 };
 
 constexpr bool operator==(Color lhs, Color rhs)
