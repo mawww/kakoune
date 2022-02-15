@@ -151,6 +151,9 @@ define-command -hidden c-family-insert-on-newline %[ evaluate-commands -itersel 
                 execute-keys d
             ]
         ]
+
+        # trim trailing whitespace on the previous line
+        try %[ execute-keys -draft k <a-x> s\h+$<ret> d ]
     ]
     try %[
         # if the previous line isn't within a comment scope, break
@@ -180,7 +183,7 @@ define-command -hidden c-family-insert-on-newline %[ evaluate-commands -itersel 
         ]
 
         # trim trailing whitespace on the previous line
-        try %[ execute-keys -draft s\h+$<ret> d ]
+        try %[ execute-keys -draft k <a-x> s\h+$<ret> d ]
         # align the new star with the previous one
         execute-keys K<a-x>1s^[^*]*(\*)<ret>&
     ]
