@@ -49,7 +49,6 @@ struct MappedFile
 
     operator StringView() const;
 
-    int fd;
     const char* data;
     struct stat st {};
 };
