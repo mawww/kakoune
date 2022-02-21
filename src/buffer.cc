@@ -505,11 +505,8 @@ BufferRange Buffer::insert(BufferCoord pos, StringView content)
     else
         real_content = intern(content);
 
-    // for undo and redo purpose it is better to use one past last line rather
-    // than one past last char coord.
-    auto coord = is_end(pos) ? line_count() : pos;
     if (not (m_flags & Flags::NoUndo))
-        m_current_undo_group.push_back({Modification::Insert, coord, real_content});
+        m_current_undo_group.push_back({Modification::Insert, pos, real_content});
     return do_insert(pos, real_content->strview());
 }
 
