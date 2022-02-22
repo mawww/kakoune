@@ -211,6 +211,7 @@ MappedFile::MappedFile(StringView filename)
     int fd = open(filename.zstr(), O_RDONLY | O_NONBLOCK);
     if (fd == -1)
         throw file_access_error(filename, strerror(errno));
+    auto close_fd = on_scope_end([&] { close(fd); });
 
     fstat(fd, &st);
     if (S_ISDIR(st.st_mode))
@@ -222,7 +223,6 @@ MappedFile::MappedFile(StringView filename)
     data = (const char*)mmap(nullptr, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     if (data == MAP_FAILED)
         throw file_access_error{filename, strerror(errno)};
-    close(fd);
 }
 
 MappedFile::~MappedFile()
