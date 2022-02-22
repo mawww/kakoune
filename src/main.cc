@@ -46,6 +46,7 @@ struct {
 } constexpr version_notes[] = { {
         0,
         "» pipe commands do not append final end-of-lines anymore\n"
+        "» {+u}complete-command{} to configure command completion\n"
     }, {
         20211107,
         "» colored and curly underlines support (undocumented in 20210828)\n"

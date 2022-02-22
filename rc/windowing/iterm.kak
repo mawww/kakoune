@@ -36,22 +36,25 @@ define-command -hidden -params 2.. iterm-terminal-split-impl %{
     }
 }
 
-define-command iterm-terminal-vertical -params 1.. -shell-completion -docstring '
+define-command iterm-terminal-vertical -params 1.. -docstring '
 iterm-terminal-vertical <program> [<arguments>]: create a new terminal as an iterm pane
 The current pane is split into two, left and right
 The program passed as argument will be executed in the new terminal'\
 %{
     iterm-terminal-split-impl 'vertically' %arg{@}
 }
-define-command iterm-terminal-horizontal -params 1.. -shell-completion -docstring '
+complete-command iterm-terminal-vertical shell
+
+define-command iterm-terminal-horizontal -params 1.. -docstring '
 iterm-terminal-horizontal <program> [<arguments>]: create a new terminal as an iterm pane
 The current pane is split into two, top and bottom
 The program passed as argument will be executed in the new terminal'\
 %{
     iterm-terminal-split-impl 'horizontally' %arg{@}
 }
+complete-command iterm-terminal-horizontal shell
 
-define-command iterm-terminal-tab -params 1.. -shell-completion -docstring '
+define-command iterm-terminal-tab -params 1.. -docstring '
 iterm-terminal-tab <program> [<arguments>]: create a new terminal as an iterm tab
 The program passed as argument will be executed in the new terminal'\
 %{
@@ -76,8 +79,9 @@ The program passed as argument will be executed in the new terminal'\
         -e "end tell" >/dev/null
     }
 }
+complete-command iterm-terminal-tab shell
 
-define-command iterm-terminal-window -params 1.. -shell-completion -docstring '
+define-command iterm-terminal-window -params 1.. -docstring '
 iterm-terminal-window <program> [<arguments>]: create a new terminal as an iterm window
 The program passed as argument will be executed in the new terminal'\
 %{
@@ -100,8 +104,9 @@ The program passed as argument will be executed in the new terminal'\
         -e "end tell" >/dev/null
     }
 }
+complete-command iterm-terminal-window shell
 
-define-command iterm-focus -params ..1 -client-completion -docstring '
+define-command iterm-focus -params ..1 -docstring '
 iterm-focus [<client>]: focus the given client
 If no client is passed then the current one is used' \
 %{
@@ -131,6 +136,7 @@ If no client is passed then the current one is used' \
         fi
     }
 }
+complete-command iterm-focus client
 
 alias global focus iterm-focus
 alias global terminal iterm-terminal-vertical

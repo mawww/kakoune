@@ -56,7 +56,7 @@ add-highlighter shared/kakrc/shell8 region -recurse '<'  '(^|\h)\K-shell-script-
 evaluate-commands %sh{
     # Grammar
     keywords="add-highlighter alias arrange-buffers buffer buffer-next buffer-previous catch
-              change-directory colorscheme debug declare-option declare-user-mode define-command
+              change-directory colorscheme debug declare-option declare-user-mode define-command complete-command
               delete-buffer delete-buffer! echo edit edit! enter-user-mode evaluate-commands execute-keys
               fail hook info kill kill! map menu nop on-key prompt provide-module quit quit!
               remove-highlighter remove-hooks rename-buffer rename-client rename-session require-module

@@ -1159,6 +1159,82 @@ Vector<String> params_to_shell(const ParametersParser& parser)
     return vars;
 }
 
+CommandCompleter make_command_completer(StringView type, StringView param, Completions::Flags completions_flags)
+{
+    if (type == "file")
+    {
+        return [=](const Context& context, CompletionFlags flags,
+                   CommandParameters params,
+                   size_t token_to_complete, ByteCount pos_in_token) {
+             const String& prefix = params[token_to_complete];
+             const auto& ignored_files = context.options()["ignored_files"].get<Regex>();
+             return Completions{0_byte, pos_in_token,
+                                complete_filename(prefix, ignored_files,
+                                                  pos_in_token, FilenameFlags::Expand),
+                                completions_flags};
+        };
+    }
+    else if (type == "client")
+    {
+        return [=](const Context& context, CompletionFlags flags,
+                   CommandParameters params,
+                   size_t token_to_complete, ByteCount pos_in_token)
+        {
+             const String& prefix = params[token_to_complete];
+             auto& cm = ClientManager::instance();
+             return Completions{0_byte, pos_in_token,
+                                cm.complete_client_name(prefix, pos_in_token),
+                                completions_flags};
+        };
+    }
+    else if (type == "buffer")
+    {
+        return [=](const Context& context, CompletionFlags flags,
+                   CommandParameters params,
+                   size_t token_to_complete, ByteCount pos_in_token)
+        {
+             return add_flags(complete_buffer_name<false>, completions_flags)(
+                 context, flags, params[token_to_complete], pos_in_token);
+        };
+    }
+    else if (type == "shell-script")
+    {
+        if (param.empty())
+            throw runtime_error("shell-script requires a shell script parameter");
+
+        return ShellScriptCompleter{param.str(), completions_flags};
+    }
+    else if (type == "shell-script-candidates")
+    {
+        if (param.empty())
+            throw runtime_error("shell-script-candidates requires a shell script parameter");
+
+        return ShellCandidatesCompleter{param.str(), completions_flags};
+    }
+    else if (type == "command")
+    {
+        return [](const Context& context, CompletionFlags flags,
+                  CommandParameters params,
+                  size_t token_to_complete, ByteCount pos_in_token)
+        {
+            return CommandManager::instance().complete(
+                context, flags, params, token_to_complete, pos_in_token);
+        };
+    }
+    else if (type == "shell")
+    {
+        return [=](const Context& context, CompletionFlags flags,
+                   CommandParameters params,
+                   size_t token_to_complete, ByteCount pos_in_token)
+        {
+            return add_flags(shell_complete, completions_flags)(
+                context, flags, params[token_to_complete], pos_in_token);
+        };
+    }
+    else
+        throw runtime_error(format("invalid command completion type '{}'", type));
+}
+
 void define_command(const ParametersParser& parser, Context& context, const ShellContext&)
 {
     const String& cmd_name = parser[0];
@@ -1211,75 +1287,22 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
     }
 
     CommandCompleter completer;
-    if (parser.get_switch("file-completion"))
+    for (StringView completion_switch : {"file-completion", "client-completion", "buffer-completion",
+                                         "shell-script-completion", "shell-script-candidates",
+                                         "command-completion", "shell-completion"})
     {
-        completer = [=](const Context& context, CompletionFlags flags,
-                       CommandParameters params,
-                       size_t token_to_complete, ByteCount pos_in_token)
+        if (auto param = parser.get_switch(completion_switch))
         {
-             const String& prefix = params[token_to_complete];
-             const auto& ignored_files = context.options()["ignored_files"].get<Regex>();
-             return Completions{0_byte, pos_in_token,
-                                complete_filename(prefix, ignored_files,
-                                                  pos_in_token, FilenameFlags::Expand),
-                                completions_flags};
-        };
+            constexpr StringView suffix = "-completion";
+            if (completion_switch.ends_with(suffix))
+                completion_switch = completion_switch.substr(0, completion_switch.length() - suffix.length());
+            completer = make_command_completer(completion_switch, *param, completions_flags);
+            break;
+        }
     }
-    else if (parser.get_switch("client-completion"))
-    {
-        completer = [=](const Context& context, CompletionFlags flags,
-                       CommandParameters params,
-                       size_t token_to_complete, ByteCount pos_in_token)
-        {
-             const String& prefix = params[token_to_complete];
-             auto& cm = ClientManager::instance();
-             return Completions{0_byte, pos_in_token,
-                                cm.complete_client_name(prefix, pos_in_token),
-                                completions_flags};
-        };
-    }
-    else if (parser.get_switch("buffer-completion"))
-    {
-        completer = [=](const Context& context, CompletionFlags flags,
-                       CommandParameters params,
-                       size_t token_to_complete, ByteCount pos_in_token)
-        {
-             return add_flags(complete_buffer_name<false>, completions_flags)(
-                 context, flags, params[token_to_complete], pos_in_token);
-        };
-    }
-    else if (auto shell_script = parser.get_switch("shell-script-completion"))
-    {
-        completer = ShellScriptCompleter{shell_script->str(), completions_flags};
-    }
-    else if (auto shell_script = parser.get_switch("shell-script-candidates"))
-    {
-        completer = ShellCandidatesCompleter{shell_script->str(), completions_flags};
-    }
-    else if (parser.get_switch("command-completion"))
-    {
-        completer = [](const Context& context, CompletionFlags flags,
-                       CommandParameters params,
-                       size_t token_to_complete, ByteCount pos_in_token)
-        {
-            return CommandManager::instance().complete(
-                context, flags, params, token_to_complete, pos_in_token);
-        };
-    }
-    else if (parser.get_switch("shell-completion"))
-    {
-        completer = [=](const Context& context, CompletionFlags flags,
-                        CommandParameters params,
-                        size_t token_to_complete, ByteCount pos_in_token)
-        {
-            return add_flags(shell_complete, completions_flags)(
-                context, flags, params[token_to_complete], pos_in_token);
-        };
-    }
-
     auto docstring = trim_indent(parser.get_switch("docstring").value_or(StringView{}));
 
-    cm.register_command(cmd_name, cmd, docstring, desc, flags, CommandHelper{}, completer);
+    cm.register_command(cmd_name, cmd, docstring, desc, flags, CommandHelper{}, std::move(completer));
 }
 
 const CommandDesc define_command_cmd = {
@@ -1351,6 +1374,25 @@ const CommandDesc unalias_cmd = {
             aliases[parser[1]] != parser[2])
             return;
         aliases.remove_alias(parser[1]);
+    }
+};
+
+const CommandDesc complete_command_cmd = {
+    "complete-command",
+    "compl",
+    "complete-command [<switches>] <name> <type> [<param>]\n"
+    "define command completion",
+    ParameterDesc{
+        { { "menu",                     { false, "treat completions as the only valid inputs" } }, },
+        ParameterDesc::Flags::None, 2, 3},
+    CommandFlags::None,
+    CommandHelper{},
+    make_completer(complete_command_name),
+    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    {
+        const Completions::Flags flags = parser.get_switch("menu") ? Completions::Flags::Menu : Completions::Flags::None;
+        CommandCompleter completer = make_command_completer(parser[1], parser.positional_count() >= 3 ? parser[2] : StringView{}, flags);
+        CommandManager::instance().set_command_completer(parser[0], std::move(completer));
     }
 };
 
@@ -2719,6 +2761,7 @@ void register_commands()
     register_command(remove_hook_cmd);
     register_command(trigger_user_hook_cmd);
     register_command(define_command_cmd);
+    register_command(complete_command_cmd);
     register_command(alias_cmd);
     register_command(unalias_cmd);
     register_command(echo_cmd);

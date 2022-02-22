@@ -112,6 +112,8 @@ public:
                           CommandHelper helper = CommandHelper(),
                           CommandCompleter completer = CommandCompleter());
 
+    void set_command_completer(StringView command_name, CommandCompleter completer);
+
     Completions complete_command_name(const Context& context, StringView query) const;
 
     void clear_last_complete_command() { m_last_complete_command = String{}; }

@@ -11,7 +11,6 @@ define-command -docstring %{
     All optional parameters are forwarded to the new window
 } \
     -params .. \
-    -shell-completion \
     x11-repl %{ x11-terminal sh -c %{
         winid="${WINDOWID:-$(xdotool search --pid ${PPID} | tail -1)}"
         printf "evaluate-commands -try-client $1 \
@@ -20,6 +19,7 @@ define-command -docstring %{
         [ "$1" ] && "$@" || "$SHELL"
     } -- %val{client} %val{session} %arg{@}
 }
+complete-command x11-repl shell
 
 define-command x11-send-text -params 0..1 -docstring %{
         x11-send-text [text]: Send text to the REPL window.

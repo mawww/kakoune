@@ -396,6 +396,16 @@ UnitTest test_string{[]()
 {
     kak_assert(String("youpi ") + "matin" == "youpi matin");
 
+    kak_assert(StringView{"youpi"}.starts_with(""));
+    kak_assert(StringView{"youpi"}.starts_with("you"));
+    kak_assert(StringView{"youpi"}.starts_with("youpi"));
+    kak_assert(not StringView{"youpi"}.starts_with("youpi!"));
+
+    kak_assert(StringView{"youpi"}.ends_with(""));
+    kak_assert(StringView{"youpi"}.ends_with("pi"));
+    kak_assert(StringView{"youpi"}.ends_with("youpi"));
+    kak_assert(not StringView{"youpi"}.ends_with("oup"));
+
     auto wrapped = "wrap this paragraph\n respecting whitespaces and much_too_long_words" | wrap_at(16) | gather<Vector>();
     kak_assert(wrapped.size() == 6);
     kak_assert(wrapped[0] == "wrap this");

@@ -41,6 +41,15 @@ void CommandManager::register_command(String command_name,
                                  std::move(completer) };
 }
 
+void CommandManager::set_command_completer(StringView command_name, CommandCompleter completer)
+{
+    auto it = m_commands.find(command_name);
+    if (it == m_commands.end())
+        throw runtime_error(format("no such command '{}'", command_name));
+
+    it->value.completer = std::move(completer);
+}
+
 bool CommandManager::module_defined(StringView module_name) const
 {
     return m_modules.find(module_name) != m_modules.end();

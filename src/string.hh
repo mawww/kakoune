@@ -67,6 +67,9 @@ public:
     [[gnu::always_inline]]
     bool empty() const { return type().length() == 0_byte; }
 
+    bool starts_with(StringView str) const;
+    bool ends_with(StringView str) const;
+
     ByteCount byte_count_to(CharCount count) const
     { return utf8::advance(begin(), end(), count) - begin(); }
 
@@ -304,6 +307,22 @@ inline StringView StringOps<Type, CharType>::substr(ColumnCount from, ColumnCoun
         length = INT_MAX;
     auto beg = utf8::advance(begin(), end(), from);
     return StringView{ beg, utf8::advance(beg, end(), length) };
+}
+
+template<typename Type, typename CharType>
+inline bool StringOps<Type, CharType>::starts_with(StringView str) const
+{
+    if (type().length() < str.length())
+        return false;
+    return substr(0, str.length()) == str;
+}
+
+template<typename Type, typename CharType>
+inline bool StringOps<Type, CharType>::ends_with(StringView str) const
+{
+    if (type().length() < str.length())
+        return false;
+    return substr(type().length() - str.length()) == str;
 }
 
 inline String& operator+=(String& lhs, StringView rhs)

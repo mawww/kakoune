@@ -19,14 +19,14 @@ add-highlighter shared/diff/ regex "^\+[^\n]*\n" 0:green,default
 add-highlighter shared/diff/ regex "^-[^\n]*\n" 0:red,default
 add-highlighter shared/diff/ regex "^@@[^\n]*@@" 0:cyan,default
 
-define-command diff-jump \
-    -docstring %{diff-jump [<switches>] [<directory>]: edit the diff's source file at the cursor position.
-Paths are resolved relative to <directory>, or the current working directory if unspecified.
+define-command diff-jump -params .. -docstring %{
+        diff-jump [<switches>] [<directory>]: edit the diff's source file at the cursor position.
+        Paths are resolved relative to <directory>, or the current working directory if unspecified.
 
-Switches:
-    -       jump to the old file instead of the new file
-    -<num> strip <num> leading directory components, like -p<num> in patch(1). Defaults to 1 if there is a 'diff' line (as printed by 'diff -r'), or 0 otherwise.} \
-    -params .. -file-completion %{
+        Switches:
+            -       jump to the old file instead of the new file
+            -<num> strip <num> leading directory components, like -p<num> in patch(1). Defaults to 1 if there is a 'diff' line (as printed by 'diff -r'), or 0 otherwise.
+    } %{
     evaluate-commands -draft -save-regs c %{
         # Save the column because we will move the cursor.
         set-register c %val{cursor_column}
@@ -146,6 +146,7 @@ Switches:
         }
     }
 }
+complete-command diff-jump file
 
 §
 

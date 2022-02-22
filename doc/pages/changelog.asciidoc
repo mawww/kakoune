@@ -3,6 +3,10 @@
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
+== Development version
+
+* `complete-command` (See <<commands#configuring-command-completion,`:doc commands configuring-command-completion`>> 
+
 == Kakoune 2021.11.07
 
 * Support for curly and separately colored underlines (undocumented in 2021.10.28)

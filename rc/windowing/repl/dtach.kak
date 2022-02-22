@@ -12,7 +12,6 @@ define-command -docstring %{
     All optional parameters are forwarded to the new terminal window
 } \
     -params .. \
-    -shell-completion \
     dtach-repl %{ terminal sh -c %{
         file="$(mktemp -u -t kak_dtach_repl.XXXXX)"
         trap 'rm -f "${file}"' EXIT
@@ -22,6 +21,7 @@ define-command -docstring %{
         dtach -c "${file}" -E sh -c "${@:-$SHELL}" || "${@:-$SHELL}"
     } -- %val{client} %val{session} %arg{@}
 }
+complete-command dtach-repl shell
 
 define-command dtach-send-text -params 0..1 -docstring %{
         dtach-send-text [text]: Send text to the REPL.

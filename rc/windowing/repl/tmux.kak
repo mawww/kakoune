@@ -23,17 +23,20 @@ define-command -hidden -params 1.. tmux-repl-impl %{
     }
 }
 
-define-command tmux-repl-vertical -params 0.. -command-completion -docstring "Create a new vertical pane for repl interaction" %{
+define-command tmux-repl-vertical -params 0.. -docstring "Create a new vertical pane for repl interaction" %{
     tmux-repl-impl 'split-window -v' %arg{@}
 }
+complete-command tmux-repl-vertical command
 
-define-command tmux-repl-horizontal -params 0.. -command-completion -docstring "Create a new horizontal pane for repl interaction" %{
+define-command tmux-repl-horizontal -params 0.. -docstring "Create a new horizontal pane for repl interaction" %{
     tmux-repl-impl 'split-window -h' %arg{@}
 }
+complete-command tmux-repl-horizontal command
 
-define-command tmux-repl-window -params 0.. -command-completion -docstring "Create a new window for repl interaction" %{
+define-command tmux-repl-window -params 0.. -docstring "Create a new window for repl interaction" %{
     tmux-repl-impl 'new-window' %arg{@}
 }
+complete-command tmux-repl-window command
 
 define-command -params 0..1 tmux-repl-set-pane -docstring %{
         tmux-repl-set-pane [pane number]: Set an existing tmux pane for repl interaction
