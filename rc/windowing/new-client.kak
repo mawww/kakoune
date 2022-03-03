@@ -5,4 +5,3 @@ The optional arguments are passed as commands to the new client' \
 %{
     terminal kak -c %val{session} -e "%arg{@}"
 }
-

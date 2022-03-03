@@ -26,16 +26,23 @@ manual control of the module loading." \
 str-list windowing_modules 'tmux' 'screen' 'kitty' 'iterm' 'wayland' 'x11'
 
 hook -group windowing global KakBegin .* %{
+    define-command missing-windowing-system -params .. -docstring \
+    'Placeholder implementation for the focus and terminal aliases' %{
+        fail This command only works inside a windowing system: $opt{windowing_modules}
+    }
+
+    alias global focus missing-windowing-system
+    alias global terminal missing-windowing-system
 
     evaluate-commands %sh{
         set -- ${kak_opt_windowing_modules}
         if [ $# -gt 0 ]; then
             echo 'try %{ '
-            while [ $# -gt 1 ]; do
+            while [ $# -gt 0 ]; do
                 echo "require-module ${1} } catch %{ "
                 shift
             done
-            echo "require-module ${1} }"
+            echo 'nop }'
         fi
     }
 }
