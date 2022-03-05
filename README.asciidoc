@@ -103,7 +103,7 @@ Building
 
 Kakoune dependencies are:
 
- * A {cpp}20 compliant compiler (GCC >= 10 or clang >= 11) along with its
+ * A {cpp}20 compliant compiler (GCC >= 10.3 or clang >= 11) along with its
    associated {cpp} standard library (libstdc{pp} >= 10 or libc{pp})
 
 To build, just type *make* in the src directory.
