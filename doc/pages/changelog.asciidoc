@@ -7,6 +7,8 @@ released versions.
 
 * `complete-command` (See <<commands#configuring-command-completion,`:doc commands configuring-command-completion`>> 
 
+* `!` and `<a-!>` commands now select the inserted text
+
 == Kakoune 2021.11.07
 
 * Support for curly and separately colored underlines (undocumented in 2021.10.28)
