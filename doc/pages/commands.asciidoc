@@ -515,22 +515,22 @@ Command completion can be configured with the *complete-command* command:
 
     *completion_type* can be:
 
-    *file-completion*:::
+    *file*:::
         try file completion on any parameter passed to the command
 
-    *client-completion*:::
+    *client*:::
         try client name completion on any parameter passed to the command
 
-    *buffer-completion*:::
+    *buffer*:::
         try buffer name completion on any parameter passed to the command
 
-    *command-completion*:::
+    *command*:::
         try command completion on any parameter passed to the command
 
-    *shell-completion*:::
+    *shell*:::
         try shell command completion on any parameter passed to the command
 
-    *shell-script-completion*:::
+    *shell-script*:::
         following string is a shell command which takes parameters as
         positional params and outputs one completion candidate per line.
         The provided shell command will run after each keypress.
