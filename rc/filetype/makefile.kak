@@ -55,11 +55,11 @@ define-command -hidden makefile-indent-on-new-line %{
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon>K<a-&> }
         ## If the line above is a target indent with a tab
-        try %{ execute-keys -draft Z k<a-x> <a-k>^\S.*?(::|:|!)\s<ret> z i<tab> }
+        try %{ execute-keys -draft Z kx <a-k>^\S.*?(::|:|!)\s<ret> z i<tab> }
         # cleanup trailing white space son previous line
-        try %{ execute-keys -draft k<a-x> s \h+$ <ret>d }
+        try %{ execute-keys -draft kx s \h+$ <ret>d }
         # indent after some keywords
-        try %{ execute-keys -draft Z k<a-x> <a-k> ^\h*(ifeq|ifneq|ifdef|ifndef|else|define)\b<ret> z <a-gt> }
+        try %{ execute-keys -draft Z kx <a-k> ^\h*(ifeq|ifneq|ifdef|ifndef|else|define)\b<ret> z <a-gt> }
     }
 }
 

@@ -65,7 +65,7 @@ add-highlighter shared/coffee/code/ regex \b(break|case|catch|class|const|contin
 
 define-command -hidden coffee-trim-indent %{
     evaluate-commands -draft -itersel %{
-        execute-keys <a-x>
+        execute-keys x
         # remove trailing white spaces
         try %{ execute-keys -draft s \h + $ <ret> d }
     }
@@ -74,7 +74,7 @@ define-command -hidden coffee-trim-indent %{
 define-command -hidden coffee-insert-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy '#' comment prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s '^\h*\K#\h*' <ret> y gh j P }
+        try %{ execute-keys -draft k x s '^\h*\K#\h*' <ret> y gh j P }
     }
 }
 
@@ -85,7 +85,7 @@ define-command -hidden coffee-indent-on-new-line %{
         # filter previous line
         try %{ execute-keys -draft k : coffee-trim-indent <ret> }
         # indent after start structure
-        try %{ execute-keys -draft k <a-x> <a-k> ^ \h * (case|catch|class|else|finally|for|function|if|switch|try|while|with) \b | (=|->) $ <ret> j <a-gt> }
+        try %{ execute-keys -draft k x <a-k> ^ \h * (case|catch|class|else|finally|for|function|if|switch|try|while|with) \b | (=|->) $ <ret> j <a-gt> }
     }
 }
 

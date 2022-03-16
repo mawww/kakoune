@@ -111,7 +111,7 @@ provide-module coq %{
 # Hence here only a simple mechanism of copying indent is done.
     define-command -hidden coq-copy-indent-on-newline %{
         evaluate-commands -draft -itersel %{
-            try %{ execute-keys -draft k <a-x> s ^\h+ <ret> y gh j P }
+            try %{ execute-keys -draft k x s ^\h+ <ret> y gh j P }
         }
 }
 

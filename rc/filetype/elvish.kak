@@ -40,19 +40,19 @@ define-command -hidden elvish-indent %< evaluate-commands -draft -itersel %<
     execute-keys <semicolon>
     try %<
         # if the previous line is a comment, copy indent, # and whitespace
-        execute-keys -draft k <a-x> s^\h*#\h*<ret> yjP
+        execute-keys -draft k x s^\h*#\h*<ret> yjP
     > catch %<
         # copy indent
         execute-keys -draft K <a-&>
         # indent after { [ ( |
-        try %< execute-keys -draft k <a-x> <a-k>[[{(|]\h*$<ret> j <a-gt> >
+        try %< execute-keys -draft k x <a-k>[[{(|]\h*$<ret> j <a-gt> >
     >
 >>
 
 define-command -hidden elvish-deindent %< evaluate-commands -draft -itersel %<
     try %<
         # Deindent only when there is a lone closing character
-        execute-keys -draft <a-x> <a-k>^\h*[^\h]$<ret> <a-lt>
+        execute-keys -draft x <a-k>^\h*[^\h]$<ret> <a-lt>
     >
 >>
 §

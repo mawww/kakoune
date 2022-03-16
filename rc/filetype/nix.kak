@@ -91,7 +91,7 @@ add-highlighter shared/nix/code/ regex '([^:/?#\s]+):([^#(){}\[\]";`|\s\\]+)' 0:
 
 define-command -hidden nix-trim-indent %{
     # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel x s \h+$ <ret> d }
 }
 
 define-command -hidden nix-indent-on-char %<
@@ -104,7 +104,7 @@ define-command -hidden nix-indent-on-char %<
 define-command -hidden nix-insert-on-new-line %<
     evaluate-commands -draft -itersel %<
         # copy // comments prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
+        try %{ execute-keys -draft k x s ^\h*\K#\h* <ret> y gh j P }
     >
 >
 
@@ -115,9 +115,9 @@ define-command -hidden nix-indent-on-new-line %<
         # filter previous line
         try %{ execute-keys -draft k : nix-trim-indent <ret> }
         # indent after lines beginning / ending with opener token
-        try %_ execute-keys -draft k <a-x> <a-k> ^\h*[[{]|[[{]$ <ret> j <a-gt> _
+        try %_ execute-keys -draft k x <a-k> ^\h*[[{]|[[{]$ <ret> j <a-gt> _
         # deindent closer token(s) when after cursor
-        try %_ execute-keys -draft <a-x> <a-k> ^\h*[}\]] <ret> gh / [}\]] <ret> m <a-S> 1<a-&> _
+        try %_ execute-keys -draft x <a-k> ^\h*[}\]] <ret> gh / [}\]] <ret> m <a-S> 1<a-&> _
     >
 >
 

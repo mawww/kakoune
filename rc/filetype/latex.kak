@@ -55,27 +55,27 @@ add-highlighter shared/latex/content/ regex '\\(chapter|(sub)+section|(sub)*para
 
 define-command -hidden latex-trim-indent %{
     evaluate-commands -no-hooks -draft -itersel %{
-        try %{ execute-keys <a-x> 1s^(\h+)$<ret> d }
+        try %{ execute-keys x 1s^(\h+)$<ret> d }
     }
 }
 
 define-command -hidden latex-indent-newline %(
     evaluate-commands -no-hooks -draft -itersel %(
         # copy '%' comment prefix and following white spaces
-        try %{ execute-keys -draft k<a-x> s^\h*%\h*<ret> y jgh P }
+        try %{ execute-keys -draft kx s^\h*%\h*<ret> y jgh P }
         # preserve previous line indent
         try %{ execute-keys -draft K<a-&> }
         # cleanup trailing whitespaces from previous line
-        try %{ execute-keys -draft k<a-x> s\h+$<ret> d }
+        try %{ execute-keys -draft kx s\h+$<ret> d }
         # indent after line ending with {
-        try %( execute-keys -draft k<a-x> <a-k>\{$<ret> j<a-gt> )
+        try %( execute-keys -draft kx <a-k>\{$<ret> j<a-gt> )
         # deindent closing brace(s) when after cursor
-        try %( execute-keys -draft <a-x> <a-k> ^\h*\} <ret> gh / \} <ret> m <a-S> 1<a-&> )
+        try %( execute-keys -draft x <a-k> ^\h*\} <ret> gh / \} <ret> m <a-S> 1<a-&> )
         # indent after line ending with \begin{...}[...]{...}, with multiple
         # sets of arguments possible
         try %(
             execute-keys -draft \
-                k<a-x> \
+                kx \
                 <a-k>\\begin\h*\{[^\}]+\}(\h|\[.*\]|\{.*\})*$<ret> \
                 j<a-gt>
         )
@@ -85,7 +85,7 @@ define-command -hidden latex-indent-newline %(
 define-command -hidden latex-indent-closing-brace %(
     evaluate-commands -no-hooks -draft -itersel %(
         # Align lone } with matching bracket
-        try %( execute-keys -draft <a-x>_ <a-k>\A\}\z<ret> m<a-S>1<a-&> )
+        try %( execute-keys -draft x_ <a-k>\A\}\z<ret> m<a-S>1<a-&> )
         # Align \end{...} with corresponding \begin{...}
         try %(
             execute-keys -draft h<a-h> 1s\\end\h*\{([^\}]+)\}\z<ret> \
@@ -99,12 +99,12 @@ define-command -hidden latex-insert-on-new-line %(
         # Wisely add "\end{...}".
         evaluate-commands -save-regs xz %(
             # Save previous line indent in register x.
-            try %( execute-keys -draft k<a-x>s^\h+<ret>"xy ) catch %( reg x '' )
+            try %( execute-keys -draft kxs^\h+<ret>"xy ) catch %( reg x '' )
             # Save item of begin in register z.
-            try %( execute-keys -draft k<a-x>s\{.*\}<ret>"zy ) catch %( reg z '' )
+            try %( execute-keys -draft kxs\{.*\}<ret>"zy ) catch %( reg z '' )
             try %(
                 # Validate previous line and that it is not closed yet.
-                execute-keys -draft k<a-x> <a-k>^<c-r>x\h*\\begin\{.*\}<ret> J}iJ<a-x> <a-K>^<c-r>x(\\end\<c-r>z<backspace>\})<ret>
+                execute-keys -draft kx <a-k>^<c-r>x\h*\\begin\{.*\}<ret> J}iJx <a-K>^<c-r>x(\\end\<c-r>z<backspace>\})<ret>
                 # Auto insert "\end{...}".
                 execute-keys -draft o<c-r>x\end<c-r>z<esc>
             )

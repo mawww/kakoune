@@ -74,7 +74,7 @@ add-highlighter shared/graphql/object/field/expand-fragment regex '\.\.\.(?=\w)'
 
 define-command -hidden graphql-trim-indent %{
     # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel x s \h+$ <ret> d }
 }
 
 define-command -hidden graphql-indent-on-char %<
@@ -91,9 +91,9 @@ define-command -hidden graphql-indent-on-new-line %<
         # filter previous line
         try %{ execute-keys -draft k : graphql-trim-indent <ret> }
         # indent after lines ending with opener token
-        try %< execute-keys -draft k <a-x> <a-k> [[{]\h*$ <ret> j <a-gt> >
+        try %< execute-keys -draft k x <a-k> [[{]\h*$ <ret> j <a-gt> >
         # deindent closer token(s) when after cursor
-        try %< execute-keys -draft <a-x> <a-k> ^\h*[}\]] <ret> gh / [}\]] <ret> m <a-S> 1<a-&> >
+        try %< execute-keys -draft x <a-k> ^\h*[}\]] <ret> gh / [}\]] <ret> m <a-S> 1<a-&> >
     >
 >
 

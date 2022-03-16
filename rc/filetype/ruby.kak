@@ -143,7 +143,7 @@ define-command ruby-alternative-file -docstring 'Jump to the alternate file (imp
 
 define-command -hidden ruby-trim-indent %{
     evaluate-commands -no-hooks -draft -itersel %{
-        execute-keys <a-x>
+        execute-keys x
         # remove trailing white spaces
         try %{ execute-keys -draft s \h + $ <ret> d }
     }
@@ -152,10 +152,10 @@ define-command -hidden ruby-trim-indent %{
 define-command -hidden ruby-indent-on-char %{
     evaluate-commands -no-hooks -draft -itersel %{
         # align middle and end structures to start
-        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (else)   $ <ret> <a-a> i <a-semicolon> <a-?> ^ \h * (if|case)                                               <ret> <a-S> 1<a-&> }
-        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (elsif)  $ <ret> <a-a> i <a-semicolon> <a-?> ^ \h * (if)                                                    <ret> <a-S> 1<a-&> }
-        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (when)   $ <ret> <a-a> i <a-semicolon> <a-?> ^ \h * (case)                                                  <ret> <a-S> 1<a-&> }
-        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (rescue) $ <ret> <a-a> i <a-semicolon> <a-?> ^ \h * (begin|def)                                             <ret> <a-S> 1<a-&> }
+        try %{ execute-keys -draft x <a-k> ^ \h * (else)   $ <ret> <a-a> i <a-semicolon> <a-?> ^ \h * (if|case)                                               <ret> <a-S> 1<a-&> }
+        try %{ execute-keys -draft x <a-k> ^ \h * (elsif)  $ <ret> <a-a> i <a-semicolon> <a-?> ^ \h * (if)                                                    <ret> <a-S> 1<a-&> }
+        try %{ execute-keys -draft x <a-k> ^ \h * (when)   $ <ret> <a-a> i <a-semicolon> <a-?> ^ \h * (case)                                                  <ret> <a-S> 1<a-&> }
+        try %{ execute-keys -draft x <a-k> ^ \h * (rescue) $ <ret> <a-a> i <a-semicolon> <a-?> ^ \h * (begin|def)                                             <ret> <a-S> 1<a-&> }
     }
 }
 
@@ -166,23 +166,23 @@ define-command -hidden ruby-indent-on-new-line %{
         # filter previous line
         try %{ execute-keys -draft k : ruby-trim-indent <ret> }
         # indent after start structure
-        try %{ execute-keys -draft k <a-x> <a-k> ^ \h * (begin|case|class|def|else|elsif|ensure|for|if|module|rescue|unless|until|when|while|.+\bdo$|.+\bdo\h\|.+(?=\|)) [^0-9A-Za-z_!?] <ret> j <a-gt> }
+        try %{ execute-keys -draft k x <a-k> ^ \h * (begin|case|class|def|else|elsif|ensure|for|if|module|rescue|unless|until|when|while|.+\bdo$|.+\bdo\h\|.+(?=\|)) [^0-9A-Za-z_!?] <ret> j <a-gt> }
     }
 }
 
 define-command -hidden ruby-insert-on-new-line %[
     evaluate-commands -no-hooks -draft -itersel %[
         # copy _#_ comment prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y jgi P }
+        try %{ execute-keys -draft k x s ^\h*\K#\h* <ret> y jgi P }
         # wisely add end structure
         evaluate-commands -save-regs x %[
-            try %{ execute-keys -draft k <a-x> s ^ \h + <ret> \" x y } catch %{ reg x '' }
+            try %{ execute-keys -draft k x s ^ \h + <ret> \" x y } catch %{ reg x '' }
             try %[
                 evaluate-commands -draft %[
                     # Check if previous line opens a block
-                    execute-keys -draft k<a-x> <a-k>^<c-r>x(begin|case|class|def|for|if|module|unless|until|while|.+\bdo$|.+\bdo\h\|.+(?=\|))[^0-9A-Za-z_!?]<ret>
+                    execute-keys -draft kx <a-k>^<c-r>x(begin|case|class|def|for|if|module|unless|until|while|.+\bdo$|.+\bdo\h\|.+(?=\|))[^0-9A-Za-z_!?]<ret>
                     # Check that we do not already have an end for this indent level which is first set via `ruby-indent-on-new-line` hook
-                    execute-keys -draft }i J <a-x> <a-K> ^<c-r>x(end|else|elsif|rescue|when)[^0-9A-Za-z_!?]<ret>
+                    execute-keys -draft }i J x <a-K> ^<c-r>x(end|else|elsif|rescue|when)[^0-9A-Za-z_!?]<ret>
                 ]
                 execute-keys -draft o<c-r>xend<esc> # insert a new line with containing end
             ]

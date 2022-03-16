@@ -21,7 +21,7 @@ hook global WinSetOption filetype=kak %~
     hook window InsertChar [>)}\]] -group kak-indent kak-indent-on-closing-matching
     hook window InsertChar (?![[{(<>)}\]])[^\s\w] -group kak-indent kak-indent-on-closing-char
     # cleanup trailing whitespaces on current line insert end
-    hook window ModeChange pop:insert:.* -group kak-trim-indent %{ try %{ execute-keys -draft <semicolon> <a-x> s ^\h+$ <ret> d } }
+    hook window ModeChange pop:insert:.* -group kak-trim-indent %{ try %{ execute-keys -draft <semicolon> x s ^\h+$ <ret> d } }
     set-option buffer extra_word_chars '_' '-'
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window kak-.+ }
@@ -96,7 +96,7 @@ add-highlighter shared/kakrc/single_string/escape regex "''" 0:default+b
 define-command -hidden kak-insert-on-new-line %~
     evaluate-commands -draft -itersel %=
         # copy '#' comment prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
+        try %{ execute-keys -draft k x s ^\h*#\h* <ret> y jgh P }
     =
 ~
 
@@ -105,13 +105,13 @@ define-command -hidden kak-indent-on-new-line %~
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # cleanup trailing whitespaces from previous line
-        try %{ execute-keys -draft k <a-x> s \h+$ <ret> d }
+        try %{ execute-keys -draft k x s \h+$ <ret> d }
         # indent after line ending with %\w*[^\s\w]
-        try %{ execute-keys -draft k <a-x> <a-k> \%\w*[^\s\w]$ <ret> j <a-gt> }
+        try %{ execute-keys -draft k x <a-k> \%\w*[^\s\w]$ <ret> j <a-gt> }
         # deindent closing brace when after cursor
-        try %_ execute-keys -draft -itersel <a-x> <a-k> ^\h*([>)}\]]) <ret> gh / <c-r>1 <ret> m <a-S> 1<a-&> _
+        try %_ execute-keys -draft -itersel x <a-k> ^\h*([>)}\]]) <ret> gh / <c-r>1 <ret> m <a-S> 1<a-&> _
         # deindent closing char(s) 
-        try %{ execute-keys -draft -itersel <a-x> <a-k> ^\h*([^\s\w]) <ret> gh / <c-r>1 <ret> <a-?> <c-r>1 <ret> <a-T>% <a-k> \w*<c-r>1$ <ret> <a-S> 1<a-&> }
+        try %{ execute-keys -draft -itersel x <a-k> ^\h*([^\s\w]) <ret> gh / <c-r>1 <ret> <a-?> <c-r>1 <ret> <a-T>% <a-k> \w*<c-r>1$ <ret> <a-S> 1<a-&> }
     =
 ~
 

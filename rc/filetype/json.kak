@@ -43,7 +43,7 @@ add-highlighter shared/json/code/ regex \b(true|false|null|\d+(?:\.\d+)?(?:[eE][
 
 define-command -hidden json-trim-indent %{
     # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel x s \h+$ <ret> d }
 }
 
 define-command -hidden json-indent-on-char %<
@@ -60,9 +60,9 @@ define-command -hidden json-indent-on-new-line %<
         # filter previous line
         try %{ execute-keys -draft k : json-trim-indent <ret> }
         # indent after lines ending with opener token
-        try %< execute-keys -draft k <a-x> <a-k> [[{]\h*$ <ret> j <a-gt> >
+        try %< execute-keys -draft k x <a-k> [[{]\h*$ <ret> j <a-gt> >
         # deindent closer token(s) when after cursor
-        try %< execute-keys -draft <a-x> <a-k> ^\h*[}\]] <ret> gh / [}\]] <ret> m <a-S> 1<a-&> >
+        try %< execute-keys -draft x <a-k> ^\h*[}\]] <ret> gh / [}\]] <ret> m <a-S> 1<a-&> >
     >
 >
 

@@ -64,7 +64,7 @@ provide-module c-family %§
 
 define-command -hidden c-family-trim-indent %{
     # remove the line if it's empty when leaving the insert mode
-    try %{ execute-keys -draft <a-x> 1s^(\h+)$<ret> d }
+    try %{ execute-keys -draft x 1s^(\h+)$<ret> d }
 }
 
 define-command -hidden c-family-indent-on-newline %< evaluate-commands -draft -itersel %<
@@ -75,31 +75,31 @@ define-command -hidden c-family-indent-on-newline %< evaluate-commands -draft -i
     > catch %<
         # else if previous line closed a paren (possibly followed by words and a comment),
         # copy indent of the opening paren line
-        execute-keys -draft k<a-x> 1s(\))(\h+\w+)*\h*(\;\h*)?(?://[^\n]+)?\n\z<ret> m<a-semicolon>J <a-S> 1<a-&>
+        execute-keys -draft kx 1s(\))(\h+\w+)*\h*(\;\h*)?(?://[^\n]+)?\n\z<ret> m<a-semicolon>J <a-S> 1<a-&>
     > catch %<
         # else indent new lines with the same level as the previous one
         execute-keys -draft K <a-&>
     >
     # remove previous empty lines resulting from the automatic indent
-    try %< execute-keys -draft k <a-x> <a-k>^\h+$<ret> Hd >
+    try %< execute-keys -draft k x <a-k>^\h+$<ret> Hd >
     # indent after an opening brace or parenthesis at end of line
-    try %< execute-keys -draft k <a-x> <a-k>[{(]\h*$<ret> j <a-gt> >
+    try %< execute-keys -draft k x <a-k>[{(]\h*$<ret> j <a-gt> >
     # indent after a label
-    try %< execute-keys -draft k <a-x> s[a-zA-Z0-9_-]+:\h*$<ret> j <a-gt> >
+    try %< execute-keys -draft k x s[a-zA-Z0-9_-]+:\h*$<ret> j <a-gt> >
     # indent after a statement not followed by an opening brace
-    try %< execute-keys -draft k <a-x> s\)\h*(?://[^\n]+)?\n\z<ret> \
+    try %< execute-keys -draft k x s\)\h*(?://[^\n]+)?\n\z<ret> \
                                <a-semicolon>mB <a-k>\A\b(if|for|while)\b<ret> <a-semicolon>j <a-gt> >
-    try %< execute-keys -draft k <a-x> s \belse\b\h*(?://[^\n]+)?\n\z<ret> \
+    try %< execute-keys -draft k x s \belse\b\h*(?://[^\n]+)?\n\z<ret> \
                                j <a-gt> >
     # deindent after a single line statement end
-    try %< execute-keys -draft K <a-x> <a-k>\;\h*(//[^\n]+)?$<ret> \
-                               K <a-x> s\)(\h+\w+)*\h*(//[^\n]+)?\n([^\n]*\n){2}\z<ret> \
+    try %< execute-keys -draft K x <a-k>\;\h*(//[^\n]+)?$<ret> \
+                               K x s\)(\h+\w+)*\h*(//[^\n]+)?\n([^\n]*\n){2}\z<ret> \
                                MB <a-k>\A\b(if|for|while)\b<ret> <a-S>1<a-&> >
-    try %< execute-keys -draft K <a-x> <a-k>\;\h*(//[^\n]+)?$<ret> \
-                               K <a-x> s \belse\b\h*(?://[^\n]+)?\n([^\n]*\n){2}\z<ret> \
+    try %< execute-keys -draft K x <a-k>\;\h*(//[^\n]+)?$<ret> \
+                               K x s \belse\b\h*(?://[^\n]+)?\n([^\n]*\n){2}\z<ret> \
                                <a-S>1<a-&> >
     # deindent closing brace(s) when after cursor
-    try %< execute-keys -draft <a-x> <a-k> ^\h*[})] <ret> gh / [})] <esc> m <a-S> 1<a-&> >
+    try %< execute-keys -draft x <a-k> ^\h*[})] <ret> gh / [})] <esc> m <a-S> 1<a-&> >
     # align to the opening parenthesis or opening brace (whichever is first)
     # on a previous line if its followed by text on the same line
     try %< evaluate-commands -draft %<
@@ -118,7 +118,7 @@ define-command -hidden c-family-indent-on-opening-curly-brace %[
     # align indent with opening paren when { is entered on a new line after the closing paren
     try %[ execute-keys -draft -itersel h<a-F>)M <a-k> \A\(.*\)\h*\n\h*\{\z <ret> <a-S> 1<a-&> ]
     # align indent with opening paren when { is entered on a new line after the else
-    try %[ execute-keys -draft -itersel hK <a-x> s \belse\b\h*(?://[^\n]+)?\n\h*\{<ret> <a-S> 1<a-&> ]
+    try %[ execute-keys -draft -itersel hK x s \belse\b\h*(?://[^\n]+)?\n\h*\{<ret> <a-S> 1<a-&> ]
 ]
 
 define-command -hidden c-family-indent-on-closing-curly-brace %[
@@ -134,7 +134,7 @@ define-command -hidden c-family-indent-on-closing-curly-brace %[
 
 define-command -hidden c-family-insert-on-closing-curly-brace %[
     # add a semicolon after a closing brace if part of a class, union or struct definition
-    try %[ execute-keys -itersel -draft hm<a-x>B<a-x> <a-K>\A[^\n]+\)\h*(\{|$)<ret> <a-k>\A\h*(class|struct|union|enum)<ret> '<a-;>;i;<esc>' ]
+    try %[ execute-keys -itersel -draft hmxBx <a-K>\A[^\n]+\)\h*(\{|$)<ret> <a-k>\A\h*(class|struct|union|enum)<ret> '<a-;>;i;<esc>' ]
 ]
 
 define-command -hidden c-family-insert-on-newline %[ evaluate-commands -itersel -draft %[
@@ -142,10 +142,10 @@ define-command -hidden c-family-insert-on-newline %[ evaluate-commands -itersel 
     try %[
         evaluate-commands -draft -save-regs '/"' %[
             # copy the commenting prefix
-            execute-keys -save-regs '' k <a-x>1s^\h*(//+\h*)<ret> y
+            execute-keys -save-regs '' k x1s^\h*(//+\h*)<ret> y
             try %[
                 # if the previous comment isn't empty, create a new one
-                execute-keys <a-x><a-K>^\h*//+\h*$<ret> j<a-x>s^\h*<ret>P
+                execute-keys x<a-K>^\h*//+\h*$<ret> jxs^\h*<ret>P
             ] catch %[
                 # if there is no text in the previous comment, remove it completely
                 execute-keys d
@@ -153,28 +153,28 @@ define-command -hidden c-family-insert-on-newline %[ evaluate-commands -itersel 
         ]
 
         # trim trailing whitespace on the previous line
-        try %[ execute-keys -draft k <a-x> s\h+$<ret> d ]
+        try %[ execute-keys -draft k x s\h+$<ret> d ]
     ]
     try %[
         # if the previous line isn't within a comment scope, break
-        execute-keys -draft k<a-x> <a-k>^(\h*/\*|\h+\*(?!/))<ret>
+        execute-keys -draft kx <a-k>^(\h*/\*|\h+\*(?!/))<ret>
 
         # find comment opening, validate it was not closed, and check its using star prefixes
         execute-keys -draft <a-?>/\*<ret><a-H> <a-K>\*/<ret> <a-k>\A\h*/\*([^\n]*\n\h*\*)*[^\n]*\n\h*.\z<ret>
 
         try %[
             # if the previous line is opening the comment, insert star preceeded by space
-            execute-keys -draft k<a-x><a-k>^\h*/\*<ret>
+            execute-keys -draft kx<a-k>^\h*/\*<ret>
             execute-keys -draft i*<space><esc>
         ] catch %[
            try %[
                 # if the next line is a comment line insert a star
-                execute-keys -draft j<a-x><a-k>^\h+\*<ret>
+                execute-keys -draft jx<a-k>^\h+\*<ret>
                 execute-keys -draft i*<space><esc>
             ] catch %[
                 try %[
                     # if the previous line is an empty comment line, close the comment scope
-                    execute-keys -draft k<a-x><a-k>^\h+\*\h+$<ret> <a-x>1s\*(\h*)<ret>c/<esc>
+                    execute-keys -draft kx<a-k>^\h+\*\h+$<ret> x1s\*(\h*)<ret>c/<esc>
                 ] catch %[
                     # if the previous line is a non-empty comment line, add a star
                     execute-keys -draft i*<space><esc>
@@ -183,9 +183,9 @@ define-command -hidden c-family-insert-on-newline %[ evaluate-commands -itersel 
         ]
 
         # trim trailing whitespace on the previous line
-        try %[ execute-keys -draft k <a-x> s\h+$<ret> d ]
+        try %[ execute-keys -draft k x s\h+$<ret> d ]
         # align the new star with the previous one
-        execute-keys K<a-x>1s^[^*]*(\*)<ret>&
+        execute-keys Kx1s^[^*]*(\*)<ret>&
     ]
 ] ]
 

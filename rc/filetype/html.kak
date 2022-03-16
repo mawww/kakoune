@@ -64,7 +64,7 @@ add-highlighter shared/html/tag/base/ regex <(!DOCTYPE(\h+\w+)+) 1:meta
 
 define-command -hidden html-trim-indent %{
     # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel x s \h+$ <ret> d }
 }
 
 define-command -hidden html-indent-on-greater-than %[
@@ -81,7 +81,7 @@ define-command -hidden html-indent-on-new-line %{
         # filter previous line
         try %{ execute-keys -draft k : html-trim-indent <ret> }
         # indent after lines ending with opening tag except when it starts with a closing tag
-        try %{ execute-keys -draft k <a-x> <a-k> <lt>(?!area)(?!base)(?!br)(?!col)(?!command)(?!embed)(?!hr)(?!img)(?!input)(?!keygen)(?!link)(?!menuitem)(?!meta)(?!param)(?!source)(?!track)(?!wbr)(?!/)(?!>)[a-zA-Z0-9_-]+[^>]*?>$ <ret>j<a-x><a-K>^\s*<lt>/<ret><a-gt> } }
+        try %{ execute-keys -draft k x <a-k> <lt>(?!area)(?!base)(?!br)(?!col)(?!command)(?!embed)(?!hr)(?!img)(?!input)(?!keygen)(?!link)(?!menuitem)(?!meta)(?!param)(?!source)(?!track)(?!wbr)(?!/)(?!>)[a-zA-Z0-9_-]+[^>]*?>$ <ret>jx<a-K>^\s*<lt>/<ret><a-gt> } }
 }
 
 ]

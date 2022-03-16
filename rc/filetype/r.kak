@@ -56,7 +56,7 @@ add-highlighter shared/r/code/ regex (?<=[\w\s\d'"_)])(\$|@|\^|-|\+|%[^%^\n]+%|\
 
 define-command -hidden r-trim-indent %{
     # remove the line if it's empty when leaving the insert mode
-    try %{ execute-keys -draft <a-x> 1s^(\h+)$<ret> d }
+    try %{ execute-keys -draft x 1s^(\h+)$<ret> d }
 }
 
 define-command -hidden r-indent-on-newline %< evaluate-commands -draft -itersel %<
@@ -64,26 +64,26 @@ define-command -hidden r-indent-on-newline %< evaluate-commands -draft -itersel 
     try %<
         # if previous line closed a paren (possibly followed by words and a comment),
         # copy indent of the opening paren line
-        execute-keys -draft k<a-x> 1s(\))(\h+\w+)*\h*(\;\h*)?(?:#[^\n]+)?\n\z<ret> m<a-semicolon>J <a-S> 1<a-&>
+        execute-keys -draft kx 1s(\))(\h+\w+)*\h*(\;\h*)?(?:#[^\n]+)?\n\z<ret> m<a-semicolon>J <a-S> 1<a-&>
     > catch %<
         # else indent new lines with the same level as the previous one
         execute-keys -draft K <a-&>
     >
     # remove previous empty lines resulting from the automatic indent
-    try %< execute-keys -draft k <a-x> <a-k>^\h+$<ret> Hd >
+    try %< execute-keys -draft k x <a-k>^\h+$<ret> Hd >
     # indent after an opening brace or parenthesis at end of line
-    try %< execute-keys -draft k <a-x> s[{(]\h*$<ret> j <a-gt> >
+    try %< execute-keys -draft k x s[{(]\h*$<ret> j <a-gt> >
     # indent after a statement not followed by an opening brace
-    try %< execute-keys -draft k <a-x> s\)\h*(?:#[^\n]+)?\n\z<ret> \
+    try %< execute-keys -draft k x s\)\h*(?:#[^\n]+)?\n\z<ret> \
                                <a-semicolon>mB <a-k>\A\b(if|for|while)\b<ret> <a-semicolon>j <a-gt> >
-    try %< execute-keys -draft k <a-x> s \belse\b\h*(?:#[^\n]+)?\n\z<ret> \
+    try %< execute-keys -draft k x s \belse\b\h*(?:#[^\n]+)?\n\z<ret> \
                                j <a-gt> >
     # deindent after a single line statement end
-    try %< execute-keys -draft K <a-x> <a-k>\;\h*(#[^\n]+)?$<ret> \
-                               K <a-x> s\)(\h+\w+)*\h*(#[^\n]+)?\n([^\n]*\n){2}\z<ret> \
+    try %< execute-keys -draft K x <a-k>\;\h*(#[^\n]+)?$<ret> \
+                               K x s\)(\h+\w+)*\h*(#[^\n]+)?\n([^\n]*\n){2}\z<ret> \
                                MB <a-k>\A\b(if|for|while)\b<ret> <a-S>1<a-&> >
-    try %< execute-keys -draft K <a-x> <a-k>\;\h*(#[^\n]+)?$<ret> \
-                               K <a-x> s \belse\b\h*(?:#[^\n]+)?\n([^\n]*\n){2}\z<ret> \
+    try %< execute-keys -draft K x <a-k>\;\h*(#[^\n]+)?$<ret> \
+                               K x s \belse\b\h*(?:#[^\n]+)?\n([^\n]*\n){2}\z<ret> \
                                <a-S>1<a-&> >
     # align to the opening parenthesis or opening brace (whichever is first)
     # on a previous line if its followed by text on the same line
@@ -120,10 +120,10 @@ define-command -hidden r-insert-on-newline %[ evaluate-commands -itersel -draft 
     try %[
         evaluate-commands -draft -save-regs '/"' %[
             # copy the commenting prefix
-            execute-keys -save-regs '' k <a-x>1s^\h*(#+\h*)<ret> y
+            execute-keys -save-regs '' k x1s^\h*(#+\h*)<ret> y
             try %[
                 # if the previous comment isn't empty, create a new one
-                execute-keys <a-x><a-K>^\h*#+\h*$<ret> j<a-x>s^\h*<ret>P
+                execute-keys x<a-K>^\h*#+\h*$<ret> jxs^\h*<ret>P
             ] catch %[
                 # if there is no text in the previous comment, remove it completely
                 execute-keys d

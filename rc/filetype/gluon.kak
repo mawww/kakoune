@@ -76,13 +76,13 @@ add-highlighter shared/gluon/code/ regex \B'([^\\]|[\\]['"\w\d\\])' 0:string
 
 define-command -hidden gluon-trim-indent %{
     # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel x s \h+$ <ret> d }
 }
 
 define-command -hidden gluon-insert-on-new-line %~
     evaluate-commands -draft -itersel %_
         # copy // and /// comments prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*\K///?\h* <ret> y gh j P }
+        try %{ execute-keys -draft k x s ^\h*\K///?\h* <ret> y gh j P }
     _
 ~
 
@@ -96,7 +96,7 @@ define-command -hidden gluon-indent-on-new-line %~
         # or in
         try %{ execute-keys -draft \; k x <a-k> (\(|\{|\[|=|->|\b(?:then|else|rec|in))$ <ret> j <a-gt> }
         # deindent closing brace(s) when after cursor
-        try %< execute-keys -draft <a-x> <a-k> ^\h*[})\]] <ret> gh / \})\]] <ret> m <a-S> 1<a-&> >
+        try %< execute-keys -draft x <a-k> ^\h*[})\]] <ret> gh / \})\]] <ret> m <a-S> 1<a-&> >
     _
 ~
 

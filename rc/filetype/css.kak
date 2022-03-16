@@ -112,7 +112,7 @@ add-highlighter shared/css/attr_selector/single_string region "'"  (?<!\\)(\\\\)
 
 define-command -hidden css-trim-indent %{
     # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel x s \h+$ <ret> d }
 }
 
 define-command -hidden css-indent-on-new-line %[
@@ -124,17 +124,17 @@ define-command -hidden css-indent-on-new-line %[
         > catch %<
             # else if previous line closed a paren (possibly followed by words and a comment),
             # copy indent of the opening paren line
-            execute-keys -draft k<a-x> 1s(\))(\h+\w+)*\h*(\;\h*)?(?://[^\n]+)?\n\z<ret> m<a-semicolon>J <a-S> 1<a-&>
+            execute-keys -draft kx 1s(\))(\h+\w+)*\h*(\;\h*)?(?://[^\n]+)?\n\z<ret> m<a-semicolon>J <a-S> 1<a-&>
         > catch %<
             # else indent new lines with the same level as the previous one
             execute-keys -draft K <a-&>
         >
         # filter previous line
-        try %< execute-keys -draft k <a-x> <a-k>^\h+$<ret> Hd >
+        try %< execute-keys -draft k x <a-k>^\h+$<ret> Hd >
         # indent after lines ending with with {
-        try %[ execute-keys -draft k <a-x> <a-k> \{$ <ret> j <a-gt> ]
+        try %[ execute-keys -draft k x <a-k> \{$ <ret> j <a-gt> ]
         # deindent closing brace when after cursor
-        try %[ execute-keys -draft <a-x> <a-k> ^\h*\} <ret> gh / \} <ret> m <a-S> 1<a-&> ]
+        try %[ execute-keys -draft x <a-k> ^\h*\} <ret> gh / \} <ret> m <a-S> 1<a-&> ]
     ]
 ]
 
@@ -143,24 +143,24 @@ define-command -hidden css-insert-on-new-line %[
     execute-keys <semicolon>
     try %[
         # if the previous line isn't within a comment scope, break
-        execute-keys -draft k<a-x> <a-k>^(\h*/\*|\h+\*(?!/))<ret>
+        execute-keys -draft kx <a-k>^(\h*/\*|\h+\*(?!/))<ret>
 
         # find comment opening, validate it was not closed, and check its using star prefixes
         execute-keys -draft <a-?>/\*<ret><a-H> <a-K>\*/<ret> <a-k>\A\h*/\*([^\n]*\n\h*\*)*[^\n]*\n\h*.\z<ret>
 
         try %[
             # if the previous line is opening the comment, insert star preceeded by space
-            execute-keys -draft k<a-x><a-k>^\h*/\*<ret>
+            execute-keys -draft kx<a-k>^\h*/\*<ret>
             execute-keys -draft i*<space><esc>
         ] catch %[
            try %[
                 # if the next line is a comment line insert a star
-                execute-keys -draft j<a-x><a-k>^\h+\*<ret>
+                execute-keys -draft jx<a-k>^\h+\*<ret>
                 execute-keys -draft i*<space><esc>
             ] catch %[
                 try %[
                     # if the previous line is an empty comment line, close the comment scope
-                    execute-keys -draft k<a-x><a-k>^\h+\*\h+$<ret> <a-x>1s\*(\h*)<ret>c/<esc>
+                    execute-keys -draft kx<a-k>^\h+\*\h+$<ret> x1s\*(\h*)<ret>c/<esc>
                 ] catch %[
                     # if the previous line is a non-empty comment line, add a star
                     execute-keys -draft i*<space><esc>
@@ -171,7 +171,7 @@ define-command -hidden css-insert-on-new-line %[
         # trim trailing whitespace on the previous line
         try %[ execute-keys -draft s\h+$<ret> d ]
         # align the new star with the previous one
-        execute-keys K<a-x>1s^[^*]*(\*)<ret>&
+        execute-keys Kx1s^[^*]*(\*)<ret>&
     ]
     >
 ]

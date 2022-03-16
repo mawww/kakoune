@@ -45,9 +45,9 @@ define-command -hidden taskpaper-indent-on-new-line %{
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon>K<a-&> }
         ## If the line above is a project indent with a tab
-        try %{ execute-keys -draft Z k<a-x> <a-k>^\h*([^:\n]+):<ret> z i<tab> }
+        try %{ execute-keys -draft Z kx <a-k>^\h*([^:\n]+):<ret> z i<tab> }
         # cleanup trailing white spaces on previous line
-        try %{ execute-keys -draft k<a-x> s \h+$ <ret>d }
+        try %{ execute-keys -draft kx s \h+$ <ret>d }
     }
 }
 

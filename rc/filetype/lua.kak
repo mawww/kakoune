@@ -87,7 +87,7 @@ define-command lua-alternative-file -docstring 'Jump to the alternate file (impl
 
 define-command -hidden lua-trim-indent %[
     # remove trailing whitespaces
-    try %[ execute-keys -draft -itersel <a-x> s \h+$ <ret> d ]
+    try %[ execute-keys -draft -itersel x s \h+$ <ret> d ]
 ]
 
 define-command -hidden lua-indent-on-char %[
@@ -112,7 +112,7 @@ define-command -hidden lua-indent-on-new-line %[
         #     - or contains an unclosed function expression,
         #     - or ends with an enclosed '(' or '{'
         try %[ execute-keys -draft \
-            <space> K<a-x> \
+            <space> Kx \
             <a-K>\A\h*--<ret> \
             <a-K>\A[^\n]*\b(end|until)\b<ret> \
             <a-k>\A(\h*\b(do|else|elseif|for|function|if|repeat|while)\b|[^\n]*[({]$|[^\n]*\bfunction\b\h*[(])<ret> \
@@ -124,23 +124,23 @@ define-command -hidden lua-indent-on-new-line %[
 define-command -hidden lua-insert-on-new-line %[
     evaluate-commands -no-hooks -draft -itersel %[
         # copy -- comment prefix and following white spaces
-        try %[ execute-keys -draft k<a-x>s^\h*\K--\h*<ret> y gh j <a-x><semicolon> P ]
+        try %[ execute-keys -draft kxs^\h*\K--\h*<ret> y gh j x<semicolon> P ]
         # wisely add end structure
         evaluate-commands -save-regs x %[
             # save previous line indent in register x
-            try %[ execute-keys -draft k<a-x>s^\h+<ret>"xy ] catch %[ reg x '' ]
+            try %[ execute-keys -draft kxs^\h+<ret>"xy ] catch %[ reg x '' ]
             try %[
                 # check that starts with a block keyword that is not closed on the same line
                 execute-keys -draft \
-                    k<a-x> \
+                    kx \
                     <a-k>^\h*\b(else|elseif|do|for|function|if|while)\b|[^\n]\bfunction\b\h*[(]<ret> \
                     <a-K>\bend\b<ret>
                 # check that the block is empty and is not closed on a different line
-                execute-keys -draft <a-a>i <a-K>^[^\n]+\n[^\n]+\n<ret> j<a-x> <a-K>^<c-r>x\b(else|elseif|end)\b<ret>
+                execute-keys -draft <a-a>i <a-K>^[^\n]+\n[^\n]+\n<ret> jx <a-K>^<c-r>x\b(else|elseif|end)\b<ret>
                 # auto insert end
                 execute-keys -draft o<c-r>xend<esc>
                 # auto insert ) for anonymous function
-                execute-keys -draft k<a-x><a-k>\([^)\n]*function\b<ret>jjA)<esc>
+                execute-keys -draft kx<a-k>\([^)\n]*function\b<ret>jjA)<esc>
             ]
         ]
     ]

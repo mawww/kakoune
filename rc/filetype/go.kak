@@ -17,7 +17,7 @@ hook global WinSetOption filetype=go %{
     set-option window static_words %opt{go_static_words}
 
     # cleanup trailing whitespaces when exiting insert mode
-    hook window ModeChange pop:insert:.* -group go-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
+    hook window ModeChange pop:insert:.* -group go-trim-indent %{ try %{ execute-keys -draft xs^\h+$<ret>d } }
     hook window InsertChar \n -group go-indent go-indent-on-new-line
     hook window InsertChar \{ -group go-indent go-indent-on-opening-curly-brace
     hook window InsertChar \} -group go-indent go-indent-on-closing-curly-brace
@@ -102,15 +102,15 @@ define-command -hidden go-indent-on-new-line %~
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon>K<a-&> }
         # indent after lines ending with { or (
-        try %[ execute-keys -draft k<a-x> <a-k> [{(]\h*$ <ret> j<a-gt> ]
+        try %[ execute-keys -draft kx <a-k> [{(]\h*$ <ret> j<a-gt> ]
         # cleanup trailing white spaces on the previous line
-        try %{ execute-keys -draft k<a-x> s \h+$ <ret>d }
+        try %{ execute-keys -draft kx s \h+$ <ret>d }
         # align to opening paren of previous line
         try %{ execute-keys -draft [( <a-k> \A\([^\n]+\n[^\n]*\n?\z <ret> s \A\(\h*.|.\z <ret> '<a-;>' & }
         # indent after a switch's case/default statements
-        try %[ execute-keys -draft k<a-x> <a-k> ^\h*(case|default).*:$ <ret> j<a-gt> ]
+        try %[ execute-keys -draft kx <a-k> ^\h*(case|default).*:$ <ret> j<a-gt> ]
         # deindent closing brace(s) when after cursor
-        try %[ execute-keys -draft <a-x> <a-k> ^\h*[})] <ret> gh / [})] <ret> m <a-S> 1<a-&> ]
+        try %[ execute-keys -draft x <a-k> ^\h*[})] <ret> gh / [})] <ret> m <a-S> 1<a-&> ]
     =
 ~
 
@@ -127,33 +127,33 @@ define-command -hidden go-indent-on-closing-curly-brace %[
 define-command -hidden go-insert-on-new-line %[
     evaluate-commands -no-hooks -draft -itersel %[
         # copy // comments prefix and following white spaces
-        try %{ execute-keys -draft <semicolon><c-s>k<a-x> s ^\h*\K/{2,}\h* <ret> y<c-o>P<esc> }
+        try %{ execute-keys -draft <semicolon><c-s>kx s ^\h*\K/{2,}\h* <ret> y<c-o>P<esc> }
 
         # Wisely add '}'.
         evaluate-commands -save-regs x %[
             # Save previous line indent in register x.
-            try %[ execute-keys -draft k<a-x>s^\h+<ret>"xy ] catch %[ reg x '' ]
+            try %[ execute-keys -draft kxs^\h+<ret>"xy ] catch %[ reg x '' ]
             try %[
                 # Validate previous line and that it is not closed yet.
-                execute-keys -draft k<a-x> <a-k>^<c-r>x.*\{\h*\(?\h*$<ret> j}iJ<a-x> <a-K>^<c-r>x\)?\h*\}<ret>
+                execute-keys -draft kx <a-k>^<c-r>x.*\{\h*\(?\h*$<ret> j}ijx <a-K>^<c-r>x\)?\h*\}<ret>
                 # Insert closing '}'.
                 execute-keys -draft o<c-r>x}<esc>
                 # Delete trailing '}' on the line below the '{'.
-                execute-keys -draft Xs\}$<ret>d
+                execute-keys -draft xs\}$<ret>d
             ]
         ]
 
         # Wisely add ')'.
         evaluate-commands -save-regs x %[
             # Save previous line indent in register x.
-            try %[ execute-keys -draft k<a-x>s^\h+<ret>"xy ] catch %[ reg x '' ]
+            try %[ execute-keys -draft kxs^\h+<ret>"xy ] catch %[ reg x '' ]
             try %[
                 # Validate previous line and that it is not closed yet.
-                execute-keys -draft k<a-x> <a-k>^<c-r>x.*\(\h*$<ret> J}iJ<a-x> <a-K>^<c-r>x\)<ret>
+                execute-keys -draft kx <a-k>^<c-r>x.*\(\h*$<ret> J}iJx <a-K>^<c-r>x\)<ret>
                 # Insert closing ')'.
                 execute-keys -draft o<c-r>x)<esc>
                 # Delete trailing ')' on the line below the '('.
-                execute-keys -draft Xs\)\h*\}?\h*$<ret>d
+                execute-keys -draft xs\)\h*\}?\h*$<ret>d
             ]
         ]
     ]

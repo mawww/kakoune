@@ -80,7 +80,7 @@ define-command moon-alternative-file -docstring 'Jump to the alternate file (imp
 
 define-command -hidden moon-trim-indent %{
     evaluate-commands -draft -itersel %{
-        execute-keys <a-x>
+        execute-keys x
         # remove trailing white spaces
         try %{ execute-keys -draft s \h + $ <ret> d }
     }
@@ -89,18 +89,18 @@ define-command -hidden moon-trim-indent %{
 define-command -hidden moon-indent-on-char %{
     evaluate-commands -draft -itersel %{
         # align _else_ statements to start
-        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (else(if)?) $ <ret> <a-semicolon> <a-?> ^ \h * (if|unless|when) <ret> s \A | \z <ret> ) <a-&> }
+        try %{ execute-keys -draft x <a-k> ^ \h * (else(if)?) $ <ret> <a-semicolon> <a-?> ^ \h * (if|unless|when) <ret> s \A | \z <ret> ) <a-&> }
         # align _when_ to _switch_ then indent
-        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (when) $ <ret> <a-semicolon> <a-?> ^ \h * (switch) <ret> s \A | \z <ret> ) <a-&> ) <space> <gt> }
+        try %{ execute-keys -draft x <a-k> ^ \h * (when) $ <ret> <a-semicolon> <a-?> ^ \h * (switch) <ret> s \A | \z <ret> ) <a-&> ) <space> <gt> }
         # align _catch_ and _finally_ to _try_
-        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (catch|finally) $ <ret> <a-semicolon> <a-?> ^ \h * (try) <ret> s \A | \z <ret> ) <a-&> }
+        try %{ execute-keys -draft x <a-k> ^ \h * (catch|finally) $ <ret> <a-semicolon> <a-?> ^ \h * (try) <ret> s \A | \z <ret> ) <a-&> }
     }
 }
 
 define-command -hidden moon-insert-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy -- comment prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P }
+        try %{ execute-keys -draft k x s ^\h*\K--\h* <ret> y gh j P }
     }
 }
 
@@ -111,9 +111,9 @@ define-command -hidden moon-indent-on-new-line %{
         # filter previous line
         try %{ execute-keys -draft k : moon-trim-indent <ret> }
         # indent after start structure
-        try %{ execute-keys -draft k <a-x> <a-k> ^ \h * (class|else(if)?|for|if|switch|unless|when|while|with) \b | ([:=]|[-=]>) $ <ret> j <a-gt> }
+        try %{ execute-keys -draft k x <a-k> ^ \h * (class|else(if)?|for|if|switch|unless|when|while|with) \b | ([:=]|[-=]>) $ <ret> j <a-gt> }
         # deindent after return statements
-        try %{ execute-keys -draft k <a-x> <a-k> ^ \h * (break|return) \b <ret> j <a-lt> }
+        try %{ execute-keys -draft k x <a-k> ^ \h * (break|return) \b <ret> j <a-lt> }
     }
 }
 

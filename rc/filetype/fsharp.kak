@@ -128,7 +128,7 @@ add-highlighter shared/fsharp/code/ regex "\B(\(\))\B" 0:value
 define-command -hidden fsharp-insert-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy // comments prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*//\h* <ret> y jgh P }
+        try %{ execute-keys -draft k x s ^\h*//\h* <ret> y jgh P }
     }
 }
 
@@ -137,11 +137,11 @@ define-command -hidden fsharp-indent-on-new-line %{
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # cleanup trailing whitespaces from previous line
-        try %{ execute-keys -draft k <a-x> s \h+$ <ret> d }
+        try %{ execute-keys -draft k x s \h+$ <ret> d }
         # indent after line ending with =
-        try %{ execute-keys -draft <space> k <a-x> <a-k> =$ <ret> j <a-gt> }
+        try %{ execute-keys -draft <space> k x <a-k> =$ <ret> j <a-gt> }
         # indent after line ending with "do"
-        try %{ execute-keys -draft <space> k <a-x> <a-k> \bdo$ <ret> j <a-gt> }
+        try %{ execute-keys -draft <space> k x <a-k> \bdo$ <ret> j <a-gt> }
     }
 }
 

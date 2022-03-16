@@ -129,14 +129,14 @@ define-command -hidden ledger-indent-on-new-line %[
         # preserve previous line indent
         try %[ execute-keys -draft <semicolon> K <a-&> ]
         # cleanup trailing whitespaces from previous line
-        try %[ execute-keys -draft k <a-x> s \h+$ <ret> d ]
+        try %[ execute-keys -draft k x s \h+$ <ret> d ]
         # indent after the first line of a transaction
-        try %[ execute-keys -draft k<a-x> <a-k>^[0-9]<ret> j<a-gt> ]
+        try %[ execute-keys -draft kx <a-k>^[0-9]<ret> j<a-gt> ]
     ]
 ]
 
 define-command -hidden ledger-trim-indent %{
-    try %{ execute-keys -draft <semicolon> <a-x> s ^\h+$ <ret> d }
+    try %{ execute-keys -draft <semicolon> x s ^\h+$ <ret> d }
 }
 
 ]

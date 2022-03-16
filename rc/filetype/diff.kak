@@ -32,7 +32,7 @@ define-command diff-jump -params .. -docstring %{
         set-register c %val{cursor_column}
         # If there is a "diff" line, we don't need to look further back.
         try %{
-            execute-keys %{<a-l><semicolon><a-?>^(?:> )*diff\b<ret><a-x>}
+            execute-keys %{<a-l><semicolon><a-?>^(?:> )*diff\b<ret>x}
         } catch %{
             # A single file diff won't have a diff line. Start parsing from
             # the buffer start, so we can tell if +++/--- lines are headers

@@ -57,13 +57,13 @@ add-highlighter shared/scala/code/ regex (\[|\]|=>|<:|:>|=:=|::|&&|\|\|) 0:opera
 
 define-command -hidden scala-trim-indent %{
     # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel x s \h+$ <ret> d }
 }
 
 define-command -hidden scala-insert-on-new-line %[
     evaluate-commands -draft -itersel %[
         # copy // comments prefix and following white spaces
-        try %{ execute-keys -draft <semicolon><c-s>k<a-x> s ^\h*\K#\h* <ret> y<c-o>P<esc> }
+        try %{ execute-keys -draft <semicolon><c-s>kx s ^\h*\K#\h* <ret> y<c-o>P<esc> }
     ]
 ]
 
@@ -74,9 +74,9 @@ define-command -hidden scala-indent-on-new-line %[
         # filter previous line
         try %[ execute-keys -draft k : scala-trim-indent <ret> ]
         # indent after lines ending with {
-        try %[ execute-keys -draft k <a-x> <a-k> \{$ <ret> j <a-gt> ]
+        try %[ execute-keys -draft k x <a-k> \{$ <ret> j <a-gt> ]
         # deindent closing brace when after cursor
-        try %[ execute-keys -draft <a-x> <a-k> ^\h*\} <ret> gh / \} <ret> m <a-S> 1<a-&> ]
+        try %[ execute-keys -draft x <a-k> ^\h*\} <ret> gh / \} <ret> m <a-S> 1<a-&> ]
     ]
 ]
 

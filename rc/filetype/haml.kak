@@ -54,13 +54,13 @@ add-highlighter shared/haml/code/ regex ^\h*%([A-Za-z][A-Za-z0-9_-]*)([#.][A-Za-
 
 define-command -hidden haml-trim-indent %{
     # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel x s \h+$ <ret> d }
 }
 
 define-command -hidden haml-insert-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy '/' comment prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*\K/\h* <ret> y gh j P }
+        try %{ execute-keys -draft k x s ^\h*\K/\h* <ret> y gh j P }
     }
 }
 
@@ -71,7 +71,7 @@ define-command -hidden haml-indent-on-new-line %{
         # filter previous line
         try %{ execute-keys -draft k : haml-trim-indent <ret> }
         # indent after lines beginning with : or -
-        try %{ execute-keys -draft k <a-x> <a-k> ^\h*[:-] <ret> j <a-gt> }
+        try %{ execute-keys -draft k x <a-k> ^\h*[:-] <ret> j <a-gt> }
     }
 }
 

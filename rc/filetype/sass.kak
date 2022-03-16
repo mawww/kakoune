@@ -53,7 +53,7 @@ add-highlighter shared/sass/code/ regex !important 0:keyword
 
 define-command -hidden sass-trim-indent %{
     # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel x s \h+$ <ret> d }
 }
 
 define-command -hidden sass-indent-on-closing-brace %<
@@ -66,7 +66,7 @@ define-command -hidden sass-indent-on-closing-brace %<
 define-command -hidden sass-insert-on-new-line %<
     evaluate-commands -draft -itersel %<
         # copy // comment prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*\K/{2,}\h* <ret> y gh j P }
+        try %{ execute-keys -draft k x s ^\h*\K/{2,}\h* <ret> y gh j P }
     >
 >
 
@@ -77,9 +77,9 @@ define-command -hidden sass-indent-on-new-line %<
         # filter previous line
         try %{ execute-keys -draft k : sass-trim-indent <ret> }
         # avoid indent after properties and comments
-        try %{ execute-keys -draft k <a-x> <a-K> [:/] <ret> j <a-gt> }
+        try %{ execute-keys -draft k x <a-K> [:/] <ret> j <a-gt> }
         # deindent closing brace when after cursor
-        try %[ execute-keys -draft <a-x> <a-k> ^\h*\} <ret> gh / \} <ret> m <a-S> 1<a-&> ]
+        try %[ execute-keys -draft x <a-k> ^\h*\} <ret> gh / \} <ret> m <a-S> 1<a-&> ]
     >
 >
 
