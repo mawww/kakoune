@@ -117,7 +117,7 @@ define-command -hidden modeline-parse-impl %{
 define-command modeline-parse -docstring "Read and interpret vi-format modelines at the beginning/end of the buffer" %{
     try %{ evaluate-commands -draft %{
         execute-keys <percent> "s(?S)\A(.+\n){,%opt{modelines}}|(.+\n){,%opt{modelines}}\z<ret>" \
-             s^\S*?\s+?\w+:\s?[^\n]+<ret> <a-x>
+             s^\S*?\s+?\w+:\s?[^\n]+<ret> x
         evaluate-commands -draft -itersel modeline-parse-impl
     } }
 }

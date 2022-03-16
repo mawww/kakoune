@@ -94,13 +94,13 @@ add-highlighter shared/purescript/code/ regex ^\s*(?:where\s+|let\s+|default\s+)
 
 define-command -hidden purescript-trim-indent %{
     # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel x s \h+$ <ret> d }
 }
 
 define-command -hidden purescript-insert-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy -- comments prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P }
+        try %{ execute-keys -draft k x s ^\h*\K--\h* <ret> y gh j P }
     }
 }
 

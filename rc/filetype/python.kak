@@ -19,7 +19,7 @@ hook global WinSetOption filetype=python %{
     hook window InsertChar \n -group python-insert python-insert-on-new-line
     hook window InsertChar \n -group python-indent python-indent-on-new-line
     # cleanup trailing whitespaces on current line insert end
-    hook window ModeChange pop:insert:.* -group python-trim-indent %{ try %{ execute-keys -draft <semicolon> <a-x> s ^\h+$ <ret> d } }
+    hook window ModeChange pop:insert:.* -group python-trim-indent %{ try %{ execute-keys -draft <semicolon> x s ^\h+$ <ret> d } }
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window python-.+ }
 }
 
@@ -149,7 +149,7 @@ add-highlighter shared/python/code/ regex ^\h*(?:from|import)\h+(\S+) 1:module
 define-command -hidden python-insert-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy '#' comment prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
+        try %{ execute-keys -draft k x s ^\h*#\h* <ret> y jgh P }
     }
 }
 
@@ -158,11 +158,11 @@ define-command -hidden python-indent-on-new-line %<
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # cleanup trailing whitespaces from previous line
-        try %{ execute-keys -draft k <a-x> s \h+$ <ret> d }
+        try %{ execute-keys -draft k x s \h+$ <ret> d }
         # indent after line ending with :
-        try %{ execute-keys -draft <space> k <a-x> <a-k> :$ <ret> <a-K> ^\h*# <ret> j <a-gt> }
+        try %{ execute-keys -draft <space> k x <a-k> :$ <ret> <a-K> ^\h*# <ret> j <a-gt> }
         # deindent closing brace/bracket when after cursor (for arrays and dictionaries)
-        try %< execute-keys -draft <a-x> <a-k> ^\h*[}\]] <ret> gh / [}\]] <ret> m <a-S> 1<a-&> >
+        try %< execute-keys -draft x <a-k> ^\h*[}\]] <ret> gh / [}\]] <ret> m <a-S> 1<a-&> >
     >
 >
 

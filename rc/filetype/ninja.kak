@@ -20,7 +20,7 @@ hook global WinSetOption filetype=ninja %{
     hook window InsertChar \n -group ninja-insert ninja-insert-on-new-line
     hook window InsertChar \n -group ninja-indent ninja-indent-on-new-line
     # cleanup trailing whitespaces on current line insert end
-    hook window ModeChange pop:insert:.* -group ninja-trim-indent %{ try %{ execute-keys -draft <semicolon> <a-x> s ^\h+$ <ret> d } }
+    hook window ModeChange pop:insert:.* -group ninja-trim-indent %{ try %{ execute-keys -draft <semicolon> x s ^\h+$ <ret> d } }
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window ninja-.+ }
 }
@@ -82,13 +82,13 @@ evaluate-commands %sh{
 
 define-command -hidden ninja-trim-indent %{
     # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel x s \h+$ <ret> d }
 }
 
 define-command -hidden ninja-insert-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy -- comments prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P }
+        try %{ execute-keys -draft k x s ^\h*\K--\h* <ret> y gh j P }
     }
 }
 

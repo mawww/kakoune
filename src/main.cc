@@ -48,6 +48,7 @@ struct {
         "» pipe commands do not append final end-of-lines anymore\n"
         "» {+u}complete-command{} to configure command completion\n"
         "» {+b}!{} and {+b}<a-!>{} now select the inserted text\n"
+        "» {+b}x{} now uses {+b}<a-x>{} behaviour\n"
     }, {
         20211107,
         "» colored and curly underlines support (undocumented in 20210828)\n"
