@@ -26,7 +26,7 @@ provide-module justfile %{
 
 define-command -hidden justfile-trim-indent %{
     evaluate-commands -no-hooks -draft -itersel %{
-        execute-keys <a-x>
+        execute-keys x
         # remove trailing white spaces
         try %{ execute-keys -draft s \h + $ <ret> d }
     }
@@ -37,9 +37,9 @@ define-command -hidden just-indent-on-new-line %{
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon>K<a-&> }
         # cleanup trailing white spaces on previous line
-        try %{ execute-keys -draft k<a-x> s \h+$ <ret>"_d }
+        try %{ execute-keys -draft kx s \h+$ <ret>"_d }
         # copy '#' comment prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*//\h* <ret> y jgh P }
+        try %{ execute-keys -draft k x s ^\h*//\h* <ret> y jgh P }
     }
 }
 

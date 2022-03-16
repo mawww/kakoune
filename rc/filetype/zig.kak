@@ -97,13 +97,13 @@ add-highlighter shared/zig/code/ regex "@(?:addWithOverflow|alignCast|alignOf|as
 
 define-command -hidden zig-trim-indent %{
     # delete trailing whitespace
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel x s \h+$ <ret> d }
 }
 
 define-command -hidden zig-insert-on-new-line %<
     evaluate-commands -draft -itersel %<
         # copy // or /// comments prefix or \\ string literal prefix and following whitespace
-        try %< execute-keys -draft k <a-x> s ^\h*\K(///?|\\\\)\h* <ret> y gh j P >
+        try %< execute-keys -draft k x s ^\h*\K(///?|\\\\)\h* <ret> y gh j P >
     >
 >
 
@@ -113,11 +113,11 @@ define-command -hidden zig-indent-on-new-line %<
         try %< execute-keys -draft <semicolon> K <a-&> >
         try %<
             # only if we didn't copy a comment or multiline string
-            execute-keys -draft <a-x> <a-K> ^\h*(//|\\\\) <ret>
+            execute-keys -draft x <a-K> ^\h*(//|\\\\) <ret>
             # indent after lines ending in {
-            try %< execute-keys -draft k <a-x> <a-k> \{\h*$ <ret> j <a-gt> >
+            try %< execute-keys -draft k x <a-k> \{\h*$ <ret> j <a-gt> >
             # deindent closing } when after cursor
-            try %< execute-keys -draft <a-x> <a-k> ^\h*\} <ret> gh / \} <ret> m <a-S> 1<a-&> >
+            try %< execute-keys -draft x <a-k> ^\h*\} <ret> gh / \} <ret> m <a-S> 1<a-&> >
         >
         # filter previous line
         try %< execute-keys -draft k : zig-trim-indent <ret> >

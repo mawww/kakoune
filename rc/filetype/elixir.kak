@@ -89,22 +89,22 @@ add-highlighter shared/elixir/code/ regex '\b\d+[\d_]*\b' 0:value
 
 define-command -hidden elixir-trim-indent %{
     # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel x s \h+$ <ret> d }
 }
 
 define-command -hidden elixir-insert-on-new-line %[
     evaluate-commands -no-hooks -draft -itersel %[
         # copy '#' comment prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y jgi P }
+        try %{ execute-keys -draft k x s ^\h*\K#\h* <ret> y jgi P }
         # wisely add end structure
         evaluate-commands -save-regs x %[
-            try %{ execute-keys -draft k <a-x> s ^ \h + <ret> \" x y } catch %{ reg x '' }
+            try %{ execute-keys -draft k x s ^ \h + <ret> \" x y } catch %{ reg x '' }
             try %[
                 evaluate-commands -draft %[
                     # Check if previous line opens a block
-                    execute-keys -draft k<a-x> <a-k>^<c-r>x(.+\bdo$)<ret>
+                    execute-keys -draft kx <a-k>^<c-r>x(.+\bdo$)<ret>
                     # Check that we do not already have an end for this indent level which is first set via `elixir-indent-on-new-line` hook
-                    execute-keys -draft }i J <a-x> <a-K> ^<c-r>x(end|else)[^0-9A-Za-z_!?]<ret>
+                    execute-keys -draft }i J x <a-K> ^<c-r>x(end|else)[^0-9A-Za-z_!?]<ret>
                 ]
                 execute-keys -draft o<c-r>xend<esc> # insert a new line with containing end
             ]

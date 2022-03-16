@@ -109,7 +109,7 @@ add-highlighter shared/rust/code/std_traits             regex \b(Copy|Send|Sized
 
 define-command -hidden rust-trim-indent %{
     # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel x s \h+$ <ret> d }
 }
 
 define-command -hidden rust-indent-on-new-line %~
@@ -118,10 +118,10 @@ define-command -hidden rust-indent-on-new-line %~
             try %[ # line comment
                 evaluate-commands -draft -save-regs '/"' %[
                     # copy the commenting prefix
-                    execute-keys -save-regs '' k <a-x> s ^\h*//[!/]{0,2}\h* <ret> y
+                    execute-keys -save-regs '' k x s ^\h*//[!/]{0,2}\h* <ret> y
                     try %[
                         # if the previous comment isn't empty, create a new one
-                        execute-keys <a-x><a-K>^\h*//[!/]{0,2}$<ret> j<a-x>s^\h*<ret>P
+                        execute-keys x<a-K>^\h*//[!/]{0,2}$<ret> jxs^\h*<ret>P
                     ] catch %[
                         # TODO figure out a way to not delete empty comment in current line
                         # if there is no space and text in the previous comment, remove it completely
@@ -130,24 +130,24 @@ define-command -hidden rust-indent-on-new-line %~
                 ]
             ] catch %[ # block comment
                 # if the previous line isn't within a comment scope, break
-                execute-keys -draft k<a-x> <a-k>^(\h*/\*|\h+\*(?!/))<ret>
+                execute-keys -draft kx <a-k>^(\h*/\*|\h+\*(?!/))<ret>
 
                 # find comment opening, validate it was not closed, and check its using star prefixes
                 execute-keys -draft <a-?>/\*<ret><a-H> <a-K>\*/<ret> <a-k>\A\h*/\*([^\n]*\n\h*\*)*[^\n]*\n\h*.\z<ret>
 
                 try %[
                     # if the previous line is opening the comment, insert star preceeded by space
-                    execute-keys -draft k<a-x><a-k>^\h*/\*<ret>
+                    execute-keys -draft kx<a-k>^\h*/\*<ret>
                     execute-keys -draft i*<space><esc>
                 ] catch %[
                     try %[
                         # if the next line is a comment line insert a star
-                        execute-keys -draft j<a-x><a-k>^\h+\*<ret>
+                        execute-keys -draft jx<a-k>^\h+\*<ret>
                         execute-keys -draft i*<space><esc>
                     ] catch %[
                         try %[
                             # if the previous line is an empty comment line, close the comment scope
-                            execute-keys -draft k<a-x><a-k>^\h+\*\h+$<ret> <a-x>1s\*(\h*)<ret>c/<esc>
+                            execute-keys -draft kx<a-k>^\h+\*\h+$<ret> x1s\*(\h*)<ret>c/<esc>
                         ] catch %[
                             # if the previous line is a non-empty comment line, add a star
                             execute-keys -draft i*<space><esc>
@@ -158,29 +158,29 @@ define-command -hidden rust-indent-on-new-line %~
                 # trim trailing whitespace on the previous line
                 try %[ execute-keys -draft s\h+$<ret> d ]
                 # align the new star with the previous one
-                execute-keys K<a-x>1s^[^*]*(\*)<ret>&
+                execute-keys Kx1s^[^*]*(\*)<ret>&
             ]
         } catch %`
             # re-indent previous line if it starts with where to match previous block
             # string literal parsing within extern does not handle escape
-            try %% execute-keys -draft k <a-x> <a-k> ^\h*where\b <ret> hh <a-?> ^\h*\b(impl|((|pub\ |pub\((crate|self|super|in\ (::)?([a-zA-Z][a-zA-Z0-9_]*|_[a-zA-Z0-9_]+)(::[a-zA-Z][a-zA-Z0-9_]*|_[a-zA-Z0-9_]+)*)\)\ )((async\ |const\ )?(unsafe\ )?(extern\ ("[^"]*"\ )?)?fn|struct|enum|union)))\b <ret> <a-S> 1<a-&> %
+            try %% execute-keys -draft k x <a-k> ^\h*where\b <ret> hh <a-?> ^\h*\b(impl|((|pub\ |pub\((crate|self|super|in\ (::)?([a-zA-Z][a-zA-Z0-9_]*|_[a-zA-Z0-9_]+)(::[a-zA-Z][a-zA-Z0-9_]*|_[a-zA-Z0-9_]+)*)\)\ )((async\ |const\ )?(unsafe\ )?(extern\ ("[^"]*"\ )?)?fn|struct|enum|union)))\b <ret> <a-S> 1<a-&> %
             # preserve previous line indent
             try %{ execute-keys -draft <semicolon> K <a-&> }
             # indent after lines ending with [{([].+ and move first parameter to own line
             try %< execute-keys -draft [c[({[],[)}\]] <ret> <a-k> \A[({[][^\n]+\n[^\n]*\n?\z <ret> L i<ret><esc> <gt> <a-S> <a-&> >
             # indent after non-empty lines not starting with operator and not ending with , or ; or {
             # XXX simplify this into a single <a-k> without s
-            try %< execute-keys -draft k <a-x> s [^\h].+ <ret> <a-K> \A[-+*/&|^})<gt><lt>#] <ret> <a-K> [,<semicolon>{](\h*/[/*].*|)$ <ret> j <a-gt> >
+            try %< execute-keys -draft k x s [^\h].+ <ret> <a-K> \A[-+*/&|^})<gt><lt>#] <ret> <a-K> [,<semicolon>{](\h*/[/*].*|)$ <ret> j <a-gt> >
             # indent after lines ending with {
-            try %+ execute-keys -draft k <a-x> <a-k> \{$ <ret> j <a-gt> +
+            try %+ execute-keys -draft k x <a-k> \{$ <ret> j <a-gt> +
             # dedent after lines starting with . and ending with } or ) or , or ; or .await (} or ) or .await maybe with ?)
-            try %_ execute-keys -draft k <a-x> <a-k> ^\h*\. <ret> <a-k> ([,<semicolon>]|(([})]|\.await)\?*))\h*$ <ret> j <a-lt> _
+            try %_ execute-keys -draft k x <a-k> ^\h*\. <ret> <a-k> ([,<semicolon>]|(([})]|\.await)\?*))\h*$ <ret> j <a-lt> _
             # dedent after lines ending with " => {}" - part of empty match
-            try %# execute-keys -draft k <a-x> <a-k> \ =>\ \{\}\h*$ <ret> j <a-lt> #
+            try %# execute-keys -draft k x <a-k> \ =>\ \{\}\h*$ <ret> j <a-lt> #
             # align to opening curly brace or paren when newline is inserted before a single closing
             try %< execute-keys -draft <a-h> <a-k> ^\h*[)}] <ret> h m <a-S> 1<a-&> >
             # todo dedent additional unmatched parenthesis
-            # try %& execute-keys -draft k <a-x> s \((?:[^)(]+|\((?:[^)(]+|\([^)(]*\))*\))*\) l Gl s\) %sh{
+            # try %& execute-keys -draft k x s \((?:[^)(]+|\((?:[^)(]+|\([^)(]*\))*\))*\) l Gl s\) %sh{
                 # count previous selections length
                 # printf "j $(echo $kak_selections_length | wc -w) <a-lt>"
             # } &
@@ -195,7 +195,7 @@ define-command -hidden rust-indent-on-opening-curly-brace %[
         # align indent with opening paren when { is entered on a new line after the closing paren
         try %[ execute-keys -draft h <a-F> ) M <a-k> \A\(.*\)\h*\n\h*\{\z <ret> s \A|.\z <ret> 1<a-&> ]
         # dedent standalone { after impl and related block without any { in between
-        try %@ execute-keys -draft hh <a-?> ^\h*\b(impl|((|pub\ |pub\((crate|self|super|in\ (::)?([a-zA-Z][a-zA-Z0-9_]*|_[a-zA-Z0-9_]+)(::[a-zA-Z][a-zA-Z0-9_]*|_[a-zA-Z0-9_]+)*)\)\ )((async\ |const\ )?(unsafe\ )?(extern\ ("[^"]*"\ )?)?fn|struct|enum|union))|if|for)\b <ret> <a-K> \{ <ret> <a-semicolon> <semicolon> ll <a-x> <a-k> ^\h*\{$ <ret> <a-lt> @
+        try %@ execute-keys -draft hh <a-?> ^\h*\b(impl|((|pub\ |pub\((crate|self|super|in\ (::)?([a-zA-Z][a-zA-Z0-9_]*|_[a-zA-Z0-9_]+)(::[a-zA-Z][a-zA-Z0-9_]*|_[a-zA-Z0-9_]+)*)\)\ )((async\ |const\ )?(unsafe\ )?(extern\ ("[^"]*"\ )?)?fn|struct|enum|union))|if|for)\b <ret> <a-K> \{ <ret> <a-semicolon> <semicolon> ll x <a-k> ^\h*\{$ <ret> <a-lt> @
     ~
 ]
 

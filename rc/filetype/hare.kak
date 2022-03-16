@@ -95,22 +95,22 @@ provide-module hare %§
         # preserve indentation on new lines
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # indent after lines ending with { or (
-        try %[ execute-keys -draft k<a-x> <a-k> [{(]\h*$ <ret> j i<tab> ]
+        try %[ execute-keys -draft kx <a-k> [{(]\h*$ <ret> j i<tab> ]
         # cleanup trailing white spaces on the previous line
         execute-keys -draft k :hare-trim-indent <ret>
         # indent after match/switch's case statements
-        try %[ execute-keys -draft k<a-x> <a-k> case\h.*=>\h*$ <ret> j<a-gt> ]
+        try %[ execute-keys -draft kx <a-k> case\h.*=>\h*$ <ret> j<a-gt> ]
         # deindent closing brace(s) when after cursor
-        try %[ execute-keys -draft <a-x> <a-k> ^\h*[})] <ret> gh / [})] <ret> m <a-S> 1<a-&> ]
+        try %[ execute-keys -draft x <a-k> ^\h*[})] <ret> gh / [})] <ret> m <a-S> 1<a-&> ]
     } }
 
     define-command -hidden hare-insert-on-new-line %{ evaluate-commands -draft -itersel %{
         try %{ evaluate-commands -draft -save-regs '/"' %{
             # copy the comment prefix
-            execute-keys -save-regs '' k <a-x> s ^\h*\K//\h* <ret> y
+            execute-keys -save-regs '' k x s ^\h*\K//\h* <ret> y
             try %{
                 # paste the comment prefix
-                execute-keys <a-x> j <a-x> s ^\h* <ret>P
+                execute-keys x j x s ^\h* <ret>P
             }
         } }
         try %{
@@ -131,6 +131,6 @@ provide-module hare %§
 
     define-command -hidden hare-trim-indent %{ evaluate-commands -draft -itersel %{
         # remove trailing whitespace
-        try %{ execute-keys -draft <a-x> s \h+$ <ret> d }
+        try %{ execute-keys -draft x s \h+$ <ret> d }
     } }
 §

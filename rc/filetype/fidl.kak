@@ -45,14 +45,14 @@ add-highlighter shared/fidl/code/literals/binary regex \b(0b[01])\b 0:value
 
 define-command -hidden fidl-trim-indent %{
     # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel x s \h+$ <ret> d }
 }
 
 define-command -hidden fidl-indent-on-new-line %~
     evaluate-commands -draft -itersel %@
         try %{ # line comment
             # copy the commenting prefix
-            execute-keys -draft k <a-x> s ^\h*/{2,}\h* <ret> yjghP
+            execute-keys -draft k x s ^\h*/{2,}\h* <ret> yjghP
         } catch %`
             # preserve previous line indent
             try %{ execute-keys -draft <semicolon> K <a-&> }
@@ -61,7 +61,7 @@ define-command -hidden fidl-indent-on-new-line %~
                 execute-keys -draft <a-k> [)}] <ret> m <a-S> 1<a-&>
             + catch %+
                 # indent after lines ending with ( or {
-                try %! execute-keys -draft k <a-x> <a-k> [({]$ <ret> j <a-gt> !
+                try %! execute-keys -draft k x <a-k> [({]$ <ret> j <a-gt> !
             +
         `
         # remove trailing white spaces

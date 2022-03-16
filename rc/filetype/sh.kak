@@ -71,7 +71,7 @@ add-highlighter shared/sh/double_string/expansion regex (?<!\\)(?:\\\\)*\K\$(\w+
 
 define-command -hidden sh-trim-indent %{
     # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel x s \h+$ <ret> d }
 }
 
 # This is at best an approximation, since shell syntax is very complex.
@@ -85,7 +85,7 @@ define-command -hidden sh-trim-indent %{
 define-command -hidden sh-insert-on-new-line %[
     evaluate-commands -draft -itersel %[
         # copy '#' comment prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
+        try %{ execute-keys -draft k x s ^\h*\K#\h* <ret> y gh j P }
     ]
 ]
 
@@ -120,11 +120,11 @@ define-command -hidden sh-indent-on-new-line %¶
         # done
         #
         # indent after do
-        try %{ execute-keys -draft <space> k <a-x> <a-k> \bdo$ <ret> j <a-gt> }
+        try %{ execute-keys -draft <space> k x <a-k> \bdo$ <ret> j <a-gt> }
         # copy the indentation of the matching for/when - matching on the do
         # statement, so we don't need to duplicate this for the two loop
         # structures.
-        try %{ execute-keys -draft <space> k <a-x> <a-k> \bdone$ <ret> gh [c\bdo\b,\bdone\b <ret> <a-x> <a-S> 1<a-&> <space> j K <a-&> }
+        try %{ execute-keys -draft <space> k x <a-k> \bdone$ <ret> gh [c\bdo\b,\bdone\b <ret> x <a-S> 1<a-&> <space> j K <a-&> }
 
         # Indent if/then/else syntax, e.g.:
         # if [ $foo = $bar ]; then
@@ -142,11 +142,11 @@ define-command -hidden sh-indent-on-new-line %¶
         # fi
         #
         # indent after then
-        try %{ execute-keys -draft <space> k <a-x> <a-k> \bthen$ <ret> j <a-gt> }
+        try %{ execute-keys -draft <space> k x <a-k> \bthen$ <ret> j <a-gt> }
         # copy the indentation of the matching if
-        try %{ execute-keys -draft <space> k <a-x> <a-k> \bfi$ <ret> gh [c\bif\b,\bfi\b <ret> <a-x> <a-S> 1<a-&> <space> j K <a-&> }
+        try %{ execute-keys -draft <space> k x <a-k> \bfi$ <ret> gh [c\bif\b,\bfi\b <ret> x <a-S> 1<a-&> <space> j K <a-&> }
         # copy the indentation of the matching if, and then re-indent afterwards
-        try %{ execute-keys -draft <space> k <a-x> <a-k> \belse$ <ret> gh [c\bif\b,\bfi\b <ret> <a-x> <a-S> 1<a-&> <space> j K <a-&> j <a-gt> }
+        try %{ execute-keys -draft <space> k x <a-k> \belse$ <ret> gh [c\bif\b,\bfi\b <ret> x <a-S> 1<a-&> <space> j K <a-&> j <a-gt> }
 
         # Indent case syntax, e.g.:
         # case "$foo" in
@@ -166,13 +166,13 @@ define-command -hidden sh-indent-on-new-line %¶
         # esac
         #
         # indent after in
-        try %{ execute-keys -draft <space> k <a-x> <a-k> \bin$ <ret> j <a-gt> }
+        try %{ execute-keys -draft <space> k x <a-k> \bin$ <ret> j <a-gt> }
         # copy the indentation of the matching case
-        try %{ execute-keys -draft <space> k <a-x> <a-k> \besac$ <ret> gh [c\bcase\b,\besac\b <ret> <a-x> <a-S> 1<a-&> <space> j K <a-&> }
+        try %{ execute-keys -draft <space> k x <a-k> \besac$ <ret> gh [c\bcase\b,\besac\b <ret> x <a-S> 1<a-&> <space> j K <a-&> }
         # indent after )
-        try %{ execute-keys -draft <space> k <a-x> <a-k> ^\s*\(?[^(]+[^)]\)$ <ret> j <a-gt> }
+        try %{ execute-keys -draft <space> k x <a-k> ^\s*\(?[^(]+[^)]\)$ <ret> j <a-gt> }
         # deindent after ;;
-        try %{ execute-keys -draft <space> k <a-x> <a-k> ^\s*\;\;$ <ret> j <a-lt> }
+        try %{ execute-keys -draft <space> k x <a-k> ^\s*\;\;$ <ret> j <a-lt> }
 
         # Indent compound commands as logical blocks, e.g.:
         # {
@@ -194,11 +194,11 @@ define-command -hidden sh-indent-on-new-line %¶
         # white space (including a newline), though technically it can also be
         # ';'. Only vertical white space makes sense in this context, though,
         # since the syntax denotes a logical block, not a simple compound command.
-        try %= execute-keys -draft <space> k <a-x> <a-k> (\s|^)\{$ <ret> j <a-gt> =
+        try %= execute-keys -draft <space> k x <a-k> (\s|^)\{$ <ret> j <a-gt> =
         # deindent closing }
-        try %= execute-keys -draft <space> k <a-x> <a-k> ^\s*\}$ <ret> <a-lt> j K <a-&> =
+        try %= execute-keys -draft <space> k x <a-k> ^\s*\}$ <ret> <a-lt> j K <a-&> =
         # deindent closing } when after cursor
-        try %= execute-keys -draft <a-x> <a-k> ^\h*\} <ret> gh / \} <ret> m <a-S> 1<a-&> =
+        try %= execute-keys -draft x <a-k> ^\h*\} <ret> gh / \} <ret> m <a-S> 1<a-&> =
 
     @
 ¶

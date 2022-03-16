@@ -80,7 +80,7 @@ define-command -hidden twig-insert-on-new-line %[
   evaluate-commands -draft -itersel %/
     execute-keys <semicolon>
     try %[
-      execute-keys -draft k<a-x><a-k>^\h*\{\[%#\{\]\h+$<ret>
+      execute-keys -draft kx<a-k>^\h*\{\[%#\{\]\h+$<ret>
       execute-keys -draft jghd
     ]
   /

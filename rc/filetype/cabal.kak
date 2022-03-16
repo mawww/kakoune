@@ -48,13 +48,13 @@ add-highlighter shared/cabal/code/ regex ^\h*([A-Za-z][A-Za-z0-9_-]*)\h*: 1:vari
 
 define-command -hidden cabal-trim-indent %{
     # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel x s \h+$ <ret> d }
 }
 
 define-command -hidden cabal-insert-on-new-line %[
     evaluate-commands -draft -itersel %[
         # copy '--' comment prefix and following white spaces
-        try %[ execute-keys -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P ]
+        try %[ execute-keys -draft k x s ^\h*\K--\h* <ret> y gh j P ]
     ]
 ]
 
@@ -65,9 +65,9 @@ define-command -hidden cabal-indent-on-new-line %[
         # filter previous line
         try %[ execute-keys -draft k : cabal-trim-indent <ret> ]
         # indent after lines ending with { or :
-        try %[ execute-keys -draft <space> k <a-x> <a-k> [:{]$ <ret> j <a-gt> ]
+        try %[ execute-keys -draft <space> k x <a-k> [:{]$ <ret> j <a-gt> ]
         # deindent closing brace when after cursor
-        try %[ execute-keys -draft <a-x> <a-k> \h*\} <ret> gh / \} <ret> m <a-S> 1<a-&> ]
+        try %[ execute-keys -draft x <a-k> \h*\} <ret> gh / \} <ret> m <a-S> 1<a-&> ]
     ]
 ]
 

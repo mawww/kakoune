@@ -162,13 +162,9 @@ the Shift modifier and moving will extend each selection instead.
     characters, see the `matching_pairs` option in <<options#,`:doc options`>>
 
 *x*::
-    select line on which the end of each selection lies (or next line when end lies
-    on an end-of-line)
-
-*<a-x>*::
     expand selections to contain full lines (including end-of-lines)
 
-*<a-X>*::
+*<a-x>*::
     trim selections to only contain full lines (not including last
     end-of-line)
 

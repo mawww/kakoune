@@ -17,7 +17,7 @@ hook global WinSetOption filetype=perl %{
     set-option window static_words %opt{perl_static_words}
 
     # cleanup trailing whitespaces when exiting insert mode
-    hook window ModeChange pop:insert:.* -group perl-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
+    hook window ModeChange pop:insert:.* -group perl-trim-indent %{ try %{ execute-keys -draft xs^\h+$<ret>d } }
     hook window InsertChar \n -group perl-insert perl-insert-on-new-line
     hook window InsertChar \n -group perl-indent perl-indent-on-new-line
     hook window InsertChar \{ -group perl-indent perl-indent-on-opening-curly-brace
@@ -110,7 +110,7 @@ add-highlighter shared/perl/code/ regex \$(LAST_REGEXP_CODE_RESULT|LIST_SEPARATO
 define-command -hidden perl-insert-on-new-line %~
     evaluate-commands -draft -itersel %=
         # copy # comments prefix and following white spaces
-        try %{ execute-keys -draft <semicolon><c-s>k<a-x> s ^\h*\K#\h* <ret> y<c-o>P<esc> }
+        try %{ execute-keys -draft <semicolon><c-s>kx s ^\h*\K#\h* <ret> y<c-o>P<esc> }
     =
 ~
 
@@ -119,17 +119,17 @@ define-command -hidden perl-indent-on-new-line %~
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon>K<a-&> }
         # indent after lines ending with { or (
-        try %[ execute-keys -draft k<a-x> <a-k> [{(]\h*$ <ret> j<a-gt> ]
+        try %[ execute-keys -draft kx <a-k> [{(]\h*$ <ret> j<a-gt> ]
         # cleanup trailing white spaces on the previous line
-        try %{ execute-keys -draft k<a-x> s \h+$ <ret>d }
+        try %{ execute-keys -draft kx s \h+$ <ret>d }
         # align to opening paren of previous line
         try %{ execute-keys -draft [( <a-k> \A\([^\n]+\n[^\n]*\n?\z <ret> s \A\(\h*.|.\z <ret> '<a-;>' & }
         # indent after a switch's case/default statements
-        try %[ execute-keys -draft k<a-x> <a-k> ^\h*(case|default).*:$ <ret> j<a-gt> ]
+        try %[ execute-keys -draft kx <a-k> ^\h*(case|default).*:$ <ret> j<a-gt> ]
         # indent after if|else|while|for
         try %[ execute-keys -draft <semicolon><a-F>)MB <a-k> \A(if|else|while|for)\h*\(.*\)\h*\n\h*\n?\z <ret> s \A|.\z <ret> 1<a-&>1<a-space><a-gt> ]
         # deindent closing brace(s) when after cursor
-        try %[ execute-keys -draft <a-x> <a-k> ^\h*[})] <ret> gh / [})] <ret> m <a-S> 1<a-&> ]
+        try %[ execute-keys -draft x <a-k> ^\h*[})] <ret> gh / [})] <ret> m <a-S> 1<a-&> ]
     =
 ~
 

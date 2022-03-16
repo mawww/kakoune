@@ -192,7 +192,7 @@ EOF
 
 define-command -hidden pascal-trim-indent %{
     evaluate-commands -no-hooks -draft -itersel %{
-        execute-keys <a-x>
+        execute-keys x
         # remove trailing white spaces
         try %{ execute-keys -draft s \h + $ <ret> d }
     }
@@ -203,9 +203,9 @@ define-command -hidden pascal-indent-on-new-line %{
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # cleanup trailing whitespaces from previous line
-        try %{ execute-keys -draft k <a-x> s \h+$ <ret> d }
+        try %{ execute-keys -draft k x s \h+$ <ret> d }
         # indent after certain keywords
-        try %{ execute-keys -draft k<a-x><a-k>(?i)(asm|begin|const|else|except|exports|finalization|finally|label|of|otherwise|private|property|public|protected|published|record|repeat|resourcestring|threadvar|try|type|uses|var|:)\h*$<ret>j<a-gt> }
+        try %{ execute-keys -draft kx<a-k>(?i)(asm|begin|const|else|except|exports|finalization|finally|label|of|otherwise|private|property|public|protected|published|record|repeat|resourcestring|threadvar|try|type|uses|var|:)\h*$<ret>j<a-gt> }
     }
 }
 §

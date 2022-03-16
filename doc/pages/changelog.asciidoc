@@ -9,6 +9,9 @@ released versions.
 
 * `!` and `<a-!>` commands now select the inserted text
 
+* `x` now just extends the selection to contain full lines (as `<a-x>` did)
+  `<a-x>` trims partial lines from the selection (as `<a-X>` did)
+
 == Kakoune 2021.11.07
 
 * Support for curly and separately colored underlines (undocumented in 2021.10.28)

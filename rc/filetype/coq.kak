@@ -112,13 +112,13 @@ evaluate-commands %sh{
 # Hence here only a simple mechanism of copying indent is done.
 define-command -hidden coq-copy-indent-on-newline %{
     evaluate-commands -draft -itersel %{
-        try %{ execute-keys -draft k <a-x> s ^\h+ <ret> y gh j P }
+        try %{ execute-keys -draft k x s ^\h+ <ret> y gh j P }
     }
 }
 
 define-command -hidden coq-trim-indent %{
     evaluate-commands -no-hooks -draft -itersel %{
-        execute-keys <a-x>
+        execute-keys x
         # remove trailing white spaces
         try %{ execute-keys -draft s \h + $ <ret> d }
     }
