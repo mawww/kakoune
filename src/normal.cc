@@ -683,10 +683,13 @@ void paste(Context& context, NormalParams params)
     ScopedEdition edition(context);
     context.selections().for_each([&](size_t index, Selection& sel) {
         auto& str = strings[std::min(strings.size()-1, index)];
-        if (mode == PasteMode::Replace)
-            replace(buffer, sel, str);
-        else
-            insert(buffer, sel, paste_pos(buffer, sel, mode, linewise), str);
+        auto& min = sel.min();
+        auto& max = sel.max();
+        BufferRange range = (mode == PasteMode::Replace) ?
+            buffer.replace(min, buffer.char_next(max), str)
+          : buffer.insert(paste_pos(buffer, sel, mode, linewise), str);
+        min = range.begin;
+        max = range.end > range.begin ? buffer.char_prev(range.end) : range.begin;
     });
 }
 
