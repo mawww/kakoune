@@ -17,7 +17,7 @@ hook global WinSetOption filetype=twig %[
     hook window ModeChange pop:insert:.* -group twig-trim-indent  twig-trim-indent
     hook window InsertChar \n -group twig-insert twig-insert-on-new-line
     hook window InsertChar \n -group twig-indent twig-indent-on-new-line
-    hook window InsertChar '>' -group twig-indent twig-indent-on-grater-than
+    hook window InsertChar '>' -group twig-indent twig-indent-on-greater-than
     hook window InsertChar '#' -group twig-auto-close twig-auto-close-delim
     hook window InsertChar '%' -group twig-auto-close twig-auto-close-delim
     set-option buffer extra_word_chars '_' '-'
