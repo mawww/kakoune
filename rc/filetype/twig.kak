@@ -71,7 +71,7 @@ add-highlighter shared/twig/delim/base/ regex (\{\{|\}\}) 0:operator
 
 define-command -hidden twig-trim-indent                   html-trim-indent
 define-command -hidden twig-indent-on-new-line            html-indent-on-new-line
-define-command -hidden twig-indent-on-grater-than         html-indent-on-greater-than
+define-command -hidden twig-indent-on-greater-than        html-indent-on-greater-than
 
 define-command -hidden twig-auto-close-delim %[
   evaluate-commands -itersel %[
