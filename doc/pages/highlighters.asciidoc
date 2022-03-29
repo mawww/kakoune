@@ -113,7 +113,7 @@ add-highlighter window/ regex //\h*(TODO:)[^\n]* 0:cyan 1:yellow,red
 
     capture_id can be either the capture number, or its name if a
     named capture is used in the regex (See
-    <<regex#Groups, `:doc regex Groups`>>)
+    <<regex#groups, `:doc regex groups`>>)
 
 *dynregex* <expression> <capture_id>:<face> ...::
     similar to regex, but expand (like a command parameter would) the

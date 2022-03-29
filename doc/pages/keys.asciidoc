@@ -817,7 +817,7 @@ The following keys are recognized by this mode to help with editing
 
 *<a-!>*::
     expand the typed expansions in currently entered text
-    (See <<expansions#typed-expansions,`:doc expansions typed-expansions`>>)
+    (See <<expansions#,`:doc expansions`>>)
 
 *<a-;>*, *<a-semicolon>*::
     escape to normal mode for a single command

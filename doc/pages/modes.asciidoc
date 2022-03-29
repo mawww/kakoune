@@ -85,7 +85,7 @@ See prompt commands <<keys#prompt-commands,`:doc keys prompt-commands`>>.
 Mode entered with `<a-i>`, `<a-a>` and various combinations of `[]{}` keys.
 It aims at crafting semantic selections, often called *text-objects*.
 
-See object commands <<keys#object-commands,`:doc keys object-commands`>>.
+See object commands <<keys#object-selection,`:doc keys object-selection`>>.
 
 === User mode
 
