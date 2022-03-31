@@ -1324,7 +1324,8 @@ void select_object(Context& context, NormalParams params)
                     struct error : runtime_error { error(size_t) : runtime_error{"desc parsing failed, expected <open>,<close>"} {} };
 
                     auto params = cmdline | split<StringView>(',', '\\') |
-                        transform(unescape<',', '\\'>) | static_gather<error, 2>();
+                        transform([](auto s) { return unescape(s, {','}, '\\'); }) |
+                        static_gather<error, 2>();
 
                     if (params[0].empty() or params[1].empty())
                         throw error{0};
