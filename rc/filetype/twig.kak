@@ -17,7 +17,7 @@ hook global WinSetOption filetype=twig %[
     hook window ModeChange pop:insert:.* -group twig-trim-indent  twig-trim-indent
     hook window InsertChar \n -group twig-insert twig-insert-on-new-line
     hook window InsertChar \n -group twig-indent twig-indent-on-new-line
-    hook window InsertChar '>' -group twig-indent twig-indent-on-grater-than
+    hook window InsertChar '>' -group twig-indent twig-indent-on-greater-than
     hook window InsertChar '#' -group twig-auto-close twig-auto-close-delim
     hook window InsertChar '%' -group twig-auto-close twig-auto-close-delim
     set-option buffer extra_word_chars '_' '-'
@@ -65,7 +65,7 @@ add-highlighter shared/twig/delim/base/delimiter_output regex (\{\{|\}\}) 0:oper
 
 define-command -hidden twig-trim-indent                   html-trim-indent
 define-command -hidden twig-indent-on-new-line            html-indent-on-new-line
-define-command -hidden twig-indent-on-grater-than         html-indent-on-greater-than
+define-command -hidden twig-indent-on-greater-than        html-indent-on-greater-than
 
 define-command -hidden twig-auto-close-delim %[
   evaluate-commands -itersel %[
