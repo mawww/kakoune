@@ -46,10 +46,6 @@ evaluate-commands %sh{
   # includes elements that cannot be styled, which is fine.
   # 
   # https://developer.mozilla.org/en-US/docs/Web/HTML/Element
-  # <CODE>
-  # // selector might change on site updates
-  # var els; document.querySelectorAll('tr td:first-child a[href^="/en-US/docs/Web/HTML/Element/"]').forEach((el) => {els += el.childNodes[0].innerText + " ";}); console.log(els);
-  # </CODE>
   html_tags='html body address article aside footer header h1 h2 h3 h4 h5 h6 main nav section blockquote dd div dl dt figcaption figure hr li ol p pre ul a abbr b bdi bdo br cite code data dfn em i kbd mark q rp rt ruby s samp small span strong sub sup time u var wbr area audio img map track video embed iframe object param picture portal source canvas noscript script del ins caption col colgroup table tbody td tfoot th thead tr button datalist fieldset form input label legend meter optgroup option output progress select textarea details dialog menu summary slot template acronym applet basefont bgsound big blink center content dir font frame frameset hgroup image keygen marquee menuitem nobr noembed noframes plaintext rb rtc shadow spacer strike tt xmp'
 
   # Units
@@ -58,10 +54,6 @@ evaluate-commands %sh{
   # includes #rgb, #rrggbb, #rrggbbaa as color values {3,8}
   # 
   # https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Values_and_Units
-  # <CODE>
-  # // selector might change on site updates
-  # var units; document.querySelectorAll('tr td:first-child').forEach((el) => {els += el.childNodes[0].innerText + " ";}); console.log(units)
-  # </CODE>
   units='% cap ch cm deg dpcm dpi dppx em ex grad Hz ic in kHz lh mm ms pc pt px Q rad rem rlh s turn vb vh vi vmax vmin vw x'
 
   logical_ops='and not only from to'
@@ -84,34 +76,26 @@ evaluate-commands %sh{
 
   # order below matters
   printf %s "
-  # html tag selectors
-  add-highlighter shared/css/code/ regex \b($(join "${html_tags}"))((:[a-z:])|[\h.#]) 1:keyword
+  add-highlighter shared/css/code/tag_selectors regex \b($(join "${html_tags}"))((:[a-z:])|[\h.#]) 1:keyword
 
-  #functional notation
-  add-highlighter shared/css/code/ regex ([a-zA-Z0-9-_]+[a-zA-Z0-9])\( 1:keyword
+  add-highlighter shared/css/code/functional_notation regex ([a-zA-Z0-9-_]+[a-zA-Z0-9])\( 1:keyword
 
-  # logical operators, and other keywords
-  add-highlighter shared/css/code/ regex (\b($(join "${logical_ops}"))\b|$(join "${keywords}")) 1:keyword 1:+i
+  add-highlighter shared/css/code/logical_operators regex (\b($(join "${logical_ops}"))\b|$(join "${keywords}")) 1:keyword 1:+i
 
-  # media types
-  add-highlighter shared/css/code/ regex \b($(join "${media_types}"))\b 1:+i
+  add-highlighter shared/css/code/media_types regex \b($(join "${media_types}"))\b 1:+i
 
-  # pseudo (after functional notation as they may contain paranthesis)
-  add-highlighter shared/css/code/ regex (:{1,2})([a-z-]+) 2:attribute 2:+a
+  # (after functional notation as they may contain paranthesis)
+  add-highlighter shared/css/code/psudo regex (:{1,2})([a-z-]+) 2:attribute 2:+a
 
-  # at-rules
-  add-highlighter shared/css/code/ regex @[a-z-]+ 0:function 
+  add-highlighter shared/css/code/at_rules regex @[a-z-]+ 0:function 
 
-  # css property
-  add-highlighter shared/css/code/ regex ([A-Za-z][A-Za-z0-9_-]*)\h*:\h 1:operator 1:+a
+  add-highlighter shared/css/code/css_property regex ([A-Za-z][A-Za-z0-9_-]*)\h*:\h 1:operator 1:+a
 
-  # universal, class, id selectors
-  add-highlighter shared/css/code/ regex (\*|[*]?[.][A-Za-z][A-Za-z0-9_-]+) 1:type
-  add-highlighter shared/css/code/ regex (\*|[*]?[#][A-Za-z][A-Za-z0-9_-]+) 1:type 1:+i
+  add-highlighter shared/css/code/selectors regex (\*|[*]?[.][A-Za-z][A-Za-z0-9_-]+) 1:type
+  add-highlighter shared/css/code/selectors_id regex (\*|[*]?[#][A-Za-z][A-Za-z0-9_-]+) 1:type 1:+i
 
-  # hex values
-  add-highlighter shared/css/code/ regex (#[0-9A-Fa-f]{3,8})\b 0:value 0:+a
-  add-highlighter shared/css/code/ regex \b(\d*\.)?\d+($(join "${units}"))?\b 0:value 0:+a
+  add-highlighter shared/css/code/hex_values regex (#[0-9A-Fa-f]{3,8})\b 0:value 0:+a
+  add-highlighter shared/css/code/units regex \b(\d*\.)?\d+($(join "${units}"))?\b 0:value 0:+a
   "
 }
 
