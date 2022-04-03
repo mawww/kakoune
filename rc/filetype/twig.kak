@@ -50,21 +50,15 @@ add-highlighter shared/twig/delim/double_string region '"'  (?<!\\)(\\\\)*" fill
 add-highlighter shared/twig/delim/single_string region "'"  (?<!\\)(\\\\)*' fill string
 add-highlighter shared/twig/delim/base/ regex (\w+)\h= 1:variable
 
-# functions
-add-highlighter shared/twig/delim/base/ regex \b(\w+)\( 1:function
+add-highlighter shared/twig/delim/base/functions regex \b(\w+)\( 1:function
 
-# filters
-add-highlighter shared/twig/delim/base/ regex \b(abs|batch|capitalize|column|convert_encoding|country_name|currency_name|currency_symbol|data_uri|date|date_modify|default|e|escape|filter|first|format|format_currency|format_date|format_datetime|format_number|format_time|html_to_markdown|inline_css|inky_to_html|join|json_encode|keys|language_name|last|length|locale_name|lower|map|markdown_to_html|merge|nl2br|number_format|raw|reduce|replace|reverse|round|slice|slug|sort|spaceless|split|striptags|timezone_name|title|trim|u|upper|url_encode)(\()?\b 1:operator
+add-highlighter shared/twig/delim/base/filters regex \b(abs|batch|capitalize|column|convert_encoding|country_name|currency_name|currency_symbol|data_uri|date|date_modify|default|e|escape|filter|first|format|format_currency|format_date|format_datetime|format_number|format_time|html_to_markdown|inline_css|inky_to_html|join|json_encode|keys|language_name|last|length|locale_name|lower|map|markdown_to_html|merge|nl2br|number_format|raw|reduce|replace|reverse|round|slice|slug|sort|spaceless|split|striptags|timezone_name|title|trim|u|upper|url_encode)(\()?\b 1:operator
 
-# tags
-add-highlighter shared/twig/delim/base/ regex \b((extends|deprecated|do|flush|import|from|elseif|else|include|set|use)|(end)?(apply|autoescape|block|cache|embed|for|if|macro|sandbox|set|verbatim|with))\b 0:keyword 0:+i
+add-highlighter shared/twig/delim/base/tags regex \b((extends|deprecated|do|flush|import|from|elseif|else|include|set|use)|(end)?(apply|autoescape|block|cache|embed|for|if|macro|sandbox|set|verbatim|with))\b 0:keyword 0:+i
 
-# logic
-# and or not in is matches
 
-# delimiters
-add-highlighter shared/twig/delim/base/ regex (\{[%]|[%]\}) 0:function
-add-highlighter shared/twig/delim/base/ regex (\{\{|\}\}) 0:operator
+add-highlighter shared/twig/delim/base/delimiter_code regex (\{[%]|[%]\}) 0:function
+add-highlighter shared/twig/delim/base/delimiter_output regex (\{\{|\}\}) 0:operator
 
 # Commands
 # ‾‾‾‾‾‾‾‾
