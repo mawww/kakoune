@@ -56,7 +56,7 @@ evaluate-commands %sh{
     keywords='break default func interface select case defer go map struct
               chan else goto package switch const fallthrough if range type
               continue for import return var'
-    types='bool byte chan complex128 complex64 error float32 float64 int int16 int32
+    types='any bool byte chan comparable complex128 complex64 error float32 float64 int int16 int32
            int64 int8 interface intptr map rune string struct uint uint16 uint32 uint64 uint8'
     values='false true nil iota'
     functions='append cap close complex copy delete imag len make new panic print println real recover'
