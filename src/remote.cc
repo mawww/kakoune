@@ -614,7 +614,10 @@ static sockaddr_un session_addr(StringView session)
 {
     sockaddr_un addr;
     addr.sun_family = AF_UNIX;
-    strcpy(addr.sun_path, session_path(session).c_str());
+    String path = session_path(session);
+    if (path.length() + 1 > sizeof addr.sun_path)
+        throw runtime_error{format("socket path too long: '{}'", path)};
+    strcpy(addr.sun_path, path.c_str());
     return addr;
 }
 
