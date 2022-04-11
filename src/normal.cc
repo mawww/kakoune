@@ -1,7 +1,5 @@
 #include "normal.hh"
 
-#include <functional>
-
 #include "buffer.hh"
 #include "buffer_manager.hh"
 #include "buffer_utils.hh"
@@ -30,8 +28,6 @@
 
 namespace Kakoune
 {
-
-using namespace std::placeholders;
 
 enum class SelectMode
 {
@@ -1302,7 +1298,15 @@ void select_object(Context& context, NormalParams params)
         auto obj_it = find(selectors | transform(&ObjectType::key), key).base();
         if (obj_it != std::end(selectors))
             return select_and_set_last<mode>(
-                context, std::bind(obj_it->func, _1, _2, count, flags));
+                context, [=](Context& context, Selection& sel) { return obj_it->func(context, sel, count, flags); });
+
+        static constexpr auto regex_selector = [=](StringView open, StringView close, int count) {
+            return [open=Regex{open, RegexCompileFlags::Backward},
+                    close=Regex{close, RegexCompileFlags::Backward},
+                    count](Context& context, Selection& sel) {
+                return select_surrounding(context, sel, open, close, count, flags);
+            };
+        };
 
         if (key == 'c')
         {
@@ -1323,17 +1327,13 @@ void select_object(Context& context, NormalParams params)
 
                     struct error : runtime_error { error(size_t) : runtime_error{"desc parsing failed, expected <open>,<close>"} {} };
 
-                    auto params = cmdline | split<StringView>(',', '\\') |
-                        transform(unescape<',', '\\'>) | static_gather<error, 2>();
-
+                    auto params = cmdline | split<StringView>(',', '\\')
+                                          | transform(unescape<',', '\\'>)
+                                          | static_gather<error, 2>();
                     if (params[0].empty() or params[1].empty())
                         throw error{0};
 
-                    select_and_set_last<mode>(
-                        context, std::bind(select_surrounding, _1, _2,
-                                           Regex{params[0], RegexCompileFlags::Backward},
-                                           Regex{params[1], RegexCompileFlags::Backward},
-                                           count, flags));
+                    select_and_set_last<mode>(context, regex_selector(params[0], params[1], count));
                 });
             return;
         }
@@ -1350,10 +1350,10 @@ void select_object(Context& context, NormalParams params)
             return;
         }
 
-        static constexpr struct SurroundingPair
+        static constexpr struct
         {
-            char opening;
-            char closing;
+            char open;
+            char close;
             char name;
         } surrounding_pairs[] = {
             { '(', ')', 'b' },
@@ -1364,28 +1364,15 @@ void select_object(Context& context, NormalParams params)
             { '\'', '\'', 'q' },
             { '`', '`', 'g' },
         };
-        auto pair_it = find_if(surrounding_pairs,
-                               [key](const SurroundingPair& s) {
-                                   return key == s.opening or key == s.closing or
-                                          (s.name != 0 and key == s.name);
-                               });
-        if (pair_it != std::end(surrounding_pairs))
+        if (auto it = find_if(surrounding_pairs, [key](auto s) { return key == s.open or key == s.close or key == s.name; });
+            it != std::end(surrounding_pairs))
             return select_and_set_last<mode>(
-                context, std::bind(select_surrounding, _1, _2,
-                                   Regex{format("\\Q{}", pair_it->opening), RegexCompileFlags::Backward},
-                                   Regex{format("\\Q{}", pair_it->closing), RegexCompileFlags::Backward},
-                                   count, flags));
+                context, regex_selector(format("\\Q{}", it->open), format("\\Q{}", it->close), count));
 
-        if (not key.codepoint())
-            return;
-
-        const Codepoint cp = *key.codepoint();
-        if (is_punctuation(cp, {}))
+        if (auto cp = key.codepoint(); cp and is_punctuation(*cp, {}))
         {
-            auto re = Regex{"\\Q" + to_string(cp), RegexCompileFlags::Backward};
-            return select_and_set_last<mode>(
-                context, std::bind(select_surrounding, _1, _2,
-                                   re, re, count, flags));
+            auto re = "\\Q" + to_string(*cp);
+            return select_and_set_last<mode>(context, regex_selector(re, re, count));
         }
     }, get_title(),
     build_autoinfo_for_mapping(context, KeymapMode::Object,
@@ -1537,11 +1524,10 @@ void select_to_next_char(Context& context, NormalParams params)
         constexpr auto new_flags = flags & SelectFlags::Extend ? SelectMode::Extend
                                                                : SelectMode::Replace;
         select_and_set_last<new_flags>(
-            context,
-            std::bind(flags & SelectFlags::Reverse ? select_to_reverse
-                                                   : select_to,
-                      _1, _2, *cp, params.count,
-                      flags & SelectFlags::Inclusive));
+            context, [cp=*cp, count=params.count] (auto& context, auto& sel) {
+                auto& func = flags & SelectFlags::Reverse ? select_to_reverse : select_to;
+                return func(context, sel, cp, count, flags & SelectFlags::Inclusive);
+            });
     }, get_title(), "enter char to select to");
 }
 
