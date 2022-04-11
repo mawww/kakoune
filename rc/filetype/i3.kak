@@ -63,7 +63,7 @@ add-highlighter shared/i3/single_string/ regex "#[0-9a-fA-F]{6}" 0:value
 
 # attributes
 add-highlighter shared/i3/code/ regex "client\.(background|statusline|background|separator|statusline)" 1:attribute
-add-highlighter shared/i3/code/ regex "client\.(focused_inactive|focused|unfocused|urgent|inactive_workspace|urgent_workspace|focused_workspace|active_workspace|placeholder)" 1:attribute
+add-highlighter shared/i3/code/ regex "client\.(focused_inactive|focused_tab_title|focused|unfocused|urgent|inactive_workspace|urgent_workspace|focused_workspace|active_workspace|placeholder)" 1:attribute
 
 # Commands
 # ‾‾‾‾‾‾‾‾
