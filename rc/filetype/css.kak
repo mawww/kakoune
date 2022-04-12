@@ -92,8 +92,8 @@ evaluate-commands %sh{
 
   add-highlighter shared/css/code/css_property regex ([A-Za-z][A-Za-z0-9_-]*)\h*:\h 1:operator 1:+a
 
-  add-highlighter shared/css/code/selectors regex (\*|[*]?[.][A-Za-z][A-Za-z0-9_-]+) 1:type
-  add-highlighter shared/css/code/selectors_id regex (\*|[*]?[#][A-Za-z][A-Za-z0-9_-]+) 1:type 1:+i
+  add-highlighter shared/css/code/selectors regex (\*|[*]?[.][A-Za-z][A-Za-z0-9_-]+) 0:type
+  add-highlighter shared/css/code/selectors_id regex (\*|[*]?[#][A-Za-z][A-Za-z0-9_-]+) 0:type 0:+i
 
   add-highlighter shared/css/code/hex_values regex (#[0-9A-Fa-f]{3,8})\b 0:value 0:+a
   add-highlighter shared/css/code/units regex \b(\d*\.)?\d+($(join "${units}"))?\b 0:value 0:+a
