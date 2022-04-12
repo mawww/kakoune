@@ -77,7 +77,7 @@ evaluate-commands %sh{
 
   # order below matters
   printf %s "
-  add-highlighter shared/css/code/tag_selectors regex \b($(join "${html_tags}"))((:[a-z:])|[\h.#,]) 0:keyword
+  add-highlighter shared/css/code/tag_selectors regex \b($(join "${html_tags}"))((:[a-z:])|[\h.#,]) 1:keyword
 
   add-highlighter shared/css/code/functional_notation regex ([a-zA-Z0-9-_]+[a-zA-Z0-9])\( 1:keyword
 
@@ -86,7 +86,7 @@ evaluate-commands %sh{
   add-highlighter shared/css/code/media_types regex \b($(join "${media_types}"))\b 1:+i
 
   # (after functional notation as they may contain paranthesis)
-  add-highlighter shared/css/code/psudo regex (:{1,2})([a-z-]+) 2:attribute 2:+a
+  add-highlighter shared/css/code/pseudo regex (:{1,2})([a-z-]+) 2:attribute 2:+a
 
   add-highlighter shared/css/code/at_rules regex @[a-z-]+ 0:function 
 
