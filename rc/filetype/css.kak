@@ -19,6 +19,7 @@ hook global WinSetOption filetype=css %[
     hook window InsertChar \n -group css-indent css-indent-on-new-line
     hook window InsertChar \} -group css-indent css-indent-on-closing-curly-brace
     set-option buffer extra_word_chars '_' '-'
+    set-face global cssLogicalOperator +i@keyword
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window css-.+ }
 ]
@@ -76,11 +77,11 @@ evaluate-commands %sh{
 
   # order below matters
   printf %s "
-  add-highlighter shared/css/code/tag_selectors regex \b($(join "${html_tags}"))((:[a-z:])|[\h.#]) 1:keyword
+  add-highlighter shared/css/code/tag_selectors regex \b($(join "${html_tags}"))((:[a-z:])|[\h.#,]) 0:keyword
 
   add-highlighter shared/css/code/functional_notation regex ([a-zA-Z0-9-_]+[a-zA-Z0-9])\( 1:keyword
 
-  add-highlighter shared/css/code/logical_operators regex (\b($(join "${logical_ops}"))\b|$(join "${keywords}")) 1:keyword 1:+i
+  add-highlighter shared/css/code/logical_operators regex (\b($(join "${logical_ops}"))\b|$(join "${keywords}")) 1:cssLogicalOperator
 
   add-highlighter shared/css/code/media_types regex \b($(join "${media_types}"))\b 1:+i
 
