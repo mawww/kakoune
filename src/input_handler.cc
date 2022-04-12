@@ -1698,14 +1698,9 @@ InputHandler::ScopedForceNormal::~ScopedForceNormal()
 
     if (m_mode == m_handler.m_mode_stack.back().get())
         m_handler.pop_mode(m_mode);
-    else
-    {
-        auto it = find_if(m_handler.m_mode_stack,
-                          [this](const RefPtr<InputMode>& m)
-                          { return m.get() == m_mode; });
-        kak_assert(it != m_handler.m_mode_stack.end());
+    else if (auto it = find(m_handler.m_mode_stack, m_mode);
+             it != m_handler.m_mode_stack.end())
         m_handler.m_mode_stack.erase(it);
-    }
 }
 
 static bool is_valid(Key key)

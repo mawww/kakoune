@@ -88,8 +88,8 @@ struct RefPtr
         acquire();
     }
 
-    friend bool operator==(const RefPtr& lhs, const RefPtr& rhs) { return lhs.m_ptr == rhs.m_ptr; }
-    friend bool operator!=(const RefPtr& lhs, const RefPtr& rhs) { return lhs.m_ptr != rhs.m_ptr; }
+    friend bool operator==(const RefPtr& lhs, const RefPtr& rhs) = default;
+    friend bool operator==(const RefPtr& lhs, const T* rhs) { return lhs.m_ptr == rhs; }
 
 private:
     T* m_ptr = nullptr;
