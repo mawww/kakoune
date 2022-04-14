@@ -250,7 +250,7 @@ define-command -hidden crystal-fetch-objects %{
     set-register dquote %sh{
         curl --location https://crystal-lang.org/api/ |
         # Remove Top Level Namespace
-        kak -f '%1sdata-id="github.com/crystal-lang/crystal/(\w+)"<ret>)<a-space>y%<a-R>a<ret><esc><a-_>a<del><esc>'
+        kak -f '%1sdata-id="github.com/crystal-lang/crystal/(\w+)"<ret>)<a-,>y%<a-R>a<ret><esc><a-_>a<del><esc>'
     }
 }
 

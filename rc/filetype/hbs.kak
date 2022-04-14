@@ -72,7 +72,7 @@ define-command -hidden hbs-trim-indent %{
 define-command -hidden hbs-indent-on-char %[
     evaluate-commands -draft -itersel %[
         # de-indent after closing a yielded block tag
-        try %[ execute-keys -draft <space> <a-h> s ^\h+\{\{/([\w-.]+(?:/[\w-.]+)*)\}\}$ <ret> {c\{\{#<c-r>1,\{\{/<c-r>1\}\} <ret> s \A|.\z <ret> 1<a-&> ]
+        try %[ execute-keys -draft , <a-h> s ^\h+\{\{/([\w-.]+(?:/[\w-.]+)*)\}\}$ <ret> {c\{\{#<c-r>1,\{\{/<c-r>1\}\} <ret> s \A|.\z <ret> 1<a-&> ]
     ]
 ]
 

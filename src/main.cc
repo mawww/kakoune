@@ -49,6 +49,7 @@ struct {
         "» {+u}complete-command{} to configure command completion\n"
         "» {+b}!{} and {+b}<a-!>{} now select the inserted text\n"
         "» {+b}x{} now uses {+b}<a-x>{} behaviour\n"
+        "» {+b}<space>{} and {+b},{} have been swapped\n"
     }, {
         20211107,
         "» colored and curly underlines support (undocumented in 20210828)\n"

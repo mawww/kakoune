@@ -70,7 +70,7 @@ define-command -hidden html-trim-indent %{
 define-command -hidden html-indent-on-greater-than %[
     evaluate-commands -draft -itersel %[
         # align closing tag to opening when alone on a line
-        try %[ execute-keys -draft <space> <a-h> s ^\h+<lt>/(\w+)<gt>$ <ret> {c<lt><c-r>1,<lt>/<c-r>1<gt> <ret> s \A|.\z <ret> 1<a-&> ]
+        try %[ execute-keys -draft , <a-h> s ^\h+<lt>/(\w+)<gt>$ <ret> {c<lt><c-r>1,<lt>/<c-r>1<gt> <ret> s \A|.\z <ret> 1<a-&> ]
     ]
 ]
 

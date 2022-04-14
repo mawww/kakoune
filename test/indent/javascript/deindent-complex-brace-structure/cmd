@@ -1,1 +1,1 @@
-c<ret><esc>Oif (true) {}<esc>hi<ret><esc>Oconsole.log();<esc>hhi<ret><esc>O{},<ret>{},<esc>hh<a-C>i<ret><esc>1<space>Ofoo: { bar: 1 },<esc>jjobaz: { bam: 2 },<esc>
+c<ret><esc>Oif (true) {}<esc>hi<ret><esc>Oconsole.log();<esc>hhi<ret><esc>O{},<ret>{},<esc>hh<a-C>i<ret><esc>1,Ofoo: { bar: 1 },<esc>jjobaz: { bam: 2 },<esc>

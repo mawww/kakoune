@@ -2268,8 +2268,8 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
     { {'!'}, {"insert command output", insert_output<PasteMode::Insert>} },
     { {alt('!')}, {"append command output", insert_output<PasteMode::Append>} },
 
-    { {Key::Space}, {"remove all selections except main", keep_selection} },
-    { {alt(Key::Space)}, {"remove main selection", remove_selection} },
+    { {','}, {"remove all selections except main", keep_selection} },
+    { {alt(',')}, {"remove main selection", remove_selection} },
     { {';'}, {"reduce selections to their cursor", clear_selections} },
     { {alt(';')}, {"swap selections cursor and anchor", flip_selections} },
     { {alt(':')}, {"ensure selection cursor is after anchor", ensure_forward} },
@@ -2373,7 +2373,7 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
     { {'C'}, {"copy selection on next lines", copy_selections_on_next_lines<Forward>} },
     { {alt('C')}, {"copy selection on previous lines", copy_selections_on_next_lines<Backward>} },
 
-    { {','}, {"user mappings", exec_user_mappings} },
+    { {Key::Space}, {"user mappings", exec_user_mappings} },
 
     { {Key::PageUp}, {  "scroll one page up", scroll<Backward>} },
     { {Key::PageDown}, {"scroll one page down", scroll<Forward>} },

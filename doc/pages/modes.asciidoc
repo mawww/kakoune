@@ -89,8 +89,8 @@ See object commands <<keys#object-selection,`:doc keys object-selection`>>.
 
 === User mode
 
-Mode entered with `,` (comma key). The user mode is empty by default and is
-the opportunity to store custom mappings with no risk to shadow builtin ones.
+Mode entered with `<space>`. The user mode is empty by default and is the
+opportunity to store custom mappings with no risk to shadow builtin ones.
 The context of execution is always the Normal mode.
 
 == User modes

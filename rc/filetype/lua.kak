@@ -106,13 +106,13 @@ define-command -hidden lua-indent-on-new-line %[
         # remove trailing white spaces from previous line
         try %[ execute-keys -draft k : lua-trim-indent <ret> ]
         # preserve previous non-empty line indent
-        try %[ execute-keys -draft <space>gh<a-?>^[^\n]+$<ret>s\A|.\z<ret>)<a-&> ]
+        try %[ execute-keys -draft ,gh<a-?>^[^\n]+$<ret>s\A|.\z<ret>)<a-&> ]
         # add one indentation level if the previous line is not a comment and:
         #     - starts with a block keyword that is not closed on the same line,
         #     - or contains an unclosed function expression,
         #     - or ends with an enclosed '(' or '{'
         try %[ execute-keys -draft \
-            <space> Kx \
+            , Kx \
             <a-K>\A\h*--<ret> \
             <a-K>\A[^\n]*\b(end|until)\b<ret> \
             <a-k>\A(\h*\b(do|else|elseif|for|function|if|repeat|while)\b|[^\n]*[({]$|[^\n]*\bfunction\b\h*[(])<ret> \
