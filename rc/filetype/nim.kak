@@ -125,7 +125,7 @@ define-command -hidden nim-indent-on-new-line %{
         # cleanup trailing whitespaces from previous line
         try %{ exec -draft k x s \h+$ <ret> d }
         # indent after line ending with enum, tuple, object, type, import, export, const, let, var, ':' or '='
-        try %{ exec -draft <space> k x <a-k> (:|=|\b(?:enum|tuple|object|const|let|var|import|export|type))$ <ret> j <a-gt> }
+        try %{ exec -draft , k x <a-k> (:|=|\b(?:enum|tuple|object|const|let|var|import|export|type))$ <ret> j <a-gt> }
     }
 }
 

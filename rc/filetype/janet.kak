@@ -71,7 +71,7 @@ define-command -hidden janet-indent-on-new-line %{
         }
         try %{ execute-keys -draft '[rl"i<a-Z><gt>' }
         try %{ execute-keys -draft '[Bl"i<a-Z><gt>' }
-        execute-keys -draft '"i<a-z>a&<space>'
+        execute-keys -draft '"i<a-z>a&,'
     }
 }
 

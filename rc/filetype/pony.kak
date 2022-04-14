@@ -91,13 +91,13 @@ define-command -hidden pony-insert-on-new-line %{
 define-command -hidden pony-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
         # preserve previous line indent
-        try %{ execute-keys -draft <space> K <a-&> }
+        try %{ execute-keys -draft , K <a-&> }
         # cleanup trailing whitespaces from previous line
         try %{ execute-keys -draft k x s \h+$ <ret> d }
         # indent after line ending with :
-        try %{ execute-keys -draft <space> k x <a-k> (\b(?:do|try|then|else)|:|=>)$ <ret> j <a-gt> }
+        try %{ execute-keys -draft , k x <a-k> (\b(?:do|try|then|else)|:|=>)$ <ret> j <a-gt> }
         # else, end are always de-indented
-        try %{ execute-keys -draft <space> k x <a-k> \b(else|end):$ <ret> k x s ^\h* <ret> y j x <a-k> ^<c-r>" <ret> J <a-lt> }
+        try %{ execute-keys -draft , k x <a-k> \b(else|end):$ <ret> k x s ^\h* <ret> y j x <a-k> ^<c-r>" <ret> J <a-lt> }
     }
 }
 

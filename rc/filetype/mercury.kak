@@ -115,7 +115,7 @@ define-command -hidden mercury-indent-on-new-line %<
         # cleanup trailing whitespaces from previous line
         try %{ execute-keys -draft k x s \h+$ <ret> d }
         # indent after line ending with :-
-        try %{ execute-keys -draft <space> k x <a-k> :-$ <ret> j <a-gt> }
+        try %{ execute-keys -draft , k x <a-k> :-$ <ret> j <a-gt> }
         # deindent closing brace/bracket when after cursor
         try %< execute-keys -draft x <a-k> ^\h*[}\])] <ret> gh / [}\])] <ret> m <a-S> 1<a-&> >
     >

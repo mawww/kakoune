@@ -356,14 +356,14 @@ using the built-in `:doc` command.
                     and additional manual editing of the selections is
         .---,       needed. In order to loop through all the selections and
         | ) |       remove the current one, two primitives are available:
-        `---'       respectively the parenthesis (`)`), and the alt/space
-                    key combination (`<a-space>`).
+        `---'       respectively the parenthesis (`)`), and the alt/comma
+                    key combination (`<a-,>`).
      .---, .---,
-     |alt|+|spc|    Example: given a list of three numbers all selected
+     |alt|+| , |    Example: given a list of three numbers all selected
      `---' `---'    individually, (e.g., `1 2 3`), deselecting the second
                     selection would be done by hitting the parenthesis primitive
                     (`)`) until the according selection is the current one,
-                    then hitting `<a-space>` to end up with only the first
+                    then hitting `<a-,>` to end up with only the first
                     and third number selected.
 
                     However, being able to trim out some selections out

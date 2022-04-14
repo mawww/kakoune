@@ -95,7 +95,7 @@ define-command -hidden cucumber-indent-on-new-line %{
         # filter previous line
         try %{ execute-keys -draft k : cucumber-trim-indent <ret> }
         # indent after lines containing :
-        try %{ execute-keys -draft <space> k x <a-k> : <ret> j <a-gt> }
+        try %{ execute-keys -draft , k x <a-k> : <ret> j <a-gt> }
     }
 }
 

@@ -93,7 +93,7 @@ define-command -hidden r-indent-on-newline %< evaluate-commands -draft -itersel 
         # Validate selection and get first and last char
         execute-keys <a-k>\A[{(](\h*\S+)+\n<ret> <a-K>"(([^"]*"){2})*<ret> <a-K>'(([^']*'){2})*<ret> <a-:><a-semicolon>L <a-S>
         # Remove possibly incorrect indent from new line which was copied from previous line
-        try %< execute-keys -draft <space> <a-h> s\h+<ret> d >
+        try %< execute-keys -draft , <a-h> s\h+<ret> d >
         # Now indent and align that new line with the opening parenthesis/brace
         execute-keys 1<a-&> &
      > >
