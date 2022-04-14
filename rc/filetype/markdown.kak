@@ -45,13 +45,24 @@ evaluate-commands %sh{
     awk c cabal clojure coffee cpp crystal css cucumber d diff dockerfile elixir erlang fish
     gas go haml haskell html ini java javascript json julia kak kickstart
     latex lisp lua makefile markdown moon objc ocaml perl pug python ragel
-    ruby rust sass scala scss sh swift toml ts tupfile typescript yaml sql
+    ruby rust sass scala scheme scss sh swift toml ts tupfile typescript yaml sql
   "
   for lang in ${languages}; do
     printf 'add-highlighter shared/markdown/%s region -match-capture ^(\h*)```\h*(%s\\b|\\{[.=]?%s\\})   ^(\h*)``` regions\n' "${lang}" "${lang}" "${lang}"
     printf 'add-highlighter shared/markdown/%s/ default-region fill meta\n' "${lang}"
     case "${lang}" in
+      clj) ref="clojure" ;;
+      js)  ref="javascript" ;;
+      cr)  ref="crystal" ;;
+      c++) ref="cpp" ;;
+      ex)  ref="elixir" ;;
+      exs) ref="elixir" ;;
       kak) ref="kakrc" ;;
+      pl)  ref="perl" ;;
+      py)  ref="python" ;;
+      py3) ref="python" ;;
+      python3) ref="python" ;;
+      scm) ref="scheme" ;;
       ts)  ref="typescript" ;;
       *)   ref="${lang}" ;;
     esac
