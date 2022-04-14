@@ -74,7 +74,7 @@ define-command -hidden pug-indent-on-new-line %{
         # copy '//', '|', '-' or '(!)=' prefix and following whitespace
         try %{ execute-keys -draft k x s ^\h*\K[/|!=-]{1,2}\h* <ret> y gh j P }
         # indent unless we copied something above
-        try %{ execute-keys -draft <a-gt> <space> b s \S <ret> g l <a-lt> }
+        try %{ execute-keys -draft <a-gt> , b s \S <ret> g l <a-lt> }
     }
 }
 

@@ -575,10 +575,10 @@ to skim through the jump list using:
 *<a-C>*::
     copy the main selection to the previous line
 
-*<space>*::
+*,*::
     clear selections to only keep the main one
 
-*<a-space>*::
+*<a-,>*::
     clear the main selection
 
 *<a-k>*::
@@ -820,6 +820,6 @@ The following keys are recognized by this mode to help with editing
 
 == User commands
 
-*,*::
+*<space>*::
     enter default `user mode` to access custom commands
     (See <<modes#user-mode,`:doc modes user-mode`>>)

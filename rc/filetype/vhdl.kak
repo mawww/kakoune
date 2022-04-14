@@ -399,10 +399,10 @@ define-command -hidden vhdl-indent-on-new-line %{
         ]
 
         # Copy the indentation of the matching if.
-        try %{ execute-keys -draft <space> k x <a-k> ^\h*(elsif\b|else$) <ret> gh [c^\h*(\S*\h*:\h*)?if\b,\bend\sif\b <ret> x <a-S> 1<a-&> <space> j K <a-&> }
+        try %{ execute-keys -draft , k x <a-k> ^\h*(elsif\b|else$) <ret> gh [c^\h*(\S*\h*:\h*)?if\b,\bend\sif\b <ret> x <a-S> 1<a-&> , j K <a-&> }
 
         # Increase indent after some operators.
-        try %[ execute-keys -draft <semicolon> <space> k x <a-k> (\(|=>|<=|:=)$ <ret> j <a-gt> ]
+        try %[ execute-keys -draft <semicolon> , k x <a-k> (\(|=>|<=|:=)$ <ret> j <a-gt> ]
      }
 }
 

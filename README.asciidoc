@@ -628,8 +628,8 @@ pattern uses the last one.
 As a convenience, `<a-s>` allows you to split the current selections on
 line boundaries.
 
-To clear multiple selections, use `space`. To keep only the nth selection
-use `n` followed by `space`, in order to remove a selection, use `<a-space>`.
+To clear multiple selections, use `,`. To keep only the nth selection
+use `n` followed by `,`, in order to remove a selection, use `<a-,>`.
 
 `<a-k>` allows you to enter a regex and keep only the selections that
 contains a match for this regex. Using `<a-K>` you can keep the selections
