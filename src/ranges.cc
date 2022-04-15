@@ -7,24 +7,29 @@ namespace Kakoune
 {
 
 UnitTest test_ranges{[] {
-    auto check_equal = [](auto&& container, ConstArrayView<StringView> expected) {
+    using Strs = ConstArrayView<StringView>;
+    auto check_equal = [](auto&& container, auto&& expected) {
         kak_assert(std::equal(container.begin(), container.end(), expected.begin(), expected.end()));
     };
-    check_equal("a,b,c"_sv | split<StringView>(','), {"a", "b", "c"});
-    check_equal(",b,c"_sv  | split<StringView>(','), {"", "b", "c"});
-    check_equal(",b,"_sv   | split<StringView>(','), {"", "b", ""});
-    check_equal(","_sv     | split<StringView>(','), {"", ""});
-    check_equal(""_sv      | split<StringView>(','), {});
+    check_equal("a,b,c"_sv | split<StringView>(','), Strs{"a", "b", "c"});
+    check_equal(",b,c"_sv  | split<StringView>(','), Strs{"", "b", "c"});
+    check_equal(",b,"_sv   | split<StringView>(','), Strs{"", "b", ""});
+    check_equal(","_sv     | split<StringView>(','), Strs{"", ""});
+    check_equal(""_sv      | split<StringView>(','), Strs{});
 
-    check_equal("a,b,c,"_sv | split_after<StringView>(','), {"a,", "b,", "c,"});
-    check_equal("a,b,c"_sv  | split_after<StringView>(','), {"a,", "b,", "c"});
+    check_equal("a,b,c,"_sv | split_after<StringView>(','), Strs{"a,", "b,", "c,"});
+    check_equal("a,b,c"_sv  | split_after<StringView>(','), Strs{"a,", "b,", "c"});
 
     check_equal(R"(a\,,\,b,\,)"_sv | split<StringView>(',', '\\')
-                                   | transform(unescape<',', '\\'>), {"a,", ",b", ","});
+                                   | transform(unescape<',', '\\'>), Strs{"a,", ",b", ","});
     check_equal(R"(\,\,)"_sv | split<StringView>(',', '\\')
-                             | transform(unescape<',', '\\'>), {",,"});
+                             | transform(unescape<',', '\\'>), Strs{",,"});
     check_equal(R"(\\,\\,)"_sv | split<StringView>(',', '\\')
-                               | transform(unescape<',', '\\'>), {R"(\)", R"(\)", ""});
+                               | transform(unescape<',', '\\'>), Strs{R"(\)", R"(\)", ""});
+
+    check_equal(Array{{""_sv, "abc"_sv, ""_sv, "def"_sv, ""_sv}} | flatten(), "abcdef"_sv);
+    check_equal(Vector<StringView>{"", ""} | flatten(), ""_sv);
+    check_equal(Vector<StringView>{} | flatten(), ""_sv);
 }};
 
 }
