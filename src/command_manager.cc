@@ -132,7 +132,7 @@ ParseResult parse_quoted(ParseState& state, Delimiter delimiter)
         if (c == delimiter)
         {
             auto next = state.pos;
-            if (read(next, end) != delimiter)
+            if (next == end || read(next, end) != delimiter)
             {
                 if (str.empty())
                     return {String{String::NoCopy{}, {beg, cur}}, true};
@@ -815,15 +815,20 @@ UnitTest test_command_parsing{[]
 {
     auto check_quoted = [](StringView str, bool terminated, StringView content)
     {
-        ParseState state{str, str.begin()};
-        const Codepoint delimiter = *state.pos++;
-        auto quoted = parse_quoted(state, delimiter);
-        kak_assert(quoted.terminated == terminated);
-        kak_assert(quoted.content == content);
+        auto check_quoted_impl = [&](auto type_hint) {
+            ParseState state{str, str.begin()};
+            const decltype(type_hint) delimiter = *state.pos++;
+            auto quoted = parse_quoted(state, delimiter);
+            kak_assert(quoted.terminated == terminated);
+            kak_assert(quoted.content == content);
+        };
+        check_quoted_impl(Codepoint{});
+        check_quoted_impl(char{});
     };
     check_quoted("'abc'", true, "abc");
     check_quoted("'abc''def", false, "abc'def");
     check_quoted("'abc''def'''", true, "abc'def'");
+    check_quoted(StringView("'abc''def'", 5), true, "abc");
 
     auto check_balanced = [](StringView str, bool terminated, StringView content)
     {
