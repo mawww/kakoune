@@ -86,7 +86,7 @@ evaluate-commands %sh{
   add-highlighter shared/css/code/media_types regex \b($(join "${media_types}"))\b 1:+i
 
   # (after functional notation as they may contain paranthesis)
-  add-highlighter shared/css/code/pseudo regex (:{1,2})([a-z-]+) 2:attribute
+  add-highlighter shared/css/code/pseudo regex (:{1,2})([a-z-]+) 0:attribute
 
   add-highlighter shared/css/code/at_rules regex @[a-z-]+ 0:function 
 
