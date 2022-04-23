@@ -102,16 +102,24 @@ define-command -hidden go-indent-on-new-line %~
     evaluate-commands -draft -itersel %=
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon>K<a-&> }
-        # indent after lines ending with { or (
-        try %[ execute-keys -draft k<a-x> <a-k> [{(]\h*$ <ret> j<a-gt> ]
         # cleanup trailing white spaces on the previous line
         try %{ execute-keys -draft k<a-x> s \h+$ <ret>d }
-        # align to opening paren of previous line
-        try %{ execute-keys -draft [( <a-k> \A\([^\n]+\n[^\n]*\n?\z <ret> s \A\(\h*.|.\z <ret> '<a-;>' & }
-        # indent after a switch's case/default statements
-        try %[ execute-keys -draft k<a-x> <a-k> ^\h*(case|default).*:$ <ret> j<a-gt> ]
-        # deindent closing brace(s) when after cursor
-        try %[ execute-keys -draft <a-x> <a-k> ^\h*[})] <ret> gh / [})] <ret> m <a-S> 1<a-&> ]
+        try %{
+            try %{ # line comment
+                execute-keys -draft k<a-x> s ^\h*// <ret>
+            } catch %{ # block comment
+                execute-keys -draft <a-?> /\* <ret> <a-K>\*/<ret>
+            }
+        } catch %{
+            # indent after lines ending with { or (
+            try %[ execute-keys -draft k<a-x> <a-k> [{(]\h*$ <ret> j<a-gt> ]
+            # align to opening paren of previous line
+            try %{ execute-keys -draft [( <a-k> \A\([^\n]+\n[^\n]*\n?\z <ret> s \A\(\h*.|.\z <ret> '<a-;>' & }
+            # indent after a switch's case/default statements
+            try %[ execute-keys -draft k<a-x> <a-k> ^\h*(case|default).*:$ <ret> j<a-gt> ]
+            # deindent closing brace(s) when after cursor
+            try %[ execute-keys -draft <a-x> <a-k> ^\h*[})] <ret> gh / [})] <ret> m <a-S> 1<a-&> ]
+        }
     =
 ~
 
