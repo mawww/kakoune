@@ -39,7 +39,7 @@ define-command autorestore-restore-buffer \
             ## Replace the content of the buffer with the content of the backup file
             echo -debug Restoring file: ${newer}
 
-            execute-keys -draft %{ %d!cat<space>\"${newer}\"<ret>d }
+            execute-keys -draft %{%d!cat<space>\"${newer}\"<ret>jd}
 
             ## If the backup file has to be removed, issue the command once
             ## the current buffer has been saved
