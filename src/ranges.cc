@@ -27,7 +27,7 @@ UnitTest test_ranges{[] {
     check_equal(R"(\\,\\,)"_sv | split<StringView>(',', '\\')
                                | transform(unescape<',', '\\'>), Strs{R"(\)", R"(\)", ""});
 
-    check_equal(Array{{""_sv, "abc"_sv, ""_sv, "def"_sv, ""_sv}} | flatten(), "abcdef"_sv);
+    check_equal(Array{""_sv, "abc"_sv, ""_sv, "def"_sv, ""_sv} | flatten(), "abcdef"_sv);
     check_equal(Vector<StringView>{"", ""} | flatten(), ""_sv);
     check_equal(Vector<StringView>{} | flatten(), ""_sv);
 }};

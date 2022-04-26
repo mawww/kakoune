@@ -28,6 +28,9 @@ struct Array
     T m_data[N];
 };
 
+template<typename T, typename... U> requires (std::is_same_v<T, U> and ...)
+Array(T, U...) -> Array<T, 1 + sizeof...(U)>;
+
 template<typename T, size_t N, size_t... Indices>
 constexpr Array<T, N> make_array(const T (&data)[N], std::index_sequence<Indices...>)
 {
