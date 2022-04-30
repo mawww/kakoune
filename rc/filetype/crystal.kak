@@ -17,6 +17,7 @@ hook global WinSetOption filetype=crystal %{
     add-highlighter window/crystal ref crystal
     evaluate-commands set-option window static_words %opt{crystal_keywords} %opt{crystal_attributes} %opt{crystal_objects}
 
+    hook window ModeChange pop:insert:.* -group crystal-trim-indent crystal-trim-indent
     hook window InsertChar .*   -group crystal-indent crystal-indent-on-char
     hook window InsertChar '\n' -group crystal-indent crystal-indent-on-new-line
     hook window InsertChar '\n' -group crystal-insert crystal-insert-on-new-line

@@ -14,6 +14,7 @@ hook global BufCreate .*[.](fish) %{
 hook global WinSetOption filetype=fish %{
     require-module fish
 
+    hook window ModeChange pop:insert:.* -group fish-trim-indent fish-trim-indent
     hook window InsertChar .* -group fish-indent fish-indent-on-char
     hook window InsertChar \n -group fish-insert fish-insert-on-new-line
     hook window InsertChar \n -group fish-indent fish-indent-on-new-line

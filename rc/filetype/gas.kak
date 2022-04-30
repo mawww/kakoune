@@ -7,6 +7,7 @@ hook global BufCreate .*\.(s|S|asm)$ %{
 hook global WinSetOption filetype=gas %{
     require-module gas
 
+    hook window ModeChange pop:insert:.* -group gas-trim-indent gas-trim-indent
     hook window InsertChar \n -group gas-indent gas-indent-on-new-line
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window gas-.+ }
 }
