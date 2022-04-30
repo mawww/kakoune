@@ -14,7 +14,7 @@ hook global BufCreate .*[.](cabal) %{
 hook global WinSetOption filetype=cabal %[
     require-module cabal
 
-    hook window ModeChange pop:insert:.* -group cabal-trim-indent  cabal-trim-indent
+    hook window ModeChange pop:insert:.* -group cabal-trim-indent cabal-trim-indent
     hook window InsertChar \n -group cabal-insert cabal-insert-on-new-line
     hook window InsertChar \n -group cabal-indent cabal-indent-on-new-line
     hook window InsertChar \{ -group cabal-indent cabal-indent-on-opening-curly-brace

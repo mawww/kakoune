@@ -14,7 +14,7 @@ hook global BufCreate .*[.](nix) %{
 hook global WinSetOption filetype=nix %{
     require-module nix
 
-    hook window ModeChange pop:insert:.* -group nix-trim-indent  nix-trim-indent
+    hook window ModeChange pop:insert:.* -group nix-trim-indent nix-trim-indent
     hook window InsertChar .* -group nix-indent nix-indent-on-char
     hook window InsertChar \n -group nix-insert nix-insert-on-new-line
     hook window InsertChar \n -group nix-indent nix-indent-on-new-line

@@ -12,7 +12,7 @@ hook global BufCreate .*[.](janet|jdn) %{
 hook global WinSetOption filetype=janet %{
     require-module janet
 
-    hook window ModeChange pop:insert:.* -group janet-trim-indent  janet-trim-indent
+    hook window ModeChange pop:insert:.* -group janet-trim-indent janet-trim-indent
     hook window InsertChar \n -group janet-indent janet-indent-on-new-line
     set-option buffer extra_word_chars ! @ $ '%' ^ & * - _ + = : < > . ?
 

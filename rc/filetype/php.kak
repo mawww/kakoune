@@ -11,7 +11,7 @@ hook global BufCreate .*[.](phpt?) %{
 hook global WinSetOption filetype=php %{
     require-module php
 
-    hook window ModeChange pop:insert:.* -group php-trim-indent  php-trim-indent
+    hook window ModeChange pop:insert:.* -group php-trim-indent php-trim-indent
     hook window InsertChar .* -group php-indent php-indent-on-char
     hook window InsertChar \n -group php-insert php-insert-on-new-line
     hook window InsertChar \n -group php-indent php-indent-on-new-line

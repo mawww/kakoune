@@ -17,7 +17,7 @@ hook global WinSetOption filetype=scheme %{
     set-option window static_words %opt{scheme_static_words}
 
     set-option buffer extra_word_chars '!' '$' '%' '&' '*' '+' '-' '.' '/' ':' '<' '=' '>' '?' '@' '^' '_' '~'
-    hook window ModeChange pop:insert:.* -group scheme-trim-indent  lisp-trim-indent
+    hook window ModeChange pop:insert:.* -group scheme-trim-indent lisp-trim-indent
     hook window InsertChar \n -group scheme-indent lisp-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window scheme-.+ }

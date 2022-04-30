@@ -14,7 +14,7 @@ hook global BufCreate .*[.](graphqls?) %{
 hook global WinSetOption filetype=graphql %{
     require-module graphql
 
-    hook window ModeChange pop:insert:.* -group graphql-trim-indent  graphql-trim-indent
+    hook window ModeChange pop:insert:.* -group graphql-trim-indent graphql-trim-indent
     hook window InsertChar .* -group graphql-indent graphql-indent-on-char
     hook window InsertChar \n -group graphql-indent graphql-indent-on-new-line
 

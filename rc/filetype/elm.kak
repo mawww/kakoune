@@ -14,7 +14,7 @@ hook global BufCreate .*[.](elm) %{
 hook global WinSetOption filetype=elm %{
     require-module elm
 
-    hook window ModeChange pop:insert:.* -group elm-trim-indent  elm-trim-indent
+    hook window ModeChange pop:insert:.* -group elm-trim-indent elm-trim-indent
     hook window InsertChar \n -group elm-insert elm-insert-on-new-line
     hook window InsertChar \n -group elm-indent elm-indent-on-new-line
 

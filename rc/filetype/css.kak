@@ -14,7 +14,7 @@ hook global BufCreate .*[.](css) %{
 hook global WinSetOption filetype=css %[
     require-module css
 
-    hook window ModeChange pop:insert:.* -group css-trim-indent  css-trim-indent
+    hook window ModeChange pop:insert:.* -group css-trim-indent css-trim-indent
     hook window InsertChar \n -group css-insert css-insert-on-new-line
     hook window InsertChar \n -group css-indent css-indent-on-new-line
     hook window InsertChar \} -group css-indent css-indent-on-closing-curly-brace

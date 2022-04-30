@@ -18,7 +18,7 @@ hook global BufCreate .*[.](pug|jade) %{
 hook global WinSetOption filetype=pug %{
     require-module pug
 
-    hook window ModeChange pop:insert:.* -group pug-trim-indent  pug-trim-indent
+    hook window ModeChange pop:insert:.* -group pug-trim-indent pug-trim-indent
     hook window InsertChar \n -group pug-indent pug-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window pug-.+ }

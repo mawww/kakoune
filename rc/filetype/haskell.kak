@@ -15,7 +15,7 @@ hook global WinSetOption filetype=haskell %{
     require-module haskell
 
     set-option buffer extra_word_chars '_' "'"
-    hook window ModeChange pop:insert:.* -group haskell-trim-indent  haskell-trim-indent
+    hook window ModeChange pop:insert:.* -group haskell-trim-indent haskell-trim-indent
     hook window InsertChar \n -group haskell-insert haskell-insert-on-new-line
     hook window InsertChar \n -group haskell-indent haskell-indent-on-new-line
 

@@ -17,7 +17,7 @@ hook global WinSetOption filetype=purescript %{
     require-module purescript
 
     set-option buffer extra_word_chars '_' "'"
-    hook window ModeChange pop:insert:.* -group purescript-trim-indent  purescript-trim-indent
+    hook window ModeChange pop:insert:.* -group purescript-trim-indent purescript-trim-indent
     hook window InsertChar \n -group purescript-insert purescript-insert-on-new-line
     hook window InsertChar \n -group purescript-indent purescript-indent-on-new-line
 

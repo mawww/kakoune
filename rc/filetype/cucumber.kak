@@ -14,7 +14,7 @@ hook global BufCreate .*[.](feature|story) %{
 hook global WinSetOption filetype=cucumber %{
     require-module cucumber
 
-    hook window ModeChange pop:insert:.* -group cucumber-trim-indent  cucumber-trim-indent
+    hook window ModeChange pop:insert:.* -group cucumber-trim-indent cucumber-trim-indent
     hook window InsertChar \n -group cucumber-insert cucumber-insert-on-new-line
     hook window InsertChar \n -group cucumber-indent cucumber-indent-on-new-line
 

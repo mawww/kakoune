@@ -14,7 +14,7 @@ hook global BufCreate .*[.](scala) %{
 hook global WinSetOption filetype=scala %[
     require-module scala
 
-    hook window ModeChange pop:insert:.* -group scala-trim-indent  scala-trim-indent
+    hook window ModeChange pop:insert:.* -group scala-trim-indent scala-trim-indent
     hook window InsertChar \n -group scala-insert scala-insert-on-new-line
     hook window InsertChar \n -group scala-indent scala-indent-on-new-line
     hook window InsertChar \} -group scala-indent scala-indent-on-closing-curly-brace
