@@ -206,7 +206,7 @@ define-command -hidden crystal-indent-on-new-line %{
         # Copy previous line indent
         try %{ execute-keys -draft K <a-&> }
         # Remove previous line's trailing spaces
-        try %{ execute-keys -draft k :ruby-trim-indent <ret> }
+        try %{ execute-keys -draft k :crystal-trim-indent <ret> }
         # Indent after start structure/opening statement
         try %{ execute-keys -draft k <a-x> <a-k> ^\h*(?:begin|case|class|def|else|elsif|ensure|for|if|module|rescue|unless|until|when|while|.+\bdo$|.+\bdo\h\|.+(?=\|))[^0-9A-Za-z_!?] <ret> j <a-gt> }
     }
