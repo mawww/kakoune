@@ -1694,8 +1694,6 @@ InputHandler::ScopedForceNormal::~ScopedForceNormal()
     if (not m_mode)
         return;
 
-    kak_assert(m_handler.m_mode_stack.size() > 1);
-
     if (m_mode == m_handler.m_mode_stack.back().get())
         m_handler.pop_mode(m_mode);
     else if (auto it = find(m_handler.m_mode_stack, m_mode);
