@@ -6,7 +6,7 @@ hook global BufCreate .*/NOTES_EDITMSG %{
     set-option buffer filetype git-notes
 }
 
-hook global BufCreate .*(\.gitconfig|git/config) %{
+hook global BufCreate .*(\.git(config|modules)|git/config) %{
     set-option buffer filetype ini
 }
 
