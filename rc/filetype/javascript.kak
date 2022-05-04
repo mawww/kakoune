@@ -56,20 +56,19 @@ define-command -hidden javascript-indent-on-char %<
 define-command -hidden javascript-insert-on-new-line %<
     evaluate-commands -draft -itersel %<
     execute-keys <semicolon>
-    # NOT working, copies single line comment "//"
-    # try %[
-    #     evaluate-commands -draft -save-regs '/"' %[
-    #         # copy the commenting prefix
-    #         execute-keys -save-regs '' k <a-x>1s^\h*(//+\h*)<ret> y
-    #         try %[
-    #             # if the previous comment isn't empty, create a new one
-    #             execute-keys <a-x><a-K>^\h*//+\h*$<ret> j<a-x>s^\h*<ret>P
-    #         ] catch %[
-    #             # if there is no text in the previous comment, remove it completely
-    #             execute-keys d
-    #         ]
-    #     ]
-    # ]
+    try %[
+        evaluate-commands -draft -save-regs '/"' %[
+            # copy the commenting prefix
+            execute-keys -save-regs '' k <a-x>1s^\h*(//+\h*)<ret> y
+            try %[
+                # if the previous comment isn't empty, create a new one
+                execute-keys <a-x><a-K>^\h*//+\h*$<ret> j<a-x>s^\h*<ret>P
+            ] catch %[
+                # if there is no text in the previous comment, remove it completely
+                execute-keys d
+            ]
+        ]
+    ]
     try %[
         # if the previous line isn't within a comment scope, break
         execute-keys -draft k<a-x> <a-k>^(\h*/\*|\h+\*(?!/))<ret>
@@ -102,8 +101,6 @@ define-command -hidden javascript-insert-on-new-line %<
         # align the new star with the previous one
         execute-keys K<a-x>1s^[^*]*(\*)<ret>&
     ]
-        # # copy // comments prefix and following white spaces
-        # try %{ execute-keys -draft k <a-x> s ^\h*\K/{2,}\h* <ret> y gh j P }
     >
 >
 
@@ -153,14 +150,6 @@ define-command -hidden javascript-indent-on-new-line %<
         # Now indent and align that new line with the opening parenthesis/brace
         execute-keys 1<a-&> &
      > >
-        # # preserve previous line indent
-        # try %{ execute-keys -draft <semicolon> K <a-&> }
-        # # filter previous line
-        # try %{ execute-keys -draft k : javascript-trim-indent <ret> }
-        # # indent after lines beginning / ending with opener token
-        # try %_ execute-keys -draft k <a-x> s [[({] <ret> <space> <a-l> <a-K> [\])}] <ret> j <a-gt> _
-        # # deindent closing token(s) when after cursor
-        # try %_ execute-keys -draft <a-x> <a-k> ^\h*[})\]] <ret> gh / [})\]] <ret> m <a-S> 1<a-&> _
     >
 >
 
