@@ -605,8 +605,8 @@ const String& session_directory()
 
 String session_path(StringView session)
 {
-    if (contains(session, '/'))
-        throw runtime_error{"session names cannot have slashes"};
+    if (not all_of(session, is_identifier))
+        throw runtime_error{format("invalid session name: '{}'", session)};
     return format("{}/{}", session_directory(), session);
 }
 
@@ -614,7 +614,10 @@ static sockaddr_un session_addr(StringView session)
 {
     sockaddr_un addr;
     addr.sun_family = AF_UNIX;
-    strcpy(addr.sun_path, session_path(session).c_str());
+    String path = session_path(session);
+    if (path.length() + 1 > sizeof addr.sun_path)
+        throw runtime_error{format("socket path too long: '{}'", path)};
+    strcpy(addr.sun_path, path.c_str());
     return addr;
 }
 
@@ -848,9 +851,6 @@ private:
 Server::Server(String session_name, bool is_daemon)
     : m_session{std::move(session_name)}, m_is_daemon{is_daemon}
 {
-    if (not all_of(m_session, is_identifier))
-        throw runtime_error{format("invalid session name: '{}'", m_session)};
-
     int listen_sock = socket(AF_UNIX, SOCK_STREAM, 0);
     fcntl(listen_sock, F_SETFD, FD_CLOEXEC);
     sockaddr_un addr = session_addr(m_session);
@@ -885,9 +885,6 @@ Server::Server(String session_name, bool is_daemon)
 
 bool Server::rename_session(StringView name)
 {
-    if (not all_of(name, is_identifier))
-        throw runtime_error{format("invalid session name: '{}'", name)};
-
     String old_socket_file = session_path(m_session);
     String new_socket_file = session_path(name);
 

@@ -22,5 +22,5 @@ define-command -hidden file-detection %{ evaluate-commands %sh{
     fi
 } }
 
-hook global BufOpenFile .* file-detection
-hook global BufWritePost .* file-detection
+hook -group file-detection global BufOpenFile .* file-detection
+hook -group file-detection global BufWritePost .* file-detection

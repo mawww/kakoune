@@ -2086,14 +2086,7 @@ const CommandDesc execute_keys_cmd = {
             ScopedSetBool disable_keymaps(context.keymaps_disabled(), not parser.get_switch("with-maps"));
             ScopedSetBool disable_hoooks(context.hooks_disabled(), not parser.get_switch("with-hooks"));
 
-            KeyList keys;
-            for (auto& param : parser)
-            {
-                KeyList param_keys = parse_keys(param);
-                keys.insert(keys.end(), param_keys.begin(), param_keys.end());
-            }
-
-            for (auto& key : keys)
+            for (auto& key : parser | transform(parse_keys) | flatten())
                 context.input_handler().handle_key(key);
         });
     }
