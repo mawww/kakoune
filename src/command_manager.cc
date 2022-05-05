@@ -382,10 +382,10 @@ void expand_token(Token&& token, const Context& context, const ShellContext& she
                 return set_target(params);
         }
 
-        const int arg = str_to_int(content)-1;
-        if (arg < 0)
+        const int arg = str_to_int(content);
+        if (arg < 1)
             throw runtime_error("invalid argument index");
-        return set_target(arg < params.size() ? params[arg] : String{});
+        return set_target(arg <= params.size() ? params[arg-1] : String{});
     }
     case Token::Type::FileExpand:
         return set_target(read_file(content));
