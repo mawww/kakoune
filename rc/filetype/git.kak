@@ -53,7 +53,7 @@ add-highlighter shared/git-commit/comments/ regex "\b(?:(modified)|(deleted)|(ne
 
 provide-module git-ignore %{
 add-highlighter shared/git-ignore group
-add-highlighter shared/git-ignore/glob regex '(?<!\\)\*((?<!\\)\*)?|(?<!\\)\?' 0:operator
++add-highlighter shared/git-ignore/glob regex '(?<!\\)(?:\\\\)*\K(\*\*?|\?|\[.*?(?<!\\)(?:\\\\)*\])' 0:operator
 add-highlighter shared/git-ignore/negate regex '^!' 0:operator
 add-highlighter shared/git-ignore/comments regex '^#.*?$' 0:comment
 }
