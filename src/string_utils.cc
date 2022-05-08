@@ -197,7 +197,13 @@ InplaceString<23> to_string(Hex val)
 
 InplaceString<23> to_string(float val)
 {
+#if defined(__cpp_lib_to_chars)
     return to_string_impl<23>(val, std::chars_format::general);
+#else
+    InplaceString<23> res;
+    res.m_length = sprintf(res.m_data, "%f", val);
+    return res;
+#endif
 }
 
 InplaceString<7> to_string(Codepoint c)
