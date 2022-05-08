@@ -13,6 +13,7 @@ hook global WinSetOption filetype=makefile %{
 
     set-option window static_words %opt{makefile_static_words}
 
+    hook window ModeChange pop:insert:.* -group makefile-trim-indent makefile-trim-indent
     hook window InsertChar \n -group makefile-indent makefile-indent-on-new-line
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window makefile-.+ }
 }
@@ -49,6 +50,14 @@ evaluate-commands %sh{
 
 # Commands
 # ‾‾‾‾‾‾‾‾
+
+define-command -hidden makefile-trim-indent %{
+    evaluate-commands -no-hooks -draft -itersel %{
+        execute-keys <a-x>
+        # remove trailing white spaces
+        try %{ execute-keys -draft s \h + $ <ret> d }
+    }
+}
 
 define-command -hidden makefile-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
