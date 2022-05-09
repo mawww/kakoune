@@ -1,7 +1,7 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate .*[.]m?(js)x? %{
+hook global BufCreate .*[.][cm]?(js)x? %{
     set-option buffer filetype javascript
 }
 
