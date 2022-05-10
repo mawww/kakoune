@@ -5,6 +5,7 @@
 #include "exception.hh"
 #include "flags.hh"
 #include "option_types.hh"
+#include "event_manager.hh"
 #include "ranked_match.hh"
 #include "regex.hh"
 #include "string.hh"
@@ -256,13 +257,20 @@ void write(int fd, StringView data)
     const char* ptr = data.data();
     ssize_t count   = (int)data.length();
 
+    int flags = fcntl(fd, F_GETFL, 0);
+    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+    auto restore_flags = on_scope_end([&] { fcntl(fd, F_SETFL, flags); });
+
     while (count)
     {
-        ssize_t written = ::write(fd, ptr, count);
-        ptr += written;
-        count -= written;
-
-        if (written == -1)
+        if (ssize_t written = ::write(fd, ptr, count); written != -1)
+        {
+            ptr += written;
+            count -= written;
+        }
+        else if (errno == EAGAIN and EventManager::has_instance())
+            EventManager::instance().handle_next_events(EventMode::Urgent, nullptr, false);
+        else
             throw file_access_error(format("fd: {}", fd), strerror(errno));
     }
 }
