@@ -10,6 +10,16 @@
 namespace Kakoune
 {
 
+StringView trim_whitespaces(StringView str)
+{
+    auto beg = str.begin(), end = str.end();
+    while (beg != end and is_blank(*beg))
+        ++beg;
+    while (beg != end and is_blank(*(end-1)))
+        --end;
+    return {beg, end};
+}
+
 String trim_indent(StringView str)
 {
     if (str.empty())
