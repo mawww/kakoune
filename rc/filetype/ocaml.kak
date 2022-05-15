@@ -32,7 +32,7 @@ provide-module ocaml %{
 
 add-highlighter shared/ocaml regions
 add-highlighter shared/ocaml/code default-region group
-add-highlighter shared/ocaml/string region (?<!')" (?<!\\)(\\\\)*" fill string
+add-highlighter shared/ocaml/string region (?<!['\\])" (?<!\\)(\\\\)*" fill string
 add-highlighter shared/ocaml/quotedstring region -match-capture %"\{(\w*)\|" %"\|(\w*)\}" fill string
 add-highlighter shared/ocaml/comment region -recurse \Q(* \Q(* \Q*) fill comment
 
