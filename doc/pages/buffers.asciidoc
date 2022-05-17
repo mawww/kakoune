@@ -11,10 +11,9 @@ Scratch buffers are useful for volatile data and quick prototyping.
 They are not linked to files, so Kakoune does not warn about unsaved
 changes at exit, and the `:write` command requires an explicit filename.
 
-One particular scratch buffer, named *\*scratch*\*, is automatically
-created when there are no other buffers left in the current
-session. (which is also the case at Kakoune's startup when no files to
-open have been provided)
+One particular scratch buffer, named *\*scratch*\*, is automatically created
+when there are no other buffers left in the current session, which is also
+the case when Kakoune starts up without any files to open.
 
 A scratch buffer can be created by passing the `-scratch` switch to the
 `:edit` command.
@@ -26,9 +25,9 @@ restrictions compared to regular buffers:
 
 - They are skipped when cycling over the buffers list.
 - Their content is not considered for word completions with `word=all`
-  completers
-- Hooks are not always run (like the `BufCreate`/`BufClose` hooks)
-- Display profiling is disabled
+  completers.
+- Hooks are not always run (like the `BufCreate`/`BufClose` hooks).
+- Display profiling is disabled.
 
 A specific *\*debug*\* buffer is used by Kakoune to write errors or
 warnings.  This is also where the ouput of the `:debug` and the `:echo
@@ -46,8 +45,8 @@ The `:edit` command can take a `-fifo` switch:
 ---------------------------------------------
 
 In this case, a buffer named `<buffername>` is created which reads
-its content from the fifo (also called "named pipe") `<filename>`.
-When the fifo is written to, the buffer is automatically updated.
+its content from the FIFO (also called "named pipe") `<filename>`.
+When the FIFO is written to, the buffer is automatically updated.
 
 If the `-scroll` switch is specified, the window displaying the buffer
 will scroll so that the newest data is always visible.
@@ -56,8 +55,7 @@ This is very useful for running some commands asynchronously while
 displaying their result in a buffer. See `rc/make.kak` and `rc/grep.kak`
 for examples.
 
-When the write end of the fifo is closed, the buffer becomes an ordinary
+When the write end of the FIFO is closed, the buffer becomes an ordinary
 <<buffers#scratch-buffers,scratch buffer>>. When the buffer is deleted,
-Kakoune closes the read end of the fifo, so any program writing to it
-will receive `SIGPIPE`. This is useful as it permits stopping the writing
-program when the buffer is deleted.
+Kakoune closes the read end of the FIFO. Any program writing to the FIFO
+will receive `SIGPIPE`, which will terminate the program by default.
