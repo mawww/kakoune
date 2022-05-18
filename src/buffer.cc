@@ -414,7 +414,7 @@ BufferRange Buffer::do_insert(BufferCoord pos, StringView content)
         if (content[i] == '\n')
         {
             StringView line = content.substr(start, i + 1 - start);
-            new_lines.push_back(StringData::create(start == 0 ? prefix + line : line));
+            new_lines.push_back(start == 0 ? StringData::create({prefix, line}) : StringData::create({line}));
             start = i + 1;
         }
     }
@@ -450,22 +450,14 @@ BufferCoord Buffer::do_erase(BufferCoord begin, BufferCoord end)
     StringView prefix = m_lines[begin.line].substr(0, begin.column);
     StringView suffix = end.line == line_count() ? StringView{} : m_lines[end.line].substr(end.column);
 
-    BufferCoord next;
-    if (not prefix.empty() or not suffix.empty())
-    {
-        auto new_line = StringData::create({prefix, suffix});
-        m_lines.erase(m_lines.begin() + (int)begin.line, m_lines.begin() + (int)end.line);
-        m_lines.get_storage(begin.line) = std::move(new_line);
-        next = begin;
-    }
-    else
-    {
-        m_lines.erase(m_lines.begin() + (int)begin.line, m_lines.begin() + (int)end.line);
-        next = begin.line;
-    }
+    auto new_line = (not prefix.empty() or not suffix.empty()) ? StringData::create({prefix, suffix}) : StringDataPtr{};
+    m_lines.erase(m_lines.begin() + (int)begin.line, m_lines.begin() + (int)end.line);
 
     m_changes.push_back({ Change::Erase, begin, end });
-    return next;
+    if (new_line)
+        m_lines.get_storage(begin.line) = std::move(new_line);
+
+    return begin;
 }
 
 void Buffer::apply_modification(const Modification& modification)
