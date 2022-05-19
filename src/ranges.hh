@@ -122,9 +122,14 @@ struct FilterView
 {
     using RangeIt = IteratorOf<Range>;
 
-    struct Iterator : std::iterator<std::forward_iterator_tag,
-                                    typename std::iterator_traits<RangeIt>::value_type>
+    struct Iterator
     {
+        using difference_type = ptrdiff_t;
+        using value_type = typename std::iterator_traits<RangeIt>::value_type;
+        using pointer = value_type*;
+        using reference = value_type&;
+        using iterator_category = std::forward_iterator_tag;
+
         Iterator(Filter& filter, RangeIt it, RangeIt end)
             : m_it{std::move(it)}, m_end{std::move(end)}, m_filter{&filter}
         {
@@ -180,9 +185,14 @@ struct EnumerateView
 {
     using RangeIt = IteratorOf<Range>;
 
-    struct Iterator : std::iterator<std::forward_iterator_tag,
-                                    typename std::iterator_traits<RangeIt>::value_type>
+    struct Iterator
     {
+        using difference_type = ptrdiff_t;
+        using value_type = typename std::iterator_traits<RangeIt>::value_type;
+        using pointer = value_type*;
+        using reference = value_type&;
+        using iterator_category = std::forward_iterator_tag;
+
         Iterator(size_t index, RangeIt it)
             : m_index{index}, m_it{std::move(it)} {}
 
@@ -317,8 +327,14 @@ struct SplitView
                                          std::pair<IteratorOf<Range>, IteratorOf<Range>>,
                                          ValueTypeParam>;
 
-    struct Iterator : std::iterator<std::forward_iterator_tag, ValueType>
+    struct Iterator
     {
+        using difference_type = ptrdiff_t;
+        using value_type = ValueType;
+        using pointer = ValueType*;
+        using reference = ValueType&;
+        using iterator_category = std::forward_iterator_tag;
+
         Iterator(RangeIt pos, const RangeIt& end, Element separator, Element escaper)
          : done{pos == end}, pos{pos}, sep{pos}, end(end), separator{std::move(separator)}, escaper{std::move(escaper)}
         {
@@ -486,8 +502,14 @@ struct ConcatView
     using ValueType = typename std::common_type_t<typename std::iterator_traits<RangeIt1>::value_type,
                                                   typename std::iterator_traits<RangeIt2>::value_type>;
 
-    struct Iterator : std::iterator<std::forward_iterator_tag, ValueType>
+    struct Iterator
     {
+        using difference_type = ptrdiff_t;
+        using value_type = ValueType;
+        using pointer = ValueType*;
+        using reference = ValueType&;
+        using iterator_category = std::forward_iterator_tag;
+
         static_assert(std::is_convertible<typename std::iterator_traits<RangeIt1>::value_type, ValueType>::value, "");
         static_assert(std::is_convertible<typename std::iterator_traits<RangeIt2>::value_type, ValueType>::value, "");
 

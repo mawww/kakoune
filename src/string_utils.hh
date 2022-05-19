@@ -68,8 +68,14 @@ String expand_tabs(StringView line, ColumnCount tabstop, ColumnCount col = 0);
 
 struct WrapView
 {
-    struct Iterator : std::iterator<std::forward_iterator_tag, StringView>
+    struct Iterator
     {
+        using difference_type = ptrdiff_t;
+        using value_type = StringView;
+        using pointer = StringView*;
+        using reference = StringView&;
+        using iterator_category = std::forward_iterator_tag;
+
         Iterator(StringView text, ColumnCount max_width);
 
         Iterator& operator++();
