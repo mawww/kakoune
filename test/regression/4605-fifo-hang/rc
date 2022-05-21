@@ -1,5 +1,6 @@
 exec 5000oabcdefghi<esc>%yppppp
-nop %sh{
+eval %sh{
     echo "write $kak_response_fifo" > "$kak_command_fifo"
-    strace -o /tmp/strace.log cat "$kak_response_fifo"
+    set -- $(wc -c "$kak_response_fifo")
+    echo "exec '%c$1'"
 }
