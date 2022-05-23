@@ -218,15 +218,15 @@ add-highlighter <path>/<name>/<region_name> region \
 *recurse*::
     regex that defines the text that matches recursively an end token
     into the region, every match of *recurse* will consume a following
-    match of *end*, preventing it from closing the region.
+    match of *closing* regex, preventing it from closing the region.
 
 *type* and *params*::
     A highlighter type, and associated params, as they would be passed
     to `add-highlighter` if they were not applied as a region.
 
-If the *-match-capture* switch is passed, then region closing and recurse
-matches are considered valid for a given region opening match only if they
-matched the same content for the capture 1.
+If the *-match-capture* switch is passed, then region *closing* and *recurse*
+regex matches are considered valid for a given region opening match only if they
+matched the same content for the capture 1 in the *opening* regex.
 
 The *recurse* option is useful for regions that can be nested, for example
 the following construct:
