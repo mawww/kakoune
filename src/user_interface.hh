@@ -16,6 +16,8 @@ using DisplayLineList = Vector<DisplayLine, MemoryDomain::Display>;
 struct DisplayCoord;
 struct Face;
 struct Key;
+struct LineCount;
+template<typename T> struct Range;
 
 enum class MenuStyle
 {
@@ -63,7 +65,9 @@ public:
                            InfoStyle style) = 0;
     virtual void info_hide() = 0;
 
-    virtual void draw(const DisplayBuffer& display_buffer,
+    virtual void draw(ConstArrayView<DisplayLine> lines,
+                      Range<LineCount> range,
+                      LineCount buffer_line_count,
                       const Face& default_face,
                       const Face& padding_face) = 0;
 

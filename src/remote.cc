@@ -146,11 +146,6 @@ private:
         write_field(line.atoms());
     }
 
-    void write_field(const DisplayBuffer& display_buffer)
-    {
-        write_field(display_buffer.lines());
-    }
-
 private:
     RemoteBuffer& m_buffer;
     uint32_t m_start;
@@ -364,16 +359,6 @@ struct MsgReader::Reader<DisplayLine> {
     }
 };
 
-template<>
-struct MsgReader::Reader<DisplayBuffer> {
-    static DisplayBuffer read(MsgReader& reader)
-    {
-        DisplayBuffer db;
-        db.lines() = Reader<Vector<DisplayLine>>::read(reader);
-        return db;
-    }
-};
-
 
 class RemoteUI : public UserInterface
 {
@@ -393,7 +378,9 @@ public:
                    InfoStyle style) override;
     void info_hide() override;
 
-    void draw(const DisplayBuffer& display_buffer,
+    void draw(ConstArrayView<DisplayLine> lines,
+              Range<LineCount> range,
+              LineCount buffer_line_count,
               const Face& default_face,
               const Face& padding_face) override;
 
@@ -545,11 +532,13 @@ void RemoteUI::info_hide()
     send_message(MessageType::InfoHide);
 }
 
-void RemoteUI::draw(const DisplayBuffer& display_buffer,
+void RemoteUI::draw(ConstArrayView<DisplayLine> lines,
+                    Range<LineCount> range,
+                    LineCount buffer_line_count,
                     const Face& default_face,
                     const Face& padding_face)
 {
-    send_message(MessageType::Draw, display_buffer, default_face, padding_face);
+    send_message(MessageType::Draw, lines, range.begin, range.end, buffer_line_count, default_face, padding_face);
 }
 
 void RemoteUI::draw_status(const DisplayLine& status_line,
@@ -706,10 +695,12 @@ RemoteClient::RemoteClient(StringView session, StringView name, std::unique_ptr<
                 break;
             case MessageType::Draw:
             {
-                auto display_buffer = reader.read<DisplayBuffer>();
+                auto lines = reader.read<Vector<DisplayLine>>();
+                Range<LineCount> range = {reader.read<LineCount>(), reader.read<LineCount>()}; 
+                LineCount buffer_line_count = reader.read<LineCount>(); 
                 auto default_face = reader.read<Face>();
                 auto padding_face = reader.read<Face>();
-                m_ui->draw(display_buffer, default_face, padding_face);
+                m_ui->draw(lines, range, buffer_line_count, default_face, padding_face);
                 break;
             }
             case MessageType::DrawStatus:

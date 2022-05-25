@@ -222,8 +222,13 @@ void Client::redraw_ifn()
     const auto& faces = context().faces();
 
     if (m_ui_pending & Draw)
-        m_ui->draw(window.update_display_buffer(context()),
+    {
+        auto& db = window.update_display_buffer(context());
+        m_ui->draw(db.lines(),
+                   {db.range().begin.line, db.range().end.line},
+                   context().buffer().line_count(),
                    faces["Default"], faces["BufferPadding"]);
+    }
 
     const bool update_menu_anchor = (m_ui_pending & Draw) and not (m_ui_pending & MenuHide) and
                                     not m_menu.items.empty() and m_menu.style == MenuStyle::Inline;

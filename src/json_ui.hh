@@ -21,7 +21,9 @@ public:
 
     bool is_ok() const override { return m_stdin_watcher.fd() != -1; }
 
-    void draw(const DisplayBuffer& display_buffer,
+    void draw(ConstArrayView<DisplayLine> lines,
+              Range<LineCount> range,
+              LineCount buffer_line_count,
               const Face& default_face,
               const Face& buffer_padding) override;
 

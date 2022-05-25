@@ -554,9 +554,17 @@ void TerminalUI::refresh(bool force)
     m_dirty = false;
 }
 
+template<typename T>
+T div_round_up(T a, T b)
+{
+    return (a - T(1)) / b + T(1);
+}
+
 static const DisplayLine empty_line = { String(" "), {} };
 
-void TerminalUI::draw(const DisplayBuffer& display_buffer,
+void TerminalUI::draw(ConstArrayView<DisplayLine> lines,
+                      Range<LineCount> range,
+                      LineCount buffer_line_count,
                       const Face& default_face,
                       const Face& padding_face)
 {
@@ -565,7 +573,7 @@ void TerminalUI::draw(const DisplayBuffer& display_buffer,
     const DisplayCoord dim = dimensions();
     const LineCount line_offset = content_line_offset();
     LineCount line_index = line_offset;
-    for (const DisplayLine& line : display_buffer.lines())
+    for (const DisplayLine& line : lines)
         m_window.draw(line_index++, line.atoms(), default_face);
 
     auto face = merge_faces(default_face, padding_face);
@@ -574,6 +582,17 @@ void TerminalUI::draw(const DisplayBuffer& display_buffer,
 
     while (line_index < dim.line + line_offset)
         m_window.draw(line_index++, padding, face);
+
+    if (m_scroll_bar)
+    {
+        const auto mark_height = min(div_round_up(sq(m_dimensions.line), buffer_line_count), m_dimensions.line);
+        const auto mark_line = range.begin * (m_dimensions.line - mark_height) / max(1_line, buffer_line_count - (range.end - range.begin));
+
+        for (auto line = 0_line; line < m_dimensions.line; ++line) {
+            const bool is_mark = line >= mark_line and line < mark_line + mark_height;
+            m_window.draw({line + line_offset, m_window.size.column - 1}, DisplayAtom(is_mark ? "█" : "░"), default_face);
+        }
+    }
 
     m_dirty = true;
 }
@@ -650,6 +669,8 @@ void TerminalUI::check_resize(bool force)
     kak_assert(m_window);
 
     m_dimensions = terminal_size - 1_line;
+    if (m_scroll_bar)
+        m_dimensions -= {0_line, 1_col};
 
     // if (char* csr = tigetstr((char*)"csr"))
     //     putp(tparm(csr, 0, ws.ws_row));
@@ -956,12 +977,6 @@ Optional<Key> TerminalUI::get_next_key()
         return alt(parse_key(*next));
     }
     return Key{Key::Escape};
-}
-
-template<typename T>
-T div_round_up(T a, T b)
-{
-    return (a - T(1)) / b + T(1);
 }
 
 void TerminalUI::draw_menu()
@@ -1492,6 +1507,13 @@ void TerminalUI::set_ui_options(const Options& options)
 
     m_padding_char = find("terminal_padding_char").map([](StringView s) { return s.column_length() < 1 ? ' ' : s[0_char]; }).value_or(Codepoint{'~'});
     m_padding_fill = find("terminal_padding_fill").map(to_bool).value_or(false);
+
+    bool scroll_bar = find("terminal_scroll_bar").map(to_bool).value_or(false);
+    if (scroll_bar != m_scroll_bar)
+    {
+        m_scroll_bar = scroll_bar;
+        check_resize(true);
+    }
 }
 
 }

@@ -30,7 +30,9 @@ public:
 
     bool is_ok() const override { return (bool)m_window; }
 
-    void draw(const DisplayBuffer& display_buffer,
+    void draw(ConstArrayView<DisplayLine> lines,
+              Range<LineCount> range,
+              LineCount buffer_line_count,
               const Face& default_face,
               const Face& padding_face) override;
 
@@ -163,6 +165,7 @@ private:
 
     Codepoint m_padding_char = '~';
     bool m_padding_fill = false;
+    bool m_scroll_bar = false;
 
     bool m_dirty = false;
 

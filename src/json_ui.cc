@@ -142,10 +142,11 @@ JsonUI::JsonUI()
     set_signal_handler(SIGINT, SIG_DFL);
 }
 
-void JsonUI::draw(const DisplayBuffer& display_buffer,
+void JsonUI::draw(ConstArrayView<DisplayLine> lines,
+                  Range<LineCount> range, LineCount buffer_line_count,
                   const Face& default_face, const Face& padding_face)
 {
-    rpc_call("draw", display_buffer.lines(), default_face, padding_face);
+    rpc_call("draw", lines, range.begin, range.end, buffer_line_count, default_face, padding_face);
 }
 
 void JsonUI::draw_status(const DisplayLine& status_line,
