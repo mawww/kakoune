@@ -1204,6 +1204,7 @@ void indent(Context& context, NormalParams params)
     CharCount indent_width = context.options()["indentwidth"].get<int>();
     String indent = indent_width == 0 ? String{'\t', count} : String{' ', indent_width * count};
 
+    ScopedEdition edition(context);
     auto& buffer = context.buffer();
     LineCount last_line = 0;
     for (auto& sel : context.selections())
