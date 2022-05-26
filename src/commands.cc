@@ -1655,18 +1655,18 @@ const CommandDesc set_option_cmd = {
 
         static constexpr auto scopes = { "global", "buffer", "window", "current" };
 
-        if (token_to_complete == start)
-            return { 0_byte, params[start].length(),
-                     complete(params[start], pos_in_token, scopes) };
-        else if (token_to_complete == start + 1)
-            return { 0_byte, params[start + 1].length(),
-                     GlobalScope::instance().option_registry().complete_option_name(params[start + 1], pos_in_token) };
-        else if (not add and token_to_complete == start + 2  and params[start + 2].empty() and
-                 GlobalScope::instance().option_registry().option_exists(params[start + 1]))
+        if (token_to_complete == 0)
+            return { 0_byte, params[0].length(),
+                     complete(params[0], pos_in_token, scopes) };
+        else if (token_to_complete == 1)
+            return { 0_byte, params[1].length(),
+                     GlobalScope::instance().option_registry().complete_option_name(params[1], pos_in_token) };
+        else if (token_to_complete == 2  and params[2].empty() and
+                 GlobalScope::instance().option_registry().option_exists(params[1]))
         {
             OptionManager& options = get_scope(params[start], context).options();
-            return {0_byte, params[start + 2].length(),
-                    {options[params[start + 1]].get_as_string(Quoting::Kakoune)},
+            return {0_byte, params[2].length(),
+                    {options[params[1]].get_as_string(Quoting::Kakoune)},
                     Completions::Flags::Quoted};
         }
         return Completions{};

@@ -760,7 +760,9 @@ Completions CommandManager::complete(const Context& context,
 
         auto& command = command_it->value;
 
-        if (token.content.substr(0_byte, 1_byte) == "-")
+        auto is_switch = [](StringView s) { return s.substr(0_byte, 1_byte) == "-"; };
+
+        if (is_switch(token.content))
         {
             auto switches = Kakoune::complete(token.content.substr(1_byte), pos_in_token,
                                               command.param_desc.switches |
@@ -771,7 +773,7 @@ Completions CommandManager::complete(const Context& context,
         if (not command.completer)
             return Completions{};
 
-        auto params = tokens | skip(1) | transform(&Token::content) | gather<Vector>();
+        auto params = tokens | skip(1) | transform(&Token::content) | filter(std::not_fn(is_switch)) | gather<Vector>();
         auto index = params.size() - 1;
 
         return offset_pos(requote(command.completer(context, flags, params, index, pos_in_token), token.type), start);
