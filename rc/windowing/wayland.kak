@@ -49,7 +49,7 @@ define-command wayland-focus -params ..1 -docstring '
 wayland-focus [<kakoune_client>]: focus a given client''s window
 If no client is passed, then the current client is used' \
 %{
-    fail There is no way to focus another window on Wayland
+    fail 'Focusing specific windows in most Wayland window managers is unsupported'
 }
 complete-command wayland-focus client
 
