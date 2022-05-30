@@ -760,15 +760,15 @@ Completions CommandManager::complete(const Context& context,
 
         auto& command = command_it->value;
 
-        auto is_switch = [](StringView s) { return s.substr(0_byte, 1_byte) == "-"; };
+        const bool has_switches = not command.param_desc.switches.empty();
+        auto is_switch = [=](StringView s) { return has_switches and s.substr(0_byte, 1_byte) == "-"; };
 
         if (is_switch(token.content))
         {
             auto switches = Kakoune::complete(token.content.substr(1_byte), pos_in_token,
                                               command.param_desc.switches |
                                               transform(&SwitchMap::Item::key));
-            if (not switches.empty())
-                return Completions{start+1, cursor_pos, std::move(switches)};
+            return switches.empty() ? Completions{} : Completions{start+1, cursor_pos, std::move(switches)};
         }
         if (not command.completer)
             return Completions{};
