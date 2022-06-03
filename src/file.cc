@@ -258,7 +258,8 @@ void write(int fd, StringView data)
     ssize_t count   = (int)data.length();
 
     int flags = fcntl(fd, F_GETFL, 0);
-    fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+    if (EventManager::has_instance())
+        fcntl(fd, F_SETFL, flags | O_NONBLOCK);
     auto restore_flags = on_scope_end([&] { fcntl(fd, F_SETFL, flags); });
 
     while (count)
