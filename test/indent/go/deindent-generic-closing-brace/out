@@ -63,3 +63,11 @@ a := []int{
         
     ),
 }
+
+14
+foobar(baz,
+    
+
+15
+foobar{ // some comment
+    

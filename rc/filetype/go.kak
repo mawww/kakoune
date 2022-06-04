@@ -111,10 +111,8 @@ define-command -hidden go-indent-on-new-line %~
                 execute-keys -draft <a-?> /\* <ret> <a-K>\*/<ret>
             }
         } catch %{
-            # indent after lines ending with { or (
-            try %[ execute-keys -draft k<a-x> <a-k> [{(]\h*$ <ret> j<a-gt> ]
-            # align to opening paren of previous line
-            try %{ execute-keys -draft [( <a-k> \A\([^\n]+\n[^\n]*\n?\z <ret> s \A\(\h*.|.\z <ret> '<a-;>' & }
+            # indent after lines with an unclosed { or (
+            try %< execute-keys -draft [c[({],[)}] <ret> <a-k> \A[({][^\n]*\n[^\n]*\n?\z <ret> j<a-gt> >
             # indent after a switch's case/default statements
             try %[ execute-keys -draft k<a-x> <a-k> ^\h*(case|default).*:$ <ret> j<a-gt> ]
             # deindent closing brace(s) when after cursor
