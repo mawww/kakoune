@@ -101,6 +101,7 @@ private:
     void on_option_changed(const Option& opt) override;
 
     void menu_show();
+    bool has_candidate_selected() const;
 
     Context&            m_context;
     OptionManager&      m_options;

@@ -1345,10 +1345,7 @@ public:
             selections.sort_and_merge_overlapping();
         }
         else if (auto cp = key.codepoint())
-        {
-            m_completer.try_accept();
             insert(*cp);
-        }
         else if (key == ctrl('r'))
         {
             on_next_key_with_autoinfo(context(), "register", KeymapMode::None,
@@ -1356,7 +1353,6 @@ public:
                     auto cp = key.codepoint();
                     if (not cp or key == Key::Escape)
                         return;
-                    m_completer.try_accept();
                     insert(RegisterManager::instance()[*cp].get(context()));
                 }, "enter register name", register_doc.str());
             update_completions = false;
@@ -1419,7 +1415,6 @@ public:
                 [this, transient](Key key, Context&) {
                     if (auto cp = get_raw_codepoint(key))
                     {
-                        m_completer.try_accept();
                         insert(*cp);
                         context().hooks().run_hook(Hook::InsertKey, key_to_str(key), context());
                         if (enabled() and not transient)
@@ -1473,6 +1468,7 @@ private:
 
     void insert(ConstArrayView<String> strings)
     {
+        m_completer.try_accept();
         context().selections().for_each([strings, &buffer=context().buffer()]
                                         (size_t index, Selection& sel) {
             Kakoune::insert(buffer, sel, sel.cursor(), strings[std::min(strings.size()-1, index)]);
@@ -1482,10 +1478,7 @@ private:
     void insert(Codepoint key)
     {
         String str{key};
-        context().selections().for_each([&buffer=context().buffer(), &str]
-                                        (size_t index, Selection& sel) {
-            Kakoune::insert(buffer, sel, sel.cursor(), str);
-        });
+        insert(str);
         context().hooks().run_hook(Hook::InsertChar, str, context());
     }
 
