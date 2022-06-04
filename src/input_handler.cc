@@ -752,7 +752,7 @@ public:
           m_empty_text{std::move(emptystr)},
           m_line_editor{context().faces()}, m_flags(flags),
           m_history{RegisterManager::instance()[history_register]},
-          m_current_history{m_history.get(context()).size()},
+          m_current_history{-1},
           m_auto_complete{context().options()["autocomplete"].get<AutoComplete>() & AutoComplete::Prompt},
           m_idle_timer{TimePoint::max(), context().flags() & Context::Flags::Draft ?
                            Timer::Callback{} : [this](Timer&) {
@@ -856,48 +856,28 @@ public:
         }
         else if (key == Key::Up or key == ctrl('p'))
         {
-            if (m_current_history != 0)
+            auto history = m_history.get(context());
+            m_current_history = std::min(static_cast<int>(history.size()) - 1, m_current_history);
+            if (m_current_history == -1)
+               m_prefix = line;
+            auto next = find_if(history.subrange(m_current_history + 1), [this](StringView s) { return prefix_match(s, m_prefix); });
+            if (next != history.end())
             {
-                auto history = m_history.get(context());
-                // The history register might have been mutated in the mean time
-                m_current_history = std::min(history.size(), m_current_history);
-                if (m_current_history == history.size())
-                   m_prefix = line;
-                auto index = m_current_history;
-                // search for the previous history entry matching typed prefix
-                do
-                {
-                    --index;
-                    if (prefix_match(history[index], m_prefix))
-                    {
-                        m_current_history = index;
-                        m_line_editor.reset(history[index], m_empty_text);
-                        break;
-                    }
-                } while (index != 0);
-
-                clear_completions();
-                m_refresh_completion_pending = true;
+                m_current_history = next - history.begin();
+                m_line_editor.reset(*next, m_empty_text);
             }
+            clear_completions();
+            m_refresh_completion_pending = true;
         }
         else if (key == Key::Down or key == ctrl('n')) // next
         {
             auto history = m_history.get(context());
-            // The history register might have been mutated in the mean time
-            m_current_history = std::min(history.size(), m_current_history);
-            if (m_current_history < history.size())
+            m_current_history = std::min(static_cast<int>(history.size()) - 1, m_current_history);
+            if (m_current_history >= 0)
             {
-                // search for the next history entry matching typed prefix
-                ++m_current_history;
-                while (m_current_history != history.size() and
-                       not prefix_match(history[m_current_history], m_prefix))
-                    ++m_current_history;
-
-                if (m_current_history != history.size())
-                    m_line_editor.reset(history[m_current_history], m_empty_text);
-                else
-                    m_line_editor.reset(m_prefix, m_empty_text);
-
+                auto next = find_if(history.subrange(0, m_current_history) | reverse(), [this](StringView s) { return prefix_match(s, m_prefix); });
+                m_current_history = history.rend() - next - 1;
+                m_line_editor.reset(next != history.rend() ? *next : m_prefix, m_empty_text);
                 clear_completions();
                 m_refresh_completion_pending = true;
             }
@@ -1157,7 +1137,7 @@ private:
     bool           m_line_changed = false;
     PromptFlags    m_flags;
     Register&      m_history;
-    size_t         m_current_history;
+    int            m_current_history;
     bool           m_auto_complete;
     bool           m_refresh_completion_pending = true;
     Timer          m_idle_timer;

@@ -941,7 +941,7 @@ template<SelectMode mode, RegexMode regex_mode>
 void search_next(Context& context, NormalParams params)
 {
     const char reg = to_lower(params.reg ? params.reg : '/');
-    StringView str = RegisterManager::instance()[reg].get(context).back();
+    StringView str = RegisterManager::instance()[reg].get(context).front();
     if (not str.empty())
     {
         Regex regex{str, direction_flags(regex_mode)};
