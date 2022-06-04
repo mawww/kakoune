@@ -1003,7 +1003,7 @@ public:
         }
         else
         {
-            if (key == Key::Space and
+            if ((key == Key::Space or key == shift(Key::Space)) and
                 not (m_completions.flags & Completions::Flags::Quoted) and // if token is quoted, this space does not end it
                 can_auto_insert_completion())
                 m_line_editor.insert_from(line.char_count_to(m_completions.start),

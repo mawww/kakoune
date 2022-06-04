@@ -49,7 +49,7 @@ Optional<Codepoint> Key::codepoint() const
         return '\n';
     if (*this == Key::Tab)
         return '\t';
-    if (*this == Key::Space)
+    if (*this == Key::Space or *this == shift(Key::Space))
         return ' ';
     if (*this == Key::Escape)
         return 0x1B;
