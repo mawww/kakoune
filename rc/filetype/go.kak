@@ -22,6 +22,7 @@ hook global WinSetOption filetype=go %{
     hook window InsertChar \{ -group go-indent go-indent-on-opening-curly-brace
     hook window InsertChar \} -group go-indent go-indent-on-closing-curly-brace
     hook window InsertChar \n -group go-insert go-insert-on-new-line
+    hook window InsertChar \n -group go-insert-closing-delimiter go-insert-closing-delimiter-on-new-line
 
     alias window alt go-alternative-file
 
@@ -128,7 +129,11 @@ define-command -hidden go-insert-on-new-line %[
     evaluate-commands -no-hooks -draft -itersel %[
         # copy // comments prefix and following white spaces
         try %{ execute-keys -draft <semicolon><c-s>k<a-x> s ^\h*\K/{2,}\h* <ret> y<c-o>P<esc> }
+    ]
+]
 
+define-command -hidden go-insert-closing-delimiter-on-new-line %[
+    evaluate-commands -no-hooks -draft -itersel %[
         # Wisely add '}'.
         evaluate-commands -save-regs x %[
             # Save previous line indent in register x.
