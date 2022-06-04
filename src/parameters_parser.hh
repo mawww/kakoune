@@ -80,8 +80,14 @@ struct ParametersParser
     // a non empty StringView value if the switch took an argument.
     Optional<StringView> get_switch(StringView name) const;
 
-    struct iterator : std::iterator<std::forward_iterator_tag, String>
+    struct iterator
     {
+        using difference_type = ptrdiff_t;
+        using value_type = String;
+        using pointer = String*;
+        using reference = String&;
+        using iterator_category = std::forward_iterator_tag;
+
         iterator(const ParametersParser& parser, size_t index)
             : m_parser(parser), m_index(index) {}
 
