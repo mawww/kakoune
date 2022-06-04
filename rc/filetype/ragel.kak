@@ -16,7 +16,7 @@ hook global BufCreate .*[.](ragel|rl) %{
 hook global WinSetOption filetype=ragel %{
     require-module ragel
 
-    hook window ModeChange pop:insert:.* -group ragel-trim-indent  ragel-trim-indent
+    hook window ModeChange pop:insert:.* -group ragel-trim-indent ragel-trim-indent
     hook window InsertChar .* -group ragel-indent ragel-indent-on-char
     hook window InsertChar \n -group ragel-insert ragel-insert-on-new-line
     hook window InsertChar \n -group ragel-indent ragel-indent-on-new-line

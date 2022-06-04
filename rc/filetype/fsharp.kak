@@ -15,6 +15,7 @@ hook global WinSetOption filetype=fsharp %{
     require-module fsharp
 
     # indent on newline
+    hook window ModeChange pop:insert:.* -group fsharp-trim-indent fsharp-trim-indent
     hook window InsertChar \n -group fsharp-insert fsharp-insert-on-new-line
     hook window InsertChar \n -group fsharp-indent fsharp-indent-on-new-line
 
@@ -124,6 +125,14 @@ add-highlighter shared/fsharp/code/ regex "\B(\(\))\B" 0:value
 
 # Commands
 # ‾‾‾‾‾‾‾‾
+
+define-command -hidden fsharp-trim-indent %{
+    evaluate-commands -no-hooks -draft -itersel %{
+        execute-keys <a-x>
+        # remove trailing white spaces
+        try %{ execute-keys -draft s \h + $ <ret> d }
+    }
+}
 
 define-command -hidden fsharp-insert-on-new-line %{
     evaluate-commands -draft -itersel %{

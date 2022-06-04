@@ -18,7 +18,7 @@ hook global BufCreate .*[.]html[.]l?eex %{
 hook global WinSetOption filetype=elixir %{
     require-module elixir
 
-    hook window ModeChange pop:insert:.* -group elixir-trim-indent  elixir-trim-indent
+    hook window ModeChange pop:insert:.* -group elixir-trim-indent elixir-trim-indent
     hook window InsertChar \n -group elixir-indent elixir-indent-on-new-line
     hook window InsertChar \n -group elixir-insert elixir-insert-on-new-line
 

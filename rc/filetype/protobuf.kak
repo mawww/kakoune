@@ -15,6 +15,7 @@ hook global WinSetOption filetype=protobuf %[
 
     set-option window static_words %opt{protobuf_static_words}
 
+    hook window ModeChange pop:insert:.* -group protobuf-trim-indent protobuf-trim-indent
     hook -group protobuf-indent window InsertChar \n protobuf-indent-on-newline
     hook -group protobuf-indent window InsertChar \{ protobuf-indent-on-opening-curly-brace
     hook -group protobuf-indent window InsertChar \} protobuf-indent-on-closing-curly-brace
@@ -65,6 +66,14 @@ evaluate-commands %sh{
 
 # Commands
 # ‾‾‾‾‾‾‾‾
+
+define-command -hidden protobuf-trim-indent %{
+    evaluate-commands -no-hooks -draft -itersel %{
+        execute-keys <a-x>
+        # remove trailing white spaces
+        try %{ execute-keys -draft s \h + $ <ret> d }
+    }
+}
 
 define-command -hidden protobuf-indent-on-newline %~
     evaluate-commands -draft -itersel %[

@@ -14,7 +14,7 @@ hook global BufCreate .*[.](coffee) %{
 hook global WinSetOption filetype=coffee %{
     require-module coffee
 
-    hook window ModeChange pop:insert:.* -group coffee-trim-indent  coffee-trim-indent
+    hook window ModeChange pop:insert:.* -group coffee-trim-indent coffee-trim-indent
     hook window InsertChar \n -group coffee-insert coffee-insert-on-new-line
     hook window InsertChar \n -group coffee-indent coffee-indent-on-new-line
 

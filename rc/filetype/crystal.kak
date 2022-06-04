@@ -17,6 +17,7 @@ hook global WinSetOption filetype=crystal %{
     add-highlighter window/crystal ref crystal
     evaluate-commands set-option window static_words %opt{crystal_keywords} %opt{crystal_attributes} %opt{crystal_objects}
 
+    hook window ModeChange pop:insert:.* -group crystal-trim-indent crystal-trim-indent
     hook window InsertChar .*   -group crystal-indent crystal-indent-on-char
     hook window InsertChar '\n' -group crystal-indent crystal-indent-on-new-line
     hook window InsertChar '\n' -group crystal-insert crystal-insert-on-new-line
@@ -206,7 +207,7 @@ define-command -hidden crystal-indent-on-new-line %{
         # Copy previous line indent
         try %{ execute-keys -draft K <a-&> }
         # Remove previous line's trailing spaces
-        try %{ execute-keys -draft k :ruby-trim-indent <ret> }
+        try %{ execute-keys -draft k :crystal-trim-indent <ret> }
         # Indent after start structure/opening statement
         try %{ execute-keys -draft k <a-x> <a-k> ^\h*(?:begin|case|class|def|else|elsif|ensure|for|if|module|rescue|unless|until|when|while|.+\bdo$|.+\bdo\h\|.+(?=\|))[^0-9A-Za-z_!?] <ret> j <a-gt> }
     }

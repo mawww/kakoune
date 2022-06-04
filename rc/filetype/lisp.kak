@@ -14,7 +14,7 @@ hook global BufCreate .*[.](lisp) %{
 hook global WinSetOption filetype=lisp %{
     require-module lisp
 
-    hook window ModeChange pop:insert:.* -group lisp-trim-indent  lisp-trim-indent
+    hook window ModeChange pop:insert:.* -group lisp-trim-indent lisp-trim-indent
     hook window InsertChar \n -group lisp-indent lisp-indent-on-new-line
     set-option buffer extra_word_chars '_' '+' '-' '*' '/' '@' '$' '%' '^' '&' '_' '=' '<' '>' '~' '.'
 

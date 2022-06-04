@@ -14,7 +14,7 @@ hook global BufCreate .*[.](twig) %{
 hook global WinSetOption filetype=twig %[
     require-module twig
 
-    hook window ModeChange pop:insert:.* -group twig-trim-indent  twig-trim-indent
+    hook window ModeChange pop:insert:.* -group twig-trim-indent twig-trim-indent
     hook window InsertChar \n -group twig-insert twig-insert-on-new-line
     hook window InsertChar \n -group twig-indent twig-indent-on-new-line
     hook window InsertChar '>' -group twig-indent twig-indent-on-greater-than

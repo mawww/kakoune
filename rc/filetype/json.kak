@@ -14,7 +14,7 @@ hook global BufCreate .*[.](json) %{
 hook global WinSetOption filetype=json %{
     require-module json
 
-    hook window ModeChange pop:insert:.* -group json-trim-indent  json-trim-indent
+    hook window ModeChange pop:insert:.* -group json-trim-indent json-trim-indent
     hook window InsertChar .* -group json-indent json-indent-on-char
     hook window InsertChar \n -group json-indent json-indent-on-new-line
 
