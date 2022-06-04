@@ -474,6 +474,15 @@ void InsertCompleter::update(bool allow_implicit)
 auto& get_first(BufferRange& range) { return range.begin; }
 auto& get_last(BufferRange& range) { return range.end; }
 
+void InsertCompleter::try_accept()
+{
+    if (m_completions.is_valid() and m_context.has_client()
+        and m_current_candidate >= 0 and m_current_candidate < m_completions.candidates.size() - 1)
+    {
+        reset();
+    }
+}
+
 void InsertCompleter::reset()
 {
     if (m_explicit_completer or m_completions.is_valid())

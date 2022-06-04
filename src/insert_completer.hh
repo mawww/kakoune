@@ -84,6 +84,7 @@ public:
 
     void select(int index, bool relative, Vector<Key>& keystrokes);
     void update(bool allow_implicit);
+    void try_accept();
     void reset();
 
     void explicit_file_complete();

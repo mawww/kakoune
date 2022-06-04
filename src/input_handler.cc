@@ -1345,7 +1345,10 @@ public:
             selections.sort_and_merge_overlapping();
         }
         else if (auto cp = key.codepoint())
+        {
+            m_completer.try_accept();
             insert(*cp);
+        }
         else if (key == ctrl('r'))
         {
             on_next_key_with_autoinfo(context(), "register", KeymapMode::None,
@@ -1353,6 +1356,7 @@ public:
                     auto cp = key.codepoint();
                     if (not cp or key == Key::Escape)
                         return;
+                    m_completer.try_accept();
                     insert(RegisterManager::instance()[*cp].get(context()));
                 }, "enter register name", register_doc.str());
             update_completions = false;
@@ -1415,6 +1419,7 @@ public:
                 [this, transient](Key key, Context&) {
                     if (auto cp = get_raw_codepoint(key))
                     {
+                        m_completer.try_accept();
                         insert(*cp);
                         context().hooks().run_hook(Hook::InsertKey, key_to_str(key), context());
                         if (enabled() and not transient)
