@@ -34,7 +34,11 @@ void HistoryRegister::set(Context& context, ConstArrayView<String> values, bool 
     constexpr size_t size_limit = 100;
 
     if (restoring)
-        return StaticRegister::set(context, values, true);
+    {
+        StaticRegister::set(context, values, true);
+        m_content.erase(remove_if(m_content, [](auto&& s) { return s.empty(); }), m_content.end());
+        return;
+    }
 
     for (auto& entry : values)
     {
