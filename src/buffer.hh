@@ -188,8 +188,8 @@ public:
     // returns nearest valid coordinates from given ones
     BufferCoord clamp(BufferCoord coord) const;
 
-    BufferCoord offset_coord(BufferCoord coord, CharCount offset, ColumnCount, bool) const;
-    BufferCoordAndTarget offset_coord(BufferCoordAndTarget coord, LineCount offset, ColumnCount tabstop, bool avoid_eol) const;
+    BufferCoord offset_coord(BufferCoord coord, CharCount offset, ColumnCount) const;
+    BufferCoordAndTarget offset_coord(BufferCoordAndTarget coord, LineCount offset, ColumnCount tabstop) const;
 
     const String& name() const { return m_name; }
     const String& display_name() const { return m_display_name; }
