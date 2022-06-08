@@ -11,6 +11,7 @@ namespace Kakoune
 using CaptureList = Vector<String, MemoryDomain::Selections>;
 
 constexpr ColumnCount max_column{std::numeric_limits<int>::max()};
+constexpr ColumnCount max_non_eol_column{max_column-1};
 
 // A selection is a Selection, associated with a CaptureList
 struct Selection

@@ -184,7 +184,7 @@ select_to_line_end(const Context& context, const Selection& selection)
                                      buffer.iterator_at(line)).coord();
     if (end < begin) // Do not go backward when cursor is on eol
         end = begin;
-    return Selection{only_move ? end : begin, {end, max_column}};
+    return Selection{only_move ? end : begin, {end, max_non_eol_column}};
 }
 template Optional<Selection> select_to_line_end<false>(const Context&, const Selection&);
 template Optional<Selection> select_to_line_end<true>(const Context&, const Selection&);
