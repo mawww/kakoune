@@ -97,13 +97,11 @@ provide-module hare %§
         # indent after lines ending with { or (
         try %[ execute-keys -draft k<a-x> <a-k> [{(]\h*$ <ret> j i<tab> ]
         # cleanup trailing white spaces on the previous line
-        try %{ execute-keys -draft k<a-x> s \h+$ <ret>d }
+        execute-keys -draft k :hare-trim-indent <ret>
         # indent after a switch's case/default statements
         try %[ execute-keys -draft k<a-x> <a-k> ^\h*(case|default).*:$ <ret> j<a-gt> ]
         # deindent closing brace(s) when after cursor
         try %[ execute-keys -draft <a-x> <a-k> ^\h*[})] <ret> gh / [})] <ret> m <a-S> 1<a-&> ]
-        # remove trailing whitespace on the above line
-        execute-keys -draft k :hare-trim-indent <ret>
     } }
 
     define-command -hidden hare-insert-on-new-line %{ evaluate-commands -draft -itersel %{
