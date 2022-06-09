@@ -98,8 +98,8 @@ provide-module hare %§
         try %[ execute-keys -draft k<a-x> <a-k> [{(]\h*$ <ret> j i<tab> ]
         # cleanup trailing white spaces on the previous line
         execute-keys -draft k :hare-trim-indent <ret>
-        # indent after a switch's case/default statements
-        try %[ execute-keys -draft k<a-x> <a-k> ^\h*(case|default).*:$ <ret> j<a-gt> ]
+        # indent after match/switch's case statements
+        try %[ execute-keys -draft k<a-x> <a-k> case\h.*=>\h*$ <ret> j<a-gt> ]
         # deindent closing brace(s) when after cursor
         try %[ execute-keys -draft <a-x> <a-k> ^\h*[})] <ret> gh / [})] <ret> m <a-S> 1<a-&> ]
     } }
