@@ -133,8 +133,4 @@ provide-module hare %§
         # remove trailing whitespace
         try %{ execute-keys -draft <a-x> s \h+$ <ret> d }
     } }
-
-    # TODO
-    # const/null/void/size are ambiguous
-    # indentation (copy c-family.kak)
- §
+§
