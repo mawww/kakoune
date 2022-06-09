@@ -9,6 +9,8 @@ hook global WinSetOption filetype=hare %{
     hook window ModeChange pop:insert:.* -group hare-trim-indent hare-trim-indent
     hook window InsertChar \n -group hare-indent hare-indent-on-new-line
     hook window InsertChar \n -group hare-insert hare-insert-on-new-line
+    hook window InsertChar \{ -group hare-indent hare-indent-on-opening-curly-brace
+    hook window InsertChar \} -group hare-indent hare-indent-on-closing-curly-brace
 }
 
 hook -group hare-highlight global WinSetOption filetype=hare %{
@@ -17,7 +19,7 @@ hook -group hare-highlight global WinSetOption filetype=hare %{
 }
 
 # highlighters
-provide-module hare %{
+provide-module hare %§
     add-highlighter shared/hare regions
     add-highlighter shared/hare/code default-region group
     add-highlighter shared/hare/comment region // $ fill comment
@@ -92,6 +94,14 @@ provide-module hare %{
     define-command -hidden hare-indent-on-new-line %{ evaluate-commands -draft -itersel %{
         # preserve indentation on new lines
         try %{ execute-keys -draft <semicolon> K <a-&> }
+        # indent after lines ending with { or (
+        try %[ execute-keys -draft k<a-x> <a-k> [{(]\h*$ <ret> j i<tab> ]
+        # cleanup trailing white spaces on the previous line
+        try %{ execute-keys -draft k<a-x> s \h+$ <ret>d }
+        # indent after a switch's case/default statements
+        try %[ execute-keys -draft k<a-x> <a-k> ^\h*(case|default).*:$ <ret> j<a-gt> ]
+        # deindent closing brace(s) when after cursor
+        try %[ execute-keys -draft <a-x> <a-k> ^\h*[})] <ret> gh / [})] <ret> m <a-S> 1<a-&> ]
         # remove trailing whitespace on the above line
         execute-keys -draft k :hare-trim-indent <ret>
     } }
@@ -111,6 +121,16 @@ provide-module hare %{
         }
     } }
 
+    define-command -hidden hare-indent-on-opening-curly-brace %[
+        # align indent with opening paren when { is entered on a new line after the closing paren
+        try %[ execute-keys -draft -itersel h<a-F>)M <a-k> \A\(.*\)\h*\n\h*\{\z <ret> s \A|.\z <ret> 1<a-&> ]
+    ]
+
+    define-command -hidden hare-indent-on-closing-curly-brace %[
+        # align to opening curly brace when alone on a line
+        try %[ execute-keys -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\A|.\z<ret>1<a-&> ]
+    ]
+
     define-command -hidden hare-trim-indent %{ evaluate-commands -draft -itersel %{
         # remove trailing whitespace
         try %{ execute-keys -draft <a-x> s \h+$ <ret> d }
@@ -119,4 +139,4 @@ provide-module hare %{
     # TODO
     # const/null/void/size are ambiguous
     # indentation (copy c-family.kak)
-}
+ §
