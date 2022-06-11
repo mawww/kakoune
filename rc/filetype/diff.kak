@@ -18,6 +18,8 @@ add-highlighter shared/diff group
 add-highlighter shared/diff/ regex "^\+[^\n]*\n" 0:green,default
 add-highlighter shared/diff/ regex "^-[^\n]*\n" 0:red,default
 add-highlighter shared/diff/ regex "^@@[^\n]*@@" 0:cyan,default
+# If any trailing whitespace was introduced in diff, show it with red background
+add-highlighter shared/diff/ regex "^\+[^\n]*?(\h+)\n" 1:default,red
 
 define-command diff-jump -params .. -docstring %{
         diff-jump [<switches>] [<directory>]: edit the diff's source file at the cursor position.
