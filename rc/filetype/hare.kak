@@ -44,8 +44,8 @@ provide-module hare %§
     add-highlighter shared/hare/rune/ regex "(\\U[0-9a-fA-F]{8})" 0:meta
 
     # imports
+    add-highlighter shared/hare/code/ regex "\buse\s.*?(?=;)" 0:module
     add-highlighter shared/hare/code/ regex "\buse\b" 0:meta
-    add-highlighter shared/hare/code/ regex "\buse\s.*?;" 0:meta
 
     # attributes
     add-highlighter shared/hare/code/ regex "@(offset|init|fini|test|noreturn|symbol)\b" 0:attribute
