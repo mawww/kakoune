@@ -319,6 +319,8 @@ public:
 
                 command->func(context(), params);
             }
+            else
+                m_params = { 0, 0 };
         }
 
         context().hooks().run_hook(Hook::NormalKey, key_to_str(key), context());

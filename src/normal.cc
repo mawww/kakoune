@@ -1548,12 +1548,6 @@ void start_or_end_macro_recording(Context& context, NormalParams params)
     }
 }
 
-void end_macro_recording(Context& context, NormalParams)
-{
-    if (context.input_handler().is_recording())
-        context.input_handler().stop_recording();
-}
-
 void replay_macro(Context& context, NormalParams params)
 {
     const char reg = to_lower(params.reg ? params.reg : '@');
@@ -2356,8 +2350,6 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
 
     { {'q'}, {"replay recorded macro", replay_macro} },
     { {'Q'}, {"start or end macro recording", start_or_end_macro_recording} },
-
-    { {Key::Escape}, {"end macro recording", end_macro_recording} },
 
     { {'`'}, {"convert to lower case in selections", for_each_codepoint<to_lower>} },
     { {'~'}, {"convert to upper case in selections", for_each_codepoint<to_upper>} },
