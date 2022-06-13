@@ -22,6 +22,7 @@ hook global WinSetOption filetype=go %{
     hook window InsertChar \{ -group go-indent go-indent-on-opening-curly-brace
     hook window InsertChar \} -group go-indent go-indent-on-closing-curly-brace
     hook window InsertChar \n -group go-insert go-insert-on-new-line
+    hook window InsertChar \n -group go-insert-closing-delimiter go-insert-closing-delimiter-on-new-line
 
     alias window alt go-alternative-file
 
@@ -101,16 +102,22 @@ define-command -hidden go-indent-on-new-line %~
     evaluate-commands -draft -itersel %=
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon>K<a-&> }
-        # indent after lines ending with { or (
-        try %[ execute-keys -draft k<a-x> <a-k> [{(]\h*$ <ret> j<a-gt> ]
         # cleanup trailing white spaces on the previous line
         try %{ execute-keys -draft k<a-x> s \h+$ <ret>d }
-        # align to opening paren of previous line
-        try %{ execute-keys -draft [( <a-k> \A\([^\n]+\n[^\n]*\n?\z <ret> s \A\(\h*.|.\z <ret> '<a-;>' & }
-        # indent after a switch's case/default statements
-        try %[ execute-keys -draft k<a-x> <a-k> ^\h*(case|default).*:$ <ret> j<a-gt> ]
-        # deindent closing brace(s) when after cursor
-        try %[ execute-keys -draft <a-x> <a-k> ^\h*[})] <ret> gh / [})] <ret> m <a-S> 1<a-&> ]
+        try %{
+            try %{ # line comment
+                execute-keys -draft k<a-x> s ^\h*// <ret>
+            } catch %{ # block comment
+                execute-keys -draft <a-?> /\* <ret> <a-K>\*/<ret>
+            }
+        } catch %{
+            # indent after lines with an unclosed { or (
+            try %< execute-keys -draft [c[({],[)}] <ret> <a-k> \A[({][^\n]*\n[^\n]*\n?\z <ret> j<a-gt> >
+            # indent after a switch's case/default statements
+            try %[ execute-keys -draft k<a-x> <a-k> ^\h*(case|default).*:$ <ret> j<a-gt> ]
+            # deindent closing brace(s) when after cursor
+            try %[ execute-keys -draft <a-x> <a-k> ^\h*[})] <ret> gh / [})] <ret> m <a-S> 1<a-&> ]
+        }
     =
 ~
 
@@ -128,7 +135,11 @@ define-command -hidden go-insert-on-new-line %[
     evaluate-commands -no-hooks -draft -itersel %[
         # copy // comments prefix and following white spaces
         try %{ execute-keys -draft <semicolon><c-s>k<a-x> s ^\h*\K/{2,}\h* <ret> y<c-o>P<esc> }
+    ]
+]
 
+define-command -hidden go-insert-closing-delimiter-on-new-line %[
+    evaluate-commands -no-hooks -draft -itersel %[
         # Wisely add '}'.
         evaluate-commands -save-regs x %[
             # Save previous line indent in register x.
