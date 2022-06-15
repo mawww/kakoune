@@ -39,7 +39,7 @@ add-highlighter shared/haskell/string       region (?<!'\\)(?<!')"              
 add-highlighter shared/haskell/macro        region ^\K#                            (?<!\\)\n        fill meta
 add-highlighter shared/haskell/pragma       region -recurse \{- \{-#               '#-\}'           fill meta
 add-highlighter shared/haskell/comment      region -recurse \{- \{-                  -\}            fill comment
-add-highlighter shared/haskell/line_comment region --(?:[^!#$%&*+./<>?@\\\^|~=]|$) $                fill comment
+add-highlighter shared/haskell/line_comment region --(?![!#$%&*+./<>?@\\\^|~=]) $                   fill comment
 add-highlighter shared/haskell/quasiquote   region \[\b[_a-z]['\w]*#?\| \|\]                        regex \[\b[_a-z]['\w]*#?\|(.*?)\|\] 1:string
 
 add-highlighter shared/haskell/code/ regex (?<!')\b0x+[A-Fa-f0-9]+ 0:value
