@@ -118,7 +118,7 @@ define-command -hidden coq-copy-indent-on-newline %{
 
 define-command -hidden coq-trim-indent %{
     evaluate-commands -no-hooks -draft -itersel %{
-        execute-keys <a-x>
+        execute-keys x
         # remove trailing white spaces
         try %{ execute-keys -draft s \h + $ <ret> d }
     }

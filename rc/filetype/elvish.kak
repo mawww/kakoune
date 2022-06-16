@@ -39,7 +39,7 @@ add-highlighter shared/elvish/code/metachar regex [*?|&\;<>()[\]{}] 0:operator
 
 define-command -hidden elvish-trim-indent %{
     evaluate-commands -no-hooks -draft -itersel %{
-        execute-keys <a-x>
+        execute-keys x
         # remove trailing white spaces
         try %{ execute-keys -draft s \h + $ <ret> d }
     }

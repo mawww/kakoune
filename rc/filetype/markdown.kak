@@ -102,7 +102,7 @@ add-highlighter shared/markdown/inline/text/ regex "\H( {2,})$" 1:+r@meta
 
 define-command -hidden markdown-trim-indent %{
     evaluate-commands -no-hooks -draft -itersel %{
-        execute-keys <a-x>
+        execute-keys x
         # remove trailing white spaces
         try %{ execute-keys -draft s \h + $ <ret> d }
     }
