@@ -247,22 +247,25 @@ UnitTest test_ranked_match{[] {
     kak_assert(count_word_boundaries_match("countWordBoundariesMatch", "wm") == 2);
     kak_assert(count_word_boundaries_match("countWordBoundariesMatch", "cobm") == 3);
     kak_assert(count_word_boundaries_match("countWordBoundariesMatch", "cWBM") == 4);
-    kak_assert(RankedMatch{"source", "so"} < RankedMatch{"source_data", "so"});
-    kak_assert(not (RankedMatch{"source_data", "so"} < RankedMatch{"source", "so"}));
-    kak_assert(not (RankedMatch{"source", "so"} < RankedMatch{"source", "so"}));
-    kak_assert(RankedMatch{"single/word", "wo"} < RankedMatch{"multiw/ord", "wo"});
-    kak_assert(RankedMatch{"foo/bar/foobar", "foobar"} < RankedMatch{"foo/bar/baz", "foobar"});
-    kak_assert(RankedMatch{"delete-buffer", "db"} < RankedMatch{"debug", "db"});
-    kak_assert(RankedMatch{"create_task", "ct"} < RankedMatch{"constructor", "ct"});
-    kak_assert(RankedMatch{"class", "cla"} < RankedMatch{"class::attr", "cla"});
-    kak_assert(RankedMatch{"meta/", "meta"} < RankedMatch{"meta-a/", "meta"});
-    kak_assert(RankedMatch{"find(1p)", "find"} < RankedMatch{"findfs(8)", "find"});
-    kak_assert(RankedMatch{"find(1p)", "fin"} < RankedMatch{"findfs(8)", "fin"});
-    kak_assert(RankedMatch{"sys_find(1p)", "sys_find"} < RankedMatch{"sys_findfs(8)", "sys_find"});
-    kak_assert(RankedMatch{"init", ""} < RankedMatch{"__init__", ""});
-    kak_assert(RankedMatch{"init", "ini"} < RankedMatch{"__init__", "ini"});
-    kak_assert(RankedMatch{"a", ""} < RankedMatch{"b", ""});
-    kak_assert(RankedMatch{"expresions", "expresins"} < RankedMatch{"expressionism's", "expresins"});
+    auto ranked_match_order = [](StringView query, StringView better, StringView worse) -> bool {
+        return RankedMatch{better, query} < RankedMatch{worse, query};
+    };
+    kak_assert(ranked_match_order("so", "source", "source_data"));
+    kak_assert(not ranked_match_order("so", "source_data", "source"));
+    kak_assert(not ranked_match_order("so", "source", "source"));
+    kak_assert(ranked_match_order("wo", "single/word", "multiw/ord"));
+    kak_assert(ranked_match_order("foobar", "foo/bar/foobar", "foo/bar/baz"));
+    kak_assert(ranked_match_order("db", "delete-buffer", "debug"));
+    kak_assert(ranked_match_order("ct", "create_task", "constructor"));
+    kak_assert(ranked_match_order("cla", "class", "class::attr"));
+    kak_assert(ranked_match_order("meta", "meta/", "meta-a/"));
+    kak_assert(ranked_match_order("find", "find(1p)", "findfs(8)"));
+    kak_assert(ranked_match_order("fin", "find(1p)", "findfs(8)"));
+    kak_assert(ranked_match_order("sys_find", "sys_find(1p)", "sys_findfs(8)"));
+    kak_assert(ranked_match_order("", "init", "__init__"));
+    kak_assert(ranked_match_order("ini", "init", "__init__"));
+    kak_assert(ranked_match_order("", "a", "b"));
+    kak_assert(ranked_match_order("expresins", "expresions", "expressionism's"));
 }};
 
 UnitTest test_used_letters{[]()
