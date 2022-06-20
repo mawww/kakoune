@@ -43,10 +43,10 @@ add-highlighter shared/vhdl/code/ regex '\b\d+\.' 0:value
 add-highlighter shared/vhdl/code/ regex '\b\d+\+\d+[jJ]\b' 0:value
 
 evaluate-commands %sh[
-    values="true false note warning error failure"
+    values="true false note warning error failure nul"
 
     # LRM 5.2.4.1
-    units="fs ps ns us ms sec min Å nm um mm cm m km"
+    units="fs ps ns us ms sec min hr Å nm um mm cm m km"
 
     # LRM 16.2
     predefined_attributes="
