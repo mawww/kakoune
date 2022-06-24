@@ -21,8 +21,8 @@ hook global WinSetOption filetype=go %{
     hook window InsertChar \n -group go-indent go-indent-on-new-line
     hook window InsertChar \{ -group go-indent go-indent-on-opening-curly-brace
     hook window InsertChar \} -group go-indent go-indent-on-closing-curly-brace
-    hook window InsertChar \n -group go-insert go-insert-on-new-line
-    hook window InsertChar \n -group go-insert-closing-delimiter go-insert-closing-delimiter-on-new-line
+    hook window InsertChar \n -group go-comment-insert go-insert-comment-on-new-line
+    hook window InsertChar \n -group go-closing-delimiter-insert go-insert-closing-delimiter-on-new-line
 
     alias window alt go-alternative-file
 
@@ -131,7 +131,7 @@ define-command -hidden go-indent-on-closing-curly-brace %[
     try %[ execute-keys -itersel -draft <a-h><a-k>^\h+\}$<ret>hms\A|.\z<ret>1<a-&> ]
 ]
 
-define-command -hidden go-insert-on-new-line %[
+define-command -hidden go-insert-comment-on-new-line %[
     evaluate-commands -no-hooks -draft -itersel %[
         # copy // comments prefix and following white spaces
         try %{ execute-keys -draft <semicolon><c-s>k<a-x> s ^\h*\K/{2,}\h* <ret> y<c-o>P<esc> }
