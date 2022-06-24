@@ -39,14 +39,18 @@ add-highlighter shared/latex/comment region '(?<!\\)%' '\n' fill comment
 add-highlighter shared/latex/content/ regex '\\[a-zA-Z@]+\b' 0:function
 # Scopes, starting with a backslash
 add-highlighter shared/latex/content/ regex '\\[a-zA-Z]+\b' 0:keyword
-# latex3 functions
-add-highlighter shared/latex/content/ regex '\\(?:__)?[a-zA-Z@]+_\w+(:([nNpTFDwcVvxefo]+))?\b' 0:function 1:type
-# latex3 variable
-add-highlighter shared/latex/content/ regex '\\[lgc]_[a-zA-Z]+_[a-zA-Z]+\b' 0:variable
+# latex3 functions (expl3 doc)
+add-highlighter shared/latex/content/ regex '\\(?:__|@@_)?[a-zA-Z@]+_\w+(:[nNpTFDwcVvxefo]+)?\b' 0:function 1:+db@type
+# latex3 variable (expl3 doc)
+add-highlighter shared/latex/content/ regex '\\([lgc]_)[a-zA-Z]+_[a-zA-Z]+\b' 0:variable 1:+db
+# latex3 type (expl3 doc)s
+add-highlighter shared/latex/content/ regex '_(bool|box|cctab|clist|coffin|dim|fp|ior|iow|int|muskip|prop|seq|skip|str|tl)' 0:+db
+ # latex3 l3kernel modules (l3kernel/doc/l3prefixes.csv)
+add-highlighter shared/latex/content/ regex '\\(alignment|alloc|ampersand|atsign|backslash|bitset|bool|box|catcode|cctab|char|chk|circumflex|clist|code|codedoc|coffin|colon|color|cs|debug|dim|document|dollar|driver|e|else|empty|etex|exp|expl|false|fi|file|flag|fp|group|hash|hbox|hcoffin|if|inf|initex|insert|int|intarray|ior|iow|job|kernel|keys|keyval|left|log|lua|luatex|mark|marks|math|max|minus|mode|msg|muskip|nan|nil|no|novalue|one|or|other|parameter|pdf|pdftex|peek|percent|pi|prg|prop|ptex|quark|recursion|ref|regex|reverse|right|scan|seq|skip|sort|space|stop|str|sys|tag|term|tex|text|tilde|tl|tmpa|tmpb|token|true|underscore|uptex|use|utex|vbox|vcoffin|xetex|zero)_' 0:+db
 # macros arguments
 add-highlighter shared/latex/content/ regex '#[1-9]\b' 0:string
 # grouped lists
-add-highlighter shared/latex/content/ regex '\{[\s/;, \w]+\}' 0:string
+add-highlighter shared/latex/content/ regex '\{([\s/;, \w]+)\}' 1:string
 
 # Options passed to scopes, between brackets
 add-highlighter shared/latex/content/ regex '\\(?!_)\w+\b\[([^\]]+)\]' 1:value
