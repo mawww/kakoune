@@ -35,8 +35,19 @@ add-highlighter shared/latex regions
 add-highlighter shared/latex/content default-region group
 add-highlighter shared/latex/comment region '(?<!\\)%' '\n' fill comment
 
+# latex2e private functions
+add-highlighter shared/latex/content/ regex '\\[a-zA-Z@]+\b' 0:function
 # Scopes, starting with a backslash
-add-highlighter shared/latex/content/ regex '\\(?!_)\w+\b' 0:keyword
+add-highlighter shared/latex/content/ regex '\\[a-zA-Z]+\b' 0:keyword
+# latex3 functions
+add-highlighter shared/latex/content/ regex '\\(?:__)?[a-zA-Z@]+_\w+(:([nNpTFDwcVvxefo]+))?\b' 0:function 1:type
+# latex3 variable
+add-highlighter shared/latex/content/ regex '\\[lgc]_[a-zA-Z]+_[a-zA-Z]+\b' 0:variable
+# macros arguments
+add-highlighter shared/latex/content/ regex '#[1-9]\b' 0:string
+# grouped lists
+add-highlighter shared/latex/content/ regex '\{[\s/;, \w]+\}' 0:string
+
 # Options passed to scopes, between brackets
 add-highlighter shared/latex/content/ regex '\\(?!_)\w+\b\[([^\]]+)\]' 1:value
 # Content between dollar signs/pairs
