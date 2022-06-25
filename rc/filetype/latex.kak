@@ -48,9 +48,9 @@ add-highlighter shared/latex/content/ regex '_(bool|box|cctab|clist|coffin|dim|f
  # latex3 l3kernel modules (l3kernel/doc/l3prefixes.csv)
 add-highlighter shared/latex/content/ regex '\\(alignment|alloc|ampersand|atsign|backslash|bitset|bool|box|catcode|cctab|char|chk|circumflex|clist|code|codedoc|coffin|colon|color|cs|debug|dim|document|dollar|driver|e|else|empty|etex|exp|expl|false|fi|file|flag|fp|group|hash|hbox|hcoffin|if|inf|initex|insert|int|intarray|ior|iow|job|kernel|keys|keyval|left|log|lua|luatex|mark|marks|math|max|minus|mode|msg|muskip|nan|nil|no|novalue|one|or|other|parameter|pdf|pdftex|peek|percent|pi|prg|prop|ptex|quark|recursion|ref|regex|reverse|right|scan|seq|skip|sort|space|stop|str|sys|tag|term|tex|text|tilde|tl|tmpa|tmpb|token|true|underscore|uptex|use|utex|vbox|vcoffin|xetex|zero)_' 0:+db
 # macros arguments
-add-highlighter shared/latex/content/ regex '#[1-9]\b' 0:string
+add-highlighter shared/latex/content/ regex '(?<!\\)(?:\\\\)*\K#+[1-9]\b' 0:string
 # grouped lists
-add-highlighter shared/latex/content/ regex '\{([\s/;, \w]+)\}' 1:string
+add-highlighter shared/latex/content/ regex '(?<!\\)(?:\\\\)*\K\{([\s/;,\w]+)\}' 1:string
 
 # Options passed to scopes, between brackets
 add-highlighter shared/latex/content/ regex '\\(?!_)\w+\b\[([^\]]+)\]' 1:value
