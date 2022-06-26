@@ -70,7 +70,7 @@ add-highlighter shared/latex/content/ regex '(?<!\\)(?:\\\\)*\K#+[1-9]' 0:string
 add-highlighter shared/latex/content/ regex '(?<!\\)(?:\\\\)*\K\{([\s/;,\w\d]+)\}' 1:string
 
 # Math mode between dollar signs/pairs
-add-highlighter shared/latex/content/ regex '((?<!\\)\$(\\\$|[^$])+\$)|((?<!\\)\$\$(\\\$|[^$])+\$\$)|((?<!\\)\\\[.*?\\\])|(\\\(.*?\\\))' 0:meta
+add-highlighter shared/latex/content/ regex '((?<!\\)(?:\\\\)*\K\$(\\\$|[^$])+\$)|((?<!\\)(?:\\\\)*\K\$\$(\\\$|[^$])+\$\$)|((?<!\\)(?:\\\\)*\K\\\[.*?\\\])|(\\\(.*?\\\))' 0:meta
 
 # Indent
 # ------
