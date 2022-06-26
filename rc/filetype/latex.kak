@@ -33,7 +33,7 @@ provide-module latex %~
 
 add-highlighter shared/latex regions
 add-highlighter shared/latex/content default-region group
-add-highlighter shared/latex/comment region '(?<!\\)%' '\n' fill comment
+add-highlighter shared/latex/comment region '(?<!\\)(?:\\\\)*\K%' '\n' fill comment
 
 # latex2e private functions
 add-highlighter shared/latex/content/ regex '\\[a-zA-Z@]+\b' 0:function
