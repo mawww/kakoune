@@ -38,9 +38,9 @@ add-highlighter shared/latex/content default-region group
 add-highlighter shared/latex/cs region '(?<!\\)(?:\\\\)*\K\\[@\w]' '\n|(?<![@:\\{}\[\]*])(?![@:{}\[\]*])\b' group
 add-highlighter shared/latex/comment region '(?<!\\)(?:\\\\)*\K%' '\n' fill comment
 
-# Document and latex2e control sequence
+# Document and LaTeX2e control sequence
 add-highlighter shared/latex/cs/ regex '(?:\\[a-zA-Z@]+)' 0:keyword
-## Options passed to latex2e control sequences, between brackets
+## Options passed to LaTeX2e control sequences, between brackets
 add-highlighter shared/latex/cs/ regex '\\[a-zA-Z@]+\b\[([^\]]+)\]' 1:value
 ## Emphasized text
 add-highlighter shared/latex/cs/ regex '\\(?:emph|textit|textsl)\{([^}]+)\}' 1:default+i
@@ -66,8 +66,8 @@ add-highlighter shared/latex/cs/ regex '_(bool|box|cctab|clist|coffin|dim|fp|ior
 # with spaces and thus should not be catched by the cs region
 ## macros arguments
 add-highlighter shared/latex/content/ regex '(?<!\\)(?:\\\\)*\K#+[1-9]' 0:string
-## group containing words lists (separated by ; , / or spaces)
-add-highlighter shared/latex/content/ regex '(?<!\\)(?:\\\\)*\K\{([\s/;,\w\d]+)\}' 1:string
+## group containing words and numbers (list separated by ; , / or spaces)
+add-highlighter shared/latex/content/ regex '(?<!\\)(?:\\\\)*\K\{([\s/;,.\w\d]+)\}' 1:string
 
 # Math mode between dollar signs/pairs
 add-highlighter shared/latex/content/ regex '((?<!\\)(?:\\\\)*\K\$(\\\$|[^$])+\$)|((?<!\\)(?:\\\\)*\K\$\$(\\\$|[^$])+\$\$)|((?<!\\)(?:\\\\)*\K\\\[.*?\\\])|(\\\(.*?\\\))' 0:meta
