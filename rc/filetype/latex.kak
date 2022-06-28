@@ -33,9 +33,9 @@ provide-module latex %~
 
 add-highlighter shared/latex regions
 add-highlighter shared/latex/content default-region group
-# Region for control sequence (with latex2e arguments and options) starting with unescaped \
+# Region for control sequence (includes latex2e arguments and options) starting with unescaped \
 # and ending at eol or word boundaries not preceded nor followed by @ : \ { } [ ] *
-add-highlighter shared/latex/cs region '(?<!\\)(?:\\\\)*\K\\[@\w]' '\n|(?<![@:\\{}\[\]*])(?![@:{}\[\]*])\b' group
+add-highlighter shared/latex/cs region '(?<!\\)(?:\\\\)*\K\\[@\w]' '/\n|(?<![@:\\{}\[\]*])(?![@:\\{}\[\]*])\b|(?<!\\)(?:\\\\)*\K\}\K' group
 add-highlighter shared/latex/comment region '(?<!\\)(?:\\\\)*\K%' '\n' fill comment
 
 # Document and LaTeX2e control sequence
@@ -56,7 +56,7 @@ add-highlighter shared/latex/cs/ regex '\\(chapter|(sub)+section|(sub)*paragraph
 ## Functions (expl3 doc) module_name:arguments_types.
 add-highlighter shared/latex/cs/ regex '\\(?:__|@@_)?[a-zA-Z@]+_\w+(:[nNpTFDwcVvxefo]+)?' 0:function 1:+db@type
 ## Variables (expl3 doc): scope_name_type
-add-highlighter shared/latex/cs/ regex '\\([lgc]_)[a-zA-Z@]+_[a-zA-Z]+' 0:variable 1:+db
+add-highlighter shared/latex/cs/ regex '\\([lgc]_)[a-zA-Z@]+_\w+' 0:variable 1:+db
 ## l3kernel modules (l3kernel/doc/l3prefixes.csv)
 add-highlighter shared/latex/cs/ regex '\\(alignment|alloc|ampersand|atsign|backslash|bitset|bool|box|catcode|cctab|char|chk|circumflex|clist|code|codedoc|coffin|colon|color|cs|debug|dim|document|dollar|driver|e|else|empty|etex|exp|expl|false|fi|file|flag|fp|group|hash|hbox|hcoffin|if|inf|initex|insert|int|intarray|ior|iow|job|kernel|keys|keyval|left|log|lua|luatex|mark|marks|math|max|minus|mode|msg|muskip|nan|nil|no|novalue|one|or|other|parameter|pdf|pdftex|peek|percent|pi|prg|prop|ptex|quark|recursion|ref|regex|reverse|right|scan|seq|skip|sort|space|stop|str|sys|tag|term|tex|text|tilde|tl|tmpa|tmpb|token|true|underscore|uptex|use|utex|vbox|vcoffin|xetex|zero)_' 0:+db
 # LaTeX3 types (expl3 doc)
