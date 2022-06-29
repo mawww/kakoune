@@ -458,6 +458,21 @@ Searches use the */* register by default (See <<registers#,`:doc registers`>>)
     *.*:::
         go to last buffer modification position
 
+    *<a-h>*:::
+        set the selection to the beginning of the current display-line
+
+    *<a-j>*:::
+        set the selection to the next display-line if it's visible, or the next buffer-line otherwise
+
+    *<a-k>*:::
+        set the selection to the previous display-line if it's visible, or the previous buffer-line otherwise
+
+    *<a-l>*:::
+        set the selection to end of the current display-line
+
+    *<a-i>*:::
+        set the selection to the first non-blank character of the current display-line
+
 == View commands
 
 *v*, *V*::

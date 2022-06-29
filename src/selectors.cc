@@ -223,6 +223,30 @@ select_to_first_non_blank(const Context& context, const Selection& selection)
     return {it.coord()};
 }
 
+Optional<Selection>
+select_to_first_non_blank_column(const Context& context, const Selection& selection)
+{
+    auto& buffer = context.buffer();
+    const LineCount line = selection.cursor().line;
+    auto it = buffer.iterator_at(selection.cursor());
+    skip_while(it,
+               buffer.iterator_at({line, buffer[line].length() - 1}),
+               is_horizontal_blank);
+    return {it.coord()};
+}
+
+Optional<Selection>
+select_to_first_non_eol_column_reverse(const Context& context, const Selection& selection)
+{
+    auto& buffer = context.buffer();
+    const LineCount line = selection.cursor().line;
+    auto it = buffer.iterator_at(selection.cursor());
+    skip_while_reverse(it,
+                       buffer.iterator_at({line, 0}),
+                       [](Codepoint c) { return is_eol(c); });
+    return {it.coord()};
+}
+
 template<bool forward>
 Optional<Selection>
 select_matching(const Context& context, const Selection& selection)
