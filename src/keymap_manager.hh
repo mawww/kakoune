@@ -45,13 +45,18 @@ public:
     };
     const KeymapInfo& get_mapping(Key key, KeymapMode mode) const;
 
-    using UserModeList = Vector<String>;
+    struct UserMode
+    {
+        String name;
+        String docstring;
+    };
+    using UserModeList = Vector<UserMode, MemoryDomain::UserModes>;
     UserModeList& user_modes() {
         if (m_parent)
             return m_parent->user_modes();
         return m_user_modes;
     }
-    void add_user_mode(String user_mode_name);
+    void add_user_mode(String user_mode_name, String docstring);
 
 private:
     KeymapManager()

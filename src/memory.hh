@@ -38,6 +38,7 @@ enum class MemoryDomain
     Events,
     Completion,
     Regex,
+    UserModes,
     Count
 };
 
@@ -70,6 +71,7 @@ inline const char* domain_name(MemoryDomain domain)
         case MemoryDomain::Events: return "Events";
         case MemoryDomain::Completion: return "Completion";
         case MemoryDomain::Regex: return "Regex";
+        case MemoryDomain::UserModes: return "UserModes";
         case MemoryDomain::Count: break;
     }
     kak_assert(false);

@@ -63,20 +63,20 @@ KeymapManager::KeyList KeymapManager::get_mapped_keys(KeymapMode mode) const
     return res;
 }
 
-void KeymapManager::add_user_mode(String user_mode_name)
+void KeymapManager::add_user_mode(String user_mode_name, String docstring)
 {
     auto modes = {"normal", "insert", "prompt", "menu", "goto", "view", "user", "object"};
 
     if (contains(modes, user_mode_name))
         throw runtime_error(format("'{}' is already a regular mode", user_mode_name));
 
-    if (contains(user_modes(), user_mode_name))
+    if (contains(user_modes() | transform(&KeymapManager::UserMode::name), user_mode_name))
         throw runtime_error(format("user mode '{}' already defined", user_mode_name));
 
     if (not all_of(user_mode_name, is_identifier))
         throw runtime_error(format("invalid mode name: '{}'", user_mode_name));
 
-    user_modes().push_back(std::move(user_mode_name));
+    user_modes().push_back({std::move(user_mode_name), std::move(docstring)});
 }
 
 }

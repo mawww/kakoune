@@ -170,7 +170,8 @@ void repeat_last_select(Context& context, NormalParams)
 }
 
 String build_autoinfo_for_mapping(const Context& context, KeymapMode mode,
-                                  ConstArrayView<KeyInfo> built_ins)
+                                  ConstArrayView<KeyInfo> built_ins,
+                                  StringView title)
 {
     auto& keymaps = context.keymaps();
 
@@ -198,6 +199,8 @@ String build_autoinfo_for_mapping(const Context& context, KeymapMode mode,
     }
 
     String res;
+    if (not title.empty())
+        res += format("{}\n", title);
     for (auto& desc : descs)
         res += format("{}:{}{}\n",
                       desc.first,

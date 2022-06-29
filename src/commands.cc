@@ -1442,12 +1442,13 @@ KeymapMode parse_keymap_mode(StringView str, const KeymapManager::UserModeList& 
     if (prefix_match("user", str))   return KeymapMode::User;
     if (prefix_match("object", str)) return KeymapMode::Object;
 
-    auto it = find(user_modes, str);
-    if (it == user_modes.end())
+    const auto keys = user_modes | transform(&KeymapManager::UserMode::name);
+    auto it = find(keys, str);
+    if (it == keys.end())
         throw runtime_error(format("no such keymap mode: '{}'", str));
 
     char offset = static_cast<char>(KeymapMode::FirstUserMode);
-    return (KeymapMode)(std::distance(user_modes.begin(), it) + offset);
+    return (KeymapMode)(std::distance(keys.begin(), it) + offset);
 }
 
 static constexpr auto modes = { "normal", "insert", "menu", "prompt", "goto", "view", "user", "object" };
@@ -1541,7 +1542,7 @@ const CommandDesc debug_cmd = {
             auto& keymaps = context.keymaps();
             auto user_modes = keymaps.user_modes();
             write_to_debug_buffer("Mappings:");
-            for (auto& mode : concatenated(modes, user_modes) | gather<Vector<String>>())
+            for (auto& mode : concatenated(modes, user_modes | transform(&KeymapManager::UserMode::name)) | gather<Vector<String>>())
             {
                 KeymapMode m = parse_keymap_mode(mode, user_modes);
                 for (auto& key : keymaps.get_mapped_keys(m))
@@ -1821,7 +1822,7 @@ static Completions map_key_completer(const Context& context, CompletionFlags fla
     {
         auto& user_modes = get_scope(params[0], context).keymaps().user_modes();
         return { 0_byte, params[1].length(),
-                 complete(params[1], pos_in_token, concatenated(modes, user_modes) | gather<Vector<String>>()) };
+                 complete(params[1], pos_in_token, concatenated(modes, user_modes | transform(&KeymapManager::UserMode::name)) | gather<Vector<String>>()) };
     }
     if (unmap and token_to_complete == 2)
     {
@@ -2607,19 +2608,34 @@ const CommandDesc declare_user_mode_cmd = {
     "declare-user-mode",
     nullptr,
     "declare-user-mode <name>: add a new user keymap mode",
-    single_param,
+    ParameterDesc{
+        { { "docstring", { true, "user mode description" } } },
+        ParameterDesc::Flags::None, 1, 2
+    },
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        context.keymaps().add_user_mode(std::move(parser[0]));
+        auto docstring = parser.get_switch("docstring").value_or(StringView{});
+        context.keymaps().add_user_mode(std::move(parser[0]), docstring.str());
     }
 };
 
 // We need ownership of the mode_name in the lock case
 void enter_user_mode(Context& context, String mode_name, KeymapMode mode, bool lock)
 {
+    StringView docstring;
+
+    {
+        const auto& user_modes = context.keymaps().user_modes();
+        auto it = find_if(user_modes, [&](auto& i) { return i.name == mode_name; });
+        if (it == user_modes.end())
+            throw runtime_error(format("no such keymap mode: '{}'", mode_name));
+
+        docstring = it->docstring;
+    }
+
     on_next_key_with_autoinfo(context, format("user.{}", mode_name), KeymapMode::None,
                              [mode_name, mode, lock](Key key, Context& context) mutable {
         if (key == Key::Escape)
@@ -2639,7 +2655,7 @@ void enter_user_mode(Context& context, String mode_name, KeymapMode mode, bool l
         if (lock)
             enter_user_mode(context, std::move(mode_name), mode, true);
     }, lock ? format("{} (lock)", mode_name) : mode_name,
-    build_autoinfo_for_mapping(context, mode, {}));
+    build_autoinfo_for_mapping(context, mode, {}, docstring));
 }
 
 const CommandDesc enter_user_mode_cmd = {
@@ -2659,7 +2675,7 @@ const CommandDesc enter_user_mode_cmd = {
         if (token_to_complete == 0)
         {
             return { 0_byte, params[0].length(),
-                     complete(params[0], pos_in_token, context.keymaps().user_modes()) };
+                     complete(params[0], pos_in_token, context.keymaps().user_modes() | transform(&KeymapManager::UserMode::name)) };
         }
         return {};
     },
