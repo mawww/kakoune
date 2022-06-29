@@ -38,6 +38,9 @@ public:
     bool is_mapped(Key key, KeymapMode mode) const;
     KeyList get_mapped_keys(KeymapMode mode) const;
 
+    void add_linked(KeymapManager& keymap_manager);
+    void remove_linked(KeymapManager& keymap_manager);
+
     struct KeymapInfo
     {
         KeyList keys;
@@ -58,8 +61,11 @@ private:
         : m_parent(nullptr) {}
     // the only one allowed to construct a root map manager
     friend class Scope;
+    const KeymapInfo* get_mapping_ifp(Key key, KeymapMode mode) const;
+    void add_mapped_keys(KeyList& keylist, KeymapMode mode) const;
 
     KeymapManager* m_parent;
+    Vector<KeymapManager*> m_linked;
     using KeyAndMode = std::pair<Key, KeymapMode>;
     HashMap<KeyAndMode, KeymapInfo, MemoryDomain::Mapping> m_mapping;
 

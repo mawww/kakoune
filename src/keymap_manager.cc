@@ -37,17 +37,30 @@ void KeymapManager::unmap_keys(KeymapMode mode)
 bool KeymapManager::is_mapped(Key key, KeymapMode mode) const
 {
     return m_mapping.find(KeyAndMode{key, mode}) != m_mapping.end() or
+           (any_of(m_linked, [&] (auto* km) { return km->is_mapped(key, mode); })) or
            (m_parent and m_parent->is_mapped(key, mode));
+}
+
+const KeymapManager::KeymapInfo*
+KeymapManager::get_mapping_ifp(Key key, KeymapMode mode) const
+{
+    auto it = m_mapping.find(KeyAndMode{key, mode});
+    if (it != m_mapping.end())
+        return &it->value;
+    for (auto* km : m_linked | reverse()) {
+        if (auto* mapping = km->get_mapping_ifp(key, mode))
+          return mapping;
+    }
+    if (!m_parent) return nullptr;
+    return m_parent->get_mapping_ifp(key, mode);
 }
 
 const KeymapManager::KeymapInfo&
 KeymapManager::get_mapping(Key key, KeymapMode mode) const
 {
-    auto it = m_mapping.find(KeyAndMode{key, mode});
-    if (it != m_mapping.end())
-        return it->value;
-    kak_assert(m_parent);
-    return m_parent->get_mapping(key, mode);
+    auto* km = get_mapping_ifp(key, mode);
+    kak_assert(km);
+    return *km;
 }
 
 KeymapManager::KeyList KeymapManager::get_mapped_keys(KeymapMode mode) const
@@ -55,13 +68,21 @@ KeymapManager::KeyList KeymapManager::get_mapped_keys(KeymapMode mode) const
     KeyList res;
     if (m_parent)
         res = m_parent->get_mapped_keys(mode);
-    for (auto& map : m_mapping)
-    {
-        if (map.key.second == mode and not contains(res, map.key.first))
-            res.emplace_back(map.key.first);
-    }
+    for (auto* km : m_linked) 
+        km->add_mapped_keys(res, mode);
+    add_mapped_keys(res, mode);
     return res;
 }
+
+void KeymapManager::add_mapped_keys(KeyList& keylist, KeymapMode mode) const
+{
+    for (auto& map : m_mapping)
+    {
+        if (map.key.second == mode and not contains(keylist, map.key.first))
+            keylist.emplace_back(map.key.first);
+    }
+}
+
 
 void KeymapManager::add_user_mode(String user_mode_name)
 {
@@ -77,6 +98,16 @@ void KeymapManager::add_user_mode(String user_mode_name)
         throw runtime_error(format("invalid mode name: '{}'", user_mode_name));
 
     user_modes().push_back(std::move(user_mode_name));
+}
+
+
+void KeymapManager::add_linked(KeymapManager& keymap_manager) 
+{
+    m_linked.push_back(&keymap_manager);
+}
+void KeymapManager::remove_linked(KeymapManager& keymap_manager) 
+{
+    unordered_erase(m_linked, &keymap_manager);
 }
 
 }

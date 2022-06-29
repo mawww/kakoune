@@ -766,6 +766,7 @@ int run_server(StringView session, StringView server_init,
 
     StringRegistry      string_registry;
     GlobalScope         global_scope;
+    SharedScopeManager  shared_scopes;
     ShellManager        shell_manager{builtin_env_vars};
     CommandManager      command_manager;
     RegisterManager     register_manager;

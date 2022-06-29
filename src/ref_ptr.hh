@@ -91,6 +91,12 @@ struct RefPtr
     friend bool operator==(const RefPtr& lhs, const RefPtr& rhs) = default;
     friend bool operator==(const RefPtr& lhs, const T* rhs) { return lhs.m_ptr == rhs; }
 
+    friend bool operator==(const RefPtr& lhs, const T* rhs) { return lhs.m_ptr == rhs; }
+    friend bool operator!=(const RefPtr& lhs, const T* rhs) { return lhs.m_ptr != rhs; }
+    
+    friend bool operator==(const T* lhs, const RefPtr& rhs) { return lhs == rhs.m_ptr; }
+    friend bool operator!=(const T* lhs, const RefPtr& rhs) { return lhs != rhs.m_ptr; }
+
 private:
     T* m_ptr = nullptr;
 

@@ -1,0 +1,1 @@
+it<esc>:link-scope window testscope<ret>it<esc>:unlink-scope window testscope<ret>it<esc>
