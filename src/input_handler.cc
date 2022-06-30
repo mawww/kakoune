@@ -826,11 +826,16 @@ public:
         {
             on_next_key_with_autoinfo(context(), "register", KeymapMode::None,
                 [this](Key key, Context&) {
+                    const bool joined = (bool)(key.modifiers & Key::Modifiers::Alt);
+                    key.modifiers &= ~Key::Modifiers::Alt;
+
                     auto cp = key.codepoint();
                     if (not cp or key == Key::Escape)
                         return;
-                    StringView reg = context().main_sel_register_value(String{*cp});
-                    m_line_editor.insert(reg);
+
+                    m_line_editor.insert(
+                        joined ? join(RegisterManager::instance()[*cp].get(context()), ' ', false)
+                               : context().main_sel_register_value(String{*cp}));
 
                     display();
                     m_line_changed = true;
