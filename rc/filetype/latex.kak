@@ -33,8 +33,11 @@ provide-module latex %~
 
 add-highlighter shared/latex regions
 add-highlighter shared/latex/content default-region group
-# Region for control sequence (includes latex2e arguments and options) starting with unescaped \
-# and ending at eol or word boundaries not preceded nor followed by @ : \ { } [ ] *
+# Region for control sequence (includes latex2e arguments and options)
+# starting with unescaped \ and ending :
+# - at eol, or
+# - at word boundaries not preceded nor followed by @ : \ { } [ ] *, or
+# - after an unescaped }
 add-highlighter shared/latex/cs region '(?<!\\)(?:\\\\)*\K\\[@\w]' '/\n|(?<![@:\\{}\[\]*])(?![@:\\{}\[\]*])\b|(?<!\\)(?:\\\\)*\K\}\K' group
 add-highlighter shared/latex/comment region '(?<!\\)(?:\\\\)*\K%' '\n' fill comment
 
