@@ -726,7 +726,7 @@ The following keys are recognized by this mode to help with editing
     validate prompt
 
 *<esc>*::
-    abandon without
+    abandon without validating prompt
 
 *<left>*, *<c-b>*::
     move cursor to previous character
