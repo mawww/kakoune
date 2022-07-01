@@ -825,7 +825,8 @@ void regex_prompt(Context& context, String prompt, char reg, T func)
             };
 
             const auto word = current_word(regex.substr(0_byte, pos));
-            auto matches = get_word_db(context.buffer()).find_matching(word);
+            RankedMatchQuery query{word};
+            auto matches = get_word_db(context.buffer()).find_matching(query);
             constexpr size_t max_count = 100;
             CandidateList candidates;
             candidates.reserve(std::min(matches.size(), max_count));

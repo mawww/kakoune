@@ -123,7 +123,8 @@ InsertCompletion complete_word(const SelectionList& sels,
     };
 
     auto& word_db = get_word_db(buffer);
-    Vector<RankedMatchAndBuffer> matches = word_db.find_matching(prefix)
+    RankedMatchQuery q{prefix};
+    Vector<RankedMatchAndBuffer> matches = word_db.find_matching(q)
                                          | transform([&](auto& m) { return RankedMatchAndBuffer{m, &buffer}; })
                                          | gather<Vector>();
     // Remove words that are being edited
@@ -139,7 +140,7 @@ InsertCompletion complete_word(const SelectionList& sels,
         {
             if (buf.get() == &buffer or buf->flags() & Buffer::Flags::Debug)
                 continue;
-            for (auto& m : get_word_db(*buf).find_matching(prefix) |
+            for (auto& m : get_word_db(*buf).find_matching(q) |
                            // filter out words that are not considered words for the current buffer
                            filter([&](auto& rm) {
                                auto&& c = rm.candidate();
@@ -152,7 +153,7 @@ InsertCompletion complete_word(const SelectionList& sels,
 
     using StaticWords = Vector<String, MemoryDomain::Options>;
     for (auto& word : options["static_words"].get<StaticWords>())
-        if (RankedMatch match{word, prefix})
+        if (RankedMatch match{word, q})
             matches.emplace_back(match, nullptr);
 
     unordered_erase(matches, prefix);
@@ -295,7 +296,7 @@ InsertCompletion complete_option(const SelectionList& sels,
         DisplayLine menu_entry;
     };
 
-    StringView query = buffer.substr(coord, cursor_pos);
+    RankedMatchQuery query{buffer.substr(coord, cursor_pos)};
     Vector<RankedMatchAndInfo> matches;
 
     for (auto& candidate : opt.list)

@@ -75,11 +75,11 @@ CandidateList complete(StringView query, ByteCount cursor_pos,
     static_assert(not std::is_same<decltype(*begin(container)), String>::value,
                   "complete require long lived strings, not temporaries");
 
-    query = query.substr(0, cursor_pos);
+    RankedMatchQuery q{query.substr(0, cursor_pos)};
     Vector<RankedMatch> matches;
     for (const auto& str : container)
     {
-        if (RankedMatch match{str, query})
+        if (RankedMatch match{str, q})
             matches.push_back(match);
     }
     std::sort(matches.begin(), matches.end());

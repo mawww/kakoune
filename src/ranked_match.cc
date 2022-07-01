@@ -50,30 +50,38 @@ static bool is_word_start(Codepoint prev, Codepoint c)
            (iswlower((wchar_t)prev) and iswupper((wchar_t)c));
 }
 
-static bool smartcase_eq(Codepoint candidate, Codepoint query)
+static bool smartcase_eq(Codepoint candidate_c, Codepoint query_c,
+                         const RankedMatchQuery& query, CharCount query_i)
 {
-    return query == (iswlower((wchar_t)query) ? to_lower(candidate) : candidate);
+    return candidate_c == query_c or candidate_c == query.smartcase_alternative_match[(size_t)query_i];
 }
 
-static bool greedy_subsequence_match(StringView candidate, StringView query)
+static bool greedy_subsequence_match(StringView candidate, const RankedMatchQuery& query)
 {
     auto it = candidate.begin();
-    for (auto query_it = query.begin(); query_it != query.end();)
+    CharCount query_i = 0;
+    for (auto query_it = query.input.begin(); query_it != query.input.end();)
     {
         if (it == candidate.end())
             return false;
-        const Codepoint c = utf8::read_codepoint(query_it, query.end());
+        const Codepoint c = utf8::read_codepoint(query_it, query.input.end());
         while (true)
         {
             auto candidate_c = utf8::read_codepoint(it, candidate.end());
-            if (smartcase_eq(candidate_c, c))
+            if (smartcase_eq(candidate_c, c, query, query_i))
                 break;
 
             if (it == candidate.end())
                 return false;
         }
+        query_i++;
     }
     return true;
+}
+
+static CharCount query_length(const RankedMatchQuery& query)
+{
+    return query.smartcase_alternative_match.size();
 }
 
 // Below is an implementation of Gotoh's algorithm for optimal sequence
@@ -93,10 +101,10 @@ struct Distance
 class SubsequenceDistance
 {
 public:
-    SubsequenceDistance(StringView query, StringView candidate)
+    SubsequenceDistance(const RankedMatchQuery& query, StringView candidate)
         : query{query}, candidate{candidate},
           stride{candidate.char_length() + 1},
-          m_matrix{(size_t)((query.char_length() + 1) * stride)} {}
+          m_matrix{(size_t)((query_length(query) + 1) * stride)} {}
 
     ArrayView<Distance, CharCount> operator[](CharCount query_i)
     {
@@ -110,7 +118,7 @@ public:
     // The index of the last matched character.
     CharCount max_index = 0;
     // These fields exist to allow pretty-printing in GDB.
-    const StringView query;
+    const RankedMatchQuery& query;
     const StringView candidate;
 private:
     CharCount stride;
@@ -124,7 +132,7 @@ private:
 static constexpr int infinity = std::numeric_limits<int>::max();
 constexpr int max_index_weight = 1;
 
-static SubsequenceDistance subsequence_distance(StringView query, StringView candidate)
+static SubsequenceDistance subsequence_distance(const RankedMatchQuery& query, StringView candidate)
 {
     auto match_bonus = [](bool starts_word, bool is_same_case) -> int {
         return -150 * starts_word
@@ -136,7 +144,6 @@ static SubsequenceDistance subsequence_distance(StringView query, StringView can
 
     SubsequenceDistance distance{query, candidate};
 
-    CharCount query_length = query.char_length();
     CharCount candidate_length = candidate.char_length();
 
     // Compute the distance of skipping a prefix of the candidate.
@@ -145,8 +152,8 @@ static SubsequenceDistance subsequence_distance(StringView query, StringView can
 
     CharCount query_i, candidate_i;
     String::const_iterator query_it, candidate_it;
-    for (query_i = 1, query_it = query.begin();
-         query_i <= query_length;
+    for (query_i = 1, query_it = query.input.begin();
+         query_i <= query_length(query);
          query_i++)
     {
         auto row = distance[query_i];
@@ -161,7 +168,7 @@ static SubsequenceDistance subsequence_distance(StringView query, StringView can
             row[query_i - 1].distance = infinity;
             row[query_i - 1].distance_ending_in_gap = infinity;
         }
-        Codepoint query_c = utf8::read_codepoint(query_it, query.end());
+        Codepoint query_c = utf8::read_codepoint(query_it, query.input.end());
         Codepoint prev_c;
         // Since we don't allow deletions, the candidate must be at least
         // as long as the query. This allows us to skip some cells.
@@ -176,7 +183,7 @@ static SubsequenceDistance subsequence_distance(StringView query, StringView can
             int distance_ending_in_gap = infinity;
             if (auto parent = row[candidate_i - 1]; parent.distance != infinity)
             {
-                bool is_trailing_gap = query_i == query_length;
+                bool is_trailing_gap = query_i == query_length(query);
                 int start_gap = parent.distance + (gap_weight * not is_trailing_gap) + gap_extend_weight;
                 int extend_gap = parent.distance_ending_in_gap == infinity
                                     ? infinity
@@ -186,7 +193,7 @@ static SubsequenceDistance subsequence_distance(StringView query, StringView can
 
             int distance_match = infinity;
             if (Distance parent = prev_row[candidate_i - 1];
-                parent.distance != infinity and smartcase_eq(candidate_c, query_c))
+                parent.distance != infinity and smartcase_eq(candidate_c, query_c, query, query_i - 1))
             {
                 bool starts_word = is_word_start(prev_c, candidate_c);
                 bool is_same_case = candidate_c == query_c;
@@ -195,7 +202,7 @@ static SubsequenceDistance subsequence_distance(StringView query, StringView can
 
             row[candidate_i].distance = std::min(distance_match, distance_ending_in_gap);
             row[candidate_i].distance_ending_in_gap = distance_ending_in_gap;
-            if (query_i == query_length and distance_match < distance_ending_in_gap)
+            if (query_i == query_length(query) and distance_match < distance_ending_in_gap)
                 distance.max_index = candidate_i - 1;
             prev_c = candidate_c;
         }
@@ -203,13 +210,23 @@ static SubsequenceDistance subsequence_distance(StringView query, StringView can
     return distance;
 }
 
+RankedMatchQuery::RankedMatchQuery(StringView query) : RankedMatchQuery(query, {}) {}
+
+RankedMatchQuery::RankedMatchQuery(StringView input, UsedLetters used_letters)
+    : input(input), used_letters(used_letters),
+      smartcase_alternative_match(input | transform([](Codepoint c) -> Optional<Codepoint> {
+          if (is_lower(c))
+              return to_upper(c);
+          return {};
+      }) | gather<decltype(smartcase_alternative_match)>()) {}
+
 template<typename TestFunc>
-RankedMatch::RankedMatch(StringView candidate, StringView query, TestFunc func)
+RankedMatch::RankedMatch(StringView candidate, const RankedMatchQuery& query, TestFunc func)
 {
-    if (query.length() > candidate.length())
+    if (query.input.length() > candidate.length())
         return;
 
-    if (query.empty())
+    if (query.input.empty())
     {
         m_candidate = candidate;
         m_matches = true;
@@ -233,19 +250,19 @@ RankedMatch::RankedMatch(StringView candidate, StringView query, TestFunc func)
 
     auto distance = subsequence_distance(query, bounded_candidate);
 
-    m_distance = distance[query.char_length()][bounded_candidate.char_length()].distance
+    m_distance = distance[query_length(query)][bounded_candidate.char_length()].distance
                + (int)distance.max_index * max_index_weight;
 }
 
 RankedMatch::RankedMatch(StringView candidate, UsedLetters candidate_letters,
-                         StringView query, UsedLetters query_letters)
+                         const RankedMatchQuery& query)
     : RankedMatch{candidate, query, [&] {
-        return matches(to_lower(query_letters), to_lower(candidate_letters)) and
-               matches(query_letters & upper_mask, candidate_letters & upper_mask);
+        return matches(to_lower(query.used_letters), to_lower(candidate_letters)) and
+               matches(query.used_letters & upper_mask, candidate_letters & upper_mask);
     }} {}
 
 
-RankedMatch::RankedMatch(StringView candidate, StringView query)
+RankedMatch::RankedMatch(StringView candidate, const RankedMatchQuery& query)
     : RankedMatch{candidate, query, [] { return true; }}
 {
 }
@@ -313,14 +330,13 @@ static_assert(log2(4) == 2);
 // returns a string representation of the distance matrix, for debugging only
 [[maybe_unused]] static String to_string(const SubsequenceDistance& distance)
 {
-    StringView query = distance.query;
+    const RankedMatchQuery& query = distance.query;
     StringView candidate = distance.candidate;
 
-    auto query_length = query.char_length();
     auto candidate_length = candidate.char_length();
 
     int distance_amplitude = 1;
-    for (auto query_i = 0; query_i <= query_length; query_i++)
+    for (auto query_i = 0; query_i <= query_length(query); query_i++)
         for (auto candidate_i = 1; candidate_i <= candidate_length; candidate_i++)
             if (distance[query_i][candidate_i].distance != infinity)
                 distance_amplitude = std::max(distance_amplitude, std::abs(distance[query_i][candidate_i].distance));
@@ -329,11 +345,11 @@ static_assert(log2(4) == 2);
                            + 2; // separator between the numbers, plus one space
 
     String s = "\n";
-    auto query_it = query.begin();
+    auto query_it = query.input.begin();
     s += String{' ', cell_width};
-    for (auto query_i = 0; query_i <= query_length; query_i++)
+    for (auto query_i = 0; query_i <= query_length(query); query_i++)
     {
-        Codepoint query_c = query_i == 0 ? ' ' : utf8::read_codepoint(query_it, query.end());
+        Codepoint query_c = query_i == 0 ? ' ' : utf8::read_codepoint(query_it, query.input.end());
         s += left_pad(to_string(query_c), cell_width);
     }
     s += "\n";
@@ -343,7 +359,7 @@ static_assert(log2(4) == 2);
     {
         Codepoint candidate_c = candidate_i == 0 ? ' ' : utf8::read_codepoint(candidate_it, candidate.end());
         s += left_pad(to_string(candidate_c), cell_width);
-        for (CharCount query_i = 0; query_i <= query_length; query_i++)
+        for (CharCount query_i = 0; query_i <= query_length(query); query_i++)
         {
             auto distance_to_string = [](int d) -> String {
                 return d == infinity ? String{"∞"} : to_string(d);
@@ -361,13 +377,15 @@ static_assert(log2(4) == 2);
 
 UnitTest test_ranked_match{[] {
     // Convenience variables, for debugging only.
+    Optional<RankedMatchQuery> q;
     Optional<SubsequenceDistance> distance_better;
     Optional<SubsequenceDistance> distance_worse;
 
     auto ranked_match_order = [&](StringView query, StringView better, StringView worse) -> bool {
-        distance_better = subsequence_distance(query, better);
-        distance_worse = subsequence_distance(query, worse);
-        return RankedMatch{better, query} < RankedMatch{worse, query};
+        q = RankedMatchQuery{query};
+        distance_better = subsequence_distance(*q, better);
+        distance_worse = subsequence_distance(*q, worse);
+        return RankedMatch{better, *q} < RankedMatch{worse, *q};
     };
 
     kak_assert(ranked_match_order("so", "source", "source_data"));
