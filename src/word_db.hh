@@ -25,7 +25,7 @@ public:
     WordDB(const WordDB&) = delete;
     WordDB(WordDB&&) noexcept;
 
-    RankedMatchList find_matching(StringView str);
+    RankedMatchList find_matching(const RankedMatchQuery& query);
 
     int get_word_occurences(StringView word) const;
 private:

@@ -516,10 +516,11 @@ CandidateList complete_filename(StringView prefix, const Regex& ignored_regex,
                (not only_dirs or S_ISDIR(st.st_mode));
     };
     auto files = list_files(parsed_dirname, filter);
+    RankedMatchQuery q{fileprefix};
     Vector<RankedMatch> matches;
     for (auto& file : files)
     {
-        if (RankedMatch match{file, fileprefix})
+        if (RankedMatch match{file, q})
             matches.push_back(match);
     }
     // Hack: when completing directories, also echo back the query if it
@@ -528,7 +529,7 @@ CandidateList complete_filename(StringView prefix, const Regex& ignored_regex,
     if (only_dirs and not dirname.empty() and dirname.back() == '/' and fileprefix.empty()
         and /* exists on disk */ not files.empty())
     {
-        matches.push_back(RankedMatch{fileprefix, fileprefix});
+        matches.push_back(RankedMatch{fileprefix, q});
     }
     std::sort(matches.begin(), matches.end());
     const bool expand = (flags & FilenameFlags::Expand);
@@ -550,10 +551,11 @@ CandidateList complete_command(StringView prefix, ByteCount cursor_pos)
             return S_ISDIR(st.st_mode) or (S_ISREG(st.st_mode) and executable);
         };
         auto files = list_files(dirname, filter);
+        RankedMatchQuery q{real_prefix};
         Vector<RankedMatch> matches;
         for (auto& file : files)
         {
-            if (RankedMatch match{file, real_prefix})
+            if (RankedMatch match{file, q})
                 matches.push_back(match);
         }
         std::sort(matches.begin(), matches.end());
@@ -569,6 +571,7 @@ CandidateList complete_command(StringView prefix, ByteCount cursor_pos)
     };
     static HashMap<String, CommandCache, MemoryDomain::Commands> command_cache;
 
+    RankedMatchQuery q{fileprefix};
     Vector<RankedMatch> matches;
     for (auto dir : StringView{getenv("PATH")} | split<StringView>(':'))
     {
@@ -593,7 +596,7 @@ CandidateList complete_command(StringView prefix, ByteCount cursor_pos)
         }
         for (auto& cmd : cache.commands)
         {
-            if (RankedMatch match{cmd, fileprefix})
+            if (RankedMatch match{cmd, q})
                 matches.push_back(match);
         }
     }

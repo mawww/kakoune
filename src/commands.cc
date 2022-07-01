@@ -166,6 +166,7 @@ static Completions complete_buffer_name(const Context& context, CompletionFlags 
     };
 
     StringView query = prefix.substr(0, cursor_pos);
+    RankedMatchQuery q{query};
     Vector<RankedMatchAndBuffer> filename_matches;
     Vector<RankedMatchAndBuffer> matches;
     for (const auto& buffer : BufferManager::instance())
@@ -176,13 +177,13 @@ static Completions complete_buffer_name(const Context& context, CompletionFlags 
         StringView bufname = buffer->display_name();
         if (buffer->flags() & Buffer::Flags::File)
         {
-            if (RankedMatch match{split_path(bufname).second, query})
+            if (RankedMatch match{split_path(bufname).second, q})
             {
                 filename_matches.emplace_back(match, buffer.get());
                 continue;
             }
         }
-        if (RankedMatch match{bufname, query})
+        if (RankedMatch match{bufname, q})
             matches.emplace_back(match, buffer.get());
     }
     std::sort(filename_matches.begin(), filename_matches.end());
@@ -304,11 +305,11 @@ struct ShellCandidatesCompleter
         }
 
         StringView query = params[token_to_complete].substr(0, pos_in_token);
-        UsedLetters query_letters = used_letters(query);
+        RankedMatchQuery q{query, used_letters(query)};
         Vector<RankedMatch> matches;
         for (const auto& candidate : m_candidates)
         {
-            if (RankedMatch match{candidate.first, candidate.second, query, query_letters})
+            if (RankedMatch match{candidate.first, candidate.second, q})
                 matches.push_back(match);
         }
 

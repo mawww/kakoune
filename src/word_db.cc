@@ -193,14 +193,13 @@ int WordDB::get_word_occurences(StringView word) const
     return 0;
 }
 
-RankedMatchList WordDB::find_matching(StringView query)
+RankedMatchList WordDB::find_matching(const RankedMatchQuery& query)
 {
     update_db();
-    const UsedLetters letters = used_letters(query);
     RankedMatchList res;
     for (auto&& word : m_words)
     {
-        if (RankedMatch match{word.key, word.value.letters, query, letters})
+        if (RankedMatch match{word.key, word.value.letters, query})
             res.push_back(match);
     }
 
@@ -227,17 +226,18 @@ UnitTest test_word_db{[]()
     Buffer buffer("test", Buffer::Flags::None,
                   make_lines("tchou mutch\n", "tchou kanaky tchou\n", "\n", "tchaa tchaa\n", "allo\n"));
     WordDB word_db(buffer);
-    auto res = word_db.find_matching("");
+    RankedMatchQuery query{""};
+    auto res = word_db.find_matching(query);
     std::sort(res.begin(), res.end(), cmp_words);
     kak_assert(eq(res, WordList{ "allo", "kanaky", "mutch", "tchaa", "tchou" }));
     kak_assert(word_db.get_word_occurences("tchou") == 3);
     kak_assert(word_db.get_word_occurences("allo") == 1);
     buffer.erase({1, 6}, {4, 0});
-    res = word_db.find_matching("");
+    res = word_db.find_matching(query);
     std::sort(res.begin(), res.end(), cmp_words);
     kak_assert(eq(res, WordList{ "allo", "mutch", "tchou" }));
     buffer.insert({1, 0}, "re");
-    res = word_db.find_matching("");
+    res = word_db.find_matching(query);
     std::sort(res.begin(), res.end(), cmp_words);
     kak_assert(eq(res, WordList{ "allo", "mutch", "retchou", "tchou" }));
 }};

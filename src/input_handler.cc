@@ -983,8 +983,9 @@ public:
                         });
                     else if (key.key == 'w')
                         use_explicit_completer([](const Context& context, StringView token) {
+                            RankedMatchQuery query{token};
                             CandidateList candidates;
-                            for_n_best(get_word_db(context.buffer()).find_matching(token),
+                            for_n_best(get_word_db(context.buffer()).find_matching(query),
                                        100, [](auto& lhs, auto& rhs){ return rhs < lhs; },
                                        [&](RankedMatch& m) {
                                 candidates.push_back(m.candidate().str());
