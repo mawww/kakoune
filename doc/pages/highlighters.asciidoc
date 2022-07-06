@@ -61,9 +61,18 @@ highlighter is replaced with the new one.
     *-hlcursor*:::
         highlight the cursor line with a separate face
 
-    *-separator* <separator text>:::
-        specify a string to separate the line numbers column from
-        the rest of the buffer (default is '|')
+    *-separators* <separator|separator:cursor|cursor:up:down>:::
+        specify a colon separated list of strings to separate the line
+        numbers column from the rest of the buffer:
+        if the list has a single element, the string is displayed on
+        every line;
+        if the list has two elements, the second string is displayed on
+        the current line and the first string is displayed on all others;
+        if the list has three elements, the first string is displayed on
+        the current line, and the other two respectively before and after
+        the current line;
+        the first element of the list is always mandatory, sensible defaults
+        for the other elements are picked if unset.
 
     *-cursor-separator* <separator text>:::
         identical to *-separator* but applies only to the line of the cursor

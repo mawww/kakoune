@@ -1117,8 +1117,7 @@ const HighlighterDesc line_numbers_desc = {
     "Display line numbers",
     { {
         { "relative", { false, "show line numbers relative to the main cursor line" } },
-        { "separator", { true, "string to separate the line numbers column from the rest of the buffer (default '|')" } },
-        { "cursor-separator", { true, "identical to -separator but applies only to the line of the cursor (default is the same value passed to -separator)" } },
+        { "separators", { true, "colon separated list of strings to separate the line numbers column from the rest of the buffer" } },
         { "min-digits", { true, "use at least the given number of columns to display line numbers (default 2)" } },
         { "hlcursor", { false, "highlight the cursor line with a separate face" } } },
         ParameterDesc::Flags::None, 0, 0
@@ -1126,26 +1125,36 @@ const HighlighterDesc line_numbers_desc = {
 };
 struct LineNumbersHighlighter : Highlighter
 {
-    LineNumbersHighlighter(bool relative, bool hl_cursor_line, String separator, String cursor_separator, int min_digits)
+    LineNumbersHighlighter(bool relative, bool hl_cursor_line, Vector<String> separators, int min_digits)
       : Highlighter{HighlightPass::Move},
         m_relative{relative},
         m_hl_cursor_line{hl_cursor_line},
-        m_separator{std::move(separator)},
-        m_cursor_separator{std::move(cursor_separator)},
+        m_separators{std::move(separators)},
         m_min_digits{min_digits} {}
 
     static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
     {
         ParametersParser parser(params, line_numbers_desc.params);
 
-        StringView separator = parser.get_switch("separator").value_or("│");
-        StringView cursor_separator = parser.get_switch("cursor-separator").value_or(separator);
-
-        if (separator.length() > 10)
+        auto separators = parser.get_switch("separators").value_or("│")
+                              | split<StringView>(':', '\\')
+                              | transform(unescape<':', '\\'>)
+                              | gather<Vector<String>>();
+        if (separators.size() < 1 or separators.size() > 3)
+            throw runtime_error(format("expected 1 to 3 separators, got {}", separators.size()));
+        else if (separators[0].empty())
+            throw runtime_error("the first separator cannot be empty");
+        else if (separators[0].length() > 10)
             throw runtime_error("separator length is limited to 10 bytes");
-
-        if (cursor_separator.column_length() != separator.column_length())
+        else if (separators.size() == 2 and not separators[1].empty()
+                 and separators[1].column_length() != separators[0].column_length())
             throw runtime_error("separator for active line should have the same length as 'separator'");
+        else if (separators.size() == 3 and (
+                 (not separators[1].empty()
+                      and separators[1].column_length() != separators[0].column_length())
+                 or (not separators[2].empty()
+                      and separators[2].column_length() != separators[0].column_length())))
+                throw runtime_error("separators for surrounding lines should have the same length as that for the current line");
 
         int min_digits = parser.get_switch("min-digits").map(str_to_int).value_or(2);
         if (min_digits < 0)
@@ -1153,7 +1162,7 @@ struct LineNumbersHighlighter : Highlighter
         if (min_digits > 10)
             throw runtime_error("min digits is limited to 10");
 
-        return std::make_unique<LineNumbersHighlighter>((bool)parser.get_switch("relative"), (bool)parser.get_switch("hlcursor"), separator.str(), cursor_separator.str(), min_digits);
+        return std::make_unique<LineNumbersHighlighter>((bool)parser.get_switch("relative"), (bool)parser.get_switch("hlcursor"), separators, min_digits);
     }
 
 private:
@@ -1185,11 +1194,26 @@ private:
             const auto atom_face = last_line == current_line ? face_wrapped :
                 ((m_hl_cursor_line and is_cursor_line) ? face_absolute : face);
 
-            const auto& separator = is_cursor_line && last_line != current_line
-                                    ? m_cursor_separator : m_separator;
+            auto resolve_separator = [&]() -> String {
+                if (m_separators.size() == 2)
+                {
+                    if (not m_separators[1].empty()
+                        and is_cursor_line and last_line != current_line)
+                        return m_separators[1];
+                }
+                else if (m_separators.size() == 3)
+                {
+                    if (current_line < main_line)
+                        return m_separators[1].empty() ? "↓" : m_separators[1];
+                    else if (current_line > main_line)
+                        return m_separators[2].empty() ? "↑" : m_separators[2];
+                }
+
+                return m_separators[0];
+            };
 
             line.insert(line.begin(), {buffer, atom_face});
-            line.insert(line.begin() + 1, {separator, face});
+            line.insert(line.begin() + 1, {std::move(resolve_separator()), face});
 
             last_line = current_line;
         }
@@ -1200,7 +1224,7 @@ private:
         if (contains(context.disabled_ids, ms_id))
             return;
 
-        ColumnCount width = compute_digit_count(context.context) + m_separator.column_length();
+        ColumnCount width = compute_digit_count(context.context) + m_separators[0].column_length();
         setup.window_range.column -= std::min(width, setup.window_range.column);
     }
 
@@ -1220,8 +1244,7 @@ private:
 
     const bool m_relative;
     const bool m_hl_cursor_line;
-    const String m_separator;
-    const String m_cursor_separator;
+    const Vector<String> m_separators;
     const int m_min_digits;
 };
 
