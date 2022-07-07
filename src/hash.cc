@@ -41,11 +41,7 @@ size_t hash_data(const char* input, size_t len)
     for (ptrdiff_t i = -nblocks; i; ++i)
     {
         uint32_t key;
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-        memcpy(&key, blocks + 4*i, 4);
-#else
-        key = blocks[4*i] + (blocks[4*i + 1] << 8) + (blocks[4*i + 2] << 16) + (blocks[4*i + 3] << 24);
-#endif
+        key = (blocks[4*i + 3] << 24) | (blocks[4*i + 2] << 16) | (blocks[4*i + 1] << 8) + blocks[4*i];
         key *= c1;
         key = rotl(key, 15);
         key *= c2;
