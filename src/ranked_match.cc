@@ -88,28 +88,28 @@ struct SubseqRes
     bool single_word;
 };
 
-static Optional<SubseqRes> subsequence_match_smart_case(StringView str, StringView subseq)
+static Optional<SubseqRes> greedy_subsequence_match(StringView candidate, StringView query)
 {
     bool single_word = true;
     int max_index = -1;
-    auto it = str.begin();
+    auto it = candidate.begin();
     int index = 0;
-    for (auto subseq_it = subseq.begin(); subseq_it != subseq.end();)
+    for (auto query_it = query.begin(); query_it != query.end();)
     {
-        if (it == str.end())
+        if (it == candidate.end())
             return {};
-        const Codepoint c = utf8::read_codepoint(subseq_it, subseq.end());
+        const Codepoint c = utf8::read_codepoint(query_it, query.end());
         while (true)
         {
-            auto str_c = utf8::read_codepoint(it, str.end());
-            if (smartcase_eq(str_c, c))
+            auto candidate_c = utf8::read_codepoint(it, candidate.end());
+            if (smartcase_eq(candidate_c, c))
                 break;
 
-            if (max_index != -1 and single_word and not is_word(str_c))
+            if (max_index != -1 and single_word and not is_word(candidate_c))
                 single_word = false;
 
             ++index;
-            if (it == str.end())
+            if (it == candidate.end())
                 return {};
         }
         max_index = index++;
@@ -133,7 +133,7 @@ RankedMatch::RankedMatch(StringView candidate, StringView query, TestFunc func)
     if (not func())
         return;
 
-    auto res = subsequence_match_smart_case(candidate, query);
+    auto res = greedy_subsequence_match(candidate, query);
     if (not res)
         return;
 
