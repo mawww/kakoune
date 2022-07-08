@@ -270,6 +270,19 @@ UnitTest test_ranked_match{[] {
     kak_assert(preferred("", "a", "b"));
     kak_assert(preferred("expresins", "expresions", "expressionism's"));
     kak_assert(preferred("foo_b", "foo/bar/foo_bar.baz", "test/test_foo_bar.baz"));
+    kak_assert(preferred("gre", "*grep*", ".git/rebase-merge/git-rebase-todo"));
+    kak_assert(preferred("CAPRAN", "CAPABILITY_RANGE_FORMATTING", "CAPABILITY_SELECTION_RANGE"));
+    kak_assert(preferred("mal", "malt", "formal"));
+    kak_assert(preferred("fa", "face", "find-apply-changes"));
+    kak_assert(preferred("cne", "cargo-next-error", "comment-line"));
+    kak_assert(preferred("cne", "cargo-next-error", "ccls-navigate"));
+    kak_assert(preferred("cpe", "cargo-previous-error", "cpp-alternative-file"));
+    kak_assert(preferred("server_",  "server_capabilities", "SERVER_CANCELLED"));
+    kak_assert(preferred("server_",  "server_capabilities_capabilities", "SERVER_CANCELLED"));
+    kak_assert(preferred("codegen", "clang/test/CodeGen/asm.c", "clang/test/ASTMerge/codegen-body/test.c"));
+    kak_assert(preferred("cho", "tchou kanaky", "tachou kanay")); // Prefer the leftmost match.
+    kak_assert(preferred("clang-query", "clang/tools/clang-query/ClangQuery.cpp", "clang/test/Tooling/clang-query.cpp"));
+    kak_assert(preferred("clangd", "clang-tools-extra/clangd/README.md", "clang/docs/conf.py"));
 }};
 
 UnitTest test_used_letters{[]()
