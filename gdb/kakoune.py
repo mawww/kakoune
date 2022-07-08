@@ -206,6 +206,16 @@ class Regex:
     def to_string(self):
         return "regex%s" % (self.val["m_str"])
 
+class SubsequenceDistance:
+    """Print a SubsequenceDistance"""
+
+    def __init__(self, val):
+        self.val = val
+
+    def to_string(self):
+        reference = "*(%s*)%s" % (self.val.type, self.val.address)
+        return gdb.parse_and_eval("Kakoune::to_string(%s)" % reference)
+
 
 def build_pretty_printer():
     pp = gdb.printing.RegexpCollectionPrettyPrinter("kakoune")
@@ -225,4 +235,5 @@ def build_pretty_printer():
     pp.add_printer('ByteCount', '^Kakoune::ByteCount$', ByteCount)
     pp.add_printer('Color', '^Kakoune::Color$', Color)
     pp.add_printer('Regex', '^Kakoune::Regex$', Regex)
+    pp.add_printer('SubsequenceDistance', '^Kakoune::SubsequenceDistance$', SubsequenceDistance)
     return pp
