@@ -235,5 +235,5 @@ def build_pretty_printer():
     pp.add_printer('ByteCount', '^Kakoune::ByteCount$', ByteCount)
     pp.add_printer('Color', '^Kakoune::Color$', Color)
     pp.add_printer('Regex', '^Kakoune::Regex$', Regex)
-    pp.add_printer('SubsequenceDistance', '^Kakoune::SubsequenceDistance$', SubsequenceDistance)
+    pp.add_printer('SubsequenceDistance', '^Kakoune::SubsequenceDistance<true>$', SubsequenceDistance)
     return pp
