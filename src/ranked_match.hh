@@ -35,25 +35,9 @@ private:
     template<typename TestFunc>
     RankedMatch(StringView candidate, StringView query, TestFunc test);
 
-    enum class Flags : int
-    {
-        None = 0,
-        // Order is important, the highest bit has precedence for comparison
-        FirstCharMatch   = 1 << 0,
-        SingleWord       = 1 << 1,
-        Contiguous       = 1 << 2,
-        OnlyWordBoundary = 1 << 3,
-        Prefix           = 1 << 4,
-        SmartFullMatch   = 1 << 5,
-        FullMatch        = 1 << 6,
-    };
-    friend constexpr bool with_bit_ops(Meta::Type<Flags>) { return true; }
-
     StringView m_candidate{};
     bool m_matches = false;
-    Flags m_flags = Flags::None;
-    int m_word_boundary_match_count = 0;
-    int m_max_index = 0;
+    int m_distance = 0;
 };
 
 }

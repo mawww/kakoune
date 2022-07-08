@@ -1,11 +1,15 @@
 #include "ranked_match.hh"
 
 #include "flags.hh"
+#include "string_utils.hh"
 #include "unit_tests.hh"
 #include "utf8_iterator.hh"
 #include "optional.hh"
+#include "vector.hh"
 
 #include <algorithm>
+#include <cmath>
+#include <bit>
 
 namespace Kakoune
 {
@@ -34,47 +38,16 @@ bool matches(UsedLetters query, UsedLetters letters)
     return (query & letters) == query;
 }
 
-using Utf8It = utf8::iterator<const char*>;
-
 static bool is_word_boundary(Codepoint prev, Codepoint c)
 {
     return (iswalnum((wchar_t)prev) != iswalnum((wchar_t)c)) or
            (iswlower((wchar_t)prev) and iswupper((wchar_t)c));
 }
 
-static bool is_word_start(Codepoint prev, Codepoint c)
+static int word_start_factor(Codepoint prev, Codepoint c)
 {
-    return (not iswalnum((wchar_t)prev) and iswalnum((wchar_t)c)) or
-           (iswlower((wchar_t)prev) and iswupper((wchar_t)c));
-}
-
-static int count_word_boundaries_match(StringView candidate, StringView query)
-{
-    int count = 0;
-    Utf8It query_it{query.begin(), query};
-    Codepoint prev = 0;
-    for (Utf8It it{candidate.begin(), candidate}; it != candidate.end(); prev = *it++)
-    {
-        const Codepoint c = *it;
-
-        if (not is_word_start(prev, c))
-            continue;
-
-        const Codepoint lc = to_lower(c);
-        for (auto qit = query_it; qit != query.end(); ++qit)
-        {
-            const Codepoint qc = *qit;
-            if (qc == (iswlower((wchar_t)qc) ? lc  : c))
-            {
-                ++count;
-                query_it = qit+1;
-                break;
-            }
-        }
-        if (query_it == query.end())
-            break;
-    }
-    return count;
+    return 2 * (not iswalnum((wchar_t)prev) and iswalnum((wchar_t)c)) +
+           1 * (iswlower((wchar_t)prev) and iswupper((wchar_t)c));
 }
 
 static bool smartcase_eq(Codepoint candidate, Codepoint query)
@@ -82,22 +55,13 @@ static bool smartcase_eq(Codepoint candidate, Codepoint query)
     return query == (iswlower((wchar_t)query) ? to_lower(candidate) : candidate);
 }
 
-struct SubseqRes
+static bool greedy_subsequence_match(StringView candidate, StringView query)
 {
-    int max_index;
-    bool single_word;
-};
-
-static Optional<SubseqRes> greedy_subsequence_match(StringView candidate, StringView query)
-{
-    bool single_word = true;
-    int max_index = -1;
     auto it = candidate.begin();
-    int index = 0;
     for (auto query_it = query.begin(); query_it != query.end();)
     {
         if (it == candidate.end())
-            return {};
+            return false;
         const Codepoint c = utf8::read_codepoint(query_it, query.end());
         while (true)
         {
@@ -105,16 +69,138 @@ static Optional<SubseqRes> greedy_subsequence_match(StringView candidate, String
             if (smartcase_eq(candidate_c, c))
                 break;
 
-            if (max_index != -1 and single_word and not is_word(candidate_c))
-                single_word = false;
-
-            ++index;
             if (it == candidate.end())
-                return {};
+                return false;
         }
-        max_index = index++;
     }
-    return SubseqRes{max_index, single_word};
+    return true;
+}
+
+// Below is an implementation of Gotoh's algorithm for optimal sequence
+// alignment following the 1982 paper "An Improved Algorithm for Matching
+// Biological Sequences", see
+// https://courses.cs.duke.edu/spring21/compsci260/resources/AlignmentPapers/1982.gotoh.pdf
+// We simplify the algorithm by always requiring the query to be a subsequence
+// of the candidate.
+struct Distance
+{
+    // The distance between two strings.
+    int distance = 0;
+    // The distance between two strings if the alignment ends in a gap.
+    int distance_ending_in_gap = 0;
+};
+
+class SubsequenceDistance
+{
+public:
+    SubsequenceDistance(StringView query, StringView candidate)
+        : query{query}, candidate{candidate},
+          stride{candidate.char_length() + 1},
+          m_matrix{(size_t)((query.char_length() + 1) * stride)} {}
+
+    ArrayView<Distance, CharCount> operator[](CharCount query_i)
+    {
+        return {m_matrix.data() + (size_t)(query_i * stride), stride};
+    }
+    ConstArrayView<Distance, CharCount> operator[](CharCount query_i) const
+    {
+        return {m_matrix.data() + (size_t)(query_i * stride), stride};
+    }
+
+    // The index of the last matched character.
+    CharCount max_index = 0;
+    // These fields exist to allow pretty-printing in GDB.
+    const StringView query;
+    const StringView candidate;
+private:
+    CharCount stride;
+    // For each combination of prefixes of candidate and query, this holds
+    // their distance.  For example, (*this)[2][3] holds the distance between
+    // the first two query characters and the first three characters from
+    // the candidate.
+    Vector<Distance, MemoryDomain::RankedMatch> m_matrix;
+};
+
+static constexpr int infinity = std::numeric_limits<int>::max();
+constexpr int max_index_weight = 1;
+
+static SubsequenceDistance subsequence_distance(StringView query, StringView candidate)
+{
+    auto match_bonus = [](int word_start, bool is_same_case) -> int {
+        return -75 * word_start
+               -40
+                -4 * is_same_case;
+    };
+    constexpr int gap_weight = 200;
+    constexpr int gap_extend_weight = 1;
+
+    SubsequenceDistance distance{query, candidate};
+
+    CharCount query_length = query.char_length();
+    CharCount candidate_length = candidate.char_length();
+
+    // Compute the distance of skipping a prefix of the candidate.
+    for (CharCount candidate_i = 0; candidate_i <= candidate_length; candidate_i++)
+        distance[0][candidate_i].distance = (int)candidate_i * gap_extend_weight;
+
+    CharCount query_i, candidate_i;
+    String::const_iterator query_it, candidate_it;
+    for (query_i = 1, query_it = query.begin();
+         query_i <= query_length;
+         query_i++)
+    {
+        auto row = distance[query_i];
+        auto prev_row = distance[query_i-1];
+
+        // Since we only allow subsequence matches, we don't need deletions.
+        // This rules out prefix-matches where the query is longer than the
+        // candidate.  Mark them as impossible. We only need to mark the boundary
+        // cases since we never read others.
+        if (query_i - 1 <= candidate_length)
+        {
+            row[query_i - 1].distance = infinity;
+            row[query_i - 1].distance_ending_in_gap = infinity;
+        }
+        Codepoint query_c = utf8::read_codepoint(query_it, query.end());
+        Codepoint prev_c;
+        // Since we don't allow deletions, the candidate must be at least
+        // as long as the query. This allows us to skip some cells.
+        for (candidate_i = query_i,
+                 candidate_it = utf8::advance(candidate.begin(), candidate.end(), query_i -1),
+                 prev_c = utf8::prev_codepoint(candidate_it, candidate.begin()).value_or(Codepoint(0));
+             candidate_i <= candidate_length;
+             candidate_i++)
+        {
+            Codepoint candidate_c = utf8::read_codepoint(candidate_it, candidate.end());
+
+            int distance_ending_in_gap = infinity;
+            if (auto parent = row[candidate_i - 1]; parent.distance != infinity)
+            {
+                bool is_trailing_gap = query_i == query_length;
+                int start_gap = parent.distance + (gap_weight * not is_trailing_gap) + gap_extend_weight;
+                int extend_gap = parent.distance_ending_in_gap == infinity
+                                    ? infinity
+                                    : parent.distance_ending_in_gap + gap_extend_weight;
+                distance_ending_in_gap = std::min(start_gap, extend_gap);
+            }
+
+            int distance_match = infinity;
+            if (Distance parent = prev_row[candidate_i - 1];
+                parent.distance != infinity and smartcase_eq(candidate_c, query_c))
+            {
+                int word_start = word_start_factor(prev_c, candidate_c);
+                bool is_same_case = candidate_c == query_c;
+                distance_match = parent.distance + match_bonus(word_start, is_same_case);
+            }
+
+            row[candidate_i].distance = std::min(distance_match, distance_ending_in_gap);
+            row[candidate_i].distance_ending_in_gap = distance_ending_in_gap;
+            if (query_i == query_length and distance_match < distance_ending_in_gap)
+                distance.max_index = candidate_i - 1;
+            prev_c = candidate_c;
+        }
+    }
+    return distance;
 }
 
 template<typename TestFunc>
@@ -133,41 +219,22 @@ RankedMatch::RankedMatch(StringView candidate, StringView query, TestFunc func)
     if (not func())
         return;
 
-    auto res = greedy_subsequence_match(candidate, query);
-    if (not res)
+    // Our matching is quadratic; avoid a hypothetical blowup by only looking at a prefix.
+    constexpr CharCount candidate_max_length = 1000;
+    StringView bounded_candidate = candidate.char_length() > candidate_max_length
+                                 ? candidate.substr(0, candidate_max_length)
+                                 : candidate;
+
+    if (not greedy_subsequence_match(bounded_candidate, query))
         return;
 
     m_candidate = candidate;
     m_matches = true;
-    m_max_index = res->max_index;
 
-    if (res->single_word)
-        m_flags |= Flags::SingleWord;
-    if (smartcase_eq(candidate[0], query[0]))
-        m_flags |= Flags::FirstCharMatch;
+    auto distance = subsequence_distance(query, bounded_candidate);
 
-    auto it = std::search(candidate.begin(), candidate.end(),
-                          query.begin(), query.end(), smartcase_eq);
-    if (it != candidate.end())
-    {
-        m_flags |= Flags::Contiguous;
-        if (std::all_of(Utf8It{query.begin(), query}, Utf8It{query.end(), query}, [](auto cp) { return is_word(cp); }))
-            m_flags |= Flags::SingleWord;
-        if (it == candidate.begin())
-        {
-            m_flags |= Flags::Prefix;
-            if (query.length() == candidate.length())
-            {
-                m_flags |= Flags::SmartFullMatch;
-                if (candidate == query)
-                    m_flags |= Flags::FullMatch;
-            }
-        }
-    }
-
-    m_word_boundary_match_count = count_word_boundaries_match(candidate, query);
-    if (m_word_boundary_match_count == query.length())
-        m_flags |= Flags::OnlyWordBoundary;
+    m_distance = distance[query.char_length()][bounded_candidate.char_length()].distance
+               + (int)distance.max_index * max_index_weight;
 }
 
 RankedMatch::RankedMatch(StringView candidate, UsedLetters candidate_letters,
@@ -187,19 +254,8 @@ bool RankedMatch::operator<(const RankedMatch& other) const
 {
     kak_assert((bool)*this and (bool)other);
 
-    const auto diff = m_flags ^ other.m_flags;
-    // flags are different, use their ordering to return the first match
-    if (diff != Flags::None)
-        return (int)(m_flags & diff) > (int)(other.m_flags & diff);
-
-    // If we are SingleWord, FirstCharMatch will do the job, and we dont want to take
-    // other words boundaries into account.
-    if (not (m_flags & (Flags::Prefix | Flags::SingleWord)) and
-        m_word_boundary_match_count != other.m_word_boundary_match_count)
-        return m_word_boundary_match_count > other.m_word_boundary_match_count;
-
-    if (m_max_index != other.m_max_index)
-        return m_max_index < other.m_max_index;
+    if (m_distance != other.m_distance)
+        return m_distance < other.m_distance;
 
     // Reorder codepoints to improve matching behaviour
     auto order = [](Codepoint cp) { return cp == '/' ? 0 : cp; };
@@ -243,16 +299,77 @@ bool RankedMatch::operator<(const RankedMatch& other) const
     }
 }
 
+// returns the base-2 logarithm, rounded down
+constexpr uint32_t log2(uint32_t n) noexcept
+{
+    return 31 - std::countl_zero(n);
+}
+
+static_assert(log2(1) == 0);
+static_assert(log2(2) == 1);
+static_assert(log2(3) == 1);
+static_assert(log2(4) == 2);
+
+// returns a string representation of the distance matrix, for debugging only
+[[maybe_unused]] static String to_string(const SubsequenceDistance& distance)
+{
+    StringView query = distance.query;
+    StringView candidate = distance.candidate;
+
+    auto query_length = query.char_length();
+    auto candidate_length = candidate.char_length();
+
+    int distance_amplitude = 1;
+    for (auto query_i = 0; query_i <= query_length; query_i++)
+        for (auto candidate_i = 1; candidate_i <= candidate_length; candidate_i++)
+            if (distance[query_i][candidate_i].distance != infinity)
+                distance_amplitude = std::max(distance_amplitude, std::abs(distance[query_i][candidate_i].distance));
+    ColumnCount max_digits = log2(distance_amplitude) / log2(10) + 1;
+    ColumnCount cell_width = 2 * (max_digits + 1) // two numbers with a minus sign
+                           + 2; // separator between the numbers, plus one space
+
+    String s = "\n";
+    auto query_it = query.begin();
+    s += String{' ', cell_width};
+    for (auto query_i = 0; query_i <= query_length; query_i++)
+    {
+        Codepoint query_c = query_i == 0 ? ' ' : utf8::read_codepoint(query_it, query.end());
+        s += left_pad(to_string(query_c), cell_width);
+    }
+    s += "\n";
+
+    auto candidate_it = candidate.begin();
+    for (CharCount candidate_i = 0; candidate_i <= candidate_length; candidate_i++)
+    {
+        Codepoint candidate_c = candidate_i == 0 ? ' ' : utf8::read_codepoint(candidate_it, candidate.end());
+        s += left_pad(to_string(candidate_c), cell_width);
+        for (CharCount query_i = 0; query_i <= query_length; query_i++)
+        {
+            auto distance_to_string = [](int d) -> String {
+                return d == infinity ? String{"∞"} : to_string(d);
+            };
+            Distance cell = distance[query_i][candidate_i];
+            s += left_pad(
+                distance_to_string(cell.distance) + "/" + distance_to_string(cell.distance_ending_in_gap),
+                cell_width);
+        }
+        s += "\n";
+    }
+
+    return s;
+}
+
 UnitTest test_ranked_match{[] {
-    auto preferred = [](StringView query, StringView better, StringView worse) {
+    // Convenience variables, for debugging only.
+    Optional<SubsequenceDistance> distance_better;
+    Optional<SubsequenceDistance> distance_worse;
+
+    auto preferred = [&](StringView query, StringView better, StringView worse) -> bool {
+        distance_better = subsequence_distance(query, better);
+        distance_worse = subsequence_distance(query, worse);
         return RankedMatch{better, query} < RankedMatch{worse, query};
     };
 
-    kak_assert(count_word_boundaries_match("run_all_tests", "rat") == 3);
-    kak_assert(count_word_boundaries_match("run_all_tests", "at") == 2);
-    kak_assert(count_word_boundaries_match("countWordBoundariesMatch", "wm") == 2);
-    kak_assert(count_word_boundaries_match("countWordBoundariesMatch", "cobm") == 3);
-    kak_assert(count_word_boundaries_match("countWordBoundariesMatch", "cWBM") == 4);
     kak_assert(preferred("so", "source", "source_data"));
     kak_assert(not preferred("so", "source_data", "source"));
     kak_assert(not preferred("so", "source", "source"));
@@ -283,6 +400,12 @@ UnitTest test_ranked_match{[] {
     kak_assert(preferred("cho", "tchou kanaky", "tachou kanay")); // Prefer the leftmost match.
     kak_assert(preferred("clang-query", "clang/tools/clang-query/ClangQuery.cpp", "clang/test/Tooling/clang-query.cpp"));
     kak_assert(preferred("clangd", "clang-tools-extra/clangd/README.md", "clang/docs/conf.py"));
+    kak_assert(preferred("rm.cc", "ranked_match.cc", "remote.cc"));
+    kak_assert(preferred("rm.cc", "src/ranked_match.cc", "test/README.asciidoc"));
+    kak_assert(preferred("fooo", "foo.o", "fo.o.o"));
+    kak_assert(preferred("evilcorp-lint/bar.go", "scripts/evilcorp-lint/foo/bar.go", "src/evilcorp-client/foo/bar.go"));
+    kak_assert(preferred("lang/haystack/needle.c", "git.evilcorp.com/language/haystack/aaa/needle.c", "git.evilcorp.com/aaa/ng/wrong-haystack/needle.cpp"));
+    kak_assert(preferred("luaremote", "src/script/LuaRemote.cpp", "tests/TestLuaRemote.cpp"));
 }};
 
 UnitTest test_used_letters{[]()
