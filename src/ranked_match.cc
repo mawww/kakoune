@@ -36,20 +36,28 @@ bool matches(UsedLetters query, UsedLetters letters)
 
 using Utf8It = utf8::iterator<const char*>;
 
+static bool is_word_boundary(Codepoint prev, Codepoint c)
+{
+    return (iswalnum((wchar_t)prev) != iswalnum((wchar_t)c)) or
+           (iswlower((wchar_t)prev) and iswupper((wchar_t)c));
+}
+
+static bool is_word_start(Codepoint prev, Codepoint c)
+{
+    return (not iswalnum((wchar_t)prev) and iswalnum((wchar_t)c)) or
+           (iswlower((wchar_t)prev) and iswupper((wchar_t)c));
+}
+
 static int count_word_boundaries_match(StringView candidate, StringView query)
 {
     int count = 0;
     Utf8It query_it{query.begin(), query};
     Codepoint prev = 0;
-    for (Utf8It it{candidate.begin(), candidate}; it != candidate.end(); ++it)
+    for (Utf8It it{candidate.begin(), candidate}; it != candidate.end(); prev = *it++)
     {
         const Codepoint c = *it;
-        const bool is_word_boundary = prev == 0 or
-                                      (!iswalnum((wchar_t)prev) and iswalnum((wchar_t)c)) or
-                                      (iswlower((wchar_t)prev) and iswupper((wchar_t)c));
-        prev = c;
 
-        if (not is_word_boundary)
+        if (not is_word_start(prev, c))
             continue;
 
         const Codepoint lc = to_lower(c);
@@ -173,12 +181,6 @@ RankedMatch::RankedMatch(StringView candidate, UsedLetters candidate_letters,
 RankedMatch::RankedMatch(StringView candidate, StringView query)
     : RankedMatch{candidate, query, [] { return true; }}
 {
-}
-
-static bool is_word_boundary(Codepoint prev, Codepoint c)
-{
-    return (iswalnum((wchar_t)prev)) != iswalnum((wchar_t)c) or
-           (iswlower((wchar_t)prev) != iswlower((wchar_t)c));
 }
 
 bool RankedMatch::operator<(const RankedMatch& other) const
