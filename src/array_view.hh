@@ -9,7 +9,7 @@ namespace Kakoune
 
 // An ArrayView provides a typed, non owning view of a memory
 // range with an interface similar to std::vector.
-template<typename T>
+template<typename T, typename SizeType = std::size_t>
 class ArrayView
 {
 public:
@@ -21,7 +21,7 @@ public:
     constexpr ArrayView(T& oneval)
         : m_pointer(&oneval), m_size(1) {}
 
-    constexpr ArrayView(T* pointer, size_t size)
+    constexpr ArrayView(T* pointer, SizeType size)
         : m_pointer(pointer), m_size(size) {}
 
     constexpr ArrayView(T* begin, T* end)
@@ -39,10 +39,10 @@ public:
         : m_pointer(v.begin()), m_size(v.size()) {}
 
     constexpr T* pointer() const { return m_pointer; }
-    constexpr size_t size() const { return m_size; }
+    constexpr SizeType size() const { return m_size; }
 
     [[gnu::always_inline]]
-    constexpr T& operator[](size_t n) const { return *(m_pointer + n); }
+    constexpr T& operator[](SizeType n) const { return *(m_pointer + (size_t)n); }
 
     constexpr T* begin() const { return m_pointer; }
     constexpr T* end()   const { return m_pointer+m_size; }
@@ -56,23 +56,24 @@ public:
 
     constexpr bool empty() const { return m_size == 0; }
 
-    constexpr ArrayView subrange(size_t first, size_t count = -1) const
+    constexpr ArrayView subrange(SizeType first, SizeType count = -1) const
     {
-        auto min = [](size_t a, size_t b) { return a < b ? a : b; };
+        auto min = [](SizeType a, SizeType b) { return a < b ? a : b; };
         return ArrayView(m_pointer + min(first, m_size),
                          min(count, m_size - min(first, m_size)));
     }
 
 private:
     T* m_pointer;
-    size_t m_size;
+    SizeType m_size;
 };
 
-template<typename T>
-using ConstArrayView = ArrayView<const T>;
+template<typename T, typename SizeType = std::size_t>
+using ConstArrayView = ArrayView<const T, SizeType>;
 
-template<typename T>
-bool operator==(ArrayView<T> lhs, ArrayView<T> rhs)
+
+template<typename T, typename SizeType>
+bool operator==(ArrayView<T, SizeType> lhs, ArrayView<T, SizeType> rhs)
 {
     if (lhs.size() != rhs.size())
         return false;
@@ -84,8 +85,8 @@ bool operator==(ArrayView<T> lhs, ArrayView<T> rhs)
     return true;
 }
 
-template<typename T>
-bool operator!=(ArrayView<T> lhs, ArrayView<T> rhs)
+template<typename T, typename SizeType>
+bool operator!=(ArrayView<T, SizeType> lhs, ArrayView<T, SizeType> rhs)
 {
     return not (lhs == rhs);
 }
