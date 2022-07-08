@@ -98,13 +98,16 @@ struct Distance
     int distance_ending_in_gap = 0;
 };
 
+template<bool full_matrix>
 class SubsequenceDistance
 {
 public:
     SubsequenceDistance(const RankedMatchQuery& query, StringView candidate)
         : query{query}, candidate{candidate},
           stride{candidate.char_length() + 1},
-          m_matrix{(size_t)((query_length(query) + 1) * stride)} {}
+          m_matrix{(size_t)(
+              (full_matrix ? (query_length(query) + 1) : 2)
+              * stride)} {}
 
     ArrayView<Distance, CharCount> operator[](CharCount query_i)
     {
@@ -132,7 +135,8 @@ private:
 static constexpr int infinity = std::numeric_limits<int>::max();
 constexpr int max_index_weight = 1;
 
-static SubsequenceDistance subsequence_distance(const RankedMatchQuery& query, StringView candidate)
+template<bool full_matrix>
+static SubsequenceDistance<full_matrix> subsequence_distance(const RankedMatchQuery& query, StringView candidate)
 {
     auto match_bonus = [](int word_start, bool is_same_case) -> int {
         return -75 * word_start
@@ -142,7 +146,7 @@ static SubsequenceDistance subsequence_distance(const RankedMatchQuery& query, S
     constexpr int gap_weight = 200;
     constexpr int gap_extend_weight = 1;
 
-    SubsequenceDistance distance{query, candidate};
+    SubsequenceDistance<full_matrix> distance{query, candidate};
 
     CharCount candidate_length = candidate.char_length();
 
@@ -156,8 +160,17 @@ static SubsequenceDistance subsequence_distance(const RankedMatchQuery& query, S
          query_i <= query_length(query);
          query_i++)
     {
-        auto row = distance[query_i];
-        auto prev_row = distance[query_i-1];
+        CharCount query_virtual_i = query_i;
+        CharCount prev_query_virtual_i = query_i - 1;
+        // Only keep the last two rows in memory, swapping them in each iteration.
+        if constexpr (not full_matrix)
+        {
+            query_virtual_i %= 2;
+            prev_query_virtual_i %= 2;
+        }
+
+        auto row = distance[query_virtual_i];
+        auto prev_row = distance[prev_query_virtual_i];
 
         // Since we only allow subsequence matches, we don't need deletions.
         // This rules out prefix-matches where the query is longer than the
@@ -248,9 +261,9 @@ RankedMatch::RankedMatch(StringView candidate, const RankedMatchQuery& query, Te
     m_candidate = candidate;
     m_matches = true;
 
-    auto distance = subsequence_distance(query, bounded_candidate);
+    auto distance = subsequence_distance<false>(query, bounded_candidate);
 
-    m_distance = distance[query_length(query)][bounded_candidate.char_length()].distance
+    m_distance = distance[query_length(query) % 2][bounded_candidate.char_length()].distance
                + (int)distance.max_index * max_index_weight;
 }
 
@@ -328,7 +341,7 @@ static_assert(log2(3) == 1);
 static_assert(log2(4) == 2);
 
 // returns a string representation of the distance matrix, for debugging only
-[[maybe_unused]] static String to_string(const SubsequenceDistance& distance)
+[[maybe_unused]] static String to_string(const SubsequenceDistance<true>& distance)
 {
     const RankedMatchQuery& query = distance.query;
     StringView candidate = distance.candidate;
@@ -378,13 +391,13 @@ static_assert(log2(4) == 2);
 UnitTest test_ranked_match{[] {
     // Convenience variables, for debugging only.
     Optional<RankedMatchQuery> q;
-    Optional<SubsequenceDistance> distance_better;
-    Optional<SubsequenceDistance> distance_worse;
+    Optional<SubsequenceDistance<true>> distance_better;
+    Optional<SubsequenceDistance<true>> distance_worse;
 
     auto preferred = [&](StringView query, StringView better, StringView worse) -> bool {
         q = RankedMatchQuery{query};
-        distance_better = subsequence_distance(*q, better);
-        distance_worse = subsequence_distance(*q, worse);
+        distance_better = subsequence_distance<true>(*q, better);
+        distance_worse = subsequence_distance<true>(*q, worse);
         return RankedMatch{better, *q} < RankedMatch{worse, *q};
     };
 
