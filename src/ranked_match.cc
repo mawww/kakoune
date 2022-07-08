@@ -282,6 +282,16 @@ UnitTest test_ranked_match{[] {
     kak_assert(preferred("fb", "foo_bar/", "foo.bar"));
     kak_assert(preferred("foo_bar", "test_foo_bar", "foo_test_bar"));
     kak_assert(preferred("rm.cc", "src/ranked_match.cc", "test/README.asciidoc"));
+    kak_assert(preferred("CAPRAN", "CAPABILITY_RANGE_FORMATTING", "CAPABILITY_SELECTION_RANGE"));
+    kak_assert(preferred("mal", "malt", "formal"));
+    kak_assert(preferred("cne", "cargo-next-error", "comment-line"));
+    kak_assert(preferred("cne", "cargo-next-error", "ccls-navigate"));
+    kak_assert(preferred("cpe", "cargo-previous-error", "cpp-alternative-file"));
+    kak_assert(preferred("server_",  "server_capabilities", "SERVER_CANCELLED"));
+    kak_assert(preferred("server_",  "server_capabilities_capabilities", "SERVER_CANCELLED"));
+    kak_assert(preferred("codegen", "clang/test/CodeGen/asm.c", "clang/test/ASTMerge/codegen-body/test.c"));
+    kak_assert(preferred("cho", "tchou kanaky", "tachou kanay")); // Prefer the leftmost match.
+    kak_assert(preferred("clangd", "clang-tools-extra/clangd/README.md", "clang/docs/conf.py"));
 }};
 
 UnitTest test_used_letters{[]()
