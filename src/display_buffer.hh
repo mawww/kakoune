@@ -27,6 +27,9 @@ public:
     DisplayAtom(const Buffer& buffer, BufferCoord begin, BufferCoord end)
         : m_type(Range), m_buffer(&buffer), m_range{begin, end} {}
 
+    DisplayAtom(const Buffer& buffer, BufferCoord begin, BufferCoord end, String str)
+        : m_type(ReplacedRange), m_buffer(&buffer), m_range{begin, end}, m_text{std::move(str)} {}
+
     DisplayAtom(String str, Face face)
         : face(face), m_type(Text), m_text(std::move(str)) {}
 
@@ -143,7 +146,7 @@ public:
 
     // remove first_col from the begining of the line, and make sure
     // the line is less that col_count character
-    bool trim(ColumnCount first_col, ColumnCount col_count);
+    bool trim(ColumnCount first_col, ColumnCount col_count, bool only_buffer = false);
 
     // Merge together consecutive atoms sharing the same display attributes
     void optimize();
