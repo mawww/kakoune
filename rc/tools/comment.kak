@@ -162,7 +162,7 @@ define-command comment-block -docstring '(un)comment selections using block comm
         } catch %{
             # Comment the selection
             set-register '"' "%opt{comment_block_begin}"
-            execute-keys P
+            execute-keys -draft P
             set-register '"' "%opt{comment_block_end}"
             execute-keys p
         }
