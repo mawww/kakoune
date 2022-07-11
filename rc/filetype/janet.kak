@@ -4,12 +4,11 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate .*[.](janet|jdn) %{
+hook -group janet global BufCreate .*[.](janet|jdn) %{
     set-option buffer filetype janet
 }
 
-
-hook global WinSetOption filetype=janet %{
+hook -group janet global WinSetOption filetype=janet %{
     require-module janet
 
     hook window ModeChange pop:insert:.* -group janet-trim-indent janet-trim-indent
