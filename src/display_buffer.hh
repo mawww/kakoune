@@ -142,7 +142,7 @@ public:
     }
 
     iterator erase(iterator beg, iterator end);
-    void push_back(DisplayAtom atom);
+    DisplayAtom& push_back(DisplayAtom atom);
 
     // remove first_col from the begining of the line, and make sure
     // the line is less that col_count character

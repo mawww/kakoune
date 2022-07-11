@@ -134,7 +134,7 @@ DisplayLine::iterator DisplayLine::insert(iterator it, DisplayAtom atom)
     return res;
 }
 
-void DisplayLine::push_back(DisplayAtom atom)
+DisplayAtom& DisplayLine::push_back(DisplayAtom atom)
 {
     if (atom.has_buffer_range())
     {
@@ -142,6 +142,7 @@ void DisplayLine::push_back(DisplayAtom atom)
         m_range.end = std::max(m_range.end, atom.end());
     }
     m_atoms.push_back(std::move(atom));
+    return m_atoms.back();
 }
 
 DisplayLine::iterator DisplayLine::erase(iterator beg, iterator end)

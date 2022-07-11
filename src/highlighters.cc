@@ -647,8 +647,12 @@ std::unique_ptr<Highlighter> create_column_highlighter(HighlighterParameters par
             auto remaining_col = column;
             bool found = false;
             auto first_buf = find_if(line, [](auto& atom) { return atom.has_buffer_range(); });
+            BufferCoord last_pos{};
             for (auto atom_it = first_buf; atom_it != line.end(); ++atom_it)
             {
+                if (atom_it->has_buffer_range())
+                    last_pos = atom_it->end();
+
                 const auto atom_len = atom_it->length();
                 if (remaining_col < atom_len)
                 {
@@ -666,8 +670,8 @@ std::unique_ptr<Highlighter> create_column_highlighter(HighlighterParameters par
                 continue;
 
             if (remaining_col > 0)
-                line.push_back({buffer, buffer.end_coord(), buffer.end_coord(), String{' ', remaining_col}});
-            line.push_back({" ", face});
+                line.push_back({buffer, last_pos, last_pos, String{' ', remaining_col}});
+            line.push_back({buffer, last_pos, last_pos, " "}).face = face;
         }
     };
 
