@@ -558,6 +558,17 @@ std::unique_ptr<Highlighter> create_dynamic_regex_highlighter(HighlighterParamet
     return make_hl(get_regex, get_face);
 }
 
+namespace
+{
+
+Face make_final(Face face)
+{
+    face.attributes |= Attribute::Final;
+    return face;
+}
+
+}
+
 const HighlighterDesc line_desc = {
     "Parameters: <value string> <face>\n"
     "Highlight the line given by evaluating <value string> with <face>",
@@ -604,7 +615,7 @@ std::unique_ptr<Highlighter> create_line_highlighter(HighlighterParameters param
         }
         const ColumnCount remaining = context.context.window().dimensions().column - column;
         if (remaining > 0)
-            it->push_back({ String{' ', remaining}, face });
+            it->push_back({ String{' ', remaining}, make_final(face) });
     };
 
     return make_highlighter(std::move(func));
@@ -670,8 +681,8 @@ std::unique_ptr<Highlighter> create_column_highlighter(HighlighterParameters par
                 continue;
 
             if (remaining_col > 0)
-                line.push_back({buffer, last_pos, last_pos, String{' ', remaining_col}});
-            line.push_back({buffer, last_pos, last_pos, " "}).face = face;
+                line.push_back({buffer, last_pos, last_pos, String{' ', remaining_col}, make_final(Face{})});
+            line.push_back({buffer, last_pos, last_pos, " ", make_final(face)});
         }
     };
 
