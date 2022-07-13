@@ -159,7 +159,7 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
         m_builtin_highlighters.highlight({context, setup, pass, {}}, m_display_buffer, range);
 
     for (auto& line : m_display_buffer.lines())
-        line.trim(setup.first_column, m_dimensions.column, true);
+        line.trim_from(setup.widget_columns, setup.first_column, m_dimensions.column);
 
     m_display_buffer.optimize();
 

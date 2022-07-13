@@ -65,10 +65,10 @@ inline Face merge_faces(const Face& base, const Face& face)
     };
 
     auto choose = [&](Color Face::*color, Attribute final_attr) {
-        if (base.attributes & final_attr)
-            return base.*color;
         if (face.attributes & final_attr)
             return face.*color;
+        if (base.attributes & final_attr)
+            return base.*color;
         if (face.*color == Color::Default)
             return base.*color;
         if ((base.*color).isRGB() and (face.*color).isRGB() and (face.*color).a != 255)

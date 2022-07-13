@@ -193,29 +193,45 @@ ColumnCount DisplayLine::length() const
     return len;
 }
 
-bool DisplayLine::trim(ColumnCount first_col, ColumnCount col_count, bool only_buffer)
+bool DisplayLine::trim(ColumnCount front, ColumnCount col_count)
 {
-    for (auto it = begin(); first_col > 0 and it != end(); )
-    {
-        if (only_buffer and !it->has_buffer_range())
-        {
-            ++it;
-            continue;
-        }
+    return trim_from(0_col, front, col_count);
+}
 
+bool DisplayLine::trim_from(ColumnCount first_col, ColumnCount front, ColumnCount col_count)
+{
+    auto it = begin();
+    while (first_col > 0 and it != end())
+    {
         auto len = it->length();
         if (len <= first_col)
         {
-            m_atoms.erase(it);
+            ++it;
             first_col -= len;
         }
         else
         {
-            it->trim_begin(first_col);
+            it = ++split(it, front);
             first_col = 0;
         }
     }
-    auto it = begin();
+
+    while (front > 0 and it != end())
+    {
+        auto len = it->length();
+        if (len <= front)
+        {
+            m_atoms.erase(it);
+            front -= len;
+        }
+        else
+        {
+            it->trim_begin(front);
+            front = 0;
+        }
+    }
+
+    it = begin();
     for (; it != end() and col_count > 0; ++it)
         col_count -= it->length();
 

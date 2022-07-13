@@ -558,17 +558,6 @@ std::unique_ptr<Highlighter> create_dynamic_regex_highlighter(HighlighterParamet
     return make_hl(get_regex, get_face);
 }
 
-namespace
-{
-
-Face make_final(Face face)
-{
-    face.attributes |= Attribute::Final;
-    return face;
-}
-
-}
-
 const HighlighterDesc line_desc = {
     "Parameters: <value string> <face>\n"
     "Highlight the line given by evaluating <value string> with <face>",
@@ -615,7 +604,7 @@ std::unique_ptr<Highlighter> create_line_highlighter(HighlighterParameters param
         }
         const ColumnCount remaining = context.context.window().dimensions().column - column;
         if (remaining > 0)
-            it->push_back({ String{' ', remaining}, make_final(face) });
+            it->push_back({String{' ', remaining}, face});
     };
 
     return make_highlighter(std::move(func));
@@ -652,18 +641,13 @@ std::unique_ptr<Highlighter> create_column_highlighter(HighlighterParameters par
         if (column < context.setup.first_column or column >= context.setup.first_column + context.context.window().dimensions().column)
             return;
 
-        const Buffer& buffer = context.context.buffer();
+        column += context.setup.widget_columns;
         for (auto& line : display_buffer.lines())
         {
             auto remaining_col = column;
             bool found = false;
-            auto first_buf = find_if(line, [](auto& atom) { return atom.has_buffer_range(); });
-            BufferCoord last_pos{};
-            for (auto atom_it = first_buf; atom_it != line.end(); ++atom_it)
+            for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
             {
-                if (atom_it->has_buffer_range())
-                    last_pos = atom_it->end();
-
                 const auto atom_len = atom_it->length();
                 if (remaining_col < atom_len)
                 {
@@ -681,8 +665,8 @@ std::unique_ptr<Highlighter> create_column_highlighter(HighlighterParameters par
                 continue;
 
             if (remaining_col > 0)
-                line.push_back({buffer, last_pos, last_pos, String{' ', remaining_col}, make_final(Face{})});
-            line.push_back({buffer, last_pos, last_pos, " ", make_final(face)});
+                line.push_back({String{' ', remaining_col}, Face{}});
+            line.push_back({" ", face});
         }
     };
 

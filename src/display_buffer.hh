@@ -144,9 +144,13 @@ public:
     iterator erase(iterator beg, iterator end);
     DisplayAtom& push_back(DisplayAtom atom);
 
-    // remove first_col from the begining of the line, and make sure
+    // remove front from the begining of the line, and make sure
     // the line is less that col_count character
-    bool trim(ColumnCount first_col, ColumnCount col_count, bool only_buffer = false);
+    bool trim(ColumnCount front, ColumnCount col_count);
+
+    // remove front from the begining of the line + first_col, and make sure
+    // the line is less that col_count character
+    bool trim_from(ColumnCount first_col, ColumnCount front, ColumnCount col_count);
 
     // Merge together consecutive atoms sharing the same display attributes
     void optimize();
