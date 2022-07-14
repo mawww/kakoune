@@ -11,7 +11,7 @@ By default, the execution of both commands happens within the context of
 the current client, and stops when the last key/command is reached or an
 error occurs.
 
-Regarding registers, *execute-keys* saves the following registers, which
+Without the *-save-regs* switch, *execute-keys* saves the following registers, which
 are then restored when the keys have been executed: */*, *"*, *|*, *^*,
 *@*. *evaluate-commands* doesn't save any registers by default.
 (See <<registers#,`:doc registers`>>)
