@@ -80,5 +80,6 @@ evaluate-commands %sh{
         face global MatchingChar default+b
         face global BufferPadding ${zenpadding}
         face global Whitespace ${zensecondaryfg}+f
+        face global IndentGuide ${zensecondaryfg}+f
     "
 }

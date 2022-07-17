@@ -81,3 +81,4 @@ face global BufferPadding blue,default
 
 # Whitespace characters
 face global Whitespace default+f
+face global IndentGuide default+f

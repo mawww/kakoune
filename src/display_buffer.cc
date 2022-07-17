@@ -34,6 +34,7 @@ StringView DisplayAtom::content() const
         }
         case Text:
         case ReplacedRange:
+        case Whitespace:
             return m_text;
     }
     kak_assert(false);
@@ -49,6 +50,7 @@ ColumnCount DisplayAtom::length() const
                                          get_iterator(*m_buffer, m_range.end));
         case Text:
         case ReplacedRange:
+        case Whitespace:
             return m_text.column_length();
     }
     kak_assert(false);
@@ -98,7 +100,7 @@ DisplayLine::iterator DisplayLine::split(iterator it, ColumnCount count)
     kak_assert(count > 0);
     kak_assert(count < it->length());
 
-    if (it->type() == DisplayAtom::Text or it->type() == DisplayAtom::ReplacedRange)
+    if (it->has_replaced_range())
     {
         DisplayAtom atom = *it;
         atom.m_text = atom.m_text.substr(0, count).str();
@@ -168,12 +170,10 @@ void DisplayLine::optimize()
         {
             if (type == DisplayAtom::Text)
                 atom.m_text += next.m_text;
-            else if ((type == DisplayAtom::Range or
-                      type == DisplayAtom::ReplacedRange) and
-                     next.begin() == atom.end())
+            else if (next.begin() == atom.end())
             {
                 atom.m_range.end = next.end();
-                if (type == DisplayAtom::ReplacedRange)
+                if (type != DisplayAtom::Range)
                     atom.m_text += next.m_text;
             }
             else

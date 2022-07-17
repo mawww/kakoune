@@ -73,5 +73,6 @@ evaluate-commands %sh{
         face global MatchingChar ${lucius_lighter_grey},${lucius_bright_green}
         face global BufferPadding ${lucius_green},${lucius_darker_grey}
         face global Whitespace ${lucius_grey}+f
+        face global IndentGuide ${lucius_grey}+f
     "
 }

@@ -152,6 +152,9 @@ The following faces are used by builtin highlighters if enabled.
 *Whitespace*::
     face used by the `show-whitespaces` highlighter
 
+*IndentGuide*::
+    face used for indent guides by the `indent-guide` highlighter
+
 *WrapMarker*::
     face used by the `wrap -marker` highlighter
 

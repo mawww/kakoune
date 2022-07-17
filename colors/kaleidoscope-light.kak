@@ -120,6 +120,7 @@ evaluate-commands %sh{
     set-face global LineNumberCursor ${white},${dark_grey}+b
     set-face global MatchingChar ${white},${dark_grey}
     set-face global Whitespace ${vibrant_grey}+f
+    set-face global IndentGuide ${vibrant_grey}+f
     set-face global WrapMarker ${vibrant_grey}+f
 
     set-face global Information ${black},${muted_sand}

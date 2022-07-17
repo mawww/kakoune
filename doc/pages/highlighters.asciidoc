@@ -51,6 +51,19 @@ highlighter is replaced with the new one.
     *-tabpad* <separator>:::
         a one character long separator that will be appended to tabulations to honor the *tabstop* option
 
+*indent-guide* [options]::
+    draw guide lines based on the indentation of text using the `IndentGuide` face,
+    with the following *options*:
+
+    *-guide* <separator>:::
+        a one character long symbol to draw guidelines, position assumes the line is towards the left of the cell
+    *-tabpad* <separator>:::
+        a one character long separator that will be appended to tabulations to honor the *tabstop* option
+    *-spcpad* <seperator>:::
+        an optional one character long seperator which if provided will replace non-aligning spaces
+    *use-actual*:::
+        use the actual indentation of text rather than multiples of the indentation width to draw lines
+
 *number-lines* [options]::
     show line numbers using the `LineNumbers`, `LineNumberCursor` and `LineNumbersWrapped` faces,
     with the following *options*: 
