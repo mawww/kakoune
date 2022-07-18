@@ -1094,7 +1094,7 @@ const CommandDesc add_hook_cmd = {
     },
     CommandFlags::None,
     CommandHelper{},
-    make_completer(complete_scope, complete_hooks, complete_nothing,
+    make_completer(menu(complete_scope),complete_hooks, complete_nothing,
                    [](const Context& context, CompletionFlags flags,
                       StringView prefix, ByteCount cursor_pos)
                    { return CommandManager::instance().complete(
@@ -1133,7 +1133,7 @@ const CommandDesc remove_hook_cmd = {
        ByteCount pos_in_token) -> Completions
     {
         if (token_to_complete == 0)
-            return complete_scope(context, flags, params[0], pos_in_token);
+            return menu(complete_scope)(context, flags, params[0], pos_in_token);
         else if (token_to_complete == 1)
         {
             if (auto scope = get_scope_ifp(params[0], context))
@@ -1361,7 +1361,7 @@ const CommandDesc alias_cmd = {
     ParameterDesc{{}, ParameterDesc::Flags::None, 3, 3},
     CommandFlags::None,
     CommandHelper{},
-    make_completer(complete_scope, complete_alias_name, complete_command_name),
+    make_completer(menu(complete_scope), complete_alias_name, complete_command_name),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         if (not CommandManager::instance().command_defined(parser[2]))
@@ -1380,7 +1380,7 @@ const CommandDesc unalias_cmd = {
     ParameterDesc{{}, ParameterDesc::Flags::None, 2, 3},
     CommandFlags::None,
     CommandHelper{},
-    make_completer(complete_scope, complete_alias_name, complete_command_name),
+    make_completer(menu(complete_scope), complete_alias_name, complete_command_name),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         AliasRegistry& aliases = get_scope(parser[0], context).aliases();
@@ -1679,7 +1679,7 @@ const CommandDesc set_option_cmd = {
        ByteCount pos_in_token) -> Completions
     {
         if (token_to_complete == 0)
-            return complete_scope_including_current(context, flags, params[0], pos_in_token);
+            return menu(complete_scope_including_current)(context, flags, params[0], pos_in_token);
         else if (token_to_complete == 1)
             return { 0_byte, params[1].length(),
                      GlobalScope::instance().option_registry().complete_option_name(params[1], pos_in_token) };
@@ -1715,7 +1715,7 @@ Completions complete_option(const Context& context, CompletionFlags flags,
                             ByteCount pos_in_token)
 {
     if (token_to_complete == 0)
-        return complete_scope_no_global(context, flags, params[0], pos_in_token);
+        return menu(complete_scope_no_global)(context, flags, params[0], pos_in_token);
     else if (token_to_complete == 1)
         return { 0_byte, params[1].length(),
                  GlobalScope::instance().option_registry().complete_option_name(params[1], pos_in_token) };
@@ -1834,7 +1834,7 @@ static Completions map_key_completer(const Context& context, CompletionFlags fla
                                      ByteCount pos_in_token)
 {
     if (token_to_complete == 0)
-        return complete_scope(context, flags, params[0], pos_in_token);
+        return menu(complete_scope)(context, flags, params[0], pos_in_token);
     if (token_to_complete == 1)
     {
         auto& user_modes = get_scope(params[0], context).keymaps().user_modes();
@@ -2448,7 +2448,7 @@ const CommandDesc set_face_cmd = {
     ParameterDesc{{}, ParameterDesc::Flags::None, 3, 3},
     CommandFlags::None,
     face_doc_helper,
-    make_completer(complete_scope, complete_face, complete_face),
+    make_completer(menu(complete_scope), complete_face, complete_face),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         get_scope(parser[0], context).faces().add_face(parser[1], parser[2], true);
@@ -2465,7 +2465,7 @@ const CommandDesc unset_face_cmd = {
     double_params,
     CommandFlags::None,
     face_doc_helper,
-    make_completer(complete_scope, complete_face),
+    make_completer(menu(complete_scope), complete_face),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
        get_scope(parser[0], context).faces().remove_face(parser[1]);
