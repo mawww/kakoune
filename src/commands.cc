@@ -1496,7 +1496,7 @@ const CommandDesc debug_cmd = {
         {
             auto total = 0;
             write_to_debug_buffer("Memory usage:");
-            const ColumnCount column_size = 13;
+            const ColumnCount column_size = 17;
             write_to_debug_buffer(format("{} │{} │{} │{} ",
                                          left_pad("domain", column_size),
                                          left_pad("bytes", column_size),
@@ -1504,22 +1504,36 @@ const CommandDesc debug_cmd = {
                                          left_pad("total allocs", column_size)));
             write_to_debug_buffer(format("{0}┼{0}┼{0}┼{0}", String(Codepoint{0x2500}, column_size + 1)));
 
+            auto group = [](StringView s) {
+                String res;
+                auto pos = 0_byte, len = s.length();
+                if ((pos = len % 3) != 0)
+                    res += s.substr(0, pos);
+                for (; pos != len; pos += 3)
+                {
+                    if (not res.empty())
+                        res += ",";
+                    res += s.substr(pos, 3);
+                }
+                return res;
+            };
+
             for (int domain = 0; domain < (int)MemoryDomain::Count; ++domain)
             {
                 auto& stats = memory_stats[domain];
                 total += stats.allocated_bytes;
                 write_to_debug_buffer(format("{} │{} │{} │{} ",
                                              left_pad(domain_name((MemoryDomain)domain), column_size),
-                                             left_pad(to_string(stats.allocated_bytes), column_size),
-                                             left_pad(to_string(stats.allocation_count), column_size),
-                                             left_pad(to_string(stats.total_allocation_count), column_size)));
+                                             left_pad(group(to_string(stats.allocated_bytes)), column_size),
+                                             left_pad(group(to_string(stats.allocation_count)), column_size),
+                                             left_pad(group(to_string(stats.total_allocation_count)), column_size)));
             }
             write_to_debug_buffer({});
-            write_to_debug_buffer(format("  Total: {}", total));
+            write_to_debug_buffer(format("  Total: {}", group(to_string(total))));
             #if defined(__GLIBC__) && (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 33))
-            write_to_debug_buffer(format("  Malloced: {}", mallinfo2().uordblks));
+            write_to_debug_buffer(format("  Malloced: {}", group(to_string(mallinfo2().uordblks))));
             #elif defined(__GLIBC__) || defined(__CYGWIN__)
-            write_to_debug_buffer(format("  Malloced: {}", mallinfo().uordblks));
+            write_to_debug_buffer(format("  Malloced: {}", group(to_string(mallinfo().uordblks))));
             #endif
         }
         else if (parser[0] == "shared-strings")
