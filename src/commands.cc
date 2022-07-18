@@ -2158,6 +2158,7 @@ const CommandDesc prompt_cmd = {
     ParameterDesc{
         { { "init", { true, "set initial prompt content" } },
           { "password", { false, "Do not display entered text and clear reg after command" } },
+          { "menu", { false, "treat completions as the only valid inputs" } },
           { "file-completion", { false, "use file completion for prompt" } },
           { "client-completion", { false, "use client completion for prompt" } },
           { "buffer-completion", { false, "use buffer completion for prompt" } },
@@ -2177,7 +2178,9 @@ const CommandDesc prompt_cmd = {
         const String& command = parser[1];
         auto initstr = parser.get_switch("init").value_or(StringView{});
 
-        PromptCompleterAdapter completer = parse_completion_switch(parser, Completions::Flags::None);
+        const Completions::Flags completions_flags = parser.get_switch("menu") ?
+            Completions::Flags::Menu : Completions::Flags::None;
+        PromptCompleterAdapter completer = parse_completion_switch(parser, completions_flags);
 
         const auto flags = parser.get_switch("password") ?
             PromptFlags::Password : PromptFlags::None;
