@@ -205,14 +205,6 @@ static Completions complete_command_name(const Context& context, CompletionFlags
        context, prefix.substr(0, cursor_pos));
 }
 
-static Completions complete_alias_name(const Context& context, CompletionFlags,
-                                       StringView prefix, ByteCount cursor_pos)
-{
-   return { 0_byte, cursor_pos, complete(prefix, cursor_pos,
-                                           context.aliases().flatten_aliases()
-                                         | transform(&HashItem<String, String>::key)) };
-}
-
 struct ShellScriptCompleter
 {
     ShellScriptCompleter(String shell_script,
@@ -1332,6 +1324,14 @@ const CommandDesc define_command_cmd = {
     define_command
 };
 
+static Completions complete_alias_name(const Context& context, CompletionFlags,
+                                       StringView prefix, ByteCount cursor_pos)
+{
+   return { 0_byte, cursor_pos, complete(prefix, cursor_pos,
+                                           context.aliases().flatten_aliases()
+                                         | transform(&HashItem<String, String>::key))};
+}
+
 const CommandDesc alias_cmd = {
     "alias",
     nullptr,
@@ -1350,14 +1350,6 @@ const CommandDesc alias_cmd = {
     }
 };
 
-static Completions complete_alias(const Context& context, CompletionFlags flags,
-                                 StringView prefix, ByteCount cursor_pos)
-{
-    return {0_byte, cursor_pos,
-            complete(prefix, cursor_pos, context.aliases().flatten_aliases() |
-                     transform([](auto& entry) -> const String& { return entry.key; }))};
-}
-
 const CommandDesc unalias_cmd = {
     "unalias",
     nullptr,
@@ -1366,7 +1358,7 @@ const CommandDesc unalias_cmd = {
     ParameterDesc{{}, ParameterDesc::Flags::None, 2, 3},
     CommandFlags::None,
     CommandHelper{},
-    make_completer(complete_scope, complete_alias, complete_command_name),
+    make_completer(complete_scope, complete_alias_name, complete_command_name),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         AliasRegistry& aliases = get_scope(parser[0], context).aliases();
