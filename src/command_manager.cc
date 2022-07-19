@@ -769,7 +769,9 @@ Completions CommandManager::complete(const Context& context,
                                               concatenated(command.param_desc.switches
                                                                | transform(&SwitchMap::Item::key),
                                                            ConstArrayView<String>{"-"}));
-            return switches.empty() ? Completions{} : Completions{start+1, cursor_pos, std::move(switches)};
+            return switches.empty()
+                    ? Completions{}
+                    : Completions{start+1, cursor_pos, std::move(switches), Completions::Flags::Menu};
         }
         if (not command.completer)
             return Completions{};
