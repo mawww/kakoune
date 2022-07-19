@@ -2555,7 +2555,8 @@ const CommandDesc change_directory_cmd = {
              return { 0_byte, cursor_pos,
                       complete_filename(prefix,
                                         context.options()["ignored_files"].get<Regex>(),
-                                        cursor_pos, FilenameFlags::OnlyDirectories) };
+                                        cursor_pos, FilenameFlags::OnlyDirectories),
+                      Completions::Flags::Menu };
         }),
     [](const ParametersParser& parser, Context&, const ShellContext&)
     {
