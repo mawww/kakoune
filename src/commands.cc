@@ -1666,9 +1666,6 @@ const CommandDesc set_option_cmd = {
        CommandParameters params, size_t token_to_complete,
        ByteCount pos_in_token) -> Completions
     {
-        const bool add = params.size() > 1 and params[0] == "-add";
-        const int start = add ? 1 : 0;
-
         static constexpr auto scopes = { "global", "buffer", "window", "current" };
 
         if (token_to_complete == 0)
@@ -1680,7 +1677,7 @@ const CommandDesc set_option_cmd = {
         else if (token_to_complete == 2  and params[2].empty() and
                  GlobalScope::instance().option_registry().option_exists(params[1]))
         {
-            OptionManager& options = get_scope(params[start], context).options();
+            OptionManager& options = get_scope(params[0], context).options();
             return {0_byte, params[2].length(),
                     {options[params[1]].get_as_string(Quoting::Kakoune)},
                     Completions::Flags::Quoted};
