@@ -1061,7 +1061,6 @@ private:
         const int tabstop = context.context.options()["tabstop"].get<int>();
         auto whitespaceface = context.context.faces()["Whitespace"];
         const auto& buffer = context.context.buffer();
-        auto win_column = context.setup.first_column;
         for (auto& line : display_buffer.lines())
         {
             for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
@@ -1085,8 +1084,7 @@ private:
                         if (cp == '\t')
                         {
                             const ColumnCount column = get_column(buffer, tabstop, coord);
-                            const ColumnCount count = tabstop - (column % tabstop) -
-                                                      std::max(win_column - column, 0_col);
+                            const ColumnCount count = tabstop - (column % tabstop);
                             atom_it->replace(m_tab + String(m_tabpad[(CharCount)0], count - m_tab.column_length()));
                         }
                         else if (cp == ' ')
