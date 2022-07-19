@@ -1450,7 +1450,7 @@ KeymapMode parse_keymap_mode(StringView str, const KeymapManager::UserModeList& 
     return (KeymapMode)(std::distance(user_modes.begin(), it) + offset);
 }
 
-static constexpr auto modes = { "normal", "insert", "menu", "prompt", "goto", "view", "user", "object" };
+static constexpr Array<StringView, 8> modes = { "normal", "insert", "menu", "prompt", "goto", "view", "user", "object" };
 
 const CommandDesc debug_cmd = {
     "debug",
@@ -1555,7 +1555,7 @@ const CommandDesc debug_cmd = {
             auto& keymaps = context.keymaps();
             auto user_modes = keymaps.user_modes();
             write_to_debug_buffer("Mappings:");
-            for (auto& mode : concatenated(modes, user_modes) | gather<Vector<String>>())
+            for (auto mode : concatenated(modes, user_modes))
             {
                 KeymapMode m = parse_keymap_mode(mode, user_modes);
                 for (auto& key : keymaps.get_mapped_keys(m))
@@ -1835,7 +1835,7 @@ static Completions map_key_completer(const Context& context, CompletionFlags fla
     {
         auto& user_modes = get_scope(params[0], context).keymaps().user_modes();
         return { 0_byte, params[1].length(),
-                 complete(params[1], pos_in_token, concatenated(modes, user_modes) | gather<Vector<String>>()) };
+                 complete(params[1], pos_in_token, concatenated(modes, user_modes)) };
     }
     if (unmap and token_to_complete == 2)
     {
