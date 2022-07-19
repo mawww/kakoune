@@ -35,6 +35,11 @@
 #include <unistd.h>
 #include <pwd.h>
 
+#ifdef __HAIKU__
+#include <Path.h>
+#include <PathFinder.h>
+#endif
+
 namespace Kakoune
 {
 
@@ -178,6 +183,13 @@ String runtime_directory()
     if (stat(relpath, &st) == 0 and S_ISDIR(st.st_mode))
         return real_path(relpath);
 
+#ifdef __HAIKU__
+    BPath path;
+    BPathFinder pathFinder;
+    if (pathFinder.FindPath(B_FIND_PATH_DATA_DIRECTORY, "kak", B_FIND_PATH_EXISTING_ONLY, path) == B_OK)
+        return path.Path();
+#endif
+
     return "/usr/share/kak";
 }
 
@@ -185,6 +197,14 @@ String config_directory()
 {
     if (StringView kak_cfg_dir = getenv("KAKOUNE_CONFIG_DIR"); not kak_cfg_dir.empty())
         return kak_cfg_dir.str();
+
+#ifdef __HAIKU__
+    BPath path;
+    BPathFinder pathFinder;
+    if (pathFinder.FindPath(B_FIND_PATH_SETTINGS_DIRECTORY, "kak", B_FIND_PATH_EXISTING_ONLY, path) == B_OK)
+        return path.Path();
+#endif
+
     if (StringView xdg_cfg_home = getenv("XDG_CONFIG_HOME"); not xdg_cfg_home.empty())
         return format("{}/kak", xdg_cfg_home);
     return format("{}/.config/kak", homedir());
