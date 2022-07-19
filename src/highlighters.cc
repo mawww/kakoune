@@ -2089,7 +2089,8 @@ public:
         }
 
         auto container = m_regions | transform(&decltype(m_regions)::Item::key);
-        return { 0, 0, complete(path, cursor_pos, container) };
+        auto completions_flags = group ? Completions::Flags::None : Completions::Flags::Menu;
+        return { 0, 0, complete(path, cursor_pos, container), completions_flags };
     }
 
     static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)

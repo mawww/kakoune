@@ -883,7 +883,8 @@ Completions highlighter_cmd_completer(
         StringView path = params[0];
         auto sep_it = find(path, '/');
         if (sep_it == path.end())
-           return { 0_byte, pos_in_token, complete(path, pos_in_token, highlighter_scopes) };
+           return { 0_byte, pos_in_token, complete(path, pos_in_token, highlighter_scopes),
+                    Completions::Flags::Menu };
 
         StringView scope{path.begin(), sep_it};
         HighlighterGroup* root = nullptr;
@@ -900,7 +901,8 @@ Completions highlighter_cmd_completer(
     else if (add and token_to_complete == 1)
     {
         StringView name = params[1];
-        return { 0_byte, name.length(), complete(name, pos_in_token, HighlighterRegistry::instance() | transform(&HighlighterRegistry::Item::key)) };
+        return { 0_byte, name.length(), complete(name, pos_in_token, HighlighterRegistry::instance() | transform(&HighlighterRegistry::Item::key)),
+                 Completions::Flags::Menu };
     }
     else
         return {};
