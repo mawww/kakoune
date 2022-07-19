@@ -190,11 +190,24 @@ const ParameterDesc single_param{ {}, ParameterDesc::Flags::None, 1, 1 };
 const ParameterDesc single_optional_param{ {}, ParameterDesc::Flags::None, 0, 1 };
 const ParameterDesc double_params{ {}, ParameterDesc::Flags::None, 2, 2 };
 
-static constexpr auto scopes = { "global", "buffer", "window" };
-
 static Completions complete_scope(const Context&, CompletionFlags,
                                   StringView prefix, ByteCount cursor_pos)
 {
+   static constexpr StringView scopes[] = { "global", "buffer", "window", };
+   return { 0_byte, cursor_pos, complete(prefix, cursor_pos, scopes) };
+}
+
+static Completions complete_scope_including_current(const Context&, CompletionFlags,
+                                  StringView prefix, ByteCount cursor_pos)
+{
+   static constexpr StringView scopes[] = { "global", "buffer", "window", "current" };
+   return { 0_byte, cursor_pos, complete(prefix, cursor_pos, scopes) };
+}
+
+static Completions complete_scope_no_global(const Context&, CompletionFlags,
+                                            StringView prefix, ByteCount cursor_pos)
+{
+   static constexpr StringView scopes[] = { "buffer", "window", "current" };
    return { 0_byte, cursor_pos, complete(prefix, cursor_pos, scopes) };
 }
 
@@ -1120,8 +1133,7 @@ const CommandDesc remove_hook_cmd = {
        ByteCount pos_in_token) -> Completions
     {
         if (token_to_complete == 0)
-            return { 0_byte, params[0].length(),
-                     complete(params[0], pos_in_token, scopes) };
+            return complete_scope(context, flags, params[0], pos_in_token);
         else if (token_to_complete == 1)
         {
             if (auto scope = get_scope_ifp(params[0], context))
@@ -1662,15 +1674,12 @@ const CommandDesc set_option_cmd = {
     },
     CommandFlags::None,
     option_doc_helper,
-    [](const Context& context, CompletionFlags,
+    [](const Context& context, CompletionFlags flags,
        CommandParameters params, size_t token_to_complete,
        ByteCount pos_in_token) -> Completions
     {
-        static constexpr auto scopes = { "global", "buffer", "window", "current" };
-
         if (token_to_complete == 0)
-            return { 0_byte, params[0].length(),
-                     complete(params[0], pos_in_token, scopes) };
+            return complete_scope_including_current(context, flags, params[0], pos_in_token);
         else if (token_to_complete == 1)
             return { 0_byte, params[1].length(),
                      GlobalScope::instance().option_registry().complete_option_name(params[1], pos_in_token) };
@@ -1701,15 +1710,12 @@ const CommandDesc set_option_cmd = {
     }
 };
 
-Completions complete_option(const Context& context, CompletionFlags,
+Completions complete_option(const Context& context, CompletionFlags flags,
                             CommandParameters params, size_t token_to_complete,
                             ByteCount pos_in_token)
 {
     if (token_to_complete == 0)
-    {
-        static constexpr auto scopes = { "buffer", "window", "current" };
-        return { 0_byte, params[0].length(), complete(params[0], pos_in_token, scopes) };
-    }
+        return complete_scope_no_global(context, flags, params[0], pos_in_token);
     else if (token_to_complete == 1)
         return { 0_byte, params[1].length(),
                  GlobalScope::instance().option_registry().complete_option_name(params[1], pos_in_token) };
@@ -1828,8 +1834,7 @@ static Completions map_key_completer(const Context& context, CompletionFlags fla
                                      ByteCount pos_in_token)
 {
     if (token_to_complete == 0)
-        return { 0_byte, params[0].length(),
-                 complete(params[0], pos_in_token, scopes) };
+        return complete_scope(context, flags, params[0], pos_in_token);
     if (token_to_complete == 1)
     {
         auto& user_modes = get_scope(params[0], context).keymaps().user_modes();
