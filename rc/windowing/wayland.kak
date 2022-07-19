@@ -51,7 +51,7 @@ If no client is passed, then the current client is used' \
 %{
     fail 'Focusing specific windows in most Wayland window managers is unsupported'
 }
-complete-command wayland-focus client
+complete-command -menu wayland-focus client
 
 alias global focus wayland-focus
 alias global terminal wayland-terminal
