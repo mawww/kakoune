@@ -306,7 +306,7 @@ private:
 template<typename Completer>
 struct PromptCompleterAdapter
 {
-    PromptCompleterAdapter(Completer completer) : m_completer{completer} {}
+    PromptCompleterAdapter(Completer completer) : m_completer{std::move(completer)} {}
 
     Completions operator()(const Context& context, CompletionFlags flags,
                            StringView prefix, ByteCount cursor_pos)
