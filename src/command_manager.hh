@@ -52,7 +52,8 @@ struct Token
         ValExpand,
         ArgExpand,
         FileExpand,
-        CommandSeparator
+        CommandSeparator,
+        UnknownExpand
     };
 
     Type type;

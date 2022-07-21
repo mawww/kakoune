@@ -279,6 +279,8 @@ Token parse_percent_token(ParseState& state, bool throw_on_unterminated)
         if (throw_on_unterminated)
             throw parse_error{format("expected a string delimiter after '%{}'",
                                      type_name)};
+        if (at_end)
+            return {Token::Type::UnknownExpand, type_start - state.str.begin(), type_name.str()};
         return {};
     }
 
@@ -688,6 +690,9 @@ static Completions complete_expansion(const Context& context, CompletionFlags fl
                  token.content, ignored_files, pos_in_token, FilenameFlags::Expand) };
     }
 
+    case Token::Type::UnknownExpand:
+        return { start, cursor_pos, Kakoune::complete(token.content, cursor_pos, Array{"exp", "file", "opt", "reg", "sh", "val"}) };
+
     default:
         kak_assert(false);
         throw runtime_error("unknown expansion");
@@ -796,6 +801,7 @@ Completions CommandManager::complete(const Context& context,
     case Token::Type::ShellExpand:
     case Token::Type::ValExpand:
     case Token::Type::FileExpand:
+    case Token::Type::UnknownExpand:
         return complete_expansion(context, flags, token, start, cursor_pos, pos_in_token);
 
     case Token::Type::Raw:
