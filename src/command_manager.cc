@@ -663,31 +663,29 @@ static Completions complete_expansion(const Context& context, CompletionFlags fl
                                       Token token, ByteCount start,
                                       ByteCount cursor_pos, ByteCount pos_in_token)
 {
+    CandidateList candidates;
     switch (token.type) {
     case Token::Type::RegisterExpand:
-        return { start, cursor_pos,
-                 RegisterManager::instance().complete_register_name(
-                     token.content, pos_in_token) };
+        candidates = RegisterManager::instance().complete_register_name(token.content, pos_in_token);
+        break;
 
     case Token::Type::OptionExpand:
-        return { start, cursor_pos,
-                 GlobalScope::instance().option_registry().complete_option_name(
-                     token.content, pos_in_token) };
+        candidates = GlobalScope::instance().option_registry().complete_option_name(token.content, pos_in_token);
+        break;
 
     case Token::Type::ShellExpand:
         return offset_pos(shell_complete(context, flags, token.content,
                                          pos_in_token), start);
 
     case Token::Type::ValExpand:
-        return { start, cursor_pos,
-                 ShellManager::instance().complete_env_var(
-                     token.content, pos_in_token) };
+        candidates = ShellManager::instance().complete_env_var(token.content, pos_in_token);
+        break;
 
     case Token::Type::FileExpand:
     {
         const auto& ignored_files = context.options()["ignored_files"].get<Regex>();
-        return { start, cursor_pos, complete_filename(
-                 token.content, ignored_files, pos_in_token, FilenameFlags::Expand) };
+        candidates = complete_filename(token.content, ignored_files, pos_in_token, FilenameFlags::Expand);
+        break;
     }
 
     case Token::Type::UnknownExpand:
@@ -697,6 +695,17 @@ static Completions complete_expansion(const Context& context, CompletionFlags fl
         kak_assert(false);
         throw runtime_error("unknown expansion");
     }
+
+    for (auto &c : candidates)
+    {
+        if ((token.type == Token::Type::ValExpand and c.ends_with("_")) // opt_, reg_, client_env_
+            or (token.type == Token::Type::FileExpand and c.ends_with("/")))
+            continue;
+        kak_assert(not token.terminator->present);
+        c += to_string(token.terminator->character);
+    }
+
+    return { start, cursor_pos, candidates };
 }
 
 static Completions complete_expand(const Context& context, CompletionFlags flags,
