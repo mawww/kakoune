@@ -308,7 +308,7 @@ Token parse_percent_token(ParseState& state, bool throw_on_unterminated)
                                      it->opening, it->closing)};
         }
 
-        return {type, byte_pos, std::move(quoted.content), quoted.terminated};
+        return {type, byte_pos, std::move(quoted.content), {{(Codepoint)it->closing, quoted.terminated}}};
     }
     else
     {
@@ -323,7 +323,7 @@ Token parse_percent_token(ParseState& state, bool throw_on_unterminated)
                                      opening_delimiter, opening_delimiter)};
         }
 
-        return {type, byte_pos, std::move(quoted.content), quoted.terminated};
+        return {type, byte_pos, std::move(quoted.content), {{opening_delimiter, quoted.terminated}}};
     }
 }
 
@@ -432,7 +432,7 @@ Optional<Token> CommandParser::read_token(bool throw_on_unterminated)
         return Token{c == '"' ? Token::Type::Expand
                               : Token::Type::RawQuoted,
                      start - line.begin(), std::move(quoted.content),
-                     quoted.terminated};
+                     {{(Codepoint)c, quoted.terminated}}};
     }
     else if (c == '%')
     {
@@ -713,7 +713,7 @@ static Completions complete_expand(const Context& context, CompletionFlags flags
             else
             {
                 auto token = parse_percent_token(state, false);
-                if (token.terminated)
+                if (token.terminator and token.terminator->present)
                     continue;
                 if (token.type == Token::Type::Raw or token.type == Token::Type::RawQuoted)
                     return {};
@@ -758,7 +758,7 @@ Completions CommandManager::complete(const Context& context,
     kak_assert(not tokens.empty());
     const auto& token = tokens.back();
 
-    if (token.terminated) // do not complete past explicit token close
+    if (token.terminator and token.terminator->present) // do not complete past explicit token close
         return Completions{};
 
     auto requote = [](Completions completions, Token::Type token_type) {
