@@ -441,7 +441,7 @@ Optional<Token> CommandParser::read_token(bool throw_on_unterminated)
     }
     else if (is_command_separator(c))
         return Token{Token::Type::CommandSeparator,
-                     ++m_state.pos - line.begin(), {}};
+                     ++m_state.pos - line.begin(), ""};
     else
     {
         if (c == '\\' and m_state.pos + 1 != m_state.str.end())
@@ -754,7 +754,7 @@ Completions CommandManager::complete(const Context& context,
     }
 
     if (is_last_token)
-        tokens.push_back({Token::Type::Raw, prefix.length(), {}});
+        tokens.push_back({Token::Type::Raw, prefix.length(), ""});
     kak_assert(not tokens.empty());
     const auto& token = tokens.back();
 
