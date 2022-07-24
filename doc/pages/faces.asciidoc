@@ -17,53 +17,53 @@ fg_color, bg_color, underline_color::
             *white* *bright-black*, *bright-red*, *bright-green*,
             *bright-yellow* *bright-blue*, *bright-magenta*, *bright-cyan*,
             *bright-white*
-       The existing color:::
+        The color of the base face (see below):::
             *default*
         A hexadecimal value:::
             *rgb:RRGGBB*, *rgba:RRGGBBAA*
     If left unspecified, the value of *default* is used.
-    Alpha values are used to blend the face onto either its base (see below) or
-    else onto whatever color happens to be used at the moment. For technical
-    reasons, alpha values must be >16.
+    Alpha values are used to blend the face onto either its base or else onto
+    whatever color happens to be used at the moment. For technical reasons,
+    alpha values must be >16.
 
 attributes::
     A string whose individual letters each set an attribute:
         *u*:::
-            Underline
+            underline
         *c*:::
-            Curly underline
+            curly underline
             Note: This takes precedence over underline if both are specified.
         *r*:::
-            Reverse
+            reverse
         *b*:::
-            Bold
+            bold
         *B*:::
-            Blink
+            blink
         *d*:::
-            Dim
+            dim
         *i*:::
-            Italic
+            italic
         *s*:::
-            Strikethrough
+            strikethrough
         *F*:::
-            Final::::
-                Override the previous face instead of merging with
-                it. Can only be replaced if another face with the final
-                attribute is applied.
+            final::::
+                Override the previous face instead of merging with it. Can
+                only be replaced if another face with the final attribute
+                is applied.
         *f*:::
-            Final foreground::::
+            final foreground::::
                 Same as final, but only applies to a face's foreground color.
         *g*:::
-            Final background::::
+            final background::::
                 Same as final, but only applies to a face's background color.
         *a*:::
-            Final attributes::::
+            final attributes::::
                 Same as final, but only applies to a face's attributes.
 
 base::
-    The face onto which the rest of the face applies. Its value can be any
-    face name, as long as no cycle is introduced. A face can reference itself,
-    in which case it will apply on top of the parent scope.
+    The face onto which other faces apply. Its value can be any face name,
+    as long as no cycle is introduced. A face can reference itself, in which
+    case it'll apply on top of the version of the parent scope.
 
 == Built-in faces
 
@@ -71,7 +71,7 @@ The following faces are used by color schemes to highlight certain areas of
 the user interface:
 
 *Default*::
-    Default colors:::
+    default colors:::
         The default foreground and background colors. If the value of *default*
         is used here, then the colors used will be your terminal's defaults.
 
@@ -174,9 +174,8 @@ For example, the following command displays the text "default" in the
 echo -markup 'default {Error}error{Default} default'
 ----
 
-Inside a markup string, a literal `{` character is written `\{`, and a literal
-backslash `\` character that precedes a `{` character is escaped as well
-(`\\`).
+Inside a markup string, a literal `{` character is written as `\{`, and a
+literal backslash (`\`) character is written as `\\`.
 
 The `{\}` string disables markup processing for the rest of the line. It
 can be used to avoid having to escape text that might be mistaken for markup
