@@ -648,6 +648,70 @@ Completions CommandManager::complete_module_name(StringView query) const
                                                                | transform(&ModuleMap::Item::key))};
 }
 
+static Completions complete_expansion(const Context& context, CompletionFlags flags,
+                                      Token token, ByteCount start,
+                                      ByteCount cursor_pos, ByteCount pos_in_token)
+{
+    switch (token.type) {
+    case Token::Type::RegisterExpand:
+        return { start, cursor_pos,
+                 RegisterManager::instance().complete_register_name(
+                     token.content, pos_in_token) };
+
+    case Token::Type::OptionExpand:
+        return { start, cursor_pos,
+                 GlobalScope::instance().option_registry().complete_option_name(
+                     token.content, pos_in_token) };
+
+    case Token::Type::ShellExpand:
+        return offset_pos(shell_complete(context, flags, token.content,
+                                         pos_in_token), start);
+
+    case Token::Type::ValExpand:
+        return { start, cursor_pos,
+                 ShellManager::instance().complete_env_var(
+                     token.content, pos_in_token) };
+
+    case Token::Type::FileExpand:
+    {
+        const auto& ignored_files = context.options()["ignored_files"].get<Regex>();
+        return { start, cursor_pos, complete_filename(
+                 token.content, ignored_files, pos_in_token, FilenameFlags::Expand) };
+    }
+
+    default:
+        kak_assert(false);
+        throw runtime_error("unknown expansion");
+    }
+}
+
+static Completions complete_raw_eval(const Context& context, CompletionFlags flags,
+                                     StringView prefix, ByteCount start,
+                                     ByteCount cursor_pos, ByteCount pos_in_token)
+{
+    ParseState state{prefix, prefix.begin()};
+    while (state)
+    {
+        if (*state.pos++ == '%')
+        {
+            if (state and *state.pos == '%')
+                ++state.pos;
+            else
+            {
+                auto token = parse_percent_token(state, false);
+                if (token.terminated)
+                    continue;
+                if (token.type == Token::Type::Raw or token.type == Token::Type::RawQuoted)
+                    return {};
+                return complete_expansion(context, flags, token,
+                                          start + token.pos, cursor_pos,
+                                          pos_in_token - token.pos);
+            }
+        }
+    }
+    return {};
+}
+
 Completions CommandManager::complete(const Context& context,
                                      CompletionFlags flags,
                                      StringView command_line,
@@ -719,30 +783,11 @@ Completions CommandManager::complete(const Context& context,
     switch (token.type)
     {
     case Token::Type::RegisterExpand:
-        return {start , cursor_pos,
-                RegisterManager::instance().complete_register_name(
-                    token.content, pos_in_token) };
-
     case Token::Type::OptionExpand:
-        return {start , cursor_pos,
-                GlobalScope::instance().option_registry().complete_option_name(
-                    token.content, pos_in_token) };
-
     case Token::Type::ShellExpand:
-        return offset_pos(shell_complete(context, flags, token.content,
-                                         pos_in_token), start);
-
     case Token::Type::ValExpand:
-        return {start , cursor_pos,
-                ShellManager::instance().complete_env_var(
-                    token.content, pos_in_token) };
-
     case Token::Type::FileExpand:
-    {
-        const auto& ignored_files = context.options()["ignored_files"].get<Regex>();
-        return {start , cursor_pos, complete_filename(
-                token.content, ignored_files, pos_in_token, FilenameFlags::Expand) };
-    }
+        return complete_expansion(context, flags, token, start, cursor_pos, pos_in_token);
 
     case Token::Type::Raw:
     case Token::Type::RawQuoted:
@@ -779,6 +824,7 @@ Completions CommandManager::complete(const Context& context,
         return offset_pos(requote(command.completer(context, flags, params, index, pos_in_token), token.type), start);
     }
     case Token::Type::RawEval:
+        return complete_raw_eval(context, flags, token.content, start, cursor_pos, pos_in_token);
     default:
         break;
     }
