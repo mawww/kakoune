@@ -48,7 +48,7 @@ struct {
         "» {+b}<esc>{} does not end macro recording anymore, use {+b}Q{}\n"
         "» pipe commands do not append final end-of-lines anymore\n"
         "» {+u}complete-command{} to configure command completion\n"
-        "» {+b}!{} and {+b}<a-!>{} now select the inserted text\n"
+        "» {+b}p{}, {+b}P{}, {+b}!{} and {+b}<a-!>{} now select the inserted text\n"
         "» {+b}x{} now uses {+b}<a-x>{} behaviour\n"
         "» {+b}<space>{} and {+b},{} have been swapped\n"
     }, {
