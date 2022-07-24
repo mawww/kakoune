@@ -788,7 +788,7 @@ public:
 
         if (key == Key::Return)
         {
-            if ((m_completions.flags & Completions::Flags::Menu) and can_auto_insert_completion())
+            if (can_auto_insert_completion())
             {
                 const String& completion = m_completions.candidates.front();
                 m_line_editor.insert_from(line.char_count_to(m_completions.start),
