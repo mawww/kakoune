@@ -717,8 +717,9 @@ Completions CommandManager::complete(const Context& context,
                                      StringView command_line,
                                      ByteCount cursor_pos)
 {
-    CommandParser parser{command_line};
-    const char* cursor = command_line.begin() + (int)cursor_pos;
+    auto prefix = command_line.substr(0_byte, cursor_pos);
+    CommandParser parser{prefix};
+    const char* cursor = prefix.begin() + (int)cursor_pos;
     Vector<Token> tokens;
 
     bool is_last_token = true;
@@ -739,7 +740,7 @@ Completions CommandManager::complete(const Context& context,
     }
 
     if (is_last_token)
-        tokens.push_back({Token::Type::Raw, command_line.length(), {}});
+        tokens.push_back({Token::Type::Raw, prefix.length(), {}});
     kak_assert(not tokens.empty());
     const auto& token = tokens.back();
 
@@ -776,8 +777,7 @@ Completions CommandManager::complete(const Context& context,
     if (tokens.size() == 1 and (token.type == Token::Type::Raw or
                                 token.type == Token::Type::RawQuoted))
     {
-        StringView query = command_line.substr(start, pos_in_token);
-        return offset_pos(requote(complete_command_name(context, query), token.type), start);
+        return offset_pos(requote(complete_command_name(context, prefix), token.type), start);
     }
 
     switch (token.type)
