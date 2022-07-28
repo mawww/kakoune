@@ -14,6 +14,7 @@
 #include "hash_map.hh"
 #include "highlighter.hh"
 #include "highlighters.hh"
+#include "input_handler.hh"
 #include "insert_completer.hh"
 #include "normal.hh"
 #include "option_manager.hh"
@@ -306,12 +307,16 @@ private:
 template<typename Completer>
 struct PromptCompleterAdapter
 {
-    PromptCompleterAdapter(Completer completer) : m_completer{completer} {}
+    PromptCompleterAdapter(Completer completer) : m_completer{std::move(completer)} {}
 
-    Completions operator()(const Context& context, CompletionFlags flags,
-                           StringView prefix, ByteCount cursor_pos)
+    operator PromptCompleter() &&
     {
-        return m_completer(context, flags, {String{String::NoCopy{}, prefix}}, 0, cursor_pos);
+        if (not m_completer)
+            return {};
+        return [completer=std::move(m_completer)](const Context& context, CompletionFlags flags,
+                                                  StringView prefix, ByteCount cursor_pos) {
+            return completer(context, flags, {String{String::NoCopy{}, prefix}}, 0, cursor_pos);
+        };
     }
 
 private:
@@ -1235,6 +1240,22 @@ CommandCompleter make_command_completer(StringView type, StringView param, Compl
         throw runtime_error(format("invalid command completion type '{}'", type));
 }
 
+static CommandCompleter parse_completion_switch(const ParametersParser& parser, Completions::Flags completions_flags) {
+    for (StringView completion_switch : {"file-completion", "client-completion", "buffer-completion",
+                                         "shell-script-completion", "shell-script-candidates",
+                                         "command-completion", "shell-completion"})
+    {
+        if (auto param = parser.get_switch(completion_switch))
+        {
+            constexpr StringView suffix = "-completion";
+            if (completion_switch.ends_with(suffix))
+                completion_switch = completion_switch.substr(0, completion_switch.length() - suffix.length());
+            return make_command_completer(completion_switch, *param, completions_flags);
+        }
+    }
+    return {};
+}
+
 void define_command(const ParametersParser& parser, Context& context, const ShellContext&)
 {
     const String& cmd_name = parser[0];
@@ -1286,20 +1307,7 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
         };
     }
 
-    CommandCompleter completer;
-    for (StringView completion_switch : {"file-completion", "client-completion", "buffer-completion",
-                                         "shell-script-completion", "shell-script-candidates",
-                                         "command-completion", "shell-completion"})
-    {
-        if (auto param = parser.get_switch(completion_switch))
-        {
-            constexpr StringView suffix = "-completion";
-            if (completion_switch.ends_with(suffix))
-                completion_switch = completion_switch.substr(0, completion_switch.length() - suffix.length());
-            completer = make_command_completer(completion_switch, *param, completions_flags);
-            break;
-        }
-    }
+    CommandCompleter completer = parse_completion_switch(parser, completions_flags);
     auto docstring = trim_indent(parser.get_switch("docstring").value_or(StringView{}));
 
     cm.register_command(cmd_name, cmd, docstring, desc, flags, CommandHelper{}, std::move(completer));
@@ -2150,6 +2158,7 @@ const CommandDesc prompt_cmd = {
     ParameterDesc{
         { { "init", { true, "set initial prompt content" } },
           { "password", { false, "Do not display entered text and clear reg after command" } },
+          { "menu", { false, "treat completions as the only valid inputs" } },
           { "file-completion", { false, "use file completion for prompt" } },
           { "client-completion", { false, "use client completion for prompt" } },
           { "buffer-completion", { false, "use buffer completion for prompt" } },
@@ -2169,35 +2178,9 @@ const CommandDesc prompt_cmd = {
         const String& command = parser[1];
         auto initstr = parser.get_switch("init").value_or(StringView{});
 
-        PromptCompleter completer;
-        if (parser.get_switch("file-completion"))
-            completer = [](const Context& context, CompletionFlags,
-                           StringView prefix, ByteCount cursor_pos) -> Completions {
-                auto& ignored_files = context.options()["ignored_files"].get<Regex>();
-                return { 0_byte, cursor_pos,
-                         complete_filename(prefix, ignored_files, cursor_pos,
-                                           FilenameFlags::Expand) };
-            };
-        else if (parser.get_switch("client-completion"))
-            completer = [](const Context& context, CompletionFlags,
-                           StringView prefix, ByteCount cursor_pos) -> Completions {
-                 return { 0_byte, cursor_pos,
-                          ClientManager::instance().complete_client_name(prefix, cursor_pos) };
-            };
-        else if (parser.get_switch("buffer-completion"))
-            completer = complete_buffer_name<false>;
-        else if (parser.get_switch("command-completion"))
-            completer = [](const Context& context, CompletionFlags flags,
-                           StringView prefix, ByteCount cursor_pos) -> Completions {
-                return CommandManager::instance().complete(
-                    context, flags, prefix, cursor_pos);
-            };
-        else if (parser.get_switch("shell-completion"))
-            completer = shell_complete;
-        else if (auto shell_script = parser.get_switch("shell-script-completion"))
-            completer = PromptCompleterAdapter{ShellScriptCompleter{shell_script->str()}};
-        else if (auto shell_script = parser.get_switch("shell-script-candidates"))
-            completer = PromptCompleterAdapter{ShellCandidatesCompleter{shell_script->str()}};
+        const Completions::Flags completions_flags = parser.get_switch("menu") ?
+            Completions::Flags::Menu : Completions::Flags::None;
+        PromptCompleterAdapter completer = parse_completion_switch(parser, completions_flags);
 
         const auto flags = parser.get_switch("password") ?
             PromptFlags::Password : PromptFlags::None;
