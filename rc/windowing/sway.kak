@@ -43,7 +43,7 @@ If no client is passed, then the current client is used' \
         fi
     }
 }
-complete-command sway-focus client
+complete-command -menu sway-focus client
 
 unalias global focus
 alias global focus sway-focus

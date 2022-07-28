@@ -811,9 +811,12 @@ Completions CommandManager::complete(const Context& context,
         if (is_switch(token.content))
         {
             auto switches = Kakoune::complete(token.content.substr(1_byte), pos_in_token,
-                                              command.param_desc.switches |
-                                              transform(&SwitchMap::Item::key));
-            return switches.empty() ? Completions{} : Completions{start+1, cursor_pos, std::move(switches)};
+                                              concatenated(command.param_desc.switches
+                                                               | transform(&SwitchMap::Item::key),
+                                                           ConstArrayView<String>{"-"}));
+            return switches.empty()
+                    ? Completions{}
+                    : Completions{start+1, cursor_pos, std::move(switches), Completions::Flags::Menu};
         }
         if (not command.completer)
             return Completions{};

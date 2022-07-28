@@ -143,7 +143,7 @@ If no client is passed then the current one is used' \
         fi
     }
 }
-complete-command iterm-focus client
+complete-command -menu iterm-focus client
 
 alias global focus iterm-focus
 alias global terminal iterm-terminal-vertical

@@ -72,7 +72,7 @@ If no client is passed then the current one is used' \
         fi
     }
 }
-complete-command kitty-focus client
+complete-command -menu kitty-focus client
 
 alias global terminal kitty-terminal
 alias global terminal-tab kitty-terminal-tab

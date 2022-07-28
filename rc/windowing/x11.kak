@@ -63,7 +63,7 @@ If no client is passed, then the current client is used' \
         fi
     }
 }
-complete-command x11-focus client 
+complete-command -menu x11-focus client 
 
 alias global focus x11-focus
 alias global terminal x11-terminal

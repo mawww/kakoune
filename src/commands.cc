@@ -106,7 +106,7 @@ template<typename Completer>
 auto add_flags(Completer completer, Completions::Flags completions_flags)
 {
     return [completer=std::move(completer), completions_flags]
-           (const Context& context, CompletionFlags flags, const String& prefix, ByteCount cursor_pos) {
+           (const Context& context, CompletionFlags flags, StringView prefix, ByteCount cursor_pos) {
         Completions res = completer(context, flags, prefix, cursor_pos);
         res.flags |= completions_flags;
         return res;
@@ -121,7 +121,7 @@ auto menu(Completer completer)
 
 template<bool menu>
 auto filename_completer = make_completer(
-    [](const Context& context, CompletionFlags flags, const String& prefix, ByteCount cursor_pos)
+    [](const Context& context, CompletionFlags flags, StringView prefix, ByteCount cursor_pos)
     { return Completions{ 0_byte, cursor_pos,
                           complete_filename(prefix,
                                             context.options()["ignored_files"].get<Regex>(),
@@ -180,7 +180,7 @@ auto make_single_word_completer(Func&& func)
 {
     return make_completer(
         [func = std::move(func)](const Context& context, CompletionFlags flags,
-               const String& prefix, ByteCount cursor_pos) -> Completions {
+               StringView prefix, ByteCount cursor_pos) -> Completions {
             auto candidate = { func(context) };
             return { 0_byte, cursor_pos, complete(prefix, cursor_pos, candidate) }; });
 }
@@ -193,25 +193,17 @@ const ParameterDesc double_params{ {}, ParameterDesc::Flags::None, 2, 2 };
 static constexpr auto scopes = { "global", "buffer", "window" };
 
 static Completions complete_scope(const Context&, CompletionFlags,
-                                  const String& prefix, ByteCount cursor_pos)
+                                  StringView prefix, ByteCount cursor_pos)
 {
    return { 0_byte, cursor_pos, complete(prefix, cursor_pos, scopes) };
 }
 
 
 static Completions complete_command_name(const Context& context, CompletionFlags,
-                                         const String& prefix, ByteCount cursor_pos)
+                                         StringView prefix, ByteCount cursor_pos)
 {
    return CommandManager::instance().complete_command_name(
        context, prefix.substr(0, cursor_pos));
-}
-
-static Completions complete_alias_name(const Context& context, CompletionFlags,
-                                       const String& prefix, ByteCount cursor_pos)
-{
-   return { 0_byte, cursor_pos, complete(prefix, cursor_pos,
-                                           context.aliases().flatten_aliases()
-                                         | transform(&HashItem<String, String>::key)) };
 }
 
 struct ShellScriptCompleter
@@ -896,7 +888,8 @@ Completions highlighter_cmd_completer(
         StringView path = params[0];
         auto sep_it = find(path, '/');
         if (sep_it == path.end())
-           return { 0_byte, pos_in_token, complete(path, pos_in_token, highlighter_scopes) };
+           return { 0_byte, pos_in_token, complete(path, pos_in_token, highlighter_scopes),
+                    Completions::Flags::Menu };
 
         StringView scope{path.begin(), sep_it};
         HighlighterGroup* root = nullptr;
@@ -913,7 +906,8 @@ Completions highlighter_cmd_completer(
     else if (add and token_to_complete == 1)
     {
         StringView name = params[1];
-        return { 0_byte, name.length(), complete(name, pos_in_token, HighlighterRegistry::instance() | transform(&HighlighterRegistry::Item::key)) };
+        return { 0_byte, name.length(), complete(name, pos_in_token, HighlighterRegistry::instance() | transform(&HighlighterRegistry::Item::key)),
+                 Completions::Flags::Menu };
     }
     else
         return {};
@@ -1064,7 +1058,7 @@ const CommandDesc remove_highlighter_cmd = {
 };
 
 static Completions complete_hooks(const Context&, CompletionFlags,
-                                  const String& prefix, ByteCount cursor_pos)
+                                  StringView prefix, ByteCount cursor_pos)
 {
     return { 0_byte, cursor_pos, complete(prefix, cursor_pos, enum_desc(Meta::Type<Hook>{}) | transform(&EnumDesc<Hook>::name)) };
 }
@@ -1089,7 +1083,7 @@ const CommandDesc add_hook_cmd = {
     CommandHelper{},
     make_completer(complete_scope, complete_hooks, complete_nothing,
                    [](const Context& context, CompletionFlags flags,
-                      const String& prefix, ByteCount cursor_pos)
+                      StringView prefix, ByteCount cursor_pos)
                    { return CommandManager::instance().complete(
                          context, flags, prefix, cursor_pos); }),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
@@ -1340,6 +1334,14 @@ const CommandDesc define_command_cmd = {
     define_command
 };
 
+static Completions complete_alias_name(const Context& context, CompletionFlags,
+                                       StringView prefix, ByteCount cursor_pos)
+{
+   return { 0_byte, cursor_pos, complete(prefix, cursor_pos,
+                                           context.aliases().flatten_aliases()
+                                         | transform(&HashItem<String, String>::key))};
+}
+
 const CommandDesc alias_cmd = {
     "alias",
     nullptr,
@@ -1358,14 +1360,6 @@ const CommandDesc alias_cmd = {
     }
 };
 
-static Completions complete_alias(const Context& context, CompletionFlags flags,
-                                 const String& prefix, ByteCount cursor_pos)
-{
-    return {0_byte, cursor_pos,
-            complete(prefix, cursor_pos, context.aliases().flatten_aliases() |
-                     transform([](auto& entry) -> const String& { return entry.key; }))};
-}
-
 const CommandDesc unalias_cmd = {
     "unalias",
     nullptr,
@@ -1374,7 +1368,7 @@ const CommandDesc unalias_cmd = {
     ParameterDesc{{}, ParameterDesc::Flags::None, 2, 3},
     CommandFlags::None,
     CommandHelper{},
-    make_completer(complete_scope, complete_alias, complete_command_name),
+    make_completer(complete_scope, complete_alias_name, complete_command_name),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         AliasRegistry& aliases = get_scope(parser[0], context).aliases();
@@ -1469,7 +1463,7 @@ const CommandDesc debug_cmd = {
     CommandHelper{},
     make_completer(
         [](const Context& context, CompletionFlags flags,
-           const String& prefix, ByteCount cursor_pos) -> Completions {
+           StringView prefix, ByteCount cursor_pos) -> Completions {
                auto c = {"info", "buffers", "options", "memory", "shared-strings",
                          "profile-hash-maps", "faces", "mappings", "regex", "registers"};
                return { 0_byte, cursor_pos, complete(prefix, cursor_pos, c) };
@@ -1787,7 +1781,7 @@ const CommandDesc declare_option_cmd = {
     CommandHelper{},
     make_completer(
         [](const Context& context, CompletionFlags flags,
-           const String& prefix, ByteCount cursor_pos) -> Completions {
+           StringView prefix, ByteCount cursor_pos) -> Completions {
                auto c = {"int", "bool", "str", "regex", "int-list", "str-list", "completions", "line-specs", "range-specs", "str-to-str-map"};
                return { 0_byte, cursor_pos, complete(prefix, cursor_pos, c) };
     }),
@@ -2412,7 +2406,7 @@ const CommandDesc try_catch_cmd = {
 };
 
 static Completions complete_face(const Context& context, CompletionFlags flags,
-                                 const String& prefix, ByteCount cursor_pos)
+                                 StringView prefix, ByteCount cursor_pos)
 {
     return {0_byte, cursor_pos,
             complete(prefix, cursor_pos, context.faces().flatten_faces() |
@@ -2506,7 +2500,7 @@ const CommandDesc set_register_cmd = {
     CommandHelper{},
     make_completer(
          [](const Context& context, CompletionFlags flags,
-            const String& prefix, ByteCount cursor_pos) -> Completions {
+            StringView prefix, ByteCount cursor_pos) -> Completions {
              return { 0_byte, cursor_pos,
                       RegisterManager::instance().complete_register_name(prefix, cursor_pos) };
         }),
@@ -2555,7 +2549,7 @@ const CommandDesc change_directory_cmd = {
     CommandHelper{},
     make_completer(
          [](const Context& context, CompletionFlags flags,
-            const String& prefix, ByteCount cursor_pos) -> Completions {
+            StringView prefix, ByteCount cursor_pos) -> Completions {
              return { 0_byte, cursor_pos,
                       complete_filename(prefix,
                                         context.options()["ignored_files"].get<Regex>(),
@@ -2702,7 +2696,7 @@ const CommandDesc require_module_cmd = {
     CommandFlags::None,
     CommandHelper{},
     make_completer(
-         [](const Context&, CompletionFlags, const String& prefix, ByteCount cursor_pos) {
+         [](const Context&, CompletionFlags, StringView prefix, ByteCount cursor_pos) {
             return CommandManager::instance().complete_module_name(prefix.substr(0, cursor_pos));
         }),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
