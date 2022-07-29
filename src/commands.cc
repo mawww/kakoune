@@ -2100,7 +2100,7 @@ const CommandDesc execute_keys_cmd = {
     {
         context_wrap(parser, context, "/\"|^@:", [](const ParametersParser& parser, Context& context) {
             ScopedSetBool disable_keymaps(context.keymaps_disabled(), not parser.get_switch("with-maps"));
-            ScopedSetBool disable_hoooks(context.hooks_disabled(), not parser.get_switch("with-hooks"));
+            ScopedSetBool disable_hooks(context.hooks_disabled(), not parser.get_switch("with-hooks"));
 
             for (auto& key : parser | transform(parse_keys) | flatten())
                 context.input_handler().handle_key(key);
@@ -2123,7 +2123,7 @@ const CommandDesc evaluate_commands_cmd = {
     {
         context_wrap(parser, context, {}, [&](const ParametersParser& parser, Context& context) {
             const bool no_hooks = context.hooks_disabled() or parser.get_switch("no-hooks");
-            ScopedSetBool disable_hoooks(context.hooks_disabled(), no_hooks);
+            ScopedSetBool disable_hooks(context.hooks_disabled(), no_hooks);
 
             if (parser.get_switch("verbatim"))
                 CommandManager::instance().execute_single_command(parser | gather<Vector>(), context, shell_context);
