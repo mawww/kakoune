@@ -34,7 +34,9 @@ All normal-mode commands using a register default to a specific one if not speci
     default search / regex register, used by:
     */*, *<a-/>*, *?*, *<a-?>*, *n*, *<a-n>*, *N*, *<a-N>*, ***, *<a-*>*,
     *s*, *S*, *<a-k>* and *<a-K>*
-    (see <<keys#searching, `:doc keys searching`>>)
+    (see <<keys#searching, `:doc keys searching`>>).
+    This is a prompt history register, holding the last 100 commands entered
+    at an interactive regex prompt.
 
 *@* (arobase)::
     default macro register, used by:
@@ -50,7 +52,10 @@ All normal-mode commands using a register default to a specific one if not speci
 *|* (pipe)::
     default shell command register, used by commands that spawn a subshell:
     *|*, *<a-|>*, *!* and *<a-!>*
-    (see <<keys#changes-through-external-programs, `:doc keys changes-through-external-programs`>>)
+    (see <<keys#changes-through-external-programs, `:doc keys changes-through-external-programs`>>).
+    This is a prompt history register, holding the last 100 commands entered
+    at interactive shell command prompts, except for commands starting with
+    a space.
 
 == Special registers
 
@@ -70,7 +75,8 @@ contain some special data
     null register, always empty
 
 *:* (colon)::
-    last entered command
+    prompt history register holding the last 100 commands entered at the
+    interactive prompt, except for commands starting with a space.
 
 == Integer registers
 

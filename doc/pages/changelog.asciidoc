@@ -15,7 +15,7 @@ released versions.
 * User mappings is now bound to `<space>` while keeping/removing main selection
   moved to `,` and `<a-,>`
 
-* History registers `%reg{colon}`, `%reg{slash}` and `%reg{pipe}` now
+* Prompt history registers `%reg{colon}`, `%reg{slash}` and `%reg{pipe}` now
   have reverse chronological order
 
 == Kakoune 2021.11.07
