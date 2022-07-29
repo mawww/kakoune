@@ -359,7 +359,7 @@ Yanking (copying) and pasting use the *"* register by default (See <<registers#,
 == Changes through external programs
 
 Shell expansions are available, (See <<expansions#shell-expansions,`:doc expansions shell-expansions`>>)
-The default command comes from the *|* register by default (See <<registers#,`:doc registers`>>)
+The default command comes from the *|* register (See <<registers#,`:doc registers`>>)
 
 *|*::
     pipe each selection through the given external filter program and
