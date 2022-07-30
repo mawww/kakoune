@@ -68,7 +68,7 @@ command you invoke with the `%val{count}` and `%val{register}` expansions
 (See <<expansions#`:doc expansions`>>). For example:
 
 ----
-map global normal = ': echo Got count %val{count} and reg %val{register}<ret>'
+map global normal = ':echo Got count %val{count} and reg %val{register}<ret>'
 ----
 
 == Mappable keys
