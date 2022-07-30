@@ -32,7 +32,7 @@ All normal-mode commands using a register default to a specific one if not speci
 
 */* (slash)::
     default search / regex register, used by:
-    */*, *<a-/>*, *?*, *<a-?>*, *n*, *<a-n>*, *N*, *<a-N>*, ***, *<a-*>*,
+    */*, *<a-/>*, *?*, *<a-?>*, *n*, *<a-n>*, *N*, *<a-N>*, ***, *<a-***>*,
     *s*, *S*, *<a-k>* and *<a-K>*
     (see <<keys#searching, `:doc keys searching`>>)
 
