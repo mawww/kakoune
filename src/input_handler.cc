@@ -1197,7 +1197,7 @@ private:
 
     void history_push(StringView entry)
     {
-        if (entry.empty() or context().history_disabled() or
+        if (entry.empty() or context().noninteractive() or
             (m_flags & PromptFlags::DropHistoryEntriesWithBlankPrefix and
              is_horizontal_blank(entry[0_byte])))
             return;
@@ -1772,7 +1772,7 @@ void InputHandler::handle_key(Key key)
     KeymapManager& keymaps = m_context.keymaps();
     if (keymaps.is_mapped(key, keymap_mode) and not m_context.keymaps_disabled())
     {
-        ScopedSetBool disable_history{context().history_disabled()};
+        ScopedSetBool noninteractive{context().noninteractive()};
 
         for (auto& k : keymaps.get_mapping_keys(key, keymap_mode))
             process_key(k);

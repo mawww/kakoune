@@ -1016,7 +1016,7 @@ void select_regex(Context& context, NormalParams params)
         RegisterManager::instance()[reg].restore(context, saved_reg);
         if (event == PromptEvent::Abort)
             return;
-        if (not context.history_disabled())
+        if (not context.noninteractive())
             RegisterManager::instance()[reg].set(context, ex.str());
 
         auto& selections = context.selections();
@@ -1038,7 +1038,7 @@ void split_regex(Context& context, NormalParams params)
         RegisterManager::instance()[reg].restore(context, saved_reg);
         if (event == PromptEvent::Abort)
             return;
-        if (not context.history_disabled())
+        if (not context.noninteractive())
             RegisterManager::instance()[reg].set(context, ex.str());
 
         auto& selections = context.selections();
@@ -1142,7 +1142,7 @@ void keep(Context& context, NormalParams params)
         RegisterManager::instance()[reg].restore(context, saved_reg);
         if (event == PromptEvent::Abort)
             return;
-        if (not context.history_disabled())
+        if (not context.noninteractive())
             RegisterManager::instance()[reg].set(context, regex.str());
 
         if (regex.empty() or regex.str().empty())
@@ -2049,7 +2049,7 @@ void exec_user_mappings(Context& context, NormalParams params)
             return;
 
         ScopedSetBool disable_keymaps(context.keymaps_disabled());
-        ScopedSetBool disable_history(context.history_disabled());
+        ScopedSetBool noninteractive(context.noninteractive());
 
         InputHandler::ScopedForceNormal force_normal{context.input_handler(), params};
 

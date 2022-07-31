@@ -1993,7 +1993,7 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
                                        Context::Flags::Draft};
             Context& c = input_handler.context();
 
-            ScopedSetBool disable_history(c.history_disabled());
+            ScopedSetBool noninteractive(c.noninteractive());
 
             func(parser, c);
         };
@@ -2044,7 +2044,7 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
 
     Context& c = *effective_context;
 
-    ScopedSetBool disable_history(c.history_disabled());
+    ScopedSetBool noninteractive(c.noninteractive());
     ScopedEdition edition{c};
     ScopedSelectionEdition selection_edition{c};
 
@@ -2222,7 +2222,7 @@ const CommandDesc prompt_cmd = {
                     sc.env_vars.erase("text"_sv);
                 });
 
-                ScopedSetBool disable_history{context.history_disabled()};
+                ScopedSetBool noninteractive{context.noninteractive()};
 
                 StringView cmd;
                 switch (event)
@@ -2269,7 +2269,7 @@ const CommandDesc menu_cmd = {
 
         if (count == modulo and parser.get_switch("auto-single"))
         {
-            ScopedSetBool disable_history{context.history_disabled()};
+            ScopedSetBool noninteractive{context.noninteractive()};
 
             CommandManager::instance().execute(parser[1], context);
             return;
@@ -2293,7 +2293,7 @@ const CommandDesc menu_cmd = {
         CapturedShellContext sc{shell_context};
         context.input_handler().menu(std::move(choices),
             [=](int choice, MenuEvent event, Context& context) {
-                ScopedSetBool disable_history{context.history_disabled()};
+                ScopedSetBool noninteractive{context.noninteractive()};
 
                 if (event == MenuEvent::Validate and choice >= 0 and choice < commands.size())
                   CommandManager::instance().execute(commands[choice], context, sc);
@@ -2324,7 +2324,7 @@ const CommandDesc on_key_cmd = {
             parser.get_switch("mode-name").value_or("on-key"),
             KeymapMode::None, [=](Key key, Context& context) mutable {
             sc.env_vars["key"_sv] = to_string(key);
-            ScopedSetBool disable_history{context.history_disabled()};
+            ScopedSetBool noninteractive{context.noninteractive()};
 
             CommandManager::instance().execute(command, context, sc);
         });
@@ -2646,7 +2646,7 @@ void enter_user_mode(Context& context, String mode_name, KeymapMode mode, bool l
             return;
 
         ScopedSetBool disable_keymaps(context.keymaps_disabled());
-        ScopedSetBool disable_history(context.history_disabled());
+        ScopedSetBool noninteractive(context.noninteractive());
 
         InputHandler::ScopedForceNormal force_normal{context.input_handler(), {}};
 
