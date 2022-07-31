@@ -18,6 +18,8 @@ released versions.
 * History registers `%reg{colon}`, `%reg{slash}` and `%reg{pipe}` now
   have reverse chronological order
 
+* Executing user mode mappings no longer adds to prompt history registers by default.
+
 == Kakoune 2021.11.07
 
 * Support for curly and separately colored underlines (undocumented in 2021.10.28)
