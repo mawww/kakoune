@@ -1705,7 +1705,7 @@ void InputHandler::prompt(StringView prompt, String initstr, String emptystr,
 
 void InputHandler::set_prompt_face(Face prompt_face)
 {
-    InputModes::Prompt* prompt = dynamic_cast<InputModes::Prompt*>(&current_mode());
+    auto* prompt = dynamic_cast<InputModes::Prompt*>(&current_mode());
     if (prompt)
         prompt->set_prompt_face(prompt_face);
 }
