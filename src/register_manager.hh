@@ -34,7 +34,6 @@ protected:
 };
 
 // static value register, which can be modified
-// using operator=, so should be user modifiable
 class StaticRegister : public Register
 {
 public:
