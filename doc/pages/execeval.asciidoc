@@ -13,7 +13,7 @@ error occurs.
 
 Without the *-save-regs* switch, *execute-keys* saves the following registers, which
 are then restored when the keys have been executed: */*, *"*, *|*, *^*,
-*@*. *evaluate-commands* doesn't save any registers by default.
+*@*, *:*. *evaluate-commands* doesn't save any registers by default.
 (See <<registers#,`:doc registers`>>)
 
 == Switches for both commands
