@@ -460,11 +460,19 @@ const CommandDesc force_edit_cmd = {
     edit<true>
 };
 
-const ParameterDesc write_params{
+const ParameterDesc write_params = {
     {
         { "sync", { false, "force the synchronization of the file onto the filesystem" } },
         { "method", { true, "explicit writemethod (replace|overwrite)" } },
-        { "force", { false, "Allow overwriting existing file with explicit filename" } },
+        { "force", { false, "Allow overwriting existing file with explicit filename" } }
+    },
+    ParameterDesc::Flags::SwitchesOnlyAtStart, 0, 1
+};
+
+const ParameterDesc write_params_except_force = {
+    {
+        { "sync", { false, "force the synchronization of the file onto the filesystem" } },
+        { "method", { true, "explicit writemethod (replace|overwrite)" } },
     },
     ParameterDesc::Flags::SwitchesOnlyAtStart, 0, 1
 };
@@ -533,7 +541,7 @@ const CommandDesc force_write_cmd = {
     "w!",
     "write! [<switches>] [<filename>]: write the current buffer to its file "
     "or to <filename> if specified, even when the file is write protected",
-    write_params,
+    write_params_except_force,
     CommandFlags::None,
     CommandHelper{},
     filename_completer<false>,
@@ -568,7 +576,7 @@ const CommandDesc write_all_cmd = {
     "wa",
     "write-all [<switches>]: write all changed buffers that are associated to a file",
     ParameterDesc{
-        write_params.switches,
+        write_params_except_force.switches,
         ParameterDesc::Flags::None, 0, 0
     },
     CommandFlags::None,
@@ -695,7 +703,7 @@ const CommandDesc write_quit_cmd = {
     "wq",
     "write-quit [<switches>] [<exit status>]: write current buffer and quit current client. "
     "An optional integer parameter can set the client exit status",
-    write_params,
+    write_params_except_force,
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
@@ -707,7 +715,7 @@ const CommandDesc force_write_quit_cmd = {
     "wq!",
     "write-quit! [<switches>] [<exit status>] write: current buffer and quit current client, even if other buffers are not saved. "
     "An optional integer parameter can set the client exit status",
-    write_params,
+    write_params_except_force,
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
@@ -719,7 +727,7 @@ const CommandDesc write_all_quit_cmd = {
     "waq",
     "write-all-quit [<switches>] [<exit status>]: write all buffers associated to a file and quit current client. "
     "An optional integer parameter can set the client exit status.",
-    write_params,
+    write_params_except_force,
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
