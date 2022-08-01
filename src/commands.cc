@@ -693,7 +693,7 @@ void write_quit(const ParametersParser& parser, Context& context,
 const CommandDesc write_quit_cmd = {
     "write-quit",
     "wq",
-    "write-quit [-sync] [<exit status>]: write current buffer and quit current client. "
+    "write-quit [<switches>] [<exit status>]: write current buffer and quit current client. "
     "An optional integer parameter can set the client exit status",
     write_params,
     CommandFlags::None,
@@ -705,7 +705,7 @@ const CommandDesc write_quit_cmd = {
 const CommandDesc force_write_quit_cmd = {
     "write-quit!",
     "wq!",
-    "write-quit! [-sync] [<exit status>] write: current buffer and quit current client, even if other buffers are not saved. "
+    "write-quit! [<switches>] [<exit status>] write: current buffer and quit current client, even if other buffers are not saved. "
     "An optional integer parameter can set the client exit status",
     write_params,
     CommandFlags::None,
@@ -717,7 +717,7 @@ const CommandDesc force_write_quit_cmd = {
 const CommandDesc write_all_quit_cmd = {
     "write-all-quit",
     "waq",
-    "write-all-quit [-sync] [<exit status>]: write all buffers associated to a file and quit current client. "
+    "write-all-quit [<switches>] [<exit status>]: write all buffers associated to a file and quit current client. "
     "An optional integer parameter can set the client exit status.",
     write_params,
     CommandFlags::None,
