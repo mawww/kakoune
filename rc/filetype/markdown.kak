@@ -35,7 +35,7 @@ declare-option \
     -docstring "map of supported languages in fenced code blocks. Keys determine which languages are recognised. The value names the corresponding highligher, if empty the key is used instead." \
     str-to-str-map markdown_supported_languages \
     awk= c= cabal= clojure= coffee= cpp= crystal= css= cucumber= d= diff= dockerfile= elixir= erlang= fish= \
-    gas= go= haml= haskell= html= ini= java= javascript= json= julia= kak=kakrc kickstart= \
+    gas= go= haml= haskell= hs=haskell html= ini= java= javascript= js=javascript json= julia= kak=kakrc kickstart= \
     latex= lisp= lua= makefile= markdown= moon= objc= ocaml= perl= pug= python= ragel= \
     ruby= rust= sass= scala= scss= sh= swift= toml= tupfile= typescript= yaml= sql=
 
@@ -50,15 +50,25 @@ add-highlighter shared/markdown regions
 add-highlighter shared/markdown/inline default-region regions
 add-highlighter shared/markdown/inline/text default-region group
 
-evaluate-commands %sh{
-  for kv in ${kak_opt_markdown_supported_languages}; do
-    ref=${kv##*=}
-    lang=${kv%%=*}
-    [ -n "$ref" ] || ref=$lang
-    printf 'add-highlighter shared/markdown/%s region -match-capture ^(\h*)```\h*(%s\\b|\\{[.=]?%s\\})   ^(\h*)``` regions\n' "${lang}" "${lang}" "${lang}"
-    printf 'add-highlighter shared/markdown/%s/ default-region fill meta\n' "${lang}"
-    printf 'add-highlighter shared/markdown/%s/inner region \A```[^\\n]*\K (?=```) ref %s\n' "${lang}" "${ref}"
-  done
+# Used for the pluggable infrastructure of languages
+define-command -hidden markdown-build-fenced-highlighters %{
+    add-highlighter -override shared/markdown/fenced region -match-capture ^(\h*)``` ^(\h*)``` regions
+    add-highlighter shared/markdown/fenced/default default-region fill meta
+    evaluate-commands %sh{
+      for kv in ${kak_opt_markdown_supported_languages}; do
+        ref=${kv##*=}
+        lang=${kv%%=*}
+        [ -n "$ref" ] || ref=$lang
+        printf 'add-highlighter shared/markdown/fenced/%s region -match-capture ^(\h*)```\h*(%s\\b|\\{[.=]?%s\\})   ^(\h*)``` regions\n' "${lang}" "${lang}" "${lang}"
+        printf 'add-highlighter shared/markdown/fenced/%s/ default-region fill meta\n' "${lang}"
+        printf 'add-highlighter shared/markdown/fenced/%s/inner region \A```[^\\n]*\K (?=```) ref %s\n' "${lang}" "${ref}"
+      done
+    }
+}
+
+markdown-build-fenced-highlighters
+hook -group markdown-update-highlighers global GlobalSetOption markdown_supported_languages=.* %{
+    markdown-build-fenced-highlighters
 }
 
 add-highlighter shared/markdown/listblock region ^\h*[-*]\s ^(?=\S) regions
@@ -132,5 +142,7 @@ define-command -hidden markdown-load-languages %{
         evaluate-commands -itersel %{ require-module %val{selection} }
     }}
 }
+
+
 
 }
