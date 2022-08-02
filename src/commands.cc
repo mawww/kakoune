@@ -479,7 +479,7 @@ const ParameterDesc write_params = {
         { "method", { true, "explicit writemethod (replace|overwrite)" } },
         { "force", { false, "Allow overwriting existing file with explicit filename" } }
     },
-    ParameterDesc::Flags::SwitchesOnlyAtStart, 0, 1
+    ParameterDesc::Flags::None, 0, 1
 };
 
 const ParameterDesc write_params_except_force = {
@@ -487,7 +487,7 @@ const ParameterDesc write_params_except_force = {
         { "sync", { false, "force the synchronization of the file onto the filesystem" } },
         { "method", { true, "explicit writemethod (replace|overwrite)" } },
     },
-    ParameterDesc::Flags::SwitchesOnlyAtStart, 0, 1
+    ParameterDesc::Flags::None, 0, 1
 };
 
 auto parse_write_method(StringView str)
@@ -2642,7 +2642,7 @@ const CommandDesc enter_user_mode_cmd = {
     "enter-user-mode [<switches>] <name>: enable <name> keymap mode for next key",
     ParameterDesc{
         { { "lock", { false, "stay in mode until <esc> is pressed" } } },
-        ParameterDesc::Flags::SwitchesOnlyAtStart, 1, 1
+        ParameterDesc::Flags::None, 1, 1
     },
     CommandFlags::None,
     CommandHelper{},
