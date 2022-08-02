@@ -140,8 +140,10 @@ void select_and_set_last(Context& context, Func&& func)
 }
 
 template<SelectMode mode = SelectMode::Replace>
-void select_coord(Buffer& buffer, BufferCoord coord, SelectionList& selections)
+void select_coord(Context& context, BufferCoord coord)
 {
+    Buffer& buffer = context.buffer();
+    SelectionList& selections = context.selections();
     coord = buffer.clamp(coord);
     if (mode == SelectMode::Replace)
         selections = SelectionList{ buffer, coord };
@@ -212,7 +214,7 @@ void goto_commands(Context& context, NormalParams params)
     if (params.count != 0)
     {
         context.push_jump();
-        select_coord<mode>(context.buffer(), LineCount{params.count - 1}, context.selections());
+        select_coord<mode>(context, LineCount{params.count - 1});
         if (context.has_window())
             context.window().center_line(LineCount{params.count-1});
     }
@@ -229,7 +231,7 @@ void goto_commands(Context& context, NormalParams params)
             case 'g':
             case 'k':
                 context.push_jump();
-                select_coord<mode>(buffer, BufferCoord{0,0}, context.selections());
+                select_coord<mode>(context, BufferCoord{0,0});
                 break;
             case 'l':
                 select<mode, select_to_line_end<true>>(context, {});
@@ -242,17 +244,17 @@ void goto_commands(Context& context, NormalParams params)
                 break;
             case 'j':
                 context.push_jump();
-                select_coord<mode>(buffer, buffer.line_count() - 1, context.selections());
+                select_coord<mode>(context, buffer.line_count() - 1);
                 break;
             case 'e':
                 context.push_jump();
-                select_coord<mode>(buffer, buffer.back_coord(), context.selections());
+                select_coord<mode>(context, buffer.back_coord());
                 break;
             case 't':
                 if (context.has_window())
                 {
                     auto line = context.window().position().line;
-                    select_coord<mode>(buffer, line, context.selections());
+                    select_coord<mode>(context, line);
                 }
                 break;
             case 'b':
@@ -260,7 +262,7 @@ void goto_commands(Context& context, NormalParams params)
                 {
                     auto& window = context.window();
                     auto line = window.position().line + window.dimensions().line - 1;
-                    select_coord<mode>(buffer, line, context.selections());
+                    select_coord<mode>(context, line);
                 }
                 break;
             case 'c':
@@ -268,7 +270,7 @@ void goto_commands(Context& context, NormalParams params)
                 {
                     auto& window = context.window();
                     auto line = window.position().line + window.dimensions().line / 2;
-                    select_coord<mode>(buffer, line, context.selections());
+                    select_coord<mode>(context, line);
                 }
                 break;
             case 'a':
@@ -328,7 +330,7 @@ void goto_commands(Context& context, NormalParams params)
                     throw runtime_error("no last modification position");
                 if (*pos >= buffer.back_coord())
                     pos = buffer.back_coord();
-                select_coord<mode>(buffer, *pos, context.selections());
+                select_coord<mode>(context, *pos);
                 break;
             }
             default:
