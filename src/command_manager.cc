@@ -808,7 +808,8 @@ Completions CommandManager::complete(const Context& context,
         const bool has_switches = not command.param_desc.switches.empty();
         auto is_switch = [=](StringView s) { return has_switches and s.substr(0_byte, 1_byte) == "-"; };
 
-        if (is_switch(token.content))
+        if (is_switch(token.content)
+            and not contains(tokens | drop(1) | transform(&Token::content), "--"))
         {
             auto switches = Kakoune::complete(token.content.substr(1_byte), pos_in_token,
                                               concatenated(command.param_desc.switches
