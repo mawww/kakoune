@@ -2621,6 +2621,7 @@ void enter_user_mode(Context& context, String mode_name, KeymapMode mode, bool l
 
         auto& mapping = context.keymaps().get_mapping(key, mode);
         ScopedSetBool disable_keymaps(context.keymaps_disabled());
+        ScopedSetBool disable_history(context.history_disabled());
 
         InputHandler::ScopedForceNormal force_normal{context.input_handler(), {}};
 

@@ -104,8 +104,8 @@ define-command -params 1.. \
         # We need to unmap in case an existing buffer changes type,
         # for example if the user runs "git show" and "git status".
         map_diff_goto_source=$([ -n "${map_diff_goto_source}" ] \
-          && printf %s "map buffer normal <ret> %[: git-diff-goto-source<ret>] -docstring 'Jump to source from git diff'" \
-          || printf %s "unmap buffer normal <ret> %[: git-diff-goto-source<ret>]")
+          && printf %s "map buffer normal <ret> :git-diff-goto-source<ret> -docstring 'Jump to source from git diff'" \
+          || printf %s "unmap buffer normal <ret> :git-diff-goto-source<ret>")
 
         printf %s "evaluate-commands -try-client '$kak_opt_docsclient' %{
                   edit! -fifo ${output} *git*

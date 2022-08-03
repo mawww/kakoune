@@ -4,9 +4,9 @@ hook global BufCreate .+\.eml %{
 
 hook global WinSetOption filetype=mail %{
     require-module mail
-    map buffer normal <ret> %{: diff-jump<ret>}
+    map buffer normal <ret> :diff-jump<ret>
     hook -once -always window WinSetOption filetype=.* %{
-        unmap buffer normal <ret> %{: diff-jump<ret>}
+        unmap buffer normal <ret> :diff-jump<ret>
     }
 }
 

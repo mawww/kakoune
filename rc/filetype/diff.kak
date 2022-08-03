@@ -4,7 +4,7 @@ hook global BufCreate .*\.(diff|patch) %{
 
 hook global WinSetOption filetype=diff %{
     require-module diff
-    map buffer normal <ret> %{: diff-jump<ret>}
+    map buffer normal <ret> :diff-jump<ret>
 }
 
 hook -group diff-highlight global WinSetOption filetype=diff %{
