@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Kakoune
+GenericName=Text Editor
+Comment=Edit text files
+TryExec=kak
+Exec=kak -- %F
+Terminal=true
+MimeType=text/plain;
+Categories=Utility;TextEditor;
+StartupNotify=false
