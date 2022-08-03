@@ -67,7 +67,7 @@ define-command -hidden markdown-build-fenced-highlighters %{
 }
 
 markdown-build-fenced-highlighters
-hook -group markdown-update-highlighers global GlobalSetOption markdown_supported_languages=.* %{
+hook -group markdown-update-highlighters global GlobalSetOption markdown_supported_languages=.* %{
     markdown-build-fenced-highlighters
 }
 
