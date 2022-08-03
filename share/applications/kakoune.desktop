@@ -3,6 +3,7 @@ Type=Application
 Name=Kakoune
 GenericName=Text Editor
 Comment=Edit text files
+Icon=kakoune
 TryExec=kak
 Exec=kak -- %F
 Terminal=true
