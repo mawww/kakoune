@@ -139,7 +139,16 @@ define-command -hidden markdown-indent-on-new-line %{
 define-command -hidden markdown-load-languages %{
     evaluate-commands -draft %{ try %{
         execute-keys 'gtGbGls```\h*\{?[.=]?\K[^}\s]+<ret>'
-        evaluate-commands -itersel %{ require-module %val{selection} }
+        evaluate-commands -itersel %sh{
+          for kv in ${kak_opt_markdown_supported_languages}; do
+            ref=${kv##*=}
+            lang=${kv%%=*}
+            [ -n "$ref" ] || ref=$lang
+            if [ "${kak_selection}" = "${lang}" ]; then
+                printf 'require-module %s\n' "${ref}"
+            fi
+          done
+        }
     }}
 }
 
