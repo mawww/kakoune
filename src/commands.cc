@@ -1926,7 +1926,6 @@ ParameterDesc make_context_wrap_params_impl(Array<HashItem<String, SwitchDesc>, 
                { "buffer",     { true,  "run in a disposable context for each given buffer in the comma separated list argument" } },
                { "draft",      { false, "run in a disposable context" } },
                { "itersel",    { false, "run once for each selection with that selection as the only one" } },
-               { "save-regs",  { true, "restore all given registers after execution" } },
                std::move(additional_params[P])...},
         ParameterDesc::Flags::SwitchesOnlyAtStart, 1
     };
@@ -2089,7 +2088,8 @@ const CommandDesc execute_keys_cmd = {
     "execute-keys",
     "exec",
     "execute-keys [<switches>] <keys>: execute given keys as if entered by user",
-    make_context_wrap_params<2>({{
+    make_context_wrap_params<3>({{
+        {"save-regs",  {true, "restore all given registers after execution (default: '/\"|^@:')"}},
         {"with-maps",  {false, "use user defined key mapping when executing keys"}},
         {"with-hooks", {false, "trigger hooks while executing keys"}}
     }}),
@@ -2100,7 +2100,7 @@ const CommandDesc execute_keys_cmd = {
     {
         context_wrap(parser, context, "/\"|^@:", [](const ParametersParser& parser, Context& context) {
             ScopedSetBool disable_keymaps(context.keymaps_disabled(), not parser.get_switch("with-maps"));
-            ScopedSetBool disable_hoooks(context.hooks_disabled(), not parser.get_switch("with-hooks"));
+            ScopedSetBool disable_hooks(context.hooks_disabled(), not parser.get_switch("with-hooks"));
 
             for (auto& key : parser | transform(parse_keys) | flatten())
                 context.input_handler().handle_key(key);
@@ -2112,7 +2112,8 @@ const CommandDesc evaluate_commands_cmd = {
     "evaluate-commands",
     "eval",
     "evaluate-commands [<switches>] <commands>...: execute commands as if entered by user",
-    make_context_wrap_params<2>({{
+    make_context_wrap_params<3>({{
+        {"save-regs",  {true, "restore all given registers after execution (default: '')"}},
         {"no-hooks", { false, "disable hooks while executing commands" }},
         {"verbatim", { false, "do not reparse argument" }}
     }}),
@@ -2123,7 +2124,7 @@ const CommandDesc evaluate_commands_cmd = {
     {
         context_wrap(parser, context, {}, [&](const ParametersParser& parser, Context& context) {
             const bool no_hooks = context.hooks_disabled() or parser.get_switch("no-hooks");
-            ScopedSetBool disable_hoooks(context.hooks_disabled(), no_hooks);
+            ScopedSetBool disable_hooks(context.hooks_disabled(), no_hooks);
 
             if (parser.get_switch("verbatim"))
                 CommandManager::instance().execute_single_command(parser | gather<Vector>(), context, shell_context);
