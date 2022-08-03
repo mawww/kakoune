@@ -98,6 +98,7 @@ evaluate-commands %sh[
         file_open_state file_origin_kind
         integer natural positive
         line line_vector
+        real real_vector
         std_logic std_logic_vector
         std_ulogic std_ulogic_vector
         side
