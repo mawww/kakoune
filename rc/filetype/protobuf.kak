@@ -15,6 +15,7 @@ hook global WinSetOption filetype=protobuf %[
 
     set-option window static_words %opt{protobuf_static_words}
 
+    hook window ModeChange pop:insert:.* -group protobuf-trim-indent protobuf-trim-indent
     hook -group protobuf-indent window InsertChar \n protobuf-indent-on-newline
     hook -group protobuf-indent window InsertChar \{ protobuf-indent-on-opening-curly-brace
     hook -group protobuf-indent window InsertChar \} protobuf-indent-on-closing-curly-brace
@@ -66,18 +67,26 @@ evaluate-commands %sh{
 # Commands
 # ‾‾‾‾‾‾‾‾
 
+define-command -hidden protobuf-trim-indent %{
+    evaluate-commands -no-hooks -draft -itersel %{
+        execute-keys x
+        # remove trailing white spaces
+        try %{ execute-keys -draft s \h + $ <ret> d }
+    }
+}
+
 define-command -hidden protobuf-indent-on-newline %~
     evaluate-commands -draft -itersel %[
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon>K<a-&> }
         # indent after lines ending with {
-        try %[ execute-keys -draft k<a-x> <a-k> \{\h*$ <ret> j<a-gt> ]
+        try %[ execute-keys -draft kx <a-k> \{\h*$ <ret> j<a-gt> ]
         # cleanup trailing white spaces on the previous line
-        try %{ execute-keys -draft k<a-x> s \h+$ <ret>d }
+        try %{ execute-keys -draft kx s \h+$ <ret>d }
         # copy // comments prefix
-        try %{ execute-keys -draft <semicolon><c-s>k<a-x> s ^\h*\K/{2,}(\h*(?=\S))? <ret> y<c-o>P<esc> }
+        try %{ execute-keys -draft <semicolon><c-s>kx s ^\h*\K/{2,}(\h*(?=\S))? <ret> y<c-o>P<esc> }
         # deindent closing brace(s) when after cursor
-        try %[ execute-keys -draft <a-x> <a-k> ^\h*\} <ret> gh / \} <ret> m <a-S> 1<a-&> ]
+        try %[ execute-keys -draft x <a-k> ^\h*\} <ret> gh / \} <ret> m <a-S> 1<a-&> ]
     ]
 ~
 

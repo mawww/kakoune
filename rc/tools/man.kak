@@ -14,7 +14,7 @@ hook -group man-highlight global WinSetOption filetype=man %{
     # References to other manpages
     add-highlighter window/man-highlight/ regex [-a-zA-Z0-9_.]+\([a-z0-9]+\) 0:header
 
-    map window normal <ret> ': man-jump<ret>'
+    map window normal <ret> :man-jump<ret>
 
     hook -once -always window WinSetOption filetype=.* %{
       remove-highlighter window/man-highlight
@@ -141,7 +141,7 @@ man-jump %{
 # Suggested keymaps for a user mode
 declare-user-mode man
 
-map global man 'g' -docstring 'Jump to a man page using selected man page link' ': man-jump<ret>'
-map global man 'j' -docstring 'Go to next man page link'                        ': man-link-next<ret>'
-map global man 'k' -docstring 'Go to previous man page link'                    ': man-link-prev<ret>'
-map global man 'm' -docstring 'Look up a man page'                              ':man<space>'
+map global man 'g' -docstring 'Jump to a man page using selected man page link' :man-jump<ret>
+map global man 'j' -docstring 'Go to next man page link'                        :man-link-next<ret>
+map global man 'k' -docstring 'Go to previous man page link'                    :man-link-prev<ret>
+map global man 'm' -docstring 'Look up a man page'                              :man<space>

@@ -1,0 +1,1 @@
+define-command test %{ execute-keys Afoo<esc> }

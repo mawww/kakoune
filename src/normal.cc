@@ -1,7 +1,5 @@
 #include "normal.hh"
 
-#include <functional>
-
 #include "buffer.hh"
 #include "buffer_manager.hh"
 #include "buffer_utils.hh"
@@ -30,8 +28,6 @@
 
 namespace Kakoune
 {
-
-using namespace std::placeholders;
 
 enum class SelectMode
 {
@@ -687,10 +683,13 @@ void paste(Context& context, NormalParams params)
     ScopedEdition edition(context);
     context.selections().for_each([&](size_t index, Selection& sel) {
         auto& str = strings[std::min(strings.size()-1, index)];
-        if (mode == PasteMode::Replace)
-            replace(buffer, sel, str);
-        else
-            insert(buffer, sel, paste_pos(buffer, sel, mode, linewise), str);
+        auto& min = sel.min();
+        auto& max = sel.max();
+        BufferRange range = (mode == PasteMode::Replace) ?
+            buffer.replace(min, buffer.char_next(max), str)
+          : buffer.insert(paste_pos(buffer, sel, mode, linewise), str);
+        min = range.begin;
+        max = range.end > range.begin ? buffer.char_prev(range.end) : range.begin;
     });
 }
 
@@ -765,6 +764,7 @@ void insert_output(Context& context, NormalParams params)
             auto& selections = context.selections();
             auto& buffer = context.buffer();
             const size_t old_main = selections.main_index();
+            Vector<BufferRange> ins_range;
 
             selections.for_each([&](size_t index, Selection& sel) {
                 selections.set_main_index(index);
@@ -772,10 +772,16 @@ void insert_output(Context& context, NormalParams params)
                     cmdline, context, content(context.buffer(), sel),
                     ShellManager::Flags::WaitForStdout);
 
-                insert(buffer, sel, paste_pos(buffer, sel, mode, false), out);
+                auto range = insert(buffer, sel, paste_pos(buffer, sel, mode, false), out);
+                ins_range.push_back(range);
             });
 
-            selections.set_main_index(old_main);
+            selections.set(ins_range | transform([&buffer](auto& range) {
+                if (range.empty())
+                    return Selection{range.begin, range.end};
+                return Selection{range.begin,
+                                 buffer.char_prev(range.end)};
+            }) | gather<Vector>(), old_main);
         });
 }
 
@@ -935,7 +941,7 @@ template<SelectMode mode, RegexMode regex_mode>
 void search_next(Context& context, NormalParams params)
 {
     const char reg = to_lower(params.reg ? params.reg : '/');
-    StringView str = RegisterManager::instance()[reg].get(context).back();
+    StringView str = RegisterManager::instance()[reg].get(context).front();
     if (not str.empty())
     {
         Regex regex{str, direction_flags(regex_mode)};
@@ -1201,6 +1207,7 @@ void indent(Context& context, NormalParams params)
     CharCount indent_width = context.options()["indentwidth"].get<int>();
     String indent = indent_width == 0 ? String{'\t', count} : String{' ', indent_width * count};
 
+    ScopedEdition edition(context);
     auto& buffer = context.buffer();
     LineCount last_line = 0;
     for (auto& sel : context.selections())
@@ -1295,7 +1302,15 @@ void select_object(Context& context, NormalParams params)
         auto obj_it = find(selectors | transform(&ObjectType::key), key).base();
         if (obj_it != std::end(selectors))
             return select_and_set_last<mode>(
-                context, std::bind(obj_it->func, _1, _2, count, flags));
+                context, [=](Context& context, Selection& sel) { return obj_it->func(context, sel, count, flags); });
+
+        static constexpr auto regex_selector = [=](StringView open, StringView close, int count) {
+            return [open=Regex{open, RegexCompileFlags::Backward},
+                    close=Regex{close, RegexCompileFlags::Backward},
+                    count](Context& context, Selection& sel) {
+                return select_surrounding(context, sel, open, close, count, flags);
+            };
+        };
 
         if (key == 'c')
         {
@@ -1316,17 +1331,13 @@ void select_object(Context& context, NormalParams params)
 
                     struct error : runtime_error { error(size_t) : runtime_error{"desc parsing failed, expected <open>,<close>"} {} };
 
-                    auto params = cmdline | split<StringView>(',', '\\') |
-                        transform(unescape<',', '\\'>) | static_gather<error, 2>();
-
+                    auto params = cmdline | split<StringView>(',', '\\')
+                                          | transform(unescape<',', '\\'>)
+                                          | static_gather<error, 2>();
                     if (params[0].empty() or params[1].empty())
                         throw error{0};
 
-                    select_and_set_last<mode>(
-                        context, std::bind(select_surrounding, _1, _2,
-                                           Regex{params[0], RegexCompileFlags::Backward},
-                                           Regex{params[1], RegexCompileFlags::Backward},
-                                           count, flags));
+                    select_and_set_last<mode>(context, regex_selector(params[0], params[1], count));
                 });
             return;
         }
@@ -1343,10 +1354,10 @@ void select_object(Context& context, NormalParams params)
             return;
         }
 
-        static constexpr struct SurroundingPair
+        static constexpr struct
         {
-            char opening;
-            char closing;
+            char open;
+            char close;
             char name;
         } surrounding_pairs[] = {
             { '(', ')', 'b' },
@@ -1357,28 +1368,15 @@ void select_object(Context& context, NormalParams params)
             { '\'', '\'', 'q' },
             { '`', '`', 'g' },
         };
-        auto pair_it = find_if(surrounding_pairs,
-                               [key](const SurroundingPair& s) {
-                                   return key == s.opening or key == s.closing or
-                                          (s.name != 0 and key == s.name);
-                               });
-        if (pair_it != std::end(surrounding_pairs))
+        if (auto it = find_if(surrounding_pairs, [key](auto s) { return key == s.open or key == s.close or key == s.name; });
+            it != std::end(surrounding_pairs))
             return select_and_set_last<mode>(
-                context, std::bind(select_surrounding, _1, _2,
-                                   Regex{format("\\Q{}", pair_it->opening), RegexCompileFlags::Backward},
-                                   Regex{format("\\Q{}", pair_it->closing), RegexCompileFlags::Backward},
-                                   count, flags));
+                context, regex_selector(format("\\Q{}", it->open), format("\\Q{}", it->close), count));
 
-        if (not key.codepoint())
-            return;
-
-        const Codepoint cp = *key.codepoint();
-        if (is_punctuation(cp, {}))
+        if (auto cp = key.codepoint(); cp and is_punctuation(*cp, {}))
         {
-            auto re = Regex{"\\Q" + to_string(cp), RegexCompileFlags::Backward};
-            return select_and_set_last<mode>(
-                context, std::bind(select_surrounding, _1, _2,
-                                   re, re, count, flags));
+            auto re = "\\Q" + to_string(*cp);
+            return select_and_set_last<mode>(context, regex_selector(re, re, count));
         }
     }, get_title(),
     build_autoinfo_for_mapping(context, KeymapMode::Object,
@@ -1530,11 +1528,10 @@ void select_to_next_char(Context& context, NormalParams params)
         constexpr auto new_flags = flags & SelectFlags::Extend ? SelectMode::Extend
                                                                : SelectMode::Replace;
         select_and_set_last<new_flags>(
-            context,
-            std::bind(flags & SelectFlags::Reverse ? select_to_reverse
-                                                   : select_to,
-                      _1, _2, *cp, params.count,
-                      flags & SelectFlags::Inclusive));
+            context, [cp=*cp, count=params.count] (auto& context, auto& sel) {
+                auto& func = flags & SelectFlags::Reverse ? select_to_reverse : select_to;
+                return func(context, sel, cp, count, flags & SelectFlags::Inclusive);
+            });
     }, get_title(), "enter char to select to");
 }
 
@@ -1549,12 +1546,6 @@ void start_or_end_macro_recording(Context& context, NormalParams params)
             throw runtime_error("macros can only use the '@' and alphabetic registers");
         context.input_handler().start_recording(reg);
     }
-}
-
-void end_macro_recording(Context& context, NormalParams)
-{
-    if (context.input_handler().is_recording())
-        context.input_handler().stop_recording();
 }
 
 void replay_macro(Context& context, NormalParams params)
@@ -2023,6 +2014,7 @@ void exec_user_mappings(Context& context, NormalParams params)
 
         auto& mapping = context.keymaps().get_mapping(key, KeymapMode::User);
         ScopedSetBool disable_keymaps(context.keymaps_disabled());
+        ScopedSetBool disable_history(context.history_disabled());
 
         InputHandler::ScopedForceNormal force_normal{context.input_handler(), params};
 
@@ -2079,7 +2071,7 @@ void move_cursor(Context& context, NormalParams params)
     auto& selections = context.selections();
     for (auto& sel : selections)
     {
-        auto cursor = context.buffer().offset_coord(sel.cursor(), offset, tabstop, true);
+        auto cursor = context.buffer().offset_coord(sel.cursor(), offset, tabstop);
         sel.anchor() = mode == SelectMode::Extend ? sel.anchor() : cursor;
         sel.cursor() = cursor;
     }
@@ -2272,8 +2264,8 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
     { {'!'}, {"insert command output", insert_output<PasteMode::Insert>} },
     { {alt('!')}, {"append command output", insert_output<PasteMode::Append>} },
 
-    { {Key::Space}, {"remove all selections except main", keep_selection} },
-    { {alt(Key::Space)}, {"remove main selection", remove_selection} },
+    { {','}, {"remove all selections except main", keep_selection} },
+    { {alt(',')}, {"remove main selection", remove_selection} },
     { {';'}, {"reduce selections to their cursor", clear_selections} },
     { {alt(';')}, {"swap selections cursor and anchor", flip_selections} },
     { {alt(':')}, {"ensure selection cursor is after anchor", ensure_forward} },
@@ -2300,10 +2292,8 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
     { {alt('h')}, {"select to line begin", repeated<select<SelectMode::Replace, select_to_line_begin<false>>>} },
     { {alt('H')}, {"extend to line begin", repeated<select<SelectMode::Extend, select_to_line_begin<false>>>} },
 
-    { {'x'}, {"select line", repeated<select<SelectMode::Replace, select_line>>} },
-    { {'X'}, {"extend line", repeated<select<SelectMode::Extend, select_line>>} },
-    { {alt('x')}, {"extend selections to whole lines", select<SelectMode::Replace, select_lines>} },
-    { {alt('X')}, {"crop selections to whole lines", select<SelectMode::Replace, trim_partial_lines>} },
+    { {'x'}, {"extend selections to whole lines", select<SelectMode::Replace, select_lines>} },
+    { {alt('x')}, {"crop selections to whole lines", select<SelectMode::Replace, trim_partial_lines>} },
 
     { {'m'}, {"select to matching character", select<SelectMode::Replace, select_matching<true>>} },
     { {alt('m')}, {"backward select to matching character", select<SelectMode::Replace, select_matching<false>>} },
@@ -2362,8 +2352,6 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
     { {'q'}, {"replay recorded macro", replay_macro} },
     { {'Q'}, {"start or end macro recording", start_or_end_macro_recording} },
 
-    { {Key::Escape}, {"end macro recording", end_macro_recording} },
-
     { {'`'}, {"convert to lower case in selections", for_each_codepoint<to_lower>} },
     { {'~'}, {"convert to upper case in selections", for_each_codepoint<to_upper>} },
     { {alt('`')}, { "swap case in selections", for_each_codepoint<swap_case>} },
@@ -2379,7 +2367,7 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
     { {'C'}, {"copy selection on next lines", copy_selections_on_next_lines<Forward>} },
     { {alt('C')}, {"copy selection on previous lines", copy_selections_on_next_lines<Backward>} },
 
-    { {','}, {"user mappings", exec_user_mappings} },
+    { {Key::Space}, {"user mappings", exec_user_mappings} },
 
     { {Key::PageUp}, {  "scroll one page up", scroll<Backward>} },
     { {Key::PageDown}, {"scroll one page down", scroll<Forward>} },

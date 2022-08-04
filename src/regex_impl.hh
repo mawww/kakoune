@@ -113,8 +113,6 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
     };
     static_assert(sizeof(Instruction) == 8);
 
-    static constexpr uint32_t prioritize_parent{1 << 16};
-
     explicit operator bool() const { return not instructions.empty(); }
 
     struct NamedCapture
@@ -255,7 +253,7 @@ public:
             else if (start != config.end)
             {
                 const unsigned char c = forward ? *start : *utf8::previous(start, config.end);
-                 if (not start_desc->map[(c < StartDesc::count) ? c : StartDesc::other])
+                if (not start_desc->map[(c < StartDesc::count) ? c : StartDesc::other])
                     return false;
             }
         }

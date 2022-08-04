@@ -66,20 +66,20 @@ add-highlighter shared/hbs-file/html default-region ref html
 
 define-command -hidden hbs-trim-indent %{
     # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel x s \h+$ <ret> d }
 }
 
 define-command -hidden hbs-indent-on-char %[
     evaluate-commands -draft -itersel %[
         # de-indent after closing a yielded block tag
-        try %[ execute-keys -draft <space> <a-h> s ^\h+\{\{/([\w-.]+(?:/[\w-.]+)*)\}\}$ <ret> {c\{\{#<c-r>1,\{\{/<c-r>1\}\} <ret> s \A|.\z <ret> 1<a-&> ]
+        try %[ execute-keys -draft , <a-h> s ^\h+\{\{/([\w-.]+(?:/[\w-.]+)*)\}\}$ <ret> {c\{\{#<c-r>1,\{\{/<c-r>1\}\} <ret> s \A|.\z <ret> 1<a-&> ]
     ]
 ]
 
 define-command -hidden hbs-insert-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy '/' comment prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*\K/\h* <ret> y j p }
+        try %{ execute-keys -draft k x s ^\h*\K/\h* <ret> y j p }
     }
 }
 
@@ -90,7 +90,7 @@ define-command -hidden hbs-indent-on-new-line %{
         # filter previous line
         try %{ execute-keys -draft k : hbs-trim-indent <ret> }
         # indent after lines beginning with : or -
-        try %{ execute-keys -draft k <a-x> <a-k> ^\h*[:-] <ret> j <a-gt> }
+        try %{ execute-keys -draft k x <a-k> ^\h*[:-] <ret> j <a-gt> }
     }
 }
 

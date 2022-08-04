@@ -24,8 +24,11 @@ struct DisplayAtom : public UseMemoryDomain<MemoryDomain::Display>
 public:
     enum Type { Range, ReplacedRange, Text };
 
-    DisplayAtom(const Buffer& buffer, BufferCoord begin, BufferCoord end)
-        : m_type(Range), m_buffer(&buffer), m_range{begin, end} {}
+    DisplayAtom(const Buffer& buffer, BufferCoord begin, BufferCoord end, Face face = {})
+        : face(face), m_type(Range), m_buffer(&buffer), m_range{begin, end} {}
+
+    DisplayAtom(const Buffer& buffer, BufferCoord begin, BufferCoord end, String str, Face face = {})
+        : face(face), m_type(ReplacedRange), m_buffer(&buffer), m_range{begin, end}, m_text{std::move(str)} {}
 
     DisplayAtom(String str, Face face)
         : face(face), m_type(Text), m_text(std::move(str)) {}
@@ -139,11 +142,15 @@ public:
     }
 
     iterator erase(iterator beg, iterator end);
-    void push_back(DisplayAtom atom);
+    DisplayAtom& push_back(DisplayAtom atom);
 
-    // remove first_col from the begining of the line, and make sure
+    // remove front from the begining of the line, and make sure
     // the line is less that col_count character
-    bool trim(ColumnCount first_col, ColumnCount col_count);
+    bool trim(ColumnCount front, ColumnCount col_count);
+
+    // remove front from the begining of the line + first_col, and make sure
+    // the line is less that col_count character
+    bool trim_from(ColumnCount first_col, ColumnCount front, ColumnCount col_count);
 
     // Merge together consecutive atoms sharing the same display attributes
     void optimize();

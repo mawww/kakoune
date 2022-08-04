@@ -14,6 +14,7 @@ hook global BufCreate .*\.(lpr|lfm)$ %{
 
 hook global WinSetOption filetype=((free|object)?pascal|delphi) %[
     require-module pascal
+    hook window ModeChange pop:insert:.* -group pascal-trim-indent pascal-trim-indent
     hook window InsertChar \n -group pascal-indent pascal-indent-on-new-line
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window pascal-.+ }
     set-option window static_words %opt{static_words}
@@ -189,14 +190,22 @@ EOF
     done
 ¶
 
+define-command -hidden pascal-trim-indent %{
+    evaluate-commands -no-hooks -draft -itersel %{
+        execute-keys x
+        # remove trailing white spaces
+        try %{ execute-keys -draft s \h + $ <ret> d }
+    }
+}
+
 define-command -hidden pascal-indent-on-new-line %{
     evaluate-commands -no-hooks -draft -itersel %{
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # cleanup trailing whitespaces from previous line
-        try %{ execute-keys -draft k <a-x> s \h+$ <ret> d }
+        try %{ execute-keys -draft k x s \h+$ <ret> d }
         # indent after certain keywords
-        try %{ execute-keys -draft k<a-x><a-k>(?i)(asm|begin|const|else|except|exports|finalization|finally|label|of|otherwise|private|property|public|protected|published|record|repeat|resourcestring|threadvar|try|type|uses|var|:)\h*$<ret>j<a-gt> }
+        try %{ execute-keys -draft kx<a-k>(?i)(asm|begin|const|else|except|exports|finalization|finally|label|of|otherwise|private|property|public|protected|published|record|repeat|resourcestring|threadvar|try|type|uses|var|:)\h*$<ret>j<a-gt> }
     }
 }
 §

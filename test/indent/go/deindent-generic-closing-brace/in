@@ -47,3 +47,9 @@ a := []int{
     someFunction(%( )
     ),
 }
+
+14
+foobar(baz,%( )
+
+15
+foobar{ // some comment%( )

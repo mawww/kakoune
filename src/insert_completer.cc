@@ -322,7 +322,8 @@ InsertCompletion complete_option(const SelectionList& sels,
     candidates.reserve(matches.size());
     while (candidates.size() < max_count and first != last)
     {
-        if (candidates.empty() or candidates.back().completion != first->candidate())
+        if (candidates.empty() or candidates.back().completion != first->candidate()
+            or candidates.back().on_select != first->on_select)
             candidates.push_back({ first->candidate().str(), first->on_select.str(),
                                    std::move(first->menu_entry) });
         std::pop_heap(first, last--, greater);
@@ -414,6 +415,7 @@ InsertCompleter::~InsertCompleter()
 
 void InsertCompleter::select(int index, bool relative, Vector<Key>& keystrokes)
 {
+    m_enabled = true;
     if (not setup_ifn())
         return;
 
@@ -461,7 +463,7 @@ void InsertCompleter::select(int index, bool relative, Vector<Key>& keystrokes)
 
 void InsertCompleter::update(bool allow_implicit)
 {
-    m_enabled = allow_implicit or m_explicit_completer;
+    m_enabled = allow_implicit;
     if (m_explicit_completer and try_complete(m_explicit_completer))
         return;
 
@@ -472,29 +474,40 @@ void InsertCompleter::update(bool allow_implicit)
 auto& get_first(BufferRange& range) { return range.begin; }
 auto& get_last(BufferRange& range) { return range.end; }
 
+bool InsertCompleter::has_candidate_selected() const
+{
+    return m_current_candidate >= 0 and m_current_candidate < m_completions.candidates.size() - 1;
+}
+
+void InsertCompleter::try_accept()
+{
+    if (m_completions.is_valid() and m_context.has_client() and has_candidate_selected())
+        reset();
+}
+
 void InsertCompleter::reset()
 {
-    if (m_explicit_completer or m_completions.is_valid())
-    {
-        String hook_param;
-        if (m_context.has_client() and m_current_candidate >= 0 and m_current_candidate < m_completions.candidates.size() - 1)
-        {
-            auto& buffer = m_context.buffer();
-            update_ranges(buffer, m_completions.timestamp, m_inserted_ranges);
-            hook_param = join(m_inserted_ranges | filter([](auto&& r) { return not r.empty(); }) | transform([&](auto&& r) {
-                    return selection_to_string(ColumnType::Byte, buffer, {r.begin, buffer.char_prev(r.end)});
-                }), ' ');
-        }
+    if (not m_explicit_completer and not m_completions.is_valid())
+        return;
 
-        m_explicit_completer = nullptr;
-        m_completions = InsertCompletion{};
-        m_inserted_ranges.clear();
-        if (m_context.has_client())
-        {
-            m_context.client().menu_hide();
-            m_context.client().info_hide();
-            m_context.hooks().run_hook(Hook::InsertCompletionHide, hook_param, m_context);
-        }
+    String hook_param;
+    if (m_context.has_client() and has_candidate_selected())
+    {
+        auto& buffer = m_context.buffer();
+        update_ranges(buffer, m_completions.timestamp, m_inserted_ranges);
+        hook_param = join(m_inserted_ranges | filter([](auto&& r) { return not r.empty(); }) | transform([&](auto&& r) {
+                return selection_to_string(ColumnType::Byte, buffer, {r.begin, buffer.char_prev(r.end)});
+            }), ' ');
+    }
+
+    m_explicit_completer = nullptr;
+    m_completions = InsertCompletion{};
+    m_inserted_ranges.clear();
+    if (m_context.has_client())
+    {
+        m_context.client().menu_hide();
+        m_context.client().info_hide();
+        m_context.hooks().run_hook(Hook::InsertCompletionHide, hook_param, m_context);
     }
 }
 

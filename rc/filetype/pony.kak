@@ -19,7 +19,7 @@ hook global WinSetOption filetype=pony %{
     hook window InsertChar \n -group pony-insert pony-insert-on-new-line
     hook window InsertChar \n -group pony-indent pony-indent-on-new-line
     # cleanup trailing whitespaces on current line insert end
-    hook window ModeChange pop:insert:.* -group pony-trim-indent %{ try %{ execute-keys -draft <semicolon> <a-x> s ^\h+$ <ret> d } }
+    hook window ModeChange pop:insert:.* -group pony-trim-indent %{ try %{ execute-keys -draft <semicolon> x s ^\h+$ <ret> d } }
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window pony-.+ }
 }
@@ -91,13 +91,13 @@ define-command -hidden pony-insert-on-new-line %{
 define-command -hidden pony-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
         # preserve previous line indent
-        try %{ execute-keys -draft <space> K <a-&> }
+        try %{ execute-keys -draft , K <a-&> }
         # cleanup trailing whitespaces from previous line
-        try %{ execute-keys -draft k <a-x> s \h+$ <ret> d }
+        try %{ execute-keys -draft k x s \h+$ <ret> d }
         # indent after line ending with :
-        try %{ execute-keys -draft <space> k x <a-k> (\b(?:do|try|then|else)|:|=>)$ <ret> j <a-gt> }
+        try %{ execute-keys -draft , k x <a-k> (\b(?:do|try|then|else)|:|=>)$ <ret> j <a-gt> }
         # else, end are always de-indented
-        try %{ execute-keys -draft <space> k x <a-k> \b(else|end):$ <ret> k x s ^\h* <ret> y j x <a-k> ^<c-r>" <ret> J <a-lt> }
+        try %{ execute-keys -draft , k x <a-k> \b(else|end):$ <ret> k x s ^\h* <ret> y j x <a-k> ^<c-r>" <ret> J <a-lt> }
     }
 }
 

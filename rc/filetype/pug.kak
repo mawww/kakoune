@@ -18,7 +18,7 @@ hook global BufCreate .*[.](pug|jade) %{
 hook global WinSetOption filetype=pug %{
     require-module pug
 
-    hook window ModeChange pop:insert:.* -group pug-trim-indent  pug-trim-indent
+    hook window ModeChange pop:insert:.* -group pug-trim-indent pug-trim-indent
     hook window InsertChar \n -group pug-indent pug-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window pug-.+ }
@@ -62,7 +62,7 @@ add-highlighter shared/pug/code/            regex   ((?:\.[A-Za-z][A-Za-z0-9_-]*
 
 define-command -hidden pug-trim-indent %{
     # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel x s \h+$ <ret> d }
 }
 
 define-command -hidden pug-indent-on-new-line %{
@@ -72,9 +72,9 @@ define-command -hidden pug-indent-on-new-line %{
         # filter previous line
         try %{ execute-keys -draft k : pug-trim-indent <ret> }
         # copy '//', '|', '-' or '(!)=' prefix and following whitespace
-        try %{ execute-keys -draft k <a-x> s ^\h*\K[/|!=-]{1,2}\h* <ret> y gh j P }
+        try %{ execute-keys -draft k x s ^\h*\K[/|!=-]{1,2}\h* <ret> y gh j P }
         # indent unless we copied something above
-        try %{ execute-keys -draft <a-gt> <space> b s \S <ret> g l <a-lt> }
+        try %{ execute-keys -draft <a-gt> , b s \S <ret> g l <a-lt> }
     }
 }
 

@@ -15,6 +15,7 @@ hook global WinSetOption filetype=fsharp %{
     require-module fsharp
 
     # indent on newline
+    hook window ModeChange pop:insert:.* -group fsharp-trim-indent fsharp-trim-indent
     hook window InsertChar \n -group fsharp-insert fsharp-insert-on-new-line
     hook window InsertChar \n -group fsharp-indent fsharp-indent-on-new-line
 
@@ -125,10 +126,18 @@ add-highlighter shared/fsharp/code/ regex "\B(\(\))\B" 0:value
 # Commands
 # ‾‾‾‾‾‾‾‾
 
+define-command -hidden fsharp-trim-indent %{
+    evaluate-commands -no-hooks -draft -itersel %{
+        execute-keys x
+        # remove trailing white spaces
+        try %{ execute-keys -draft s \h + $ <ret> d }
+    }
+}
+
 define-command -hidden fsharp-insert-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy // comments prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*//\h* <ret> y jgh P }
+        try %{ execute-keys -draft k x s ^\h*//\h* <ret> y jgh P }
     }
 }
 
@@ -137,11 +146,11 @@ define-command -hidden fsharp-indent-on-new-line %{
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # cleanup trailing whitespaces from previous line
-        try %{ execute-keys -draft k <a-x> s \h+$ <ret> d }
+        try %{ execute-keys -draft k x s \h+$ <ret> d }
         # indent after line ending with =
-        try %{ execute-keys -draft <space> k <a-x> <a-k> =$ <ret> j <a-gt> }
+        try %{ execute-keys -draft , k x <a-k> =$ <ret> j <a-gt> }
         # indent after line ending with "do"
-        try %{ execute-keys -draft <space> k <a-x> <a-k> \bdo$ <ret> j <a-gt> }
+        try %{ execute-keys -draft , k x <a-k> \bdo$ <ret> j <a-gt> }
     }
 }
 

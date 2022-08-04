@@ -30,28 +30,33 @@ define-command -hidden -params 2.. tmux-terminal-impl %{
     }
 }
 
-define-command tmux-terminal-vertical -params 1.. -shell-completion -docstring '
+define-command tmux-terminal-vertical -params 1.. -docstring '
 tmux-terminal-vertical <program> [<arguments>]: create a new terminal as a tmux pane
 The current pane is split into two, top and bottom
 The program passed as argument will be executed in the new terminal' \
 %{
     tmux-terminal-impl 'split-window -v' %arg{@}
 }
-define-command tmux-terminal-horizontal -params 1.. -shell-completion -docstring '
+complete-command tmux-terminal-vertical shell
+
+define-command tmux-terminal-horizontal -params 1.. -docstring '
 tmux-terminal-horizontal <program> [<arguments>]: create a new terminal as a tmux pane
 The current pane is split into two, left and right
 The program passed as argument will be executed in the new terminal' \
 %{
     tmux-terminal-impl 'split-window -h' %arg{@}
 }
-define-command tmux-terminal-window -params 1.. -shell-completion -docstring '
+complete-command tmux-terminal-horizontal shell
+
+define-command tmux-terminal-window -params 1.. -docstring '
 tmux-terminal-window <program> [<arguments>] [<arguments>]: create a new terminal as a tmux window
 The program passed as argument will be executed in the new terminal' \
 %{
     tmux-terminal-impl 'new-window' %arg{@}
 }
+complete-command tmux-terminal-window shell
 
-define-command tmux-focus -params ..1 -client-completion -docstring '
+define-command tmux-focus -params ..1 -docstring '
 tmux-focus [<client>]: focus the given client
 If no client is passed then the current one is used' \
 %{
@@ -66,6 +71,7 @@ If no client is passed then the current one is used' \
         fi
     }
 }
+complete-command -menu tmux-focus client
 
 ## The default behaviour for the `new` command is to open an horizontal pane in a tmux session
 alias global focus tmux-focus

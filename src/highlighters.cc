@@ -604,7 +604,7 @@ std::unique_ptr<Highlighter> create_line_highlighter(HighlighterParameters param
         }
         const ColumnCount remaining = context.context.window().dimensions().column - column;
         if (remaining > 0)
-            it->push_back({ String{' ', remaining}, face });
+            it->push_back({String{' ', remaining}, face});
     };
 
     return make_highlighter(std::move(func));
@@ -638,17 +638,15 @@ std::unique_ptr<Highlighter> create_column_highlighter(HighlighterParameters par
             return;
 
         const auto face = context.context.faces()[facespec];
-        const auto win_column = context.setup.window_pos.column;
-        const auto target_col = column - win_column;
-        if (target_col < 0 or target_col >= context.setup.window_range.column)
+        if (column < context.setup.first_column or column >= context.setup.first_column + context.context.window().dimensions().column)
             return;
 
+        column += context.setup.widget_columns;
         for (auto& line : display_buffer.lines())
         {
-            auto remaining_col = target_col;
+            auto remaining_col = column;
             bool found = false;
-            auto first_buf = find_if(line, [](auto& atom) { return atom.has_buffer_range(); });
-            for (auto atom_it = first_buf; atom_it != line.end(); ++atom_it)
+            for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
             {
                 const auto atom_len = atom_it->length();
                 if (remaining_col < atom_len)
@@ -667,7 +665,7 @@ std::unique_ptr<Highlighter> create_column_highlighter(HighlighterParameters par
                 continue;
 
             if (remaining_col > 0)
-                line.push_back({String{' ', remaining_col}, {}});
+                line.push_back({String{' ', remaining_col}, Face{}});
             line.push_back({" ", face});
         }
     };
@@ -702,7 +700,7 @@ struct WrapHighlighter : Highlighter
         if (contains(context.disabled_ids, ms_id))
             return;
 
-        const ColumnCount wrap_column = std::min(m_max_width, context.setup.window_range.column);
+        const ColumnCount wrap_column = std::min(m_max_width, context.context.window().dimensions().column - context.setup.widget_columns);
         if (wrap_column <= 0)
             return;
 
@@ -778,7 +776,7 @@ struct WrapHighlighter : Highlighter
         if (contains(context.disabled_ids, ms_id))
             return;
 
-        const ColumnCount wrap_column = std::min(setup.window_range.column, m_max_width);
+        const ColumnCount wrap_column = std::min(m_max_width, context.context.window().dimensions().column - setup.widget_columns);
         if (wrap_column <= 0)
             return;
 
@@ -804,16 +802,15 @@ struct WrapHighlighter : Highlighter
         const auto win_height = context.context.window().dimensions().line;
 
         // Disable horizontal scrolling when using a WrapHighlighter
-        setup.window_pos.column = 0;
-        setup.window_range.line = 0;
+        setup.first_column = 0;
+        setup.line_count = 0;
         setup.scroll_offset.column = 0;
-        setup.full_lines = true;
 
         const ColumnCount marker_len = zero_if_greater(m_marker.column_length(), wrap_column);
 
-        for (auto buf_line = setup.window_pos.line, win_line = 0_line;
+        for (auto buf_line = setup.first_line, win_line = 0_line;
              win_line < win_height or buf_line <= cursor.line;
-             ++buf_line, ++setup.window_range.line)
+             ++buf_line, ++setup.line_count)
         {
             if (buf_line >= buffer.line_count())
                 break;
@@ -840,18 +837,17 @@ struct WrapHighlighter : Highlighter
                     }
                     pos = next_pos;
                 }
-                kak_assert(setup.cursor_pos.column >= 0 and setup.cursor_pos.column < setup.window_range.column);
             }
             const auto wrap_count = line_wrap_count(buf_line, prefix_len);
             win_line += wrap_count + 1;
 
             // scroll window to keep cursor visible, and update range as lines gets removed
-            while (buf_line >= cursor.line and setup.window_pos.line < cursor.line and
+            while (buf_line >= cursor.line and setup.first_line < cursor.line and
                    setup.cursor_pos.line + setup.scroll_offset.line >= win_height)
             {
-                auto remove_count = 1 + line_wrap_count(setup.window_pos.line, indent);
-                ++setup.window_pos.line;
-                --setup.window_range.line;
+                auto remove_count = 1 + line_wrap_count(setup.first_line, indent);
+                ++setup.first_line;
+                --setup.line_count;
                 setup.cursor_pos.line -= std::min(win_height, remove_count);
                 win_line -= remove_count;
                 kak_assert(setup.cursor_pos.line >= 0);
@@ -977,7 +973,6 @@ struct TabulationHighlighter : Highlighter
     {
         const ColumnCount tabstop = context.context.options()["tabstop"].get<int>();
         const auto& buffer = context.context.buffer();
-        auto win_column = context.setup.window_pos.column;
         for (auto& line : display_buffer.lines())
         {
             for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
@@ -997,8 +992,7 @@ struct TabulationHighlighter : Highlighter
                             atom_it = line.split(atom_it, (it+1).coord());
 
                         const ColumnCount column = get_column(buffer, tabstop, it.coord());
-                        const ColumnCount count = tabstop - (column % tabstop) -
-                                                  std::max(win_column - column, 0_col);
+                        const ColumnCount count = tabstop - (column % tabstop);
                         atom_it->replace(String{' ', count});
                         break;
                     }
@@ -1018,10 +1012,10 @@ struct TabulationHighlighter : Highlighter
         const ColumnCount tabstop = context.context.options()["tabstop"].get<int>();
         const ColumnCount column = get_column(buffer, tabstop, cursor);
         const ColumnCount width = tabstop - (column % tabstop);
-        const ColumnCount win_end = setup.window_pos.column + setup.window_range.column;
+        const ColumnCount win_end = setup.first_column + context.context.window().dimensions().column - setup.widget_columns;
         const ColumnCount offset = std::max(column + width - win_end, 0_col);
 
-        setup.window_pos.column += offset;
+        setup.first_column += offset;
         setup.cursor_pos.column -= offset;
     }
 };
@@ -1067,7 +1061,6 @@ private:
         const int tabstop = context.context.options()["tabstop"].get<int>();
         auto whitespaceface = context.context.faces()["Whitespace"];
         const auto& buffer = context.context.buffer();
-        auto win_column = context.setup.window_pos.column;
         for (auto& line : display_buffer.lines())
         {
             for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
@@ -1091,8 +1084,7 @@ private:
                         if (cp == '\t')
                         {
                             const ColumnCount column = get_column(buffer, tabstop, coord);
-                            const ColumnCount count = tabstop - (column % tabstop) -
-                                                      std::max(win_column - column, 0_col);
+                            const ColumnCount count = tabstop - (column % tabstop);
                             atom_it->replace(m_tab + String(m_tabpad[(CharCount)0], count - m_tab.column_length()));
                         }
                         else if (cp == ' ')
@@ -1201,7 +1193,7 @@ private:
             return;
 
         ColumnCount width = compute_digit_count(context.context) + m_separator.column_length();
-        setup.window_range.column -= std::min(width, setup.window_range.column);
+        setup.widget_columns += width;
     }
 
     void fill_unique_ids(Vector<StringView>& unique_ids) const override
@@ -1499,7 +1491,7 @@ private:
             return;
         }
 
-        setup.window_range.column -= std::min(width, setup.window_range.column);
+        setup.widget_columns += width;
     }
 
     String m_option_name;
@@ -1698,6 +1690,7 @@ private:
         auto& buffer = context.context.buffer();
         auto& sels = context.context.selections();
         auto& range_and_faces = get_option(context);
+        const int tabstop = context.context.options()["tabstop"].get<int>();
         update_ranges(buffer, range_and_faces.prefix, range_and_faces.list);
 
         for (auto& [range, spec] : range_and_faces.list)
@@ -1705,15 +1698,27 @@ private:
             if (!is_valid(buffer, range.first) or (!is_empty(range) and !is_valid(buffer, range.last)) or !is_fully_selected(sels, range))
                 continue;
 
-            if (range.first.line < setup.window_pos.line and range.last.line >= setup.window_pos.line)
-                setup.window_pos.line = range.first.line;
+            auto last = is_empty(range) ? range.first : range.last;
+            if (range.first.line < setup.first_line and last.line >= setup.first_line)
+                setup.first_line = range.first.line;
 
-            if (range.last.line >= setup.window_pos.line and
-                range.first.line <= setup.window_pos.line + setup.window_range.line and
-                range.first.line != range.last.line)
+            const auto& cursor = context.context.selections().main().cursor();
+            if (cursor.line == last.line and cursor.column >= last.column)
             {
-                auto removed_count = range.last.line - range.first.line;
-                setup.window_range.line += removed_count;
+                auto first_column = get_column(buffer, tabstop, range.first);
+                auto last_column = get_column(buffer, tabstop, last);
+                auto replacement = parse_display_line(spec, context.context.faces());
+                auto cursor_move = replacement.length() - ((range.first.line == last.line) ? last_column - first_column : last_column);
+                setup.cursor_pos.line -= last.line - range.first.line;
+                setup.cursor_pos.column += cursor_move;
+            }
+
+            if (last.line >= setup.first_line and
+                range.first.line <= setup.first_line + setup.line_count and
+                range.first.line != last.line)
+            {
+                auto removed_count = last.line - range.first.line;
+                setup.line_count += removed_count;
             }
         }
     }
@@ -2084,7 +2089,8 @@ public:
         }
 
         auto container = m_regions | transform(&decltype(m_regions)::Item::key);
-        return { 0, 0, complete(path, cursor_pos, container) };
+        auto completions_flags = group ? Completions::Flags::None : Completions::Flags::Menu;
+        return { 0, 0, complete(path, cursor_pos, container), completions_flags };
     }
 
     static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)

@@ -45,6 +45,10 @@ hook global BufSetOption filetype=coffee %{
     set-option buffer comment_block_end '###'
 }
 
+hook global BufSetOption filetype=conf %{
+    set-option buffer comment_line '#'
+}
+
 hook global BufSetOption filetype=css %{
     set-option buffer comment_line ''
     set-option buffer comment_block_begin '/*'
@@ -114,7 +118,7 @@ hook global BufSetOption filetype=perl %{
     set-option buffer comment_block_end ']'
 }
 
-hook global BufSetOption filetype=(pug|zig|cue) %{
+hook global BufSetOption filetype=(pug|zig|cue|hare) %{
     set-option buffer comment_line '//'
 }
 
@@ -158,7 +162,7 @@ define-command comment-block -docstring '(un)comment selections using block comm
         } catch %{
             # Comment the selection
             set-register '"' "%opt{comment_block_begin}"
-            execute-keys P
+            execute-keys -draft P
             set-register '"' "%opt{comment_block_end}"
             execute-keys p
         }

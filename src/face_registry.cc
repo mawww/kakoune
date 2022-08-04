@@ -25,6 +25,9 @@ static FaceRegistry::FaceSpec parse_face(StringView facedesc)
         throw runtime_error(invalid_face_error.str());
 
     auto colors_end = std::min(attr_it, base_it);
+    if (underline_it != facedesc.end()
+        and underline_it > colors_end)
+        throw runtime_error(invalid_face_error.str());
 
     auto parse_color = [](StringView spec) {
         return spec.empty() ? Color::Default : str_to_color(spec);

@@ -162,13 +162,9 @@ the Shift modifier and moving will extend each selection instead.
     characters, see the `matching_pairs` option in <<options#,`:doc options`>>
 
 *x*::
-    select line on which the end of each selection lies (or next line when end lies
-    on an end-of-line)
-
-*<a-x>*::
     expand selections to contain full lines (including end-of-lines)
 
-*<a-X>*::
+*<a-x>*::
     trim selections to only contain full lines (not including last
     end-of-line)
 
@@ -363,7 +359,7 @@ Yanking (copying) and pasting use the *"* register by default (See <<registers#,
 == Changes through external programs
 
 Shell expansions are available, (See <<expansions#shell-expansions,`:doc expansions shell-expansions`>>)
-The default command comes from the *|* register by default (See <<registers#,`:doc registers`>>)
+The default command comes from the *|* register (See <<registers#,`:doc registers`>>)
 
 *|*::
     pipe each selection through the given external filter program and
@@ -374,10 +370,10 @@ The default command comes from the *|* register by default (See <<registers#,`:d
     ignore its output.
 
 *!*::
-    insert command output before each selection.
+    insert and select command output before each selection.
 
 *<a-!>*::
-    append command output after each selection.
+    append and select command output after each selection.
 
 == Searching
 
@@ -579,10 +575,10 @@ to skim through the jump list using:
 *<a-C>*::
     copy the main selection to the previous line
 
-*<space>*::
+*,*::
     clear selections to only keep the main one
 
-*<a-space>*::
+*<a-,>*::
     clear the main selection
 
 *<a-k>*::
@@ -716,7 +712,7 @@ When pressing `:` in normal mode, Kakoune will open a prompt to enter
 a command.  The executed command line is stored in the *:* register
 (See <<registers#,`:doc registers`>>).
 
-During edition, a transient *clipboard* is available, its content is
+During editing, a transient *clipboard* is available, its content is
 empty at the start of prompt edition, and is not preserved afterwards.
 
 The following keys are recognized by this mode to help with editing
@@ -726,7 +722,7 @@ The following keys are recognized by this mode to help with editing
     validate prompt
 
 *<esc>*::
-    abandon without
+    abandon without validating prompt
 
 *<left>*, *<c-b>*::
     move cursor to previous character
@@ -798,7 +794,9 @@ The following keys are recognized by this mode to help with editing
     select previous completion candidate
 
 *<c-r>*::
-    insert then content of the register given by next key
+    insert then content of the register given by next key, if next key
+    has the Alt modifier, it will insert all values in the register
+    joined with spaces, else it will insert the main one
 
 *<c-v>*::
     insert next keystroke without interpreting it
@@ -817,13 +815,13 @@ The following keys are recognized by this mode to help with editing
 
 *<a-!>*::
     expand the typed expansions in currently entered text
-    (See <<expansions#typed-expansions,`:doc expansions typed-expansions`>>)
+    (See <<expansions#,`:doc expansions`>>)
 
 *<a-;>*, *<a-semicolon>*::
     escape to normal mode for a single command
 
 == User commands
 
-*,*::
+*<space>*::
     enter default `user mode` to access custom commands
     (See <<modes#user-mode,`:doc modes user-mode`>>)

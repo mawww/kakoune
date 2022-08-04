@@ -319,6 +319,8 @@ public:
 
                 command->func(context(), params);
             }
+            else
+                m_params = { 0, 0 };
         }
 
         context().hooks().run_hook(Hook::NormalKey, key_to_str(key), context());
@@ -467,7 +469,7 @@ public:
             m_cursor_pos = 0;
         else if (key == Key::End or key == ctrl('e'))
             m_cursor_pos = m_line.char_length();
-        else if (key == Key::Backspace or key == ctrl('h'))
+        else if (key == Key::Backspace or key == shift(Key::Backspace) or key == ctrl('h'))
         {
             if (m_cursor_pos != 0)
             {
@@ -752,7 +754,7 @@ public:
           m_empty_text{std::move(emptystr)},
           m_line_editor{context().faces()}, m_flags(flags),
           m_history{RegisterManager::instance()[history_register]},
-          m_current_history{m_history.get(context()).size()},
+          m_current_history{-1},
           m_auto_complete{context().options()["autocomplete"].get<AutoComplete>() & AutoComplete::Prompt},
           m_idle_timer{TimePoint::max(), context().flags() & Context::Flags::Draft ?
                            Timer::Callback{} : [this](Timer&) {
@@ -786,7 +788,7 @@ public:
 
         if (key == Key::Return)
         {
-            if ((m_completions.flags & Completions::Flags::Menu) and can_auto_insert_completion())
+            if (can_auto_insert_completion())
             {
                 const String& completion = m_completions.candidates.front();
                 m_line_editor.insert_from(line.char_count_to(m_completions.start),
@@ -808,7 +810,7 @@ public:
             return;
         }
         else if (key == Key::Escape or key == ctrl('c') or
-                 ((key == Key::Backspace or key == ctrl('h')) and line.empty()))
+                 ((key == Key::Backspace or key == shift(Key::Backspace) or key == ctrl('h')) and line.empty()))
         {
             history_push(line);
             context().print_status(DisplayLine{});
@@ -826,11 +828,16 @@ public:
         {
             on_next_key_with_autoinfo(context(), "register", KeymapMode::None,
                 [this](Key key, Context&) {
+                    const bool joined = (bool)(key.modifiers & Key::Modifiers::Alt);
+                    key.modifiers &= ~Key::Modifiers::Alt;
+
                     auto cp = key.codepoint();
                     if (not cp or key == Key::Escape)
                         return;
-                    StringView reg = context().main_sel_register_value(String{*cp});
-                    m_line_editor.insert(reg);
+
+                    m_line_editor.insert(
+                        joined ? join(RegisterManager::instance()[*cp].get(context()), ' ', false)
+                               : context().main_sel_register_value(String{*cp}));
 
                     display();
                     m_line_changed = true;
@@ -856,48 +863,28 @@ public:
         }
         else if (key == Key::Up or key == ctrl('p'))
         {
-            if (m_current_history != 0)
+            auto history = m_history.get(context());
+            m_current_history = std::min(static_cast<int>(history.size()) - 1, m_current_history);
+            if (m_current_history == -1)
+               m_prefix = line;
+            auto next = find_if(history.subrange(m_current_history + 1), [this](StringView s) { return prefix_match(s, m_prefix); });
+            if (next != history.end())
             {
-                auto history = m_history.get(context());
-                // The history register might have been mutated in the mean time
-                m_current_history = std::min(history.size(), m_current_history);
-                if (m_current_history == history.size())
-                   m_prefix = line;
-                auto index = m_current_history;
-                // search for the previous history entry matching typed prefix
-                do
-                {
-                    --index;
-                    if (prefix_match(history[index], m_prefix))
-                    {
-                        m_current_history = index;
-                        m_line_editor.reset(history[index], m_empty_text);
-                        break;
-                    }
-                } while (index != 0);
-
-                clear_completions();
-                m_refresh_completion_pending = true;
+                m_current_history = next - history.begin();
+                m_line_editor.reset(*next, m_empty_text);
             }
+            clear_completions();
+            m_refresh_completion_pending = true;
         }
         else if (key == Key::Down or key == ctrl('n')) // next
         {
             auto history = m_history.get(context());
-            // The history register might have been mutated in the mean time
-            m_current_history = std::min(history.size(), m_current_history);
-            if (m_current_history < history.size())
+            m_current_history = std::min(static_cast<int>(history.size()) - 1, m_current_history);
+            if (m_current_history >= 0)
             {
-                // search for the next history entry matching typed prefix
-                ++m_current_history;
-                while (m_current_history != history.size() and
-                       not prefix_match(history[m_current_history], m_prefix))
-                    ++m_current_history;
-
-                if (m_current_history != history.size())
-                    m_line_editor.reset(history[m_current_history], m_empty_text);
-                else
-                    m_line_editor.reset(m_prefix, m_empty_text);
-
+                auto next = find_if(history.subrange(0, m_current_history) | reverse(), [this](StringView s) { return prefix_match(s, m_prefix); });
+                m_current_history = history.rend() - next - 1;
+                m_line_editor.reset(next != history.rend() ? *next : m_prefix, m_empty_text);
                 clear_completions();
                 m_refresh_completion_pending = true;
             }
@@ -1003,7 +990,7 @@ public:
         }
         else
         {
-            if (key == Key::Space and
+            if ((key == Key::Space or key == shift(Key::Space)) and
                 not (m_completions.flags & Completions::Flags::Quoted) and // if token is quoted, this space does not end it
                 can_auto_insert_completion())
                 m_line_editor.insert_from(line.char_count_to(m_completions.start),
@@ -1157,7 +1144,7 @@ private:
     bool           m_line_changed = false;
     PromptFlags    m_flags;
     Register&      m_history;
-    size_t         m_current_history;
+    int            m_current_history;
     bool           m_auto_complete;
     bool           m_refresh_completion_pending = true;
     Timer          m_idle_timer;
@@ -1276,7 +1263,7 @@ public:
             m_completer.reset();
             pop_mode();
         }
-        else if (key == Key::Backspace)
+        else if (key == Key::Backspace or key == shift(Key::Backspace))
         {
             Vector<Selection> sels;
             for (auto& sel : context().selections())
@@ -1460,7 +1447,7 @@ private:
         const ColumnCount tabstop = context().options()["tabstop"].get<int>();
         for (auto& sel : selections)
         {
-            auto cursor = context().buffer().offset_coord(sel.cursor(), offset, tabstop, false);
+            auto cursor = context().buffer().offset_coord(sel.cursor(), offset, tabstop);
             sel.anchor() = sel.cursor() = cursor;
         }
         selections.sort_and_merge_overlapping();
@@ -1468,6 +1455,7 @@ private:
 
     void insert(ConstArrayView<String> strings)
     {
+        m_completer.try_accept();
         context().selections().for_each([strings, &buffer=context().buffer()]
                                         (size_t index, Selection& sel) {
             Kakoune::insert(buffer, sel, sel.cursor(), strings[std::min(strings.size()-1, index)]);
@@ -1477,10 +1465,7 @@ private:
     void insert(Codepoint key)
     {
         String str{key};
-        context().selections().for_each([&buffer=context().buffer(), &str]
-                                        (size_t index, Selection& sel) {
-            Kakoune::insert(buffer, sel, sel.cursor(), str);
-        });
+        insert(str);
         context().hooks().run_hook(Hook::InsertChar, str, context());
     }
 
@@ -1694,18 +1679,11 @@ InputHandler::ScopedForceNormal::~ScopedForceNormal()
     if (not m_mode)
         return;
 
-    kak_assert(m_handler.m_mode_stack.size() > 1);
-
     if (m_mode == m_handler.m_mode_stack.back().get())
         m_handler.pop_mode(m_mode);
-    else
-    {
-        auto it = find_if(m_handler.m_mode_stack,
-                          [this](const RefPtr<InputMode>& m)
-                          { return m.get() == m_mode; });
-        kak_assert(it != m_handler.m_mode_stack.end());
+    else if (auto it = find(m_handler.m_mode_stack, m_mode);
+             it != m_handler.m_mode_stack.end())
         m_handler.m_mode_stack.erase(it);
-    }
 }
 
 static bool is_valid(Key key)

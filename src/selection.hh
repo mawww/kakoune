@@ -11,6 +11,7 @@ namespace Kakoune
 using CaptureList = Vector<String, MemoryDomain::Selections>;
 
 constexpr ColumnCount max_column{std::numeric_limits<int>::max()};
+constexpr ColumnCount max_non_eol_column{max_column-1};
 
 // A selection is a Selection, associated with a CaptureList
 struct Selection
@@ -75,7 +76,7 @@ void merge_overlapping_selections(Vector<Selection>& selections, size_t& main);
 void clamp_selections(Vector<Selection>& sel, const Buffer& buffer);
 
 void replace(Buffer& buffer, Selection& sel, StringView content);
-void insert(Buffer& buffer, Selection& sel, BufferCoord pos, StringView content);
+BufferRange insert(Buffer& buffer, Selection& sel, BufferCoord pos, StringView content);
 
 struct SelectionList
 {

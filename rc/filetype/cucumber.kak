@@ -14,7 +14,7 @@ hook global BufCreate .*[.](feature|story) %{
 hook global WinSetOption filetype=cucumber %{
     require-module cucumber
 
-    hook window ModeChange pop:insert:.* -group cucumber-trim-indent  cucumber-trim-indent
+    hook window ModeChange pop:insert:.* -group cucumber-trim-indent cucumber-trim-indent
     hook window InsertChar \n -group cucumber-insert cucumber-insert-on-new-line
     hook window InsertChar \n -group cucumber-indent cucumber-indent-on-new-line
 
@@ -78,13 +78,13 @@ add-highlighter shared/cucumber/code/ regex \b(Feature|Business\h+Need|Ability|B
 
 define-command -hidden cucumber-trim-indent %{
     # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel x s \h+$ <ret> d }
 }
 
 define-command -hidden cucumber-insert-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy '#' comment prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
+        try %{ execute-keys -draft k x s ^\h*\K#\h* <ret> y gh j P }
     }
 }
 
@@ -95,7 +95,7 @@ define-command -hidden cucumber-indent-on-new-line %{
         # filter previous line
         try %{ execute-keys -draft k : cucumber-trim-indent <ret> }
         # indent after lines containing :
-        try %{ execute-keys -draft <space> k x <a-k> : <ret> j <a-gt> }
+        try %{ execute-keys -draft , k x <a-k> : <ret> j <a-gt> }
     }
 }
 

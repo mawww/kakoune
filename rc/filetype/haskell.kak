@@ -15,7 +15,7 @@ hook global WinSetOption filetype=haskell %{
     require-module haskell
 
     set-option buffer extra_word_chars '_' "'"
-    hook window ModeChange pop:insert:.* -group haskell-trim-indent  haskell-trim-indent
+    hook window ModeChange pop:insert:.* -group haskell-trim-indent haskell-trim-indent
     hook window InsertChar \n -group haskell-insert haskell-insert-on-new-line
     hook window InsertChar \n -group haskell-indent haskell-indent-on-new-line
 
@@ -39,7 +39,7 @@ add-highlighter shared/haskell/string       region (?<!'\\)(?<!')"              
 add-highlighter shared/haskell/macro        region ^\K#                            (?<!\\)\n        fill meta
 add-highlighter shared/haskell/pragma       region -recurse \{- \{-#               '#-\}'           fill meta
 add-highlighter shared/haskell/comment      region -recurse \{- \{-                  -\}            fill comment
-add-highlighter shared/haskell/line_comment region --(?:[^!#$%&*+./<>?@\\\^|~=]|$) $                fill comment
+add-highlighter shared/haskell/line_comment region --(?![!#$%&*+./<>?@\\\^|~=]) $                   fill comment
 add-highlighter shared/haskell/quasiquote   region \[\b[_a-z]['\w]*#?\| \|\]                        regex \[\b[_a-z]['\w]*#?\|(.*?)\|\] 1:string
 
 add-highlighter shared/haskell/code/ regex (?<!')\b0x+[A-Fa-f0-9]+ 0:value
@@ -101,13 +101,13 @@ add-highlighter shared/haskell/code/ regex \bderiving\b\s+(?:[A-Z]['\w]+|\([',\w
 
 define-command -hidden haskell-trim-indent %{
     # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel x s \h+$ <ret> d }
 }
 
 define-command -hidden haskell-insert-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy -- comments prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P }
+        try %{ execute-keys -draft k x s ^\h*\K--\h* <ret> y gh j P }
     }
 }
 

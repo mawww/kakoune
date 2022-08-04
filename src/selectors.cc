@@ -173,19 +173,6 @@ select_word(const Context& context, const Selection& selection,
 template Optional<Selection> select_word<WordType::Word>(const Context&, const Selection&, int, ObjectFlags);
 template Optional<Selection> select_word<WordType::WORD>(const Context&, const Selection&, int, ObjectFlags);
 
-Optional<Selection>
-select_line(const Context& context, const Selection& selection)
-{
-    auto& buffer = context.buffer();
-    auto line = selection.cursor().line;
-    // Next line if line fully selected
-    if (selection.anchor() <= BufferCoord{line, 0_byte} and
-        selection.cursor() == BufferCoord{line, buffer[line].length() - 1} and
-        line != buffer.line_count() - 1)
-        ++line;
-    return Selection{{line, 0_byte}, {line, buffer[line].length() - 1, max_column}};
-}
-
 template<bool only_move>
 Optional<Selection>
 select_to_line_end(const Context& context, const Selection& selection)
@@ -197,7 +184,7 @@ select_to_line_end(const Context& context, const Selection& selection)
                                      buffer.iterator_at(line)).coord();
     if (end < begin) // Do not go backward when cursor is on eol
         end = begin;
-    return Selection{only_move ? end : begin, {end, max_column}};
+    return Selection{only_move ? end : begin, {end, max_non_eol_column}};
 }
 template Optional<Selection> select_to_line_end<false>(const Context&, const Selection&);
 template Optional<Selection> select_to_line_end<true>(const Context&, const Selection&);

@@ -7,6 +7,7 @@ hook global BufCreate .*\.(s|S|asm)$ %{
 hook global WinSetOption filetype=gas %{
     require-module gas
 
+    hook window ModeChange pop:insert:.* -group gas-trim-indent gas-trim-indent
     hook window InsertChar \n -group gas-indent gas-indent-on-new-line
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window gas-.+ }
 }
@@ -78,7 +79,7 @@ add-highlighter shared/gas/code/ regex \
 
 define-command -hidden gas-trim-indent %{
     evaluate-commands -draft -itersel %{
-        execute-keys <a-x>
+        execute-keys x
         # remove trailing white spaces
         try %{ execute-keys -draft s \h+$ <ret> d }
     }
@@ -91,7 +92,7 @@ define-command -hidden gas-indent-on-new-line %~
         # filter previous line
         try %{ execute-keys -draft k : gas-trim-indent <ret> }
         # indent after label
-        try %[ execute-keys -draft k <a-x> <a-k> :$ <ret> j <a-gt> ]
+        try %[ execute-keys -draft k x <a-k> :$ <ret> j <a-gt> ]
     >
 ~
 

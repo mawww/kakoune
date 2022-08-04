@@ -34,18 +34,20 @@ void HistoryRegister::set(Context& context, ConstArrayView<String> values, bool 
     constexpr size_t size_limit = 100;
 
     if (restoring)
-        return StaticRegister::set(context, values, true);
-
-    for (auto& entry : values)
     {
-        m_content.erase(std::remove(m_content.begin(), m_content.end(), entry),
-                      m_content.end());
-        m_content.push_back(entry);
+        StaticRegister::set(context, values, true);
+        m_content.erase(remove_if(m_content, [](auto&& s) { return s.empty(); }), m_content.end());
+        return;
     }
 
-    const size_t current_size = m_content.size();
-    if (current_size > size_limit)
-        m_content.erase(m_content.begin(), m_content.begin() + (current_size - size_limit));
+    for (auto&& entry : values | reverse()) 
+    {
+        m_content.erase(std::remove(m_content.begin(), m_content.end(), entry), m_content.end());
+        m_content.insert(m_content.begin(), entry);
+    }
+
+    if (m_content.size() > size_limit)
+        m_content.erase(m_content.end() - (m_content.size() - size_limit), m_content.end());
 
     if (not m_disable_modified_hook)
         context.hooks().run_hook(Hook::RegisterModified, m_name, context);
@@ -53,10 +55,10 @@ void HistoryRegister::set(Context& context, ConstArrayView<String> values, bool 
 
 const String& HistoryRegister::get_main(const Context&, size_t)
 {
-    return m_content.empty() ? String::ms_empty : m_content.back();
+    return m_content.empty() ? String::ms_empty : m_content.front();
 }
 
-static const HashMap<String, Codepoint> reg_names = {
+static const HashMap<StringView, Codepoint> reg_names {
     { "slash", '/' },
     { "dquote", '"' },
     { "pipe", '|' },
@@ -99,7 +101,7 @@ void RegisterManager::add_register(Codepoint c, std::unique_ptr<Register> reg)
 
 CandidateList RegisterManager::complete_register_name(StringView prefix, ByteCount cursor_pos) const
 {
-    return complete(prefix, cursor_pos, reg_names | transform([](auto& i) { return i.key; }) | gather<Vector<String>>());
+    return complete(prefix, cursor_pos, reg_names | transform([](auto& i) { return i.key; }));
 }
 
 }

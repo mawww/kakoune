@@ -17,7 +17,7 @@ hook global WinSetOption filetype=purescript %{
     require-module purescript
 
     set-option buffer extra_word_chars '_' "'"
-    hook window ModeChange pop:insert:.* -group purescript-trim-indent  purescript-trim-indent
+    hook window ModeChange pop:insert:.* -group purescript-trim-indent purescript-trim-indent
     hook window InsertChar \n -group purescript-insert purescript-insert-on-new-line
     hook window InsertChar \n -group purescript-indent purescript-indent-on-new-line
 
@@ -94,13 +94,13 @@ add-highlighter shared/purescript/code/ regex ^\s*(?:where\s+|let\s+|default\s+)
 
 define-command -hidden purescript-trim-indent %{
     # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel x s \h+$ <ret> d }
 }
 
 define-command -hidden purescript-insert-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy -- comments prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P }
+        try %{ execute-keys -draft k x s ^\h*\K--\h* <ret> y gh j P }
     }
 }
 

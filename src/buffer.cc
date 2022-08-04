@@ -155,14 +155,15 @@ BufferCoord Buffer::clamp(BufferCoord coord) const
     return coord;
 }
 
-BufferCoord Buffer::offset_coord(BufferCoord coord, CharCount offset, ColumnCount, bool) const
+BufferCoord Buffer::offset_coord(BufferCoord coord, CharCount offset, ColumnCount) const
 {
     return utf8::advance(iterator_at(coord), offset < 0 ? begin() : end()-1, offset).coord();
 }
 
-BufferCoordAndTarget Buffer::offset_coord(BufferCoordAndTarget coord, LineCount offset, ColumnCount tabstop, bool avoid_eol) const
+BufferCoordAndTarget Buffer::offset_coord(BufferCoordAndTarget coord, LineCount offset, ColumnCount tabstop) const
 {
     const auto column = coord.target == -1 ? get_column(*this, tabstop, coord) : coord.target;
+    const bool avoid_eol = coord.target < max_column;
     const auto line = Kakoune::clamp(coord.line + offset, 0_line, line_count()-1);
     const auto max_column = get_column(*this, tabstop, {line, m_lines[line].length()-1});
     const auto final_column = std::max(0_col, std::min(column, max_column - (avoid_eol ? 1 : 0)));
@@ -414,7 +415,7 @@ BufferRange Buffer::do_insert(BufferCoord pos, StringView content)
         if (content[i] == '\n')
         {
             StringView line = content.substr(start, i + 1 - start);
-            new_lines.push_back(StringData::create(start == 0 ? prefix + line : line));
+            new_lines.push_back(start == 0 ? StringData::create({prefix, line}) : StringData::create({line}));
             start = i + 1;
         }
     }
@@ -450,22 +451,14 @@ BufferCoord Buffer::do_erase(BufferCoord begin, BufferCoord end)
     StringView prefix = m_lines[begin.line].substr(0, begin.column);
     StringView suffix = end.line == line_count() ? StringView{} : m_lines[end.line].substr(end.column);
 
-    BufferCoord next;
-    if (not prefix.empty() or not suffix.empty())
-    {
-        auto new_line = StringData::create({prefix, suffix});
-        m_lines.erase(m_lines.begin() + (int)begin.line, m_lines.begin() + (int)end.line);
-        m_lines.get_storage(begin.line) = std::move(new_line);
-        next = begin;
-    }
-    else
-    {
-        m_lines.erase(m_lines.begin() + (int)begin.line, m_lines.begin() + (int)end.line);
-        next = begin.line;
-    }
+    auto new_line = (not prefix.empty() or not suffix.empty()) ? StringData::create({prefix, suffix}) : StringDataPtr{};
+    m_lines.erase(m_lines.begin() + (int)begin.line, m_lines.begin() + (int)end.line);
 
     m_changes.push_back({ Change::Erase, begin, end });
-    return next;
+    if (new_line)
+        m_lines.get_storage(begin.line) = std::move(new_line);
+
+    return begin;
 }
 
 void Buffer::apply_modification(const Modification& modification)
@@ -505,11 +498,8 @@ BufferRange Buffer::insert(BufferCoord pos, StringView content)
     else
         real_content = intern(content);
 
-    // for undo and redo purpose it is better to use one past last line rather
-    // than one past last char coord.
-    auto coord = is_end(pos) ? line_count() : pos;
     if (not (m_flags & Flags::NoUndo))
-        m_current_undo_group.push_back({Modification::Insert, coord, real_content});
+        m_current_undo_group.push_back({Modification::Insert, pos, real_content});
     return do_insert(pos, real_content->strview());
 }
 

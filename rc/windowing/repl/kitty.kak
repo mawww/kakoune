@@ -4,7 +4,7 @@ hook global ModuleLoaded kitty %{
 
 provide-module kitty-repl %{
 
-define-command -params .. -shell-completion \
+define-command -params .. \
     -docstring %{
         kitty-repl [<arguments>]: Create a new window for repl interaction.
 
@@ -31,6 +31,7 @@ define-command -params .. -shell-completion \
         kitty @ $listen launch --no-response --keep-focus --type="$kak_opt_kitty_window_type" --title=kak_repl_window --cwd="$PWD" $match $cmd
     }
 }
+complete-command kitty-repl shell
 
 define-command -hidden -params 0..1 \
     -docstring %{

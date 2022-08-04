@@ -14,6 +14,7 @@ hook global BufCreate .*[.](markdown|md|mkd) %{
 hook global WinSetOption filetype=markdown %{
     require-module markdown
 
+    hook window ModeChange pop:insert:.* -group markdown-trim-indent markdown-trim-indent
     hook window InsertChar \n -group markdown-insert markdown-insert-on-new-line
     hook window InsertChar \n -group markdown-indent markdown-indent-on-new-line
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window markdown-.+ }
@@ -99,8 +100,16 @@ add-highlighter shared/markdown/inline/text/ regex "\H( {2,})$" 1:+r@meta
 # Commands
 # ‾‾‾‾‾‾‾‾
 
+define-command -hidden markdown-trim-indent %{
+    evaluate-commands -no-hooks -draft -itersel %{
+        execute-keys x
+        # remove trailing white spaces
+        try %{ execute-keys -draft s \h + $ <ret> d }
+    }
+}
+
 define-command -hidden markdown-insert-on-new-line %{
-    try %{ execute-keys -draft -itersel k <a-x> s ^\h*\K((>\h*)+([*+-]\h)?|(>\h*)*[*+-]\h)\h* <ret> y gh j P }
+    try %{ execute-keys -draft -itersel k x s ^\h*\K((>\h*)+([*+-]\h)?|(>\h*)*[*+-]\h)\h* <ret> y gh j P }
 }
 
 define-command -hidden markdown-indent-on-new-line %{
@@ -108,7 +117,7 @@ define-command -hidden markdown-indent-on-new-line %{
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # remove trailing white spaces
-        try %{ execute-keys -draft k <a-x> s \h+$ <ret> d }
+        try %{ execute-keys -draft k x s \h+$ <ret> d }
     }
 }
 

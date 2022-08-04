@@ -45,7 +45,12 @@ struct {
     StringView notes;
 } constexpr version_notes[] = { {
         0,
+        "» {+b}<esc>{} does not end macro recording anymore, use {+b}Q{}\n"
         "» pipe commands do not append final end-of-lines anymore\n"
+        "» {+u}complete-command{} to configure command completion\n"
+        "» {+b}p{}, {+b}P{}, {+b}!{} and {+b}<a-!>{} now select the inserted text\n"
+        "» {+b}x{} now uses {+b}<a-x>{} behaviour\n"
+        "» {+b}<space>{} and {+b},{} have been swapped\n"
     }, {
         20211107,
         "» colored and curly underlines support (undocumented in 20210828)\n"
@@ -361,8 +366,8 @@ static const EnvVarDesc builtin_env_vars[] = { {
         [](StringView name, const Context& context) -> Vector<String>
         {
             auto setup = context.window().compute_display_setup(context);
-            return {format("{} {} {} {}", setup.window_pos.line, setup.window_pos.column,
-                                          setup.window_range.line, setup.window_range.column)};
+            return {format("{} {} {} {}", setup.first_line, setup.first_column,
+                                          setup.line_count, 0)};
         }
     }, {
         "history", false,

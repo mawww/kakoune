@@ -134,7 +134,7 @@ DisplayLine::iterator DisplayLine::insert(iterator it, DisplayAtom atom)
     return res;
 }
 
-void DisplayLine::push_back(DisplayAtom atom)
+DisplayAtom& DisplayLine::push_back(DisplayAtom atom)
 {
     if (atom.has_buffer_range())
     {
@@ -142,6 +142,7 @@ void DisplayLine::push_back(DisplayAtom atom)
         m_range.end = std::max(m_range.end, atom.end());
     }
     m_atoms.push_back(std::move(atom));
+    return m_atoms.back();
 }
 
 DisplayLine::iterator DisplayLine::erase(iterator beg, iterator end)
@@ -192,23 +193,45 @@ ColumnCount DisplayLine::length() const
     return len;
 }
 
-bool DisplayLine::trim(ColumnCount first_col, ColumnCount col_count)
+bool DisplayLine::trim(ColumnCount front, ColumnCount col_count)
 {
-    for (auto it = begin(); first_col > 0 and it != end(); )
+    return trim_from(0_col, front, col_count);
+}
+
+bool DisplayLine::trim_from(ColumnCount first_col, ColumnCount front, ColumnCount col_count)
+{
+    auto it = begin();
+    while (first_col > 0 and it != end())
     {
         auto len = it->length();
         if (len <= first_col)
         {
-            m_atoms.erase(it);
+            ++it;
             first_col -= len;
         }
         else
         {
-            it->trim_begin(first_col);
+            it = ++split(it, front);
             first_col = 0;
         }
     }
-    auto it = begin();
+
+    while (front > 0 and it != end())
+    {
+        auto len = it->length();
+        if (len <= front)
+        {
+            m_atoms.erase(it);
+            front -= len;
+        }
+        else
+        {
+            it->trim_begin(front);
+            front = 0;
+        }
+    }
+
+    it = begin();
     for (; it != end() and col_count > 0; ++it)
         col_count -= it->length();
 

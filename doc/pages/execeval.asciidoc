@@ -1,70 +1,66 @@
 = Execute-keys and Evaluate-commands
 
-== Description
+*execute-keys* [<switches>] <key> ...::
+    Run keys as if they were pressed.
 
-The *execute-keys* and *evaluate-commands* commands can be used to run
-Kakoune commands:
+*evaluate-commands* [<switches>] <command> ...::
+    Evaluate specified commands as if they were entered into the command
+    prompt.
 
-----------------------------
-execute-keys [<switches>] <key> ...
-evaluate-commands [<switches>] <command> ...
-----------------------------
+By default, the execution of both commands happens within the context of
+the current client, and stops when the last key/command is reached or an
+error occurs.
 
-*execute-keys* runs keys as if they were pressed, whereas *evaluate-commands*
-evaluates its given parameters as if they were entered in the command prompt.
-By default, their execution happens within the context of the current client,
-and stops when the last key/command is reached, or an error is raised.
-
-*execute-keys* also save the following registers, who are then restored
-when the commands have been executed: */*, *"*, *|*, *^*, *@*.
-*evaluate-commands* does not save any registers by default.
+Without the *-save-regs* switch, *execute-keys* saves the following registers, which
+are then restored when the keys have been executed: */*, *"*, *|*, *^*,
+*@*, *:*. *evaluate-commands* doesn't save any registers by default.
 (See <<registers#,`:doc registers`>>)
 
-== Optional switches
+== Switches for both commands
 
 *-client* <name>::
-    execute in the context of the client named *name*
+    Execute in the context of the client *name*.
 
 *-try-client* <name>::
-    execute in the context of the client named *name* if such client
-    exists, or else in the current context
+    Execute in the context of the client *name* if such client exists,
+    or else in the current context.
 
 *-draft*::
-    execute in a copy of the context of the selected client. Modifications
-    to the selections or input state will not affect the client. This
-    permits to make some modification to the buffer without modifying
-    the user’s selection
+    Execute in a copy of the context of the selected client. Modifications to
+    the selections or input state will not affect the client. This permits
+    making modifications to the buffer without modifying the user’s
+    selection.
 
 *-itersel*::
-    execute once per selection, in a context with only the considered
-    selection. This permits avoiding cases where the selections may
-    get merged
+    Execute once per selection, each having its own context. This prevents
+    situations where selections get merged.
 
 *-buffer* <names>::
-    execute in the context of each buffers in the comma separated list
-    *names*. `*` as a name can be used to iterate on all non-debug buffers
+    Execute in the context of each buffer specified in the comma separated
+    list *names*. `*` can be used as a *name* to iterate over all non-debug
+    buffers.
     (See <<buffers#debug-buffers, `:doc buffers`>>)
 
 *-save-regs* <regs>::
-    regs is a string of registers to be restored after execution (overwrites
-    the list of registers saved by default, c.f. description)
+    *regs* is a string of registers to be restored after execution (overwrites
+    the list of registers saved by default).
 
-== evaluate-commands specific switches
+== Switches specific to *evaluate-commands*
 
 *-no-hooks*::
-    disable hook execution while executing the keys/commands
+    Disable hook execution while executing the keys/commands.
     (See <<hooks#disabling-hooks,`:doc hooks`>>)
 
 *-verbatim*::
-    do not reparse and split positional arguments. Forward them
-    exactly as given to the `evaluate-commands` command.
+    Don't reparse and split positional arguments. Forward them exactly
+    as specified.
 
-== execute-keys specific switches
+== Switches specific to *execute-keys*
 
 *-with-maps*::
-    use user key mapping in instead of built in keys
+    Use a custom key mapping instead of the built-in one.
     (See <<mapping#,`:doc mapping`>>)
 
 *-with-hooks*::
-    the execution of keys will trigger existing hooks
+    Execute keys and trigger existing hooks.
     (See <<hooks#,`:doc hooks`>>)

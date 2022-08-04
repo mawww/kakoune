@@ -29,7 +29,7 @@ See https://github.com/mawww/golf for Kakoune solutions to vimgolf challenges,
 regularly beating the best Vim solution.
 
 See the link:doc/design.asciidoc[design document] for more information on
-Kakoune philosophy and design.
+Kakoune's philosophy and design.
 
 :numbered:
 
@@ -37,16 +37,15 @@ Introduction
 ------------
 
 Kakoune is a code editor that implements Vi's "keystrokes as a text editing
-language" model. As it's also a modal editor, it is somewhat similar to the
+language" model. As it is also a modal editor, it is somewhat similar to the
 Vim editor (after which Kakoune was originally inspired).
 
-Kakoune can operate in two modes, normal and insertion. In insertion mode,
+Kakoune can operate in two modes: *normal* and *insertion*. In insertion mode,
 keys are directly inserted into the current buffer. In normal mode, keys
 are used to manipulate the current selection and to enter insertion mode.
 
-Kakoune has a strong focus on interactivity, most commands provide immediate
-and incremental results, while still being competitive (as in keystroke count)
-with Vim.
+Kakoune has a strong focus on interactivity. Most commands provide immediate
+and incremental results, while being competitive with Vim in terms of keystroke count.
 
 Kakoune works on selections, which are oriented, inclusive ranges of characters.
 Selections have an anchor and a cursor. Most commands move both of
@@ -101,9 +100,9 @@ Getting started
 Building
 ~~~~~~~~
 
-Kakoune dependencies are:
+Kakoune's dependencies are:
 
- * A {cpp}20 compliant compiler (GCC >= 10 or clang >= 11) along with its
+ * A {cpp}20 compliant compiler (GCC >= 10.3 or clang >= 11) along with its
    associated {cpp} standard library (libstdc{pp} >= 10 or libc{pp})
 
 To build, just type *make* in the src directory.
@@ -115,7 +114,7 @@ on being in a Unix-like environment, no native Windows version is planned.
 Installing
 ~~~~~~~~~~
 
-In order to install kak on your system, rather than running it directly from
+In order to install *kak* on your system, rather than running it directly from
 its source directory, type *make install*. You can specify the `PREFIX` and
 `DESTDIR` if needed.
 
@@ -205,12 +204,17 @@ sudo zypper install kakoune
 [TIP]
 .Ubuntu
 ====
-Building on Ubuntu 16.04 and 18.04.
-Make sure you have .local/bin in your path to make the kak binary available from your shell.
+Kakoune can be found in the Ubuntu repositories.
+
+----------------------------
+sudo apt install kakoune
+----------------------------
+
+If you want to compile from source on 20.04 or earlier, you must force the build to use GCC 10, which is not the default. Also, make sure you have .local/bin in your path so that kak is available after the installation.
 
 ----------------------------------------------------------------
 git clone https://github.com/mawww/kakoune.git && cd kakoune/src
-make
+CXX=g++-10 make
 PREFIX=$HOME/.local make install
 ----------------------------------------------------------------
 ====
@@ -310,7 +314,7 @@ nix-env -iA nixpkgs.kakoune
 Running
 ~~~~~~~
 
-Just running *kak* launches a new kak session with a client on local terminal.
+Running *kak* launches a new kak session with a client on local terminal.
 Run *kak -help* to discover the valid command line flags.
 
 Configuration
@@ -334,13 +338,13 @@ directory. It will first look for an `autoload` directory at
 it does not exist.
 
 Once all those files are loaded, Kakoune will try to source
-`${runtime}/kakrc.local` which is expected to contain distribution provided
+`${runtime}/kakrc.local`, which is expected to contain distribution provided
 configuration.
 
-And finally, the user configuration will be loaded from `${userconf}/kakrc`.
+Finally, the user configuration will load from `${userconf}/kakrc`.
 
 NOTE: If you create a user `autoload` directory in `${userconf}/autoload`,
-the system one at `${runtime}/autoload` will not be loaded anymore. You can
+the system one at `${runtime}/autoload` will not load anymore. You can
 add a symbolic link to it (or to individual scripts) inside
 `${userconf}/autoload` to keep loading system scripts.
 
@@ -362,7 +366,7 @@ Normal Mode
 ~~~~~~~~~~~
 
 In normal mode, keys are not inserted directly inside the buffer, but are editing
-commands. These commands provide ways to manipulate either the selections themselves,
+commands. These commands provide ways to manipulate either the selections themselves
 or the selected text.
 
 Insert Mode
@@ -374,9 +378,9 @@ selection's cursor. Some additional keys are recognised in insert mode:
  * `<esc>`: leave insert mode
  * `<backspace>`: delete characters before cursors
  * `<del>`: delete characters under cursors
- * `<left>, <right>, <up>, <down>`: move the cursors in given direction
- * `<home>`: move cursors to line begin
- * `<end>`: move cursors to end of line
+ * `<left>, <right>, <up>, <down>`: move cursors in given direction
+ * `<home>`: move cursors to line beginning
+ * `<end>`: move cursors to line ending
 
  * `<c-n>`: select next completion candidate
  * `<c-p>`: select previous completion candidate
@@ -388,16 +392,16 @@ selection's cursor. Some additional keys are recognised in insert mode:
 
  * `<c-r>`: insert contents of the register given by next key
  * `<c-v>`: insert next keystroke directly into the buffer,
-    without interpreting it.
+    without interpreting it
 
- * `<c-u>`: commit changes up to now as a single undo group.
+ * `<c-u>`: commit changes up to now as a single undo group
 
  * `<a-;>`: escape to normal mode for a single command
 
 Movement
 ~~~~~~~~
 
-See <<Appending>> below for instructions on extending (appending to) the current selection, in order to select more text in multiple steps.
+See <<Appending>> below for instructions on extending (appending to) the current selection in order to select more text.
 
  * `h`: select the character on the left of selection end
  * `j`: select the character below the selection end
@@ -407,7 +411,7 @@ See <<Appending>> below for instructions on extending (appending to) the current
  * `w`: select the word and following whitespaces on the right of selection end
  * `b`: select preceding whitespaces and the word on the left of selection end
  * `e`: select preceding whitespaces and the word on the right of selection end
- * `<a-[wbe]>`: same as [wbe] but select WORD instead of word
+ * `<a-[wbe]>`: same as [wbe], but select WORD instead of word
 
  * `f`: select to (including) the next occurrence of the given character
  * `t`: select until (excluding) the next occurrence of the given character
@@ -624,8 +628,8 @@ pattern uses the last one.
 As a convenience, `<a-s>` allows you to split the current selections on
 line boundaries.
 
-To clear multiple selections, use `space`. To keep only the nth selection
-use `n` followed by `space`, in order to remove a selection, use `<a-space>`.
+To clear multiple selections, use `,`. To keep only the nth selection
+use `n` followed by `,`, in order to remove a selection, use `<a-,>`.
 
 `<a-k>` allows you to enter a regex and keep only the selections that
 contains a match for this regex. Using `<a-K>` you can keep the selections

@@ -32,7 +32,7 @@ provide-module ocaml %{
 
 add-highlighter shared/ocaml regions
 add-highlighter shared/ocaml/code default-region group
-add-highlighter shared/ocaml/string region (?<!')" (?<!\\)(\\\\)*" fill string
+add-highlighter shared/ocaml/string region (?<!['\\])" (?<!\\)(\\\\)*" fill string
 add-highlighter shared/ocaml/quotedstring region -match-capture %"\{(\w*)\|" %"\|(\w*)\}" fill string
 add-highlighter shared/ocaml/comment region -recurse \Q(* \Q(* \Q*) fill comment
 
@@ -96,4 +96,17 @@ define-command ocaml-alternative-file -docstring 'Switch between .ml and .mli fi
     }
 }
 
+}
+
+# The OCaml comment is `(* Some comment *)`. Like the C-family this can be a multiline comment.
+#
+# Recognize when the user is trying to commence a comment when they type `(*` and
+# then automatically insert `*)` on behalf of the user. A small convenience.
+hook global WinSetOption filetype=ocaml %{
+    hook window InsertChar '\*' %{
+        try %{
+            execute-keys -draft 'HH<a-k>\(\*<ret>'
+            execute-keys '  *)<left><left><left>'
+        }
+    }
 }

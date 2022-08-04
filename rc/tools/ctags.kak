@@ -150,7 +150,7 @@ define-command ctags-enable-autocomplete -docstring "Enable automatic ctags comp
     hook window -group ctags-autocomplete InsertIdle .* %{
         try %{
             evaluate-commands -draft %{ # select previous word >= ctags_min_chars
-                execute-keys "<space>b_<a-k>.{%opt{ctags_min_chars},}<ret>"
+                execute-keys ",b_<a-k>.{%opt{ctags_min_chars},}<ret>"
                 ctags-complete          # run in draft context to preserve selection
             }
         }

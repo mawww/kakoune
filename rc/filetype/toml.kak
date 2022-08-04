@@ -35,10 +35,10 @@ provide-module toml %{
 add-highlighter shared/toml regions
 add-highlighter shared/toml/code default-region group
 add-highlighter shared/toml/comment region '#'   $           fill comment
-add-highlighter shared/toml/string1 region  '"""' (?<!\\)(\\\\)*""" fill string
-add-highlighter shared/toml/string2 region  "'''" "'''"             fill string
-add-highlighter shared/toml/string3 region  '"'   (?<!\\)(\\\\)*"   fill string
-add-highlighter shared/toml/string4 region  "'"   "'"               fill string
+add-highlighter shared/toml/string1 region  '"""' (?<!\\)(\\\\)*"""(?!") fill string
+add-highlighter shared/toml/string2 region  "'''" "'''(?!')"             fill string
+add-highlighter shared/toml/string3 region  '"'   (?<!\\)(\\\\)*"        fill string
+add-highlighter shared/toml/string4 region  "'"   "'"                    fill string
 
 add-highlighter shared/toml/code/ regex \
     "^\h*\[\[?([A-Za-z0-9._-]*)\]\]?" 1:title
@@ -54,13 +54,13 @@ add-highlighter shared/toml/code/ regex \
 
 define-command -hidden toml-trim-indent %{
     # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel x s \h+$ <ret> d }
 }
 
 define-command -hidden toml-insert-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy # comments prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
+        try %{ execute-keys -draft k x s ^\h*\K#\h* <ret> y gh j P }
     }
 }
 

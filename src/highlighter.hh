@@ -38,16 +38,14 @@ struct Highlighter;
 
 struct DisplaySetup
 {
-    // Window position relative to the buffer origin
-    DisplayCoord window_pos;
-    // Range of lines and columns from the buffer that will get displayed
-    DisplayCoord window_range;
+    LineCount first_line;
+    LineCount line_count;
+    ColumnCount first_column;
+    ColumnCount widget_columns;
     // Position of the cursor in the window
     DisplayCoord cursor_pos;
     // Offset of line and columns that must remain visible around cursor
     DisplayCoord scroll_offset;
-    // Put full lines in the initial display buffer
-    bool full_lines;
 };
 
 using HighlighterIdList = ConstArrayView<StringView>;

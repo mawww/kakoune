@@ -10,7 +10,7 @@ evaluate-commands %sh{
 
 declare-option -docstring %{window type that kitty creates on new and repl calls (window|os-window)} str kitty_window_type window
 
-define-command kitty-terminal -params 1.. -shell-completion -docstring '
+define-command kitty-terminal -params 1.. -docstring '
 kitty-terminal <program> [<arguments>]: create a new terminal as a kitty window
 The program passed as argument will be executed in the new terminal' \
 %{
@@ -28,8 +28,9 @@ The program passed as argument will be executed in the new terminal' \
         kitty @ $listen launch --no-response --type="$kak_opt_kitty_window_type" --cwd="$PWD" $match "$@"
     }
 }
+complete-command kitty-terminal shell
 
-define-command kitty-terminal-tab -params 1.. -shell-completion -docstring '
+define-command kitty-terminal-tab -params 1.. -docstring '
 kitty-terminal-tab <program> [<arguments>]: create a new terminal as kitty tab
 The program passed as argument will be executed in the new terminal' \
 %{
@@ -47,8 +48,9 @@ The program passed as argument will be executed in the new terminal' \
         kitty @ $listen launch --no-response --type=tab --cwd="$PWD" $match "$@"
     }
 }
+complete-command kitty-terminal-tab shell
 
-define-command kitty-focus -params ..1 -client-completion -docstring '
+define-command kitty-focus -params ..1 -docstring '
 kitty-focus [<client>]: focus the given client
 If no client is passed then the current one is used' \
 %{
@@ -70,6 +72,7 @@ If no client is passed then the current one is used' \
         fi
     }
 }
+complete-command -menu kitty-focus client
 
 alias global terminal kitty-terminal
 alias global terminal-tab kitty-terminal-tab

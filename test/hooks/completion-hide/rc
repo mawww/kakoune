@@ -1,0 +1,23 @@
+declare-option completions line1
+declare-option completions line2
+set-option global completers \
+	option=line1 \
+	option=line2 \
+
+define-command update-completions %{
+    set-option global line1 "1.1@%val{timestamp}" foo()||
+    set-option global line2 "2.1@%val{timestamp}" foo()||
+}
+
+hook global InsertCompletionHide .+ %{
+    evaluate-commands -draft %{
+        select %val{hook_param}
+        execute-keys i<lt><esc>a<gt><esc>
+	execute-keys <a-h>i "accepted completion: "
+    }
+}
+hook global InsertCompletionHide '' %{
+    evaluate-commands -draft %{
+        execute-keys <a-h>i "rejected completion "
+    }
+}

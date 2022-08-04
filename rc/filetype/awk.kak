@@ -73,16 +73,16 @@ define-command -hidden awk-indent-on-new-line %[
         # preserve previous line indent
         try %[ execute-keys -draft <semicolon> K <a-&> ]
         # cleanup trailing whitespaces from previous line
-        try %[ execute-keys -draft k <a-x> s \h+$ <ret> d ]
+        try %[ execute-keys -draft k x s \h+$ <ret> d ]
         # indent after line ending in opening curly brace
-        try %[ execute-keys -draft k<a-x> <a-k>\{\h*(#.*)?$<ret> j<a-gt> ]
+        try %[ execute-keys -draft kx <a-k>\{\h*(#.*)?$<ret> j<a-gt> ]
         # deindent closing brace when after cursor
-        try %[ execute-keys -draft <a-x> <a-k> ^\h*\} <ret> gh / \} <ret> m <a-S> 1<a-&> ]
+        try %[ execute-keys -draft x <a-k> ^\h*\} <ret> gh / \} <ret> m <a-S> 1<a-&> ]
     ]
 ]
 
 define-command -hidden awk-trim-indent %{
-    try %{ execute-keys -draft <semicolon> <a-x> s ^\h+$ <ret> d }
+    try %{ execute-keys -draft <semicolon> x s ^\h+$ <ret> d }
 }
 
 @

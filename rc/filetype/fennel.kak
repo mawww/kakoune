@@ -39,7 +39,7 @@ evaluate-commands %sh{
     # Grammar
     keywords="require-macros eval-compiler doc lua hashfn macro macros import-macros pick-args pick-values macroexpand macrodebug
               do values if when each for fn lambda λ partial while set global var local let tset set-forcibly! doto match or and
-              not not= collect icollect rshift lshift bor band bnot bxor with-open"
+              not not= collect icollect accumulate rshift lshift bor band bnot bxor with-open"
     re_keywords='\\$ \\$1 \\$2 \\$3 \\$4 \\$5 \\$6 \\$7 \\$8 \\$9 \\$\\.\\.\\.'
     builtins="_G _VERSION arg assert bit32 collectgarbage coroutine debug
               dofile error getfenv getmetatable io ipairs length load
@@ -102,7 +102,7 @@ define-command -hidden fennel-indent-on-new-line %{
         }
         try %{ execute-keys -draft '[rl"i<a-Z><gt>' }
         try %{ execute-keys -draft '[Bl"i<a-Z><gt>' }
-        execute-keys -draft ';"i<a-z>a&<space>'
+        execute-keys -draft ';"i<a-z>a&,'
     }
 }
 

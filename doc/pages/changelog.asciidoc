@@ -3,6 +3,23 @@
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
+== Development version
+
+* `complete-command` (See <<commands#configuring-command-completion,`:doc commands configuring-command-completion`>>)
+
+* `p`, `P`, `!` and `<a-!>` commands now select the inserted text
+
+* `x` now just extends the selection to contain full lines (as `<a-x>` did)
+  `<a-x>` trims partial lines from the selection (as `<a-X>` did)
+
+* User mappings is now bound to `<space>` while keeping/removing main selection
+  moved to `,` and `<a-,>`
+
+* Prompt history registers `%reg{colon}`, `%reg{slash}` and `%reg{pipe}` now
+  have reverse chronological order
+
+* Executing user mode mappings no longer adds to prompt history registers by default.
+
 == Kakoune 2021.11.07
 
 * Support for curly and separately colored underlines (undocumented in 2021.10.28)

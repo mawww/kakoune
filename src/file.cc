@@ -5,6 +5,7 @@
 #include "exception.hh"
 #include "flags.hh"
 #include "option_types.hh"
+#include "event_manager.hh"
 #include "ranked_match.hh"
 #include "regex.hh"
 #include "string.hh"
@@ -208,9 +209,10 @@ String read_file(StringView filename, bool text)
 MappedFile::MappedFile(StringView filename)
     : data{nullptr}
 {
-    fd = open(filename.zstr(), O_RDONLY | O_NONBLOCK);
+    int fd = open(filename.zstr(), O_RDONLY | O_NONBLOCK);
     if (fd == -1)
         throw file_access_error(filename, strerror(errno));
+    auto close_fd = on_scope_end([&] { close(fd); });
 
     fstat(fd, &st);
     if (S_ISDIR(st.st_mode))
@@ -226,12 +228,8 @@ MappedFile::MappedFile(StringView filename)
 
 MappedFile::~MappedFile()
 {
-    if (fd != -1)
-    {
-        if (data != nullptr)
-            munmap((void*)data, st.st_size);
-        close(fd);
-    }
+    if (data != nullptr)
+        munmap((void*)data, st.st_size);
 }
 
 MappedFile::operator StringView() const
@@ -259,13 +257,21 @@ void write(int fd, StringView data)
     const char* ptr = data.data();
     ssize_t count   = (int)data.length();
 
+    int flags = fcntl(fd, F_GETFL, 0);
+    if (EventManager::has_instance())
+        fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+    auto restore_flags = on_scope_end([&] { fcntl(fd, F_SETFL, flags); });
+
     while (count)
     {
-        ssize_t written = ::write(fd, ptr, count);
-        ptr += written;
-        count -= written;
-
-        if (written == -1)
+        if (ssize_t written = ::write(fd, ptr, count); written != -1)
+        {
+            ptr += written;
+            count -= written;
+        }
+        else if (errno == EAGAIN and EventManager::has_instance())
+            EventManager::instance().handle_next_events(EventMode::Urgent, nullptr, false);
+        else
             throw file_access_error(format("fd: {}", fd), strerror(errno));
     }
 }

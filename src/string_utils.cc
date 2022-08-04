@@ -4,6 +4,7 @@
 #include "utf8_iterator.hh"
 #include "unit_tests.hh"
 
+#include <charconv>
 #include <cstdio>
 
 namespace Kakoune
@@ -146,53 +147,63 @@ int str_to_int(StringView str)
     throw runtime_error{str + " is not a number"};
 }
 
+template<size_t N>
+InplaceString<N> to_string_impl(auto val, auto format)
+{
+    InplaceString<N> res;
+    auto [end, errc] = std::to_chars(res.m_data, res.m_data + N, val, format);
+    if (errc != std::errc{})
+        throw runtime_error("to_string error");
+    res.m_length = end - res.m_data;
+    *end = '\0';
+    return res;
+}
+
+template<size_t N>
+InplaceString<N> to_string_impl(auto val)
+{
+    return to_string_impl<N>(val, 10);
+}
+
 InplaceString<15> to_string(int val)
 {
-    InplaceString<15> res;
-    res.m_length = sprintf(res.m_data, "%i", val);
-    return res;
+    return to_string_impl<15>(val);
 }
 
 InplaceString<15> to_string(unsigned val)
 {
-    InplaceString<15> res;
-    res.m_length = sprintf(res.m_data, "%u", val);
-    return res;
+    return to_string_impl<15>(val);
 }
 
 InplaceString<23> to_string(long int val)
 {
-    InplaceString<23> res;
-    res.m_length = sprintf(res.m_data, "%li", val);
-    return res;
+    return to_string_impl<23>(val);
 }
 
 InplaceString<23> to_string(long long int val)
 {
-    InplaceString<23> res;
-    res.m_length = sprintf(res.m_data, "%lli", val);
-    return res;
+    return to_string_impl<23>(val);
 }
 
 InplaceString<23> to_string(unsigned long val)
 {
-    InplaceString<23> res;
-    res.m_length = sprintf(res.m_data, "%lu", val);
-    return res;
+    return to_string_impl<23>(val);
 }
 
 InplaceString<23> to_string(Hex val)
 {
-    InplaceString<23> res;
-    res.m_length = sprintf(res.m_data, "%zx", val.val);
-    return res;
+    return to_string_impl<23>(val.val, 16);
 }
 
 InplaceString<23> to_string(float val)
 {
+#if defined(__cpp_lib_to_chars)
+    return to_string_impl<23>(val, std::chars_format::general);
+#else
     InplaceString<23> res;
     res.m_length = sprintf(res.m_data, "%f", val);
     return res;
+#endif
 }
 
 InplaceString<7> to_string(Codepoint c)
@@ -395,6 +406,16 @@ String double_up(StringView s, StringView characters)
 UnitTest test_string{[]()
 {
     kak_assert(String("youpi ") + "matin" == "youpi matin");
+
+    kak_assert(StringView{"youpi"}.starts_with(""));
+    kak_assert(StringView{"youpi"}.starts_with("you"));
+    kak_assert(StringView{"youpi"}.starts_with("youpi"));
+    kak_assert(not StringView{"youpi"}.starts_with("youpi!"));
+
+    kak_assert(StringView{"youpi"}.ends_with(""));
+    kak_assert(StringView{"youpi"}.ends_with("pi"));
+    kak_assert(StringView{"youpi"}.ends_with("youpi"));
+    kak_assert(not StringView{"youpi"}.ends_with("oup"));
 
     auto wrapped = "wrap this paragraph\n respecting whitespaces and much_too_long_words" | wrap_at(16) | gather<Vector>();
     kak_assert(wrapped.size() == 6);
