@@ -102,7 +102,7 @@ class String;
 class StringView;
 
 KeyList parse_keys(StringView str);
-String  key_to_str(Key key);
+String  to_string(Key key);
 StringView button_to_str(Key::MouseButton button);
 Key::MouseButton str_to_button(StringView str);
 

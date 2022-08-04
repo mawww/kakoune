@@ -179,14 +179,14 @@ String build_autoinfo_for_mapping(const Context& context, KeymapMode mode,
     {
         String keys = join(built_in.keys |
                            filter([&](Key k){ return not keymaps.is_mapped(k, mode); }) |
-                           transform(key_to_str),
+                           transform((String(*)(Key))to_string),
                            ',', false);
         if (not keys.empty())
             descs.emplace_back(std::move(keys), built_in.docstring);
     }
 
     for (auto& key : keymaps.get_mapped_keys(mode))
-        descs.emplace_back(key_to_str(key),
+        descs.emplace_back(to_string(key),
                            keymaps.get_mapping(key, mode).docstring);
 
     auto max_len = 0_col;

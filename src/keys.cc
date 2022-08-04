@@ -181,7 +181,7 @@ Key::MouseButton str_to_button(StringView str)
     throw runtime_error(format("invalid mouse button name {}", str));
 }
 
-String key_to_str(Key key)
+String to_string(Key key)
 {
     const auto coord = key.coord() + DisplayCoord{1,1};
     switch (Key::Modifiers(key.modifiers & ~Key::Modifiers::MouseButtonMask))
@@ -241,7 +241,7 @@ UnitTest test_keys{[]()
     };
     String keys_as_str;
     for (auto& key : keys)
-        keys_as_str += key_to_str(key);
+        keys_as_str += to_string(key);
     auto parsed_keys = parse_keys(keys_as_str);
     kak_assert(keys == parsed_keys);
     kak_assert(ConstArrayView<Key>{parse_keys("a<c-a-b>c")} ==
@@ -257,7 +257,7 @@ UnitTest test_keys{[]()
     kak_assert(parse_keys("<s-tab>") == KeyList{ shift({Key::Tab}) });
     kak_assert(parse_keys("\n") == KeyList{ Key::Return });
 
-    kak_assert(key_to_str(shift({Key::Tab})) == "<s-tab>");
+    kak_assert(to_string(shift({Key::Tab})) == "<s-tab>");
 
     kak_expect_throw(key_parse_error, parse_keys("<-x>"));
     kak_expect_throw(key_parse_error, parse_keys("<xy-z>"));
