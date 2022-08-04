@@ -162,7 +162,7 @@ KeyList parse_keys(StringView str)
     return result;
 }
 
-StringView button_to_str(Key::MouseButton button)
+StringView to_string(Key::MouseButton button)
 {
     switch (button)
     {
@@ -189,9 +189,9 @@ String to_string(Key key)
         case Key::Modifiers::MousePos:
             return format("<mouse:move:{}.{}>", coord.line, coord.column);
         case Key::Modifiers::MousePress:
-            return format("<mouse:press:{}:{}.{}>", button_to_str(key.mouse_button()), coord.line, coord.column);
+            return format("<mouse:press:{}:{}.{}>", key.mouse_button(), coord.line, coord.column);
         case Key::Modifiers::MouseRelease:
-            return format("<mouse:release:{}:{}.{}>", button_to_str(key.mouse_button()), coord.line, coord.column);
+            return format("<mouse:release:{}:{}.{}>", key.mouse_button(), coord.line, coord.column);
         case Key::Modifiers::Scroll:
             return format("<scroll:{}>", static_cast<int>(key.key));
         case Key::Modifiers::Resize:

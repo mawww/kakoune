@@ -103,7 +103,7 @@ class StringView;
 
 KeyList parse_keys(StringView str);
 String  to_string(Key key);
-StringView button_to_str(Key::MouseButton button);
+StringView to_string(Key::MouseButton button);
 Key::MouseButton str_to_button(StringView str);
 
 constexpr Key shift(Key key)
