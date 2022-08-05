@@ -16,7 +16,7 @@ Here are the data structures used:
 
 * Color: a string, either a named color, or #rrggbb, or 'default'
 * Attribute: one of {underline, reverse, blink, bold, dim, italic, final_fg, final_bg, final_attr}
-* Face { Color fg; Color bg; Array<Attribute> attributes; }
+* Face { String name; Color fg; Color bg; Array<Attribute> attributes; }
 * Atom { Face face; String contents; }
 * Line : Array of Atom
 * Coord { int line; int column }
