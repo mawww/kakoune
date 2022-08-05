@@ -35,29 +35,6 @@ struct Face
     Color underline = Color::Default;
     StringDataPtr name = {};
 
-    Face() { }
-
-    Face(const Color& fg, const Color& bg)
-    : fg(fg), bg(bg)
-    {
-    }
-
-
-    Face(const Color& fg, const Color& bg, const Attribute& attributes)
-    : fg(fg), bg(bg), attributes(attributes)
-    {
-    }
-
-    Face(const Color& fg, const Color& bg, const Attribute& attributes, const Color& underline, const StringDataPtr name)
-    : fg(fg), bg(bg), attributes(attributes), underline(underline), name(name)
-    {
-    }
-
-    Face(const Color& fg, const Color& bg, const Attribute& attributes, const Color& underline, const StringView& name)
-    : fg(fg), bg(bg), attributes(attributes), underline(underline), name(name.empty() ? StringDataPtr{} : intern(name))
-    {
-    }
-
     friend constexpr bool operator==(const Face& lhs, const Face& rhs)
     {
         return lhs.fg == rhs.fg and

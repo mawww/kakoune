@@ -365,7 +365,7 @@ struct MsgReader::Reader<Face> {
             Reader<Color>::read(reader),
             Reader<Attribute>::read(reader),
             Reader<Color>::read(reader),
-            Reader<String>::read(reader),
+            intern(Reader<String>::read(reader)),
         };
     }
 };

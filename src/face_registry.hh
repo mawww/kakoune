@@ -5,7 +5,6 @@
 #include "utils.hh"
 #include "hash_map.hh"
 #include "ranges.hh"
-#include "shared_string.hh"
 #include "string.hh"
 #include "safe_ptr.hh"
 

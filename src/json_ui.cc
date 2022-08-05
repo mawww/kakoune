@@ -7,7 +7,6 @@
 #include "json.hh"
 #include "keys.hh"
 #include "ranges.hh"
-#include "shared_string.hh"
 #include "string_utils.hh"
 
 #include <cstdio>
@@ -59,7 +58,7 @@ String to_json(Attribute attributes)
 String to_json(Face face)
 {
     return format(R"(\{ "name": {}, "fg": {}, "bg": {}, "underline": {}, "attributes": {} })",
-                  to_json(face.name), to_json(face.fg), to_json(face.bg), to_json(face.underline), to_json(face.attributes));
+                  to_json(to_string(face.name)), to_json(face.fg), to_json(face.bg), to_json(face.underline), to_json(face.attributes));
 }
 
 String to_json(const DisplayAtom& atom)
