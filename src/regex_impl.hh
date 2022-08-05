@@ -33,12 +33,18 @@ constexpr bool with_bit_ops(Meta::Type<CharacterType>) { return true; }
 
 struct CharacterClass
 {
-    struct Range { Codepoint min, max; };
+    struct Range
+    {
+        Codepoint min, max;
+        friend bool operator==(const Range&, const Range&) = default;
+    };
 
     Vector<Range, MemoryDomain::Regex> ranges;
     CharacterType ctypes = CharacterType::None;
     bool negative = false;
     bool ignore_case = false;
+
+    friend bool operator==(const CharacterClass&, const CharacterClass&) = default;
 };
 
 bool is_character_class(const CharacterClass& character_class, Codepoint cp);
