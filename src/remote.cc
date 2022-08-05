@@ -141,7 +141,7 @@ private:
         write_field(face.bg);
         write_field(face.attributes);
         write_field(face.underline);
-        write_field(face.name);
+        write_field(to_string(face.name));
     }
 
     void write_field(const DisplayAtom& atom)

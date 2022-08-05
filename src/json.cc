@@ -37,6 +37,11 @@ String to_json(StringView str)
     res += '"';
     return res;
 }
+String to_json(StringDataPtr str)
+{
+    return str ? to_json(str->strview()) : "\"\"";
+}
+
 
 static bool is_digit(char c) { return c >= '0' and c <= '9'; }
 

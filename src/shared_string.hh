@@ -67,6 +67,8 @@ inline StringDataPtr intern(StringView str)
     return StringRegistry::instance().intern(str);
 }
 
+String to_string(StringDataPtr ptr);
+
 }
 
 #endif // shared_string_hh_INCLUDED

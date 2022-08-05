@@ -2,6 +2,7 @@
 #define json_hh_INCLUDED
 
 #include "hash_map.hh"
+#include "shared_string.hh"
 #include "string.hh"
 #include "value.hh"
 
@@ -30,6 +31,7 @@ String to_json(const HashMap<K, V, D>& map)
 String to_json(int i);
 String to_json(bool b);
 String to_json(StringView str);
+String to_json(StringDataPtr str);
 
 struct JsonResult { Value value; const char* new_pos; };
 

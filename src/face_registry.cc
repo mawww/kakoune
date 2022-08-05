@@ -2,6 +2,7 @@
 
 #include "exception.hh"
 #include "ranges.hh"
+#include "shared_string.hh"
 #include "string_utils.hh"
 
 namespace Kakoune
@@ -147,7 +148,7 @@ void FaceRegistry::add_face(StringView name, StringView facedesc, bool override)
         throw runtime_error(format("invalid face name: '{}'", name));
 
     FaceSpec spec = parse_face(facedesc);
-    spec.face.name = String(name);
+    spec.face.name = intern(name);
     auto it = m_faces.find(spec.base);
     if (spec.base == name and it != m_faces.end())
     {
@@ -173,7 +174,7 @@ void FaceRegistry::remove_face(StringView name)
 FaceRegistry::FaceRegistry()
 {
     auto add = [&](String name, Face face) {
-        face.name = name;
+        face.name = intern(name);
         m_faces.insert({ name, { face }});
     };
     add("Default", Face{ Color::Default, Color::Default,  });

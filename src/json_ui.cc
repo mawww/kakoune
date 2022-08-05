@@ -7,6 +7,7 @@
 #include "json.hh"
 #include "keys.hh"
 #include "ranges.hh"
+#include "shared_string.hh"
 #include "string_utils.hh"
 
 #include <cstdio>
