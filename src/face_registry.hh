@@ -25,7 +25,7 @@ public:
         Face face = {};
         String base = {};
     };
-    using FaceMap = HashMap<String, FaceSpec, MemoryDomain::Faces>;
+    using FaceMap = HashMap<StringView, FaceSpec, MemoryDomain::Faces>;
 
     auto flatten_faces() const
     {

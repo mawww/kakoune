@@ -174,7 +174,7 @@ FaceRegistry::FaceRegistry()
 {
     auto add = [&](String name, Face face) {
         face.name = intern(name);
-        m_faces.insert({ name, { face }});
+        m_faces.insert({ face.name->strview(), { face }});
     };
     add("Default", Face{ Color::Default, Color::Default,  });
     add("PrimarySelection", Face{ Color::White, Color::Blue,  });
