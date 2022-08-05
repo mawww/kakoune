@@ -36,6 +36,7 @@ UnitTest test_hash_map{[] {
         map.insert({10, 1});
         map.insert({10, 2});
         kak_assert(map.find_index(10) == 0);
+        kak_assert(map.size() == 1);
         kak_assert(map[10] == 2);
         map.remove(10);
         kak_assert(map.find_index(10) == -1);
@@ -87,6 +88,61 @@ UnitTest test_hash_map{[] {
                 kak_assert(it != map.end() and it->value == elem.second);
             }
         }
+    }
+}};
+
+UnitTest test_hash_set{[] {
+    // Basic usage
+    {
+        HashSet<int> set;
+        set.insert({10});
+        set.insert({20});
+        kak_assert(set.find_index(0) == -1);
+        kak_assert(set.find_index(10) == 0);
+        kak_assert(set.find_index(20) == 1);
+        kak_assert(set[10] == 10);
+        kak_assert(set[20] == 20);
+        kak_assert(set[30] == 30);
+        set[30];
+        kak_assert(set.find_index(30) == 2);
+        set.remove(20);
+        kak_assert(set.find_index(30) == 1);
+        kak_assert(set.size() == 2);
+    }
+
+    // Replace Multiple entries with the same key
+    {
+        HashSet<int> set;
+        set.insert({10});
+        set.insert({10});
+        kak_assert(set.find_index(10) == 0);
+        kak_assert(set.size() == 1);
+        set.remove(10);
+        kak_assert(set.find_index(10) == -1);
+    }
+
+    // Multiple entries with the same key
+    {
+        MultiHashSet<int> set;
+        set.insert({10});
+        set.insert({10});
+        kak_assert(set.find_index(10) == 0);
+        set.remove(10);
+        kak_assert(set.find_index(10) == 0);
+        set.remove(10);
+        kak_assert(set.find_index(10) == -1);
+        set.insert({20});
+        set.insert({20});
+        set.remove_all(20);
+        kak_assert(set.find_index(20) == -1);
+    }
+
+    // Check hash compatible support
+    {
+        HashSet<String> set;
+        set.insert({"test"});
+        kak_assert(set["test"_sv] == "test");
+        set.remove("test"_sv);
     }
 }};
 
