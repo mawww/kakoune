@@ -135,6 +135,15 @@ private:
         }
     }
 
+    void write_field(const Face& face)
+    {
+        write_field(face.fg);
+        write_field(face.bg);
+        write_field(face.attributes);
+        write_field(face.underline);
+        write_field(face.name);
+    }
+
     void write_field(const DisplayAtom& atom)
     {
         write_field(atom.content());
@@ -344,6 +353,20 @@ struct MsgReader::Reader<Color> {
             res.b = Reader<unsigned char>::read(reader);
         }
         return res;
+    }
+};
+
+template<>
+struct MsgReader::Reader<Face> {
+    static Face read(MsgReader& reader)
+    {
+        return {
+            Reader<Color>::read(reader),
+            Reader<Color>::read(reader),
+            Reader<Attribute>::read(reader),
+            Reader<Color>::read(reader),
+            Reader<String>::read(reader),
+        };
     }
 };
 

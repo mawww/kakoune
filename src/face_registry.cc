@@ -147,6 +147,7 @@ void FaceRegistry::add_face(StringView name, StringView facedesc, bool override)
         throw runtime_error(format("invalid face name: '{}'", name));
 
     FaceSpec spec = parse_face(facedesc);
+    spec.face.name = String(name);
     auto it = m_faces.find(spec.base);
     if (spec.base == name and it != m_faces.end())
     {
@@ -170,35 +171,38 @@ void FaceRegistry::remove_face(StringView name)
 }
 
 FaceRegistry::FaceRegistry()
-    : m_faces{
-        { "Default", {Face{ Color::Default, Color::Default }} },
-        { "PrimarySelection", {Face{ Color::White, Color::Blue }} },
-        { "SecondarySelection", {Face{ Color::Black, Color::Blue }} },
-        { "PrimaryCursor", {Face{ Color::Black, Color::White }} },
-        { "SecondaryCursor", {Face{ Color::Black, Color::White }} },
-        { "PrimaryCursorEol", {Face{ Color::Black, Color::Cyan }} },
-        { "SecondaryCursorEol", {Face{ Color::Black, Color::Cyan }} },
-        { "LineNumbers", {Face{ Color::Default, Color::Default }} },
-        { "LineNumberCursor", {Face{ Color::Default, Color::Default, Attribute::Reverse }} },
-        { "LineNumbersWrapped", {Face{ Color::Default, Color::Default, Attribute::Italic }} },
-        { "WrapMarker", {Face{ Color::Blue, Color::Default }} },
-        { "MenuForeground", {Face{ Color::White, Color::Blue }} },
-        { "MenuBackground", {Face{ Color::Blue, Color::White }} },
-        { "MenuInfo", {Face{ Color::Cyan, Color::Default }} },
-        { "Information", {Face{ Color::Black, Color::Yellow }} },
-        { "Error", {Face{ Color::Black, Color::Red }} },
-        { "DiagnosticError", {Face{ Color::Red, Color::Default }} },
-        { "DiagnosticWarning", {Face{ Color::Yellow, Color::Default }} },
-        { "StatusLine", {Face{ Color::Cyan, Color::Default }} },
-        { "StatusLineMode", {Face{ Color::Yellow, Color::Default }} },
-        { "StatusLineInfo", {Face{ Color::Blue, Color::Default }} },
-        { "StatusLineValue", {Face{ Color::Green, Color::Default }} },
-        { "StatusCursor", {Face{ Color::Black, Color::Cyan }} },
-        { "Prompt", {Face{ Color::Yellow, Color::Default }} },
-        { "MatchingChar", {Face{ Color::Default, Color::Default, Attribute::Bold }} },
-        { "BufferPadding", {Face{ Color::Blue, Color::Default }} },
-        { "Whitespace", {Face{ Color::Default, Color::Default, Attribute::FinalFg }} },
-      }
-{}
+{
+    auto add = [&](String name, Face face) {
+        face.name = name;
+        m_faces.insert({ name, { face }});
+    };
+    add("Default", Face{ Color::Default, Color::Default,  });
+    add("PrimarySelection", Face{ Color::White, Color::Blue,  });
+    add("SecondarySelection", Face{ Color::Black, Color::Blue,  });
+    add("PrimaryCursor", Face{ Color::Black, Color::White,  });
+    add("SecondaryCursor", Face{ Color::Black, Color::White,  });
+    add("PrimaryCursorEol", Face{ Color::Black, Color::Cyan,  });
+    add("SecondaryCursorEol", Face{ Color::Black, Color::Cyan,  });
+    add("LineNumbers", Face{ Color::Default, Color::Default,  });
+    add("LineNumberCursor", Face{ Color::Default, Color::Default, Attribute::Reverse,  });
+    add("LineNumbersWrapped", Face{ Color::Default, Color::Default, Attribute::Italic,  });
+    add("WrapMarker", Face{ Color::Blue, Color::Default,  });
+    add("MenuForeground", Face{ Color::White, Color::Blue,  });
+    add("MenuBackground", Face{ Color::Blue, Color::White,  });
+    add("MenuInfo", Face{ Color::Cyan, Color::Default,  });
+    add("Information", Face{ Color::Black, Color::Yellow,  });
+    add("Error", Face{ Color::Black, Color::Red,  });
+    add("DiagnosticError", Face{ Color::Red, Color::Default,  });
+    add("DiagnosticWarning", Face{ Color::Yellow, Color::Default,  });
+    add("StatusLine", Face{ Color::Cyan, Color::Default,  });
+    add("StatusLineMode", Face{ Color::Yellow, Color::Default,  });
+    add("StatusLineInfo", Face{ Color::Blue, Color::Default,  });
+    add("StatusLineValue", Face{ Color::Green, Color::Default,  });
+    add("StatusCursor", Face{ Color::Black, Color::Cyan,  });
+    add("Prompt", Face{ Color::Yellow, Color::Default,  });
+    add("MatchingChar", Face{ Color::Default, Color::Default, Attribute::Bold,  });
+    add("BufferPadding", Face{ Color::Blue, Color::Default,  });
+    add("Whitespace", Face{ Color::Default, Color::Default, Attribute::FinalFg,  });
+}
 
 }
