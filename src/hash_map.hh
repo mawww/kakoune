@@ -160,7 +160,8 @@ struct HashItem
 
 template<typename Key, typename Value,
          MemoryDomain domain = MemoryDomain::Undefined,
-         template<typename, MemoryDomain> class Container = Vector>
+         template<typename, MemoryDomain> class Container = Vector,
+         bool multi_key = false>
 struct HashMap
 {
     using Item = HashItem<Key, Value>;
@@ -176,8 +177,18 @@ struct HashMap
 
     constexpr Value& insert(Item item)
     {
+        const auto hash = hash_value(item.key);
+        if constexpr (not multi_key)
+        {
+            if (auto index = find_index(item.key, hash); index >= 0)
+            {
+                m_items[index] = std::move(item);
+                return m_items[index].value;
+            }
+        }
+
         m_index.reserve(m_items.size()+1);
-        m_index.add(hash_value(item.key), (int)m_items.size());
+        m_index.add(hash, (int)m_items.size());
         m_items.push_back(std::move(item));
         return m_items.back().value;
     }
@@ -314,6 +325,11 @@ private:
     ContainerType m_items;
     HashIndex<domain, Container> m_index;
 };
+
+template<typename Key, typename Value,
+         MemoryDomain domain = MemoryDomain::Undefined,
+         template<typename, MemoryDomain> class Container = Vector>
+ using MultiHashMap = HashMap<Key, Value, domain, Container, true>;
 
 void profile_hash_maps();
 

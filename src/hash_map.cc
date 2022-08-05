@@ -30,9 +30,20 @@ UnitTest test_hash_map{[] {
         kak_assert(map.size() == 2);
     }
 
-    // Multiple entries with the same key
+    // Replace Multiple entries with the same key
     {
         HashMap<int, int> map;
+        map.insert({10, 1});
+        map.insert({10, 2});
+        kak_assert(map.find_index(10) == 0);
+        kak_assert(map[10] == 2);
+        map.remove(10);
+        kak_assert(map.find_index(10) == -1);
+    }
+
+    // Multiple entries with the same key
+    {
+        MultiHashMap<int, int> map;
         map.insert({10, 1});
         map.insert({10, 2});
         kak_assert(map.find_index(10) == 0);
