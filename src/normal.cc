@@ -1777,7 +1777,7 @@ void trim_selections(Context& context, NormalParams)
         selections.remove(i);
 }
 
-SelectionList read_selections_from_register(char reg, Context& context)
+SelectionList read_selections_from_register(char reg, const Context& context)
 {
     if (not is_basic_alpha(reg) and reg != '^')
         throw runtime_error("selections can only be saved to the '^' and alphabetic registers");
