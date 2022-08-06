@@ -2009,6 +2009,7 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
 
     ScopedSetBool disable_history(c.history_disabled());
     ScopedEdition edition{c};
+    ScopedSelectionEdition selection_edition{c};
 
     if (parser.get_switch("itersel"))
     {
@@ -2523,6 +2524,7 @@ const CommandDesc select_cmd = {
         else if (parser.get_switch("display-column"))
             column_type = ColumnType::DisplayColumn;
         ColumnCount tabstop = context.options()["tabstop"].get<int>();
+        ScopedSelectionEdition selection_edition{context};
         context.selections_write_only() = selection_list_from_strings(buffer, column_type, parser.positionals_from(0), timestamp, 0, tabstop);
     }
 };

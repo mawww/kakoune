@@ -74,6 +74,7 @@ UnitTest test_merge_selection{[] {
 template<SelectMode mode, typename T>
 void select(Context& context, T func)
 {
+    ScopedSelectionEdition selection_edition{context};
     auto& selections = context.selections();
     if (mode == SelectMode::Append)
     {
@@ -143,6 +144,7 @@ template<SelectMode mode = SelectMode::Replace>
 void select_coord(Context& context, BufferCoord coord)
 {
     Buffer& buffer = context.buffer();
+    ScopedSelectionEdition selection_edition{context};
     SelectionList& selections = context.selections();
     coord = buffer.clamp(coord);
     if (mode == SelectMode::Replace)
@@ -422,6 +424,7 @@ void replace_with_char(Context& context, NormalParams)
         if (not cp or key == Key::Escape)
             return;
         ScopedEdition edition(context);
+        ScopedSelectionEdition selection_edition{context};
         Buffer& buffer = context.buffer();
         context.selections().for_each([&](size_t index, Selection& sel) {
             CharCount count = char_length(buffer, sel);
@@ -442,6 +445,7 @@ void for_each_codepoint(Context& context, NormalParams)
     using Utf8It = utf8::iterator<BufferIterator>;
 
     ScopedEdition edition(context);
+    ScopedSelectionEdition selection_edition{context};
     Buffer& buffer = context.buffer();
 
     context.selections().for_each([&](size_t index, Selection& sel) {
@@ -555,7 +559,8 @@ void pipe(Context& context, NormalParams params)
         prompt, {}, default_command, context.faces()["Prompt"],
         PromptFlags::DropHistoryEntriesWithBlankPrefix, '|',
         shell_complete,
-        [default_command](StringView cmdline, PromptEvent event, Context& context)
+        [default_command, selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
+        (StringView cmdline, PromptEvent event, Context& context)
         {
             if (event != PromptEvent::Validate)
                 return;
@@ -637,6 +642,7 @@ void erase_selections(Context& context, NormalParams params)
         RegisterManager::instance()[reg].set(context, context.selections_content());
     }
     ScopedEdition edition(context);
+    ScopedSelectionEdition selection_edition{context};
     context.selections().erase();
 }
 
@@ -683,6 +689,7 @@ void paste(Context& context, NormalParams params)
 
     auto& buffer = context.buffer();
     ScopedEdition edition(context);
+    ScopedSelectionEdition selection_edition{context};
     context.selections().for_each([&](size_t index, Selection& sel) {
         auto& str = strings[std::min(strings.size()-1, index)];
         auto& min = sel.min();
@@ -719,6 +726,7 @@ void paste_all(Context& context, NormalParams params)
 
     Buffer& buffer = context.buffer();
     Vector<Selection> result;
+    ScopedSelectionEdition selection_edition{context};
     auto& selections = context.selections();
     {
         ScopedEdition edition(context);
@@ -751,7 +759,8 @@ void insert_output(Context& context, NormalParams params)
         prompt, {}, default_command, context.faces()["Prompt"],
         PromptFlags::DropHistoryEntriesWithBlankPrefix, '|',
         shell_complete,
-        [default_command](StringView cmdline, PromptEvent event, Context& context)
+        [default_command, selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
+        (StringView cmdline, PromptEvent event, Context& context)
         {
             if (event != PromptEvent::Validate)
                 return;
@@ -827,7 +836,8 @@ void regex_prompt(Context& context, String prompt, char reg, T func)
                        [&](auto&& m) { candidates.push_back(m.candidate().str()); return true; });
             return {(int)(word.begin() - regex.begin()), pos,  std::move(candidates) };
         },
-        [=, func=T(std::move(func))](StringView str, PromptEvent event, Context& context) mutable {
+        [=, func=T(std::move(func)), selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
+        (StringView str, PromptEvent event, Context& context) mutable {
             try
             {
                 if (event != PromptEvent::Change and context.has_client())
@@ -947,6 +957,7 @@ void search_next(Context& context, NormalParams params)
     if (not str.empty())
     {
         Regex regex{str, direction_flags(regex_mode)};
+        ScopedSelectionEdition selection_edition{context};
         auto& selections = context.selections();
         bool main_wrapped = false;
         do {
@@ -1048,6 +1059,7 @@ void split_regex(Context& context, NormalParams params)
 void split_lines(Context& context, NormalParams params)
 {
     const LineCount count{params.count == 0 ? 1 : params.count};
+    ScopedSelectionEdition selection_edition{context};
     auto& selections = context.selections();
     auto& buffer = context.buffer();
     Vector<Selection> res;
@@ -1074,6 +1086,7 @@ void split_lines(Context& context, NormalParams params)
 
 void select_boundaries(Context& context, NormalParams)
 {
+    ScopedSelectionEdition selection_edition{context};
     auto& selections = context.selections();
     Vector<Selection> res;
     for (auto& sel : selections)
@@ -1089,6 +1102,7 @@ void join_lines_select_spaces(Context& context, NormalParams)
 {
     auto& buffer = context.buffer();
     Vector<Selection> selections;
+    ScopedSelectionEdition selection_edition{context};
     for (auto& sel : context.selections())
     {
         const LineCount min_line = sel.min().line;
@@ -1112,6 +1126,7 @@ void join_lines_select_spaces(Context& context, NormalParams)
 
 void join_lines(Context& context, NormalParams params)
 {
+    ScopedSelectionEdition selection_edition{context};
     SelectionList sels{context.selections()};
     auto restore_sels = on_scope_end([&]{
         sels.update();
@@ -1129,7 +1144,8 @@ void keep(Context& context, NormalParams params)
     const char reg = to_lower(params.reg ? params.reg : '/');
 
     regex_prompt(context, prompt.str(), reg,
-                 [reg, saved_reg = RegisterManager::instance()[reg].save(context)]
+                 [reg, saved_reg = RegisterManager::instance()[reg].save(context),
+                  selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
                  (const Regex& regex, PromptEvent event, Context& context) {
         RegisterManager::instance()[reg].restore(context, saved_reg);
         if (event == PromptEvent::Abort)
@@ -1166,7 +1182,8 @@ void keep_pipe(Context& context, NormalParams params)
     context.input_handler().prompt(
         "keep pipe:", {}, default_command, context.faces()["Prompt"],
         PromptFlags::DropHistoryEntriesWithBlankPrefix, '|', shell_complete,
-        [default_command](StringView cmdline, PromptEvent event, Context& context) {
+        [default_command, selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
+        (StringView cmdline, PromptEvent event, Context& context) {
             if (event != PromptEvent::Validate)
                 return;
 
@@ -1212,6 +1229,7 @@ void indent(Context& context, NormalParams params)
     ScopedEdition edition(context);
     auto& buffer = context.buffer();
     LineCount last_line = 0;
+    ScopedSelectionEdition selection_edition{context};
     for (auto& sel : context.selections())
     {
         for (auto line = std::max(last_line, sel.min().line); line < sel.max().line+1; ++line)
@@ -1236,6 +1254,7 @@ void deindent(Context& context, NormalParams params)
 
     auto& buffer = context.buffer();
     LineCount last_line = 0;
+    ScopedSelectionEdition selection_edition{context};
     for (auto& sel : context.selections())
     {
         for (auto line = std::max(sel.min().line, last_line);
@@ -1416,6 +1435,7 @@ void scroll(Context& context, NormalParams params)
 template<Direction direction>
 void copy_selections_on_next_lines(Context& context, NormalParams params)
 {
+    ScopedSelectionEdition selection_edition{context};
     auto& selections = context.selections();
     auto& buffer = context.buffer();
     const ColumnCount tabstop = context.options()["tabstop"].get<int>();
@@ -1469,6 +1489,7 @@ template<Direction direction>
 void rotate_selections(Context& context, NormalParams params)
 {
     const int count = params.count ? params.count : 1;
+    ScopedSelectionEdition selection_edition{context};
     auto& selections = context.selections();
     const int index = selections.main_index();
     const int num = selections.size();
@@ -1486,6 +1507,7 @@ void rotate_selections_content(Context& context, NormalParams params)
     if (group == 0 or group > (int)strings.size())
         group = (int)strings.size();
     count = count % group;
+    ScopedSelectionEdition selection_edition{context};
     auto& selections = context.selections();
     auto main = strings.begin() + selections.main_index();
     for (auto it = strings.begin(); it != strings.end(); )
@@ -1570,6 +1592,7 @@ void replay_macro(Context& context, NormalParams params)
 
     auto keys = parse_keys(reg_val[0]);
     ScopedEdition edition(context);
+    ScopedSelectionEdition selection_edition{context};
     do
     {
         for (auto& key : keys)
@@ -1587,6 +1610,7 @@ void jump(Context& context, NormalParams params)
 
     Buffer* oldbuf = &context.buffer();
     Buffer& buffer = const_cast<Buffer&>(jump.buffer());
+    ScopedSelectionEdition selection_edition{context};
     if (&buffer != oldbuf)
         context.change_buffer(buffer);
     context.selections_write_only() = jump;
@@ -1601,6 +1625,7 @@ void push_selections(Context& context, NormalParams)
 
 void align(Context& context, NormalParams)
 {
+    ScopedSelectionEdition selection_edition{context};
     auto& selections = context.selections();
     auto& buffer = context.buffer();
     const ColumnCount tabstop = context.options()["tabstop"].get<int>();
@@ -1654,6 +1679,7 @@ void copy_indent(Context& context, NormalParams params)
 {
     int selection = params.count;
     auto& buffer = context.buffer();
+    ScopedSelectionEdition selection_edition{context};
     auto& selections = context.selections();
     Vector<LineCount> lines;
     for (auto sel : selections)
@@ -1694,6 +1720,7 @@ void tabs_to_spaces(Context& context, NormalParams params)
     const ColumnCount tabstop = params.count == 0 ? opt_tabstop : params.count;
     Vector<Selection> tabs;
     Vector<String> spaces;
+    ScopedSelectionEdition selection_edition{context};
     for (auto& sel : context.selections())
     {
         for (auto it = buffer.iterator_at(sel.min()),
@@ -1718,6 +1745,7 @@ void spaces_to_tabs(Context& context, NormalParams params)
     const ColumnCount opt_tabstop = context.options()["tabstop"].get<int>();
     const ColumnCount tabstop = params.count == 0 ? opt_tabstop : params.count;
     Vector<Selection> spaces;
+    ScopedSelectionEdition selection_edition{context};
     for (auto& sel : context.selections())
     {
         for (auto it = buffer.iterator_at(sel.min()),
@@ -1751,6 +1779,7 @@ void spaces_to_tabs(Context& context, NormalParams params)
 void trim_selections(Context& context, NormalParams)
 {
     auto& buffer = context.buffer();
+    ScopedSelectionEdition selection_edition{context};
     auto& selections = context.selections();
     Vector<int> to_remove;
 
@@ -1874,6 +1903,7 @@ void combine_selections(Context& context, SelectionList list, Func func, StringV
                                      return;
 
                                  const auto op = key_to_combine_op(key);
+                                 ScopedSelectionEdition selection_edition{context};
                                  auto& sels = context.selections();
                                  list.update();
                                  if (op == CombineOp::Append)
@@ -1927,7 +1957,10 @@ void save_selections(Context& context, NormalParams params)
     };
 
     if (combine and not empty)
+    {
+        ScopedSelectionEdition selection_edition{context};
         combine_selections(context, read_selections_from_register(reg, context), save_to_reg, "combine selections to register");
+    }
     else
         save_to_reg(context, context.selections());
 }
@@ -1937,6 +1970,8 @@ void restore_selections(Context& context, NormalParams params)
 {
     const char reg = to_lower(params.reg ? params.reg : '^');
     auto selections = read_selections_from_register(reg, context);
+
+    ScopedSelectionEdition selection_edition{context};
 
     auto set_selections = [reg](Context& context, SelectionList sels) {
         auto size = sels.size();
@@ -2021,6 +2056,7 @@ void exec_user_mappings(Context& context, NormalParams params)
         InputHandler::ScopedForceNormal force_normal{context.input_handler(), params};
 
         ScopedEdition edition(context);
+        ScopedSelectionEdition selection_edition{context};
         for (auto& key : mapping.keys)
             context.input_handler().handle_key(key);
     }, "user mapping",
@@ -2033,6 +2069,7 @@ void add_empty_line(Context& context, NormalParams params)
     int count = std::max(params.count, 1);
     String new_lines{'\n', CharCount{count}};
     auto& buffer = context.buffer();
+    ScopedSelectionEdition selection_edition{context};
     auto& sels = context.selections();
     ScopedEdition edition{context};
     for (int i = 0; i < sels.size(); ++i)
@@ -2051,6 +2088,7 @@ public:
     void operator() (Context& context, NormalParams params)
     {
         ScopedEdition edition(context);
+        ScopedSelectionEdition selection_edition{context};
         do { m_func(context, {0, params.reg}); } while(--params.count > 0);
     }
 private:
@@ -2061,6 +2099,7 @@ template<void (*func)(Context&, NormalParams)>
 void repeated(Context& context, NormalParams params)
 {
     ScopedEdition edition(context);
+    ScopedSelectionEdition selection_edition{context};
     do { func(context, {0, params.reg}); } while(--params.count > 0);
 }
 
@@ -2070,6 +2109,7 @@ void move_cursor(Context& context, NormalParams params)
     kak_assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
     const Type offset{direction * std::max(params.count,1)};
     const ColumnCount tabstop = context.options()["tabstop"].get<int>();
+    ScopedSelectionEdition selection_edition{context};
     auto& selections = context.selections();
     for (auto& sel : selections)
     {
@@ -2083,11 +2123,13 @@ void move_cursor(Context& context, NormalParams params)
 void select_whole_buffer(Context& context, NormalParams)
 {
     auto& buffer = context.buffer();
+    ScopedSelectionEdition selection_edition{context};
     context.selections_write_only() = SelectionList{buffer, {{0,0}, {buffer.back_coord(), max_column}}};
 }
 
 void keep_selection(Context& context, NormalParams p)
 {
+    ScopedSelectionEdition selection_edition{context};
     auto& selections = context.selections();
     const int index = p.count ? p.count-1 : selections.main_index();
     if (index >= selections.size())
@@ -2099,6 +2141,7 @@ void keep_selection(Context& context, NormalParams p)
 
 void remove_selection(Context& context, NormalParams p)
 {
+    ScopedSelectionEdition selection_edition{context};
     auto& selections = context.selections();
     const int index = p.count ? p.count-1 : selections.main_index();
     if (index >= selections.size())
@@ -2112,12 +2155,14 @@ void remove_selection(Context& context, NormalParams p)
 
 void clear_selections(Context& context, NormalParams)
 {
+    ScopedSelectionEdition selection_edition{context};
     for (auto& sel : context.selections())
         sel.anchor() = sel.cursor();
 }
 
 void flip_selections(Context& context, NormalParams)
 {
+    ScopedSelectionEdition selection_edition{context};
     for (auto& sel : context.selections())
     {
         const BufferCoord tmp = sel.anchor();
@@ -2129,6 +2174,7 @@ void flip_selections(Context& context, NormalParams)
 
 void ensure_forward(Context& context, NormalParams)
 {
+    ScopedSelectionEdition selection_edition{context};
     for (auto& sel : context.selections())
     {
         const BufferCoord min = sel.min(), max = sel.max();
@@ -2140,18 +2186,21 @@ void ensure_forward(Context& context, NormalParams)
 
 void merge_consecutive(Context& context, NormalParams params)
 {
+    ScopedSelectionEdition selection_edition{context};
     ensure_forward(context, params);
     context.selections().merge_consecutive();
 }
 
 void merge_overlapping(Context& context, NormalParams params)
 {
+    ScopedSelectionEdition selection_edition{context};
     ensure_forward(context, params);
     context.selections().merge_overlapping();
 }
 
 void duplicate_selections(Context& context, NormalParams params)
 {
+    ScopedSelectionEdition selection_edition{context};
     SelectionList& sels = context.selections();
     Vector<Selection> new_sels;
     const int count = params.count ? params.count : 2;

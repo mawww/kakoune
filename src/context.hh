@@ -180,5 +180,19 @@ private:
     SafePtr<Buffer> m_buffer;
 };
 
+struct ScopedSelectionEdition
+{
+    ScopedSelectionEdition(Context& context)
+        : m_context{context},
+          m_buffer{context.has_buffer() ? &context.buffer() : nullptr} {}
+    ScopedSelectionEdition(ScopedSelectionEdition&& other) : m_context{other.m_context}, m_buffer{other.m_buffer}
+    { other.m_buffer = nullptr; }
+
+    ~ScopedSelectionEdition() {}
+private:
+    Context& m_context;
+    SafePtr<Buffer> m_buffer;
+};
+
 }
 #endif // context_hh_INCLUDED
