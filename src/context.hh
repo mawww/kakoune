@@ -83,8 +83,8 @@ public:
     InputHandler& input_handler() const;
     bool has_input_handler() const { return (bool)m_input_handler; }
 
-    SelectionList& selections();
-    const SelectionList& selections() const;
+    SelectionList& selections(bool update = true);
+    const SelectionList& selections(bool update = true) const;
     Vector<String>  selections_content() const;
 
     // Return potentially out of date selections

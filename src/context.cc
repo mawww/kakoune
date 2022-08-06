@@ -26,7 +26,7 @@ Buffer& Context::buffer() const
 {
     if (not has_buffer())
         throw runtime_error("no buffer in context");
-    return const_cast<Buffer&>((*m_selections).buffer());
+    return const_cast<Buffer&>(selections(false).buffer());
 }
 
 Window& Context::window() const
@@ -223,24 +223,23 @@ Buffer* Context::last_buffer() const
     return previous_buffer != jump_list.rend() ? &previous_buffer->buffer() : nullptr;
 }
 
-SelectionList& Context::selections()
+SelectionList& Context::selections(bool update)
 {
     if (not m_selections)
         throw runtime_error("no selections in context");
-    (*m_selections).update();
+    if (update)
+        (*m_selections).update();
     return *m_selections;
 }
 
 SelectionList& Context::selections_write_only()
 {
-    if (not m_selections)
-        throw runtime_error("no selections in context");
-    return *m_selections;
+    return selections(false);
 }
 
-const SelectionList& Context::selections() const
+const SelectionList& Context::selections(bool update) const
 {
-    return const_cast<Context&>(*this).selections();
+    return const_cast<Context&>(*this).selections(update);
 }
 
 Vector<String> Context::selections_content() const
@@ -277,7 +276,7 @@ void Context::end_edition()
 
 StringView Context::main_sel_register_value(StringView reg) const
 {
-    size_t index = m_selections ? (*m_selections).main_index() : 0;
+    size_t index = has_buffer() ? selections(false).main_index() : 0;
     return RegisterManager::instance()[reg].get_main(*this, index);
 }
 
