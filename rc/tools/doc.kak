@@ -144,7 +144,7 @@ define-command -params 0..2 \
                     "${kak_config}/autoload/" \
                     "${kak_runtime}/doc/" \
                     "${kak_runtime}/rc/" \
-                    ${kak_opt_docsextrapaths} \
+                    "${kak_opt_docsextrapaths}" \
                     -type f -name "*.asciidoc" 2>/dev/null |
                     sed 's,.*/,,; s/\.[^.]*$//';;
             1)
@@ -153,7 +153,7 @@ define-command -params 0..2 \
                         "${kak_config}/autoload/" \
                         "${kak_runtime}/doc/" \
                         "${kak_runtime}/rc/" \
-                        ${kak_opt_docsextrapaths} \
+                        "${kak_opt_docsextrapaths}" \
                         -type f -name "$1.asciidoc" 2>/dev/null |
                         head -1
                 )
@@ -181,7 +181,7 @@ define-command -params 0..2 \
                 "${kak_config}/autoload/" \
                 "${kak_runtime}/doc/" \
                 "${kak_runtime}/rc/" \
-                $kak_opt_docsextrapaths \
+                "${kak_opt_docsextrapaths}" \
                 -type f -name "$topic.asciidoc" 2>/dev/null |
                 head -1
         )
