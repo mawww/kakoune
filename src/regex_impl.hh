@@ -209,6 +209,8 @@ public:
                    (not forward and program.first_backward_inst != -1));
     }
 
+    ThreadedRegexVM(ThreadedRegexVM&&) = default;
+    ThreadedRegexVM& operator=(ThreadedRegexVM&&) = default;
     ThreadedRegexVM(const ThreadedRegexVM&) = delete;
     ThreadedRegexVM& operator=(const ThreadedRegexVM&) = delete;
 
@@ -617,6 +619,11 @@ private:
     {
         DualThreadStack() = default;
         DualThreadStack(const DualThreadStack&) = delete;
+        DualThreadStack(DualThreadStack&& other)
+          : m_data{other.m_data}, m_capacity{other.m_capacity}, m_current{other.m_current}, m_next{other.m_next}
+        {
+            other.m_data = nullptr;
+        }
         ~DualThreadStack() { delete[] m_data; }
 
         bool current_is_empty() const { return m_current == 0; }

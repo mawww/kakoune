@@ -246,6 +246,21 @@ struct HashMap
         return item_value(m_items.back());
     }
 
+    template<typename KeyType> requires IsHashCompatible<Key, std::remove_cvref_t<KeyType>>
+    constexpr const EffectiveValue& get(KeyType&& key) const
+    {
+        return const_cast<HashMap&>(*this).get(key);
+    }
+
+    template<typename KeyType> requires IsHashCompatible<Key, std::remove_cvref_t<KeyType>>
+    constexpr EffectiveValue& get(KeyType&& key)
+    {
+        const auto hash = hash_value(key);
+        auto index = find_index(key, hash);
+        kak_assert(index >= 0);
+        return item_value(m_items[index]);
+    }
+
     template<typename KeyType> requires IsHashCompatible<Key, KeyType>
     constexpr void remove(const KeyType& key)
     {
@@ -337,7 +352,7 @@ struct HashMap
     }
 
 private:
-    static EffectiveValue& item_value(Item& item)
+    static auto& item_value(auto& item)
     {
         if constexpr (has_value) { return item.value; } else { return item; }
     }
