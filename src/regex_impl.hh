@@ -587,14 +587,14 @@ private:
     {
         if (pos == config.subject_begin)
             return not (config.flags & RegexExecFlags::NotBeginOfLine);
-        return utf8::codepoint(utf8::previous(pos, config.subject_begin), config.subject_end) == '\n';
+        return *(pos-1) == '\n';
     }
 
     static bool is_line_end(const Iterator& pos, const ExecConfig& config)
     {
         if (pos == config.subject_end)
             return not (config.flags & RegexExecFlags::NotEndOfLine);
-        return utf8::codepoint(pos, config.subject_end) == '\n';
+        return *pos == '\n';
     }
 
     static bool is_word_boundary(const Iterator& pos, const ExecConfig& config)
