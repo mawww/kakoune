@@ -235,10 +235,8 @@ public:
         constexpr bool search = (mode & RegexMode::Search);
 
         ConstArrayView<CompiledRegex::Instruction> instructions{m_program.instructions};
-        if (forward)
-            instructions = instructions.subrange(0, m_program.first_backward_inst);
-        else
-            instructions = instructions.subrange(m_program.first_backward_inst);
+        instructions = forward ? instructions.subrange(0, m_program.first_backward_inst)
+                               : instructions.subrange(m_program.first_backward_inst);
 
         const ExecConfig config{
             Sentinel{forward ? begin : end},
