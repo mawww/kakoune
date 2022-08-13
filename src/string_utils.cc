@@ -195,6 +195,20 @@ InplaceString<23> to_string(Hex val)
     return to_string_impl<23>(val.val, 16);
 }
 
+InplaceString<23> to_string(Grouped val)
+{
+    auto ungrouped = to_string_impl<23>(val.val);
+
+    InplaceString<23> res;
+    for (int pos = 0, len = ungrouped.m_length; pos != len; ++pos)
+    {
+        if (res.m_length and ((len - pos) % 3) == 0) 
+            res.m_data[res.m_length++] = ',';
+        res.m_data[res.m_length++] = ungrouped.m_data[pos];
+    }
+    return res;
+}
+
 InplaceString<23> to_string(float val)
 {
 #if defined(__cpp_lib_to_chars)
@@ -338,11 +352,18 @@ void format_impl(StringView fmt, ArrayView<const StringView> params, AppendFunc 
             if (closing == end)
                 throw runtime_error("format string error, unclosed '{'");
 
-            const int index = (closing == opening + 1) ?
-                implicitIndex : str_to_int({opening+1, closing});
+            auto format = std::find(opening+1, closing, ':');
+            const int index = opening+1 == format ? implicitIndex : str_to_int({opening+1, format});
 
             if (index >= params.size())
                 throw runtime_error("format string parameter index too big");
+
+            if (format != closing)
+            {
+                for (ColumnCount width = str_to_int({format+1, closing}), len = params[index].column_length();
+                     width > len; --width)
+                    append(' ');
+            }
 
             append(params[index]);
             implicitIndex = index+1;
@@ -454,7 +475,7 @@ UnitTest test_string{[]()
     kak_assert(subsequence_match("tchou kanaky", "tchou kanaky"));
     kak_assert(not subsequence_match("tchou kanaky", "tchou  kanaky"));
 
-    kak_assert(format("Youhou {1} {} {0} \\{}", 10, "hehe", 5) == "Youhou hehe 5 10 {}");
+    kak_assert(format("Youhou {1} {} '{0:4}' \\{}", 10, "hehe", 5) == "Youhou hehe 5 '  10' {}");
 
     char buffer[20];
     kak_assert(format_to(buffer, "Hey {}", 15) == "Hey 15");

@@ -117,12 +117,15 @@ struct InplaceString
     constexpr operator StringView() const { return {m_data, ByteCount{m_length}}; }
     operator String() const { return {m_data, ByteCount{m_length}}; }
 
-    unsigned char m_length;
+    unsigned char m_length{};
     char m_data[N];
 };
 
 struct Hex { size_t val; };
 constexpr Hex hex(size_t val) { return {val}; }
+
+struct Grouped { size_t val; };
+constexpr Grouped grouped(size_t val) { return {val}; }
 
 InplaceString<15> to_string(int val);
 InplaceString<15> to_string(unsigned val);
@@ -130,6 +133,7 @@ InplaceString<23> to_string(long int val);
 InplaceString<23> to_string(unsigned long val);
 InplaceString<23> to_string(long long int val);
 InplaceString<23> to_string(Hex val);
+InplaceString<23> to_string(Grouped val);
 InplaceString<23> to_string(float val);
 InplaceString<7>  to_string(Codepoint c);
 
