@@ -33,7 +33,7 @@ evaluate-commands %sh{
               perl pug python ragel ruby rust sass scala scss sh swift \
               tupfile yaml; do
         if [ "$ft" = kak ]; then ref="kakrc"; else ref="$ft"; fi
-        printf 'add-highlighter shared/restructuredtext/%s region %s %s ref %s\n' "$ft" '\.\.\h*'$ft'::\h*c\h*\n' '^(?=\S)' "$ref"
+        printf 'add-highlighter shared/restructuredtext/%s region %s %s ref %s\n' "$ft" "\.\.\h*code-block::\h*$ft\h*\n" '^(?=\S)' "$ref"
     done
 }
 
