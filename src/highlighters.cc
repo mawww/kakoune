@@ -2233,17 +2233,23 @@ private:
 
             for (auto& [matches, regex, pivot, vm] : matchers)
             {
-                for (auto&& m : RegexIterator{l.begin(), l.end(), vm, flags})
+                auto extra_flags = RegexExecFlags::None;
+                auto pos = l.begin();
+                while (vm.exec(pos, l.end(), l.begin(), l.end(), flags | extra_flags))
                 {
-                    const bool with_capture = regex.mark_count() > 0 and m[1].matched and
-                                              m[0].second - m[0].first < std::numeric_limits<uint16_t>::max();
+                    ConstArrayView<const char*> captures = vm.captures();
+                    const bool with_capture = regex.mark_count() > 0 and captures[2] != nullptr and
+                                              captures[1] - captures[0] < std::numeric_limits<uint16_t>::max();
                     matches.push_back({
                         line,
-                        (int)(m[0].first - l.begin()),
-                        (int)(m[0].second - l.begin()),
-                        (uint16_t)(with_capture ? m[1].first - m[0].first : 0),
-                        (uint16_t)(with_capture ? m[1].second - m[1].first : 0)
+                        (int)(captures[0] - l.begin()),
+                        (int)(captures[1] - l.begin()),
+                        (uint16_t)(with_capture ? captures[2] - captures[0] : 0),
+                        (uint16_t)(with_capture ? captures[3] - captures[2] : 0)
                     });
+                    pos = captures[1];
+
+                    extra_flags = (captures[0] == captures[1]) ? RegexExecFlags::NotInitialNull : RegexExecFlags::None;
                 }
             }
         }
