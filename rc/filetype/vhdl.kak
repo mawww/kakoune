@@ -182,7 +182,7 @@ define-command -hidden vhdl-insert-on-new-line %[
         evaluate-commands %[
             try %[
                 # Validate previous line and that it is not closed yet.
-                execute-keys -draft kx <a-k>^\h*(?i)((then|(.*:\h*)?if\b.*\bthen)$)<ret> j}ijx <a-K>^<c-r>x(?i)end\b<ret>
+                execute-keys -draft kx <a-k>^\h*(?i)((then|(.*:\h*)?if\b.*\bthen)$)<ret> j}ijx <a-K>^<c-r>x(?i)(elsif|else|end)\b<ret>
                 # Don't add for "if ... generate", it requires "end generate;".
                 execute-keys -draft kx <a-K>(?i)\bgenerate\b<ret>
                 execute-keys -draft o<c-r>xend<space>if<semicolon><esc>
@@ -191,7 +191,7 @@ define-command -hidden vhdl-insert-on-new-line %[
         # Wisely add "end generate;".
         evaluate-commands %[
             try %[
-                execute-keys -draft kx <a-k>^\h*(?i).*\bgenerate$<ret> j}ijx <a-K>^<c-r>x(?i)(begin|end|else)\b<ret>
+                execute-keys -draft kx <a-k>^\h*(?i).*\bgenerate$<ret> j}ijx <a-K>^<c-r>x(?i)(begin|elsif|else|end)\b<ret>
                 # Don't add in case of comment line.
                 execute-keys -draft kx <a-K>^\h*--<ret>
                 execute-keys -draft o<c-r>xend<space>generate<semicolon><esc>
