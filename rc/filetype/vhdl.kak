@@ -390,12 +390,12 @@ define-command -hidden vhdl-indent-on-new-line %{
             execute-keys -draft <semicolon> <a-gt>
         ]
 
-        # Add "when " and increase indent after "case ... is".
+        # Add "when " after "case ... is".
         try %[
             execute-keys -draft kx<a-k> (?i)\h*case\b.*\h+is$ <ret>
             # Don't indent if in comment line.
             execute-keys -draft kx<a-K>(?i)^\h*--<ret>
-            execute-keys -draft <semicolon>iwhen<space><esc><a-gt>
+            execute-keys -draft <semicolon>iwhen<space><esc>
         ]
 
         # Copy the indentation of the matching if.
