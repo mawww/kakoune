@@ -65,7 +65,7 @@ public:
     InputHandler& input_handler() { return m_input_handler; }
     const InputHandler& input_handler() const { return m_input_handler; }
 
-    void change_buffer(Buffer& buffer);
+    void change_buffer(Buffer& buffer, Optional<FunctionRef<void()>> set_selection);
 
     StringView get_env_var(StringView name) const;
 

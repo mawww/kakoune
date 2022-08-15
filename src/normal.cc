@@ -2042,6 +2042,20 @@ void move_in_history(Context& context, NormalParams params)
                             history_id, max_history_id));
 }
 
+void undo_selection_change(Context& context, NormalParams params)
+{
+    int count = std::max(1, params.count);
+    while (count--)
+        context.undo_selection_change();
+}
+
+void redo_selection_change(Context& context, NormalParams params)
+{
+    int count = std::max(1, params.count);
+    while (count--)
+        context.redo_selection_change();
+}
+
 void exec_user_mappings(Context& context, NormalParams params)
 {
     on_next_key_with_autoinfo(context, "user-mapping", KeymapMode::None,
@@ -2366,6 +2380,9 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
     { {'U'}, {"redo", redo} },
     { {alt('u')}, {"move backward in history", move_in_history<Direction::Backward>} },
     { {alt('U')}, {"move forward in history", move_in_history<Direction::Forward>} },
+
+    { {ctrl('h')}, {"undo selection change", undo_selection_change} },
+    { {ctrl('k')}, {"redo selection change", redo_selection_change} },
 
     { {alt('i')}, {"select inner object", select_object<ObjectFlags::ToBegin | ObjectFlags::ToEnd | ObjectFlags::Inner>} },
     { {alt('a')}, {"select whole object", select_object<ObjectFlags::ToBegin | ObjectFlags::ToEnd>} },
