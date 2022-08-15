@@ -197,12 +197,12 @@ define-command -hidden vhdl-insert-on-new-line %[
                 execute-keys -draft o<c-r>xend<space>generate<semicolon><esc>
             ]
         ]
-        # Wisely add "end case;".
+        # Wisely add "when" and "end case;".
         evaluate-commands %[
             try %[
                 # TODO: Case needs special handling.
-                execute-keys -draft kx <a-k>^\h*(?i)(case|.*\h*:\h*case)\b<ret> }ix <a-K>^<c-r>x(?i)(end|when)<ret>
-                execute-keys -draft o<c-r>xend<space>case<semicolon><esc>
+                execute-keys -draft kx <a-k>^\h*(?i)(case|.*\h*:\h*case)\b<ret> jwx <a-K>^<c-r>x(?i)(end|when)<ret>
+                execute-keys -draft <c-r>xo<c-r>xend<space>case<semicolon><esc>kAwhen<space><esc>
             ]
         ]
         # Wisely add "begin" and "end block;".
@@ -250,7 +250,6 @@ define-command -hidden vhdl-insert-on-new-line %[
         # Wisely add ");" for "type ... is (".
         evaluate-commands %[
             try %[
-                # FIXME: There is some problem.
                 execute-keys -draft kx <a-k>^\h*(?i)(type\b.*\bis\h+\(\h*)$<ret> j}ijx <a-K>^<c-r>x(\))<ret>
                 execute-keys -draft o<c-r>x)<semicolon><esc>
             ]
@@ -385,26 +384,17 @@ define-command -hidden vhdl-indent-on-new-line %{
          # Increase indent after some keywords.
         try %[
             execute-keys -draft kx<a-k> (?i)\b(begin|block|body|else|for|generate|if|is|loop|process|protected|record|select|then)$ <ret>
-            # Does not indent if in comment line.
+            # Do not indent if in comment line.
             execute-keys -draft kx<a-K>(?i)^\h*--<ret>
-            # Handle case line in a bit different way.
-            execute-keys -draft kx<a-K>(?i)^\h*case\b<ret>
+            # Do not indent for "case ... is".
+            execute-keys -draft kx<a-K>^\h*(?i)(case|.*\h*:\h*case)\b<ret>
             execute-keys -draft <semicolon> <a-gt>
         ]
-
-        # Add "when " after "case ... is".
-        try %[
-            execute-keys -draft kx<a-k> (?i)\h*case\b.*\h+is$ <ret>
-            # Don't indent if in comment line.
-            execute-keys -draft kx<a-K>(?i)^\h*--<ret>
-            execute-keys -draft <semicolon>iwhen<space><esc>
-        ]
-
         # Copy the indentation of the matching if.
         try %{ execute-keys -draft , k x <a-k> ^\h*(elsif\b|else$) <ret> gh [c^\h*(\S*\h*:\h*)?if\b,\bend\sif\b <ret> x <a-S> 1<a-&> , j K <a-&> }
 
         # Increase indent after some operators.
-        try %[ execute-keys -draft <semicolon> , k x <a-k> (\(|=>|<=|:=)$ <ret> j <a-gt> ]
+        try %[ execute-keys -draft <semicolon> k x <a-k> (\(|=>|<=|:=)$ <ret> j <a-gt> ]
      }
 }
 
