@@ -2210,11 +2210,57 @@ private:
         m_regexes.insert({key, Regex{str, flags}});
     }
 
-    void add_matches(const Buffer& buffer, LineRange range, Cache& cache) const
+    class MatchAdder
     {
-        for (auto& [key, regex] : m_regexes)
-            cache.matches[key];
+    public:
+        MatchAdder(RegionsHighlighter& region, const Buffer& buffer, Cache& cache) : m_buffer(buffer)
+        {
+            for (auto& [key, regex] : region.m_regexes)
+                cache.matches[key];
+            for (auto& [key, regex] : region.m_regexes)
+                m_matchers.push_back(Matcher{cache.matches.get(key), regex});
+        }
 
+        ~MatchAdder()
+        {
+            // Move new matches into position.
+            for (auto& [matches, regex, pivot, vm] : m_matchers)
+                std::inplace_merge(matches.begin(), matches.begin() + pivot, matches.end(),
+                                   [](const auto& lhs, const auto& rhs) { return lhs.line < rhs.line; });
+        }
+
+        void add(LineRange range)
+        {
+            for (auto line = range.begin; line < range.end; ++line)
+            {
+                const StringView l = m_buffer[line];
+                const auto flags = RegexExecFlags::NotEndOfLine; // buffer line already ends with \n
+
+                for (auto& [matches, regex, pivot, vm] : m_matchers)
+                {
+                    auto extra_flags = RegexExecFlags::None;
+                    auto pos = l.begin();
+                    while (vm.exec(pos, l.end(), l.begin(), l.end(), flags | extra_flags))
+                    {
+                        ConstArrayView<const char*> captures = vm.captures();
+                        const bool with_capture = regex.mark_count() > 0 and captures[2] != nullptr and
+                                                  captures[1] - captures[0] < std::numeric_limits<uint16_t>::max();
+                        matches.push_back({
+                            line,
+                            (int)(captures[0] - l.begin()),
+                            (int)(captures[1] - l.begin()),
+                            (uint16_t)(with_capture ? captures[2] - captures[0] : 0),
+                            (uint16_t)(with_capture ? captures[3] - captures[2] : 0)
+                        });
+                        pos = captures[1];
+
+                        extra_flags = (captures[0] == captures[1]) ? RegexExecFlags::NotInitialNull : RegexExecFlags::None;
+                    }
+                }
+            }
+        }
+
+    private:
         struct Matcher
         {
             RegexMatchList& matches;
@@ -2222,48 +2268,10 @@ private:
             size_t pivot = matches.size();
             ThreadedRegexVM<const char*, RegexMode::Forward | RegexMode::Search> vm{*regex.impl()};
         };
-        Vector<Matcher> matchers;
-        for (auto& [key, regex] : m_regexes)
-            matchers.push_back(Matcher{cache.matches.get(key), regex});
 
-        for (auto line = range.begin; line < range.end; ++line)
-        {
-            const StringView l = buffer[line];
-            const auto flags = RegexExecFlags::NotEndOfLine; // buffer line already ends with \n
-
-            for (auto& [matches, regex, pivot, vm] : matchers)
-            {
-                auto extra_flags = RegexExecFlags::None;
-                auto pos = l.begin();
-                while (vm.exec(pos, l.end(), l.begin(), l.end(), flags | extra_flags))
-                {
-                    ConstArrayView<const char*> captures = vm.captures();
-                    const bool with_capture = regex.mark_count() > 0 and captures[2] != nullptr and
-                                              captures[1] - captures[0] < std::numeric_limits<uint16_t>::max();
-                    matches.push_back({
-                        line,
-                        (int)(captures[0] - l.begin()),
-                        (int)(captures[1] - l.begin()),
-                        (uint16_t)(with_capture ? captures[2] - captures[0] : 0),
-                        (uint16_t)(with_capture ? captures[3] - captures[2] : 0)
-                    });
-                    pos = captures[1];
-
-                    extra_flags = (captures[0] == captures[1]) ? RegexExecFlags::NotInitialNull : RegexExecFlags::None;
-                }
-            }
-        }
-
-        for (auto& [matches, regex, pivot, vm] : matchers)
-        {
-            auto pos = std::lower_bound(matches.begin(), matches.begin() + pivot, range.begin,
-                                        [](const RegexMatch& m, LineCount l) { return m.line < l; });
-            kak_assert(pos == matches.begin() + pivot or pos->line >= range.end); // We should not have had matches for range
-
-            // Move new matches into position.
-            std::rotate(pos, matches.begin() + pivot, matches.end());
-        }
-    }
+        const Buffer& m_buffer;
+        Vector<Matcher> m_matchers;
+    };
 
     void update_changed_lines(const Buffer& buffer, ConstArrayView<LineModification> modifs, Cache& cache)
     {
@@ -2299,7 +2307,6 @@ private:
         }
     }
 
-
     bool update_matches(Cache& cache, const Buffer& buffer, LineRange range)
     {
         const size_t buffer_timestamp = buffer.timestamp();
@@ -2315,7 +2322,7 @@ private:
                 add_regex(region->m_recurse, region->match_capture());
             }
 
-            add_matches(buffer, range, cache);
+            MatchAdder{*this, buffer, cache}.add(range);
             cache.ranges.reset(range);
             cache.buffer_timestamp = buffer_timestamp;
             cache.regions_timestamp = m_regions_timestamp;
@@ -2333,10 +2340,11 @@ private:
                 modified = true;
             }
 
-            cache.ranges.add_range(range, [&, this](const LineRange& range) {
+            MatchAdder matches{*this, buffer, cache};
+            cache.ranges.add_range(range, [&](const LineRange& range) {
                 if (range.begin == range.end)
                     return;
-                add_matches(buffer, range, cache);
+                matches.add(range);
                 modified = true;
             });
             return modified;
