@@ -34,13 +34,13 @@ provide-module graphql %§
 
 add-highlighter shared/graphql regions
 add-highlighter shared/graphql/code default-region group
-add-highlighter shared/graphql/line-description region '#' '\n' fill comment
+add-highlighter shared/graphql/line-description region '#' '$' fill comment
 add-highlighter shared/graphql/block-description region '"""' '"""' fill comment
-add-highlighter shared/graphql/description region '"' '"\s*\n' fill comment
+add-highlighter shared/graphql/description region '"' '"\s*$' fill comment
 add-highlighter shared/graphql/object region -recurse \{ [{] [}] regions
 
 # Objects
-add-highlighter shared/graphql/object/line-description region '#' '\n' fill comment
+add-highlighter shared/graphql/object/line-description region '#' '$' fill comment
 add-highlighter shared/graphql/object/block-description region '"""' '"""' fill comment
 add-highlighter shared/graphql/object/field default-region group
 add-highlighter shared/graphql/object/field/ regex ([A-Za-z][A-Za-z0-9_-]*)(?:\([^)]*\))?\h*[:{] 1:attribute

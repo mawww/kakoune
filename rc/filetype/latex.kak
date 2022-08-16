@@ -39,7 +39,7 @@ add-highlighter shared/latex/content default-region group
 # - at word boundaries not preceded nor followed by @ : \ { } [ ] *, or
 # - after an unescaped }
 add-highlighter shared/latex/cs region '(?<!\\)(?:\\\\)*\K\\[@\w]' '/\n|(?<![@:\\{}\[\]*])(?![@:\\{}\[\]*])\b|(?<!\\)(?:\\\\)*\K\}\K' group
-add-highlighter shared/latex/comment region '(?<!\\)(?:\\\\)*\K%' '\n' fill comment
+add-highlighter shared/latex/comment region '(?<!\\)(?:\\\\)*\K%' '$' fill comment
 
 # Document and LaTeX2e control sequence
 add-highlighter shared/latex/cs/ regex '(?:\\[a-zA-Z@]+)' 0:keyword
