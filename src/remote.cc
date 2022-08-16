@@ -360,12 +360,17 @@ template<>
 struct MsgReader::Reader<Face> {
     static Face read(MsgReader& reader)
     {
+        Color fg = Reader<Color>::read(reader);
+        Color bg = Reader<Color>::read(reader);
+        Attribute attributes = Reader<Attribute>::read(reader);
+        Color underline = Reader<Color>::read(reader);
+        String name = Reader<String>::read(reader);
         return {
-            Reader<Color>::read(reader),
-            Reader<Color>::read(reader),
-            Reader<Attribute>::read(reader),
-            Reader<Color>::read(reader),
-            intern(Reader<String>::read(reader)),
+            fg,
+            bg,
+            attributes,
+            underline,
+            name.empty() ? StringDataPtr{} : intern(name),
         };
     }
 };
