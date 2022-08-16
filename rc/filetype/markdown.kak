@@ -124,7 +124,7 @@ define-command -hidden markdown-indent-on-new-line %{
 define-command -hidden markdown-load-languages %{
     evaluate-commands -draft %{ try %{
         execute-keys 'gtGbGls```\h*\{?[.=]?\K[^}\s]+<ret>'
-        evaluate-commands -itersel %{ require-module %val{selection} }
+        evaluate-commands -itersel %{ try %{ require-module %val{selection} } }
     }}
 }
 
