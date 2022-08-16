@@ -32,8 +32,7 @@ evaluate-commands %sh{
               julia kak kickstart latex lisp lua makefile moon objc \
               perl pug python ragel ruby rust sass scala scss sh swift \
               tupfile yaml; do
-        if [ "$ft" = kak ]; then ref="kakrc"; else ref="$ft"; fi
-        printf 'add-highlighter shared/restructuredtext/%s region %s %s ref %s\n' "$ft" "\.\.\h*code-block::\h*$ft\h*\n" '^(?=\S)' "$ref"
+        printf 'add-highlighter shared/restructuredtext/%s region %s %s ref %s\n' "$ft" "\.\.\h*code-block::\h*$ft\h*\n" '^(?=\S)' "$ft"
     done
 }
 
