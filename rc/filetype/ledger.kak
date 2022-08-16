@@ -64,12 +64,14 @@ add-highlighter shared/ledger/other region '^(P|=|~)' '$' fill meta
 # The following highlighters implement
 # https://www.ledger-cli.org/3.0/doc/ledger3.html#Command-Directives
 
+add-highlighter shared/ledger/default default-region group
+
 # Add highlighters for simple one-line command directives
 evaluate-commands %sh{
     # TODO: Is `expr` also a command directive? The documentation confuses me.
     for cmd in 'apply account' 'apply fixed' 'assert' 'bucket' 'check' 'end' \
                'include' 'apply tag' 'test' 'year'; do
-        echo "add-highlighter shared/ledger/ region '^${cmd}' '.' fill function"
+        echo "add-highlighter shared/ledger/default/ regex '^${cmd}\b' 0:function"
     done
 }
 
