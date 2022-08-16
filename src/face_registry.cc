@@ -147,7 +147,8 @@ void FaceRegistry::add_face(StringView name, StringView facedesc, bool override)
         throw runtime_error(format("invalid face name: '{}'", name));
 
     FaceSpec spec = parse_face(facedesc);
-    spec.face.name = intern(name);
+    StringDataPtr interned = intern(name);
+    spec.face.name = interned;
     auto it = m_faces.find(spec.base);
     if (spec.base == name and it != m_faces.end())
     {
@@ -162,7 +163,7 @@ void FaceRegistry::add_face(StringView name, StringView facedesc, bool override)
             throw runtime_error("face cycle detected");
         it = m_faces.find(it->value.base);
     }
-    m_faces[name] = std::move(spec);
+    m_faces[interned->strview()] = std::move(spec);
 }
 
 void FaceRegistry::remove_face(StringView name)
