@@ -30,7 +30,7 @@ add-highlighter shared/fidl/line_comment region // $ group
 add-highlighter shared/fidl/line_comment/comment fill comment
 add-highlighter shared/fidl/line_comment/todo regex TODO|FIXME: 0:meta
 
-add-highlighter shared/fidl/attributes region @[a-zA-Z] \b fill meta
+add-highlighter shared/fidl/attributes region @[a-zA-Z]\w* '' fill meta
 
 add-highlighter shared/fidl/code/keywords regex \b(as|bits|compose|const|enum|error|flexible|optional|library|protocol|resource|service|strict|struct|table|type|union|using)\b 0:keyword
 add-highlighter shared/fidl/code/types regex \b(array|bool|bytes?|client_end|float(32|64)|server_end|string|u?int(8|16|32|64)|vector)\b 0:type

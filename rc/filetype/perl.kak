@@ -43,8 +43,8 @@ add-highlighter shared/perl/double_string  region (?<!\$)"          (?<!\\)(\\\\
 add-highlighter shared/perl/single_string  region (?<!\$)(?<!\\\\)' (?<!\\)(\\\\)*' fill string
 add-highlighter shared/perl/comment        region (?<!\$)(?<!\\)#   $               fill comment
 
-add-highlighter shared/perl/regex          region m?(?<!/)(?<!qr)/[^/\n]+(?=/)  /\w*   fill meta
-add-highlighter shared/perl/sregex         region s/[^/\n]+/[^/\n]+(?=/)        /\w*   fill meta
+add-highlighter shared/perl/regex          region m?(?<!/)(?<!qr)/[^/\n]+/\w*   ''     fill meta
+add-highlighter shared/perl/sregex         region s/[^/\n]+/[^/\n]+/\w*         ''     fill meta
 add-highlighter shared/perl/bregex         region s\{[^\}\n]+\}\{[^\}\n]*(?=\}) \}\w*  fill meta
 
 add-highlighter shared/perl/quote_brace    region -recurse \{ \bq[qrwx]?\{ \}          fill string

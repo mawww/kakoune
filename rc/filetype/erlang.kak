@@ -33,11 +33,11 @@ add-highlighter shared/erlang/default default-region group
 
 add-highlighter shared/erlang/comment region '(?<!\$)%' '$' fill comment
 add-highlighter shared/erlang/attribute_atom_single_quoted region %{-'} %{(?<!\\)(?:\\\\)*'(?=[\( \.])} fill builtin
-add-highlighter shared/erlang/attribute region '\b-[a-z][\w@]*(?=[\( \.])' '\K' fill builtin
+add-highlighter shared/erlang/attribute region '\b-[a-z][\w@]*(?=[\( \.])' '' fill builtin
 add-highlighter shared/erlang/atom_single_quoted region %{'} %{(?<!\\)(?:\\\\)*'} fill type
 add-highlighter shared/erlang/char_list region %{"} %{(?<!\\)(?:\\\\)*"} fill string
-add-highlighter shared/erlang/dollar_double_quote region %{\$\\?"} '\K' fill value
-add-highlighter shared/erlang/dollar_single_quote region %{\$\\?'} '\K' fill value
+add-highlighter shared/erlang/dollar_double_quote region %{\$\\?"} '' fill value
+add-highlighter shared/erlang/dollar_single_quote region %{\$\\?'} '' fill value
 
 # default-region regex highlighters
 add-highlighter shared/erlang/default/atom regex '\b[a-z][\w@]*\b' 0:type

@@ -2008,8 +2008,8 @@ public:
         ParametersParser parser{params, region_desc.params};
 
         const bool match_capture = (bool)parser.get_switch("match-capture");
-        if (parser[0].empty() or parser[1].empty())
-            throw runtime_error("begin and end must not be empty");
+        if (parser[0].empty())
+            throw runtime_error("begin must not be empty");
 
         const auto& type = parser[2];
         auto& registry = HighlighterRegistry::instance();
@@ -2121,6 +2121,7 @@ private:
 
         bool match_capture() const { return m_match_capture; }
         bool is_default() const { return m_default; }
+        bool has_end() const { return not m_end.empty(); }
 
         Highlighter& delegate() { return *m_delegate; }
 
@@ -2318,7 +2319,8 @@ private:
             for (auto& [key, region] : m_regions)
             {
                 add_regex(region->m_begin, region->match_capture());
-                add_regex(region->m_end, region->match_capture());
+                if (region->has_end())
+                    add_regex(region->m_end, region->match_capture());
                 add_regex(region->m_recurse, region->match_capture());
             }
 
@@ -2368,14 +2370,21 @@ private:
         {
             auto& [index, beg_it] = *begin;
             auto& [name, region] = m_regions.item(index);
-            auto& end_matches = cache.matches.get(RegexKey{region->m_end, region->match_capture()});
             auto& recurse_matches = region->m_recurse.empty() ?
                 empty_matches : cache.matches.get(RegexKey{region->m_recurse, region->match_capture()});
 
-            auto end_it = find_matching_end(buffer, beg_it->end_coord(), end_matches, recurse_matches,
-                                            region->match_capture() ? beg_it->capture(buffer) : Optional<StringView>{});
-
-            if (end_it == end_matches.end() or end_it->end_coord() >= range.end) // region continue past range end
+            RegexMatchList::const_iterator end_it;
+            bool past_end = false;
+            if (region->has_end())
+            {
+                auto& end_matches = cache.matches.get(RegexKey{region->m_end, region->match_capture()});
+                end_it = find_matching_end(buffer, beg_it->end_coord(), end_matches, recurse_matches,
+                                           region->match_capture() ? beg_it->capture(buffer) : Optional<StringView>{});
+                past_end = end_it == end_matches.end();
+            }
+            else
+                end_it = beg_it;
+            if (past_end or end_it->end_coord() >= range.end) // region continue past range end
             {
                 auto begin_coord = beg_it->begin_coord();
                 if (begin_coord < range.end)

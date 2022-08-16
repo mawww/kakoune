@@ -65,7 +65,7 @@ add-highlighter shared/ruby/              region -match-capture '%[qwQW]?([^\s0-
 add-highlighter shared/ruby/              region -match-capture '%[isIS]([^\s0-9A-Za-z\(\{\[<>\]\}\)])' ([^\s0-9A-Za-z\(\{\[<>\]\}\)]) fill variable
 add-highlighter shared/ruby/              region -match-capture '%[rxRX]([^\s0-9A-Za-z\(\{\[<>\]\}\)])' ([^\s0-9A-Za-z\(\{\[<>\]\}\)]) fill meta
 add-highlighter shared/ruby/heredoc region -match-capture '<<[-~]?(?!self)(\w+)'      '^\h*(\w+)$' fill string
-add-highlighter shared/ruby/division region '[\w\)\]]\K(/|(\h+/\h+))' '\w' group # Help Kakoune to better detect /…/ literals
+add-highlighter shared/ruby/division region '[\w\)\]]\K(/|(\h+/\h+))[^\n]*\w' '' group # Help Kakoune to better detect /…/ literals
 
 # Regular expression flags are: i → ignore case, m → multi-lines, o → only interpolate #{} blocks once, x → extended mode (ignore white spaces)
 # Literals are: i → array of symbols, q → string, r → regular expression, s → symbol, w → array of words, x → capture shell result

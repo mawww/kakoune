@@ -86,7 +86,7 @@ add-highlighter shared/crystal/quoted-symbol region ':"' '(?<!\\)(\\\\)*"' fill 
 # https://crystal-lang.org/reference/syntax_and_semantics/literals/regex.html#modifiers
 add-highlighter shared/crystal/regex region '/' '(?<!\\)(\\\\)*/[imx]*' regions
 # Avoid unterminated regular expression
-add-highlighter shared/crystal/division region ' / ' '.\K' group
+add-highlighter shared/crystal/division region ' / .' '' group
 
 # Percent regex literals
 # https://crystal-lang.org/reference/syntax_and_semantics/literals/regex.html#percent-regex-literals
