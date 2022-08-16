@@ -21,8 +21,12 @@ hook global WinSetOption filetype=markdown %{
 }
 
 hook -group markdown-load-languages global WinSetOption filetype=markdown %{
-    hook -group markdown-load-languages window NormalIdle .* markdown-load-languages
-    hook -group markdown-load-languages window InsertIdle .* markdown-load-languages
+    markdown-load-languages '%'
+}
+
+hook -group markdown-load-languages global WinSetOption filetype=markdown %{
+    hook -group markdown-load-languages window NormalIdle .* %{markdown-load-languages gtGbGl}
+    hook -group markdown-load-languages window InsertIdle .* %{markdown-load-languages gtGbGl}
 }
 
 
@@ -46,31 +50,16 @@ add-highlighter shared/markdown/listblock/g default-region group
 add-highlighter shared/markdown/listblock/g/ ref markdown/inline
 add-highlighter shared/markdown/listblock/g/marker regex ^\h*([-*])\s 1:bullet
 
-evaluate-commands %sh{
-  languages="
-    awk c cabal clojure coffee cpp crystal css cucumber d diff dockerfile elixir erlang fish
-    gas go haml haskell html ini java javascript json julia kak kickstart
-    latex lisp lua makefile markdown moon objc ocaml perl pug python ragel
-    ruby rust sass scala scss sh swift toml tupfile typescript yaml sql
-  "
-  for lang in ${languages}; do
-    printf 'add-highlighter shared/markdown/%s region -match-capture ^(\h*)```\h*(%s\\b|\\{[.=]?%s\\})   ^(\h*)``` regions\n' "${lang}" "${lang}" "${lang}"
-    printf 'add-highlighter shared/markdown/%s/ default-region fill meta\n' "${lang}"
-    printf 'add-highlighter shared/markdown/%s/inner region \A\h*```[^\\n]*\K (?=```) ref %s\n' "${lang}" "${lang}"
-    printf 'add-highlighter shared/markdown/listblock/%s region -match-capture ^(\h*)```\h*(%s\\b|\\{[.=]?%s\\})   ^(\h*)``` regions\n' "${lang}" "${lang}" "${lang}"
-    printf 'add-highlighter shared/markdown/listblock/%s/ default-region fill meta\n' "${lang}"
-    printf 'add-highlighter shared/markdown/listblock/%s/inner region \A\h*```[^\\n]*\K (?=```) ref %s\n' "${lang}" "${lang}"
-  done
-}
-
 add-highlighter shared/markdown/codeblock region -match-capture \
     ^(\h*)```\h* \
     ^(\h*)```\h*$ \
-    fill meta
+    regions
+add-highlighter shared/markdown/codeblock/ default-region fill meta
 add-highlighter shared/markdown/listblock/codeblock region -match-capture \
     ^(\h*)```\h* \
     ^(\h*)```\h*$ \
-    fill meta
+    regions
+add-highlighter shared/markdown/listblock/codeblock/ default-region fill meta
 add-highlighter shared/markdown/codeline region "^( {4}|\t)" "$" fill meta
 
 # https://spec.commonmark.org/0.29/#link-destination
@@ -102,6 +91,21 @@ add-highlighter shared/markdown/inline/text/ regex "\H( {2,})$" 1:+r@meta
 # Commands
 # ‾‾‾‾‾‾‾‾
 
+define-command markdown-load-languages -params 1 %{
+    evaluate-commands -draft %{ try %{
+        execute-keys "%arg{1}s```\h*\{?[.=]?\K\w+<ret>" # }
+        evaluate-commands -itersel %{ try %{
+            require-module %val{selection}
+            add-highlighter "shared/markdown/codeblock/%val{selection}" region -match-capture "^(\h*)```\h*(%val{selection}\b|\{[.=]?%val{selection}\})" ^(\h*)``` regions
+            add-highlighter "shared/markdown/codeblock/%val{selection}/" default-region fill meta
+            add-highlighter "shared/markdown/codeblock/%val{selection}/inner" region \A\h*```[^\n]*\K (?=```) ref %val{selection}
+            add-highlighter "shared/markdown/listblock/codeblock/%val{selection}" region -match-capture "^(\h*)```\h*(%val{selection}\b|\{[.=]?%val{selection}\})" ^(\h*)``` regions
+            add-highlighter "shared/markdown/listblock/codeblock/%val{selection}/" default-region fill meta
+            add-highlighter "shared/markdown/listblock/codeblock/%val{selection}/inner" region \A\h*```[^\n]*\K (?=```) ref %val{selection}
+        }}
+    }}
+}
+
 define-command -hidden markdown-trim-indent %{
     evaluate-commands -no-hooks -draft -itersel %{
         execute-keys x
@@ -121,13 +125,6 @@ define-command -hidden markdown-indent-on-new-line %{
         # remove trailing white spaces
         try %{ execute-keys -draft k x s \h+$ <ret> d }
     }
-}
-
-define-command -hidden markdown-load-languages %{
-    evaluate-commands -draft %{ try %{
-        execute-keys 'gtGbGls```\h*\{?[.=]?\K[^}\s]+<ret>'
-        evaluate-commands -itersel %{ try %{ require-module %val{selection} } }
-    }}
 }
 
 }
