@@ -3,7 +3,6 @@
 
 #include "color.hh"
 #include "flags.hh"
-#include "shared_string.hh"
 
 namespace Kakoune
 {
@@ -33,7 +32,7 @@ struct Face
     Color bg = Color::Default;
     Attribute attributes = Attribute::Normal;
     Color underline = Color::Default;
-    StringDataPtr name = {};
+    StringView name = {};
 
     friend constexpr bool operator==(const Face& lhs, const Face& rhs)
     {
@@ -84,7 +83,7 @@ inline Face merge_faces(const Face& base, const Face& face)
                  base.attributes & Attribute::FinalAttr ? base.attributes :
                  face.attributes | base.attributes,
                  choose(&Face::underline, Attribute{0}),
-                 face.name ? face.name : base.name };
+                 face.name.empty() ? base.name : face.name };
 }
 
 }

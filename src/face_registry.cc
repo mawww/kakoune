@@ -120,13 +120,13 @@ Face FaceRegistry::resolve_spec(const FaceSpec& spec) const
     Face face = spec.face;
     for (auto* reg = this; reg != nullptr; reg = reg->m_parent.get())
     {
-        auto it = reg->m_faces.find(base);
+        auto it = reg->m_faces.find(intern(base));
         if (it == reg->m_faces.end())
             continue;
 
         if (it->value.base.empty())
             return merge_faces(it->value.face, face);
-        if (it->value.base != it->key)
+        if (it->value.base != it->key->strview())
             return merge_faces(reg->resolve_spec(it->value), face);
         else
         {
@@ -139,7 +139,9 @@ Face FaceRegistry::resolve_spec(const FaceSpec& spec) const
 
 void FaceRegistry::add_face(StringView name, StringView facedesc, bool override)
 {
-    if (not override and m_faces.find(name) != m_faces.end())
+    StringDataPtr interned = intern(name);
+
+    if (not override and m_faces.find(interned) != m_faces.end())
         throw runtime_error(format("face '{}' already defined", name));
 
     if (name.empty() or is_color_name(name) or
@@ -147,9 +149,8 @@ void FaceRegistry::add_face(StringView name, StringView facedesc, bool override)
         throw runtime_error(format("invalid face name: '{}'", name));
 
     FaceSpec spec = parse_face(facedesc);
-    StringDataPtr interned = intern(name);
-    spec.face.name = interned;
-    auto it = m_faces.find(spec.base);
+    spec.face.name = interned->strview();
+    auto it = m_faces.find(intern(spec.base));
     if (spec.base == name and it != m_faces.end())
     {
         it->value.face = merge_faces(it->value.face, spec.face);
@@ -161,21 +162,22 @@ void FaceRegistry::add_face(StringView name, StringView facedesc, bool override)
     {
         if (it->value.base == name)
             throw runtime_error("face cycle detected");
-        it = m_faces.find(it->value.base);
+        it = m_faces.find(intern(it->value.base));
     }
-    m_faces[interned->strview()] = std::move(spec);
+    m_faces[interned] = std::move(spec);
 }
 
 void FaceRegistry::remove_face(StringView name)
 {
-    m_faces.remove(name);
+    m_faces.remove(intern(name));
 }
 
 FaceRegistry::FaceRegistry()
 {
-    auto add = [&](String name, Face face) {
-        face.name = intern(name);
-        m_faces.insert({ face.name->strview(), { face }});
+    auto add = [&](StringView name, Face face) {
+        StringDataPtr interned = intern(name);
+        face.name = interned->strview();
+        m_faces.insert({ interned, { face }});
     };
     add("Default", Face{ Color::Default, Color::Default,  });
     add("PrimarySelection", Face{ Color::White, Color::Blue,  });

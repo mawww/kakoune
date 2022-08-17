@@ -2411,7 +2411,7 @@ static Completions complete_face(const Context& context, CompletionFlags flags,
 {
     return {0_byte, cursor_pos,
             complete(prefix, cursor_pos, context.faces().flatten_faces() |
-                     transform([](auto& entry) -> StringView { return entry.key; }))};
+                     transform([](auto& entry) -> StringView { return entry.value.face.name; }))};
 }
 
 static String face_doc_helper(const Context& context, CommandParameters params)

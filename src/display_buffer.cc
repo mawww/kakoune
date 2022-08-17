@@ -177,18 +177,10 @@ void DisplayLine::optimize()
                     atom.m_text += next.m_text;
             }
             else
-            {
-                ++atom_it;
-                if (atom_it != next_it)
-                    *atom_it = std::move(*next_it);
-            }
+                *++atom_it = std::move(*next_it);
         }
         else
-        {
-            ++atom_it;
-            if (atom_it != next_it)
-                *atom_it = std::move(*next_it);
-        }
+            *++atom_it = std::move(*next_it);
     }
     m_atoms.erase(atom_it+1, m_atoms.end());
 }

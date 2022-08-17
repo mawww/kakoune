@@ -56,9 +56,14 @@ void StringData::Registry::debug_stats() const
     write_to_debug_buffer(format("  refcounts: {}, mean: {}", total_refcount, (float)total_refcount/count));
 }
 
-String to_string(StringDataPtr ptr)
+String to_string(const StringDataPtr& ptr)
 {
     return ptr ? String(ptr->strview()) : "";
+}
+
+size_t hash_value(const StringDataPtr& ptr)
+{
+    return hash_value(ptr->strview());
 }
 
 }

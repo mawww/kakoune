@@ -141,7 +141,7 @@ private:
         write_field(face.bg);
         write_field(face.attributes);
         write_field(face.underline);
-        write_field(to_string(face.name));
+        write_field(face.name);
     }
 
     void write_field(const DisplayAtom& atom)
@@ -370,7 +370,7 @@ struct MsgReader::Reader<Face> {
             bg,
             attributes,
             underline,
-            name.empty() ? StringDataPtr{} : intern(name),
+            name.empty() ? StringView{} : intern(name)->strview(),
         };
     }
 };

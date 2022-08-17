@@ -6,6 +6,7 @@
 #include "hash_map.hh"
 #include "ranges.hh"
 #include "string.hh"
+#include "shared_string.hh"
 #include "safe_ptr.hh"
 
 namespace Kakoune
@@ -25,7 +26,7 @@ public:
         Face face = {};
         String base = {};
     };
-    using FaceMap = HashMap<StringView, FaceSpec, MemoryDomain::Faces>;
+    using FaceMap = HashMap<StringDataPtr, FaceSpec, MemoryDomain::Faces>;
 
     auto flatten_faces() const
     {
