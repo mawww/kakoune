@@ -1855,7 +1855,7 @@ const HighlighterDesc region_desc = {
     "Parameters:  [-match-capture] [-recurse <recurse>] <opening> <closing> <type> <params>...\n"
     "Define a region for a regions highlighter, and apply the given delegate\n"
     "highlighter as defined by <type> and eventual <params>...\n"
-    "The region starts at <begin> match and ends at the first <end>",
+    "The region spans from the beginning of an <opening> match until the end of the next <closing> match",
     { {
         { "match-capture", { false, "only consider region ending/recurse delimiters whose first capture group match the region beginning delimiter" } },
         { "recurse",       { true, "make the region end on the first ending delimiter that does not close the given parameter" } } },

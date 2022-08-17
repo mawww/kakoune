@@ -224,6 +224,11 @@ add-highlighter <path>/<name>/<region_name> region \
     A highlighter type, and associated params, as they would be passed
     to `add-highlighter` if they were not applied as a region.
 
+A region spans from the beginning of an *opening* match to the end of the
+next *closing* match that does not overlap with the *opening* match. Hence if
+*closing* is the empty regex, the region will be congruent with the *opening*
+match. If there is no *closing* match the region extends until buffer end.
+
 If the *-match-capture* switch is passed, then region *closing* and *recurse*
 regex matches are considered valid for a given region opening match only if they
 matched the same content for the capture 1 in the *opening* regex.
