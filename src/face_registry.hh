@@ -24,7 +24,7 @@ public:
     struct FaceSpec
     {
         Face face = {};
-        String base = {};
+        StringDataPtr base = {};
     };
     using FaceMap = HashMap<StringDataPtr, FaceSpec, MemoryDomain::Faces>;
 

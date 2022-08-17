@@ -11,7 +11,7 @@ static FaceRegistry::FaceSpec parse_face(StringView facedesc)
 {
     constexpr StringView invalid_face_error = "invalid face description, expected [<fg>][,<bg>[,<underline>]][+<attr>][@base] or just [base]";
     if (all_of(facedesc, [](char c){ return is_word(c); }) and not is_color_name(facedesc))
-        return {Face{}, facedesc.str()};
+        return {Face{}, intern(facedesc.str())};
 
     auto bg_it = find(facedesc, ',');
     auto underline_it = bg_it == facedesc.end() ? bg_it : std::find(bg_it+1, facedesc.end(), ',');
@@ -65,7 +65,7 @@ static FaceRegistry::FaceSpec parse_face(StringView facedesc)
         }
     }
     if (base_it != facedesc.end())
-        spec.base = String{base_it+1, facedesc.end()};
+        spec.base = intern({base_it+1, facedesc.end()});
     return spec;
 }
 
@@ -113,20 +113,20 @@ Face FaceRegistry::operator[](StringView facedesc) const
 
 Face FaceRegistry::resolve_spec(const FaceSpec& spec) const
 {
-    if (spec.base.empty())
+    if (!spec.base)
         return spec.face;
 
-    StringView base = spec.base;
+    StringDataPtr base = spec.base;
     Face face = spec.face;
     for (auto* reg = this; reg != nullptr; reg = reg->m_parent.get())
     {
-        auto it = reg->m_faces.find(intern(base));
+        auto it = reg->m_faces.find(base);
         if (it == reg->m_faces.end())
             continue;
 
-        if (it->value.base.empty())
+        if (!it->value.base)
             return merge_faces(it->value.face, face);
-        if (it->value.base != it->key->strview())
+        if (it->value.base != it->key)
             return merge_faces(reg->resolve_spec(it->value), face);
         else
         {
@@ -150,19 +150,19 @@ void FaceRegistry::add_face(StringView name, StringView facedesc, bool override)
 
     FaceSpec spec = parse_face(facedesc);
     spec.face.name = interned->strview();
-    auto it = m_faces.find(intern(spec.base));
-    if (spec.base == name and it != m_faces.end())
+    auto it = m_faces.find(spec.base);
+    if (spec.base == interned and it != m_faces.end())
     {
         it->value.face = merge_faces(it->value.face, spec.face);
         it->value.base = spec.base;
         return;
     }
 
-    while (it != m_faces.end() and not it->value.base.empty())
+    while (it != m_faces.end() and it->value.base)
     {
-        if (it->value.base == name)
+        if (it->value.base == interned)
             throw runtime_error("face cycle detected");
-        it = m_faces.find(intern(it->value.base));
+        it = m_faces.find(it->value.base);
     }
     m_faces[interned] = std::move(spec);
 }

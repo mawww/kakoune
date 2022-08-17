@@ -63,7 +63,7 @@ String to_string(const StringDataPtr& ptr)
 
 size_t hash_value(const StringDataPtr& ptr)
 {
-    return hash_value(ptr->strview());
+    return hash_value(ptr ? ptr->strview() : "");
 }
 
 }
