@@ -41,6 +41,11 @@ add-highlighter shared/markdown regions
 add-highlighter shared/markdown/inline default-region regions
 add-highlighter shared/markdown/inline/text default-region group
 
+add-highlighter shared/markdown/listblock region ^\h*[-*]\s ^(?=\S) regions
+add-highlighter shared/markdown/listblock/g default-region group
+add-highlighter shared/markdown/listblock/g/ ref markdown/inline
+add-highlighter shared/markdown/listblock/g/marker regex ^\h*([-*])\s 1:bullet
+
 evaluate-commands %sh{
   languages="
     awk c cabal clojure coffee cpp crystal css cucumber d diff dockerfile elixir erlang fish
@@ -49,17 +54,15 @@ evaluate-commands %sh{
     ruby rust sass scala scss sh swift toml tupfile typescript yaml sql
   "
   for lang in ${languages}; do
+    [ "${lang}" = kak ] && ref=kakrc || ref="${lang}"
     printf 'add-highlighter shared/markdown/%s region -match-capture ^(\h*)```\h*(%s\\b|\\{[.=]?%s\\})   ^(\h*)``` regions\n' "${lang}" "${lang}" "${lang}"
     printf 'add-highlighter shared/markdown/%s/ default-region fill meta\n' "${lang}"
-    [ "${lang}" = kak ] && ref=kakrc || ref="${lang}"
-    printf 'add-highlighter shared/markdown/%s/inner region \A```[^\\n]*\K (?=```) ref %s\n' "${lang}" "${ref}"
+    printf 'add-highlighter shared/markdown/%s/inner region \A\h*```[^\\n]*\K (?=```) ref %s\n' "${lang}" "${ref}"
+    printf 'add-highlighter shared/markdown/listblock/%s region -match-capture ^(\h*)```\h*(%s\\b|\\{[.=]?%s\\})   ^(\h*)``` regions\n' "${lang}" "${lang}" "${lang}"
+    printf 'add-highlighter shared/markdown/listblock/%s/ default-region fill meta\n' "${lang}"
+    printf 'add-highlighter shared/markdown/listblock/%s/inner region \A\h*```[^\\n]*\K (?=```) ref %s\n' "${lang}" "${ref}"
   done
 }
-
-add-highlighter shared/markdown/listblock region ^\h*[-*]\s ^(?=\S) regions
-add-highlighter shared/markdown/listblock/g default-region group
-add-highlighter shared/markdown/listblock/g/ ref markdown/inline
-add-highlighter shared/markdown/listblock/g/marker regex ^\h*([-*])\s 1:bullet
 
 add-highlighter shared/markdown/codeblock region -match-capture \
     ^(\h*)```\h* \
@@ -124,7 +127,7 @@ define-command -hidden markdown-indent-on-new-line %{
 define-command -hidden markdown-load-languages %{
     evaluate-commands -draft %{ try %{
         execute-keys 'gtGbGls```\h*\{?[.=]?\K[^}\s]+<ret>'
-        evaluate-commands -itersel %{ require-module %val{selection} }
+        evaluate-commands -itersel %{ try %{ require-module %val{selection} } }
     }}
 }
 
