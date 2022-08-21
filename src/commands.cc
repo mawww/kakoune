@@ -1617,11 +1617,11 @@ const CommandDesc source_cmd = {
 
 static String option_doc_helper(const Context& context, CommandParameters params)
 {
-    const bool add = params.size() > 1 and params[0] == "-add";
-    if (params.size() < 2 + (add ? 1 : 0))
+    const bool is_switch = params.size() > 1 and (params[0] == "-add" or params[0] == "-remove");
+    if (params.size() < 2 + (is_switch ? 1 : 0))
         return "";
 
-    auto desc = GlobalScope::instance().option_registry().option_desc(params[1 + (add ? 1 : 0)]);
+    auto desc = GlobalScope::instance().option_registry().option_desc(params[1 + (is_switch ? 1 : 0)]);
     if (not desc or desc->docstring().empty())
         return "";
 
@@ -1652,9 +1652,6 @@ const CommandDesc set_option_cmd = {
        CommandParameters params, size_t token_to_complete,
        ByteCount pos_in_token) -> Completions
     {
-        const bool add = params.size() > 1 and params[0] == "-add";
-        const int start = add ? 1 : 0;
-
         static constexpr auto scopes = { "global", "buffer", "window", "current" };
 
         if (token_to_complete == 0)
@@ -1666,7 +1663,7 @@ const CommandDesc set_option_cmd = {
         else if (token_to_complete == 2  and params[2].empty() and
                  GlobalScope::instance().option_registry().option_exists(params[1]))
         {
-            OptionManager& options = get_scope(params[start], context).options();
+            OptionManager& options = get_scope(params[0], context).options();
             return {0_byte, params[2].length(),
                     {options[params[1]].get_as_string(Quoting::Kakoune)},
                     Completions::Flags::Quoted};
