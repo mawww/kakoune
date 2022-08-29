@@ -788,6 +788,7 @@ public:
           m_prompt(prompt.str()), m_prompt_face(face),
           m_empty_text{std::move(emptystr)},
           m_line_editor{context().faces()}, m_flags(flags),
+          m_was_interactive{not context().noninteractive()},
           m_history{RegisterManager::instance()[history_register]},
           m_current_history{-1},
           m_auto_complete{context().options()["autocomplete"].get<AutoComplete>() & AutoComplete::Prompt},
@@ -1062,6 +1063,16 @@ public:
         }
     }
 
+    bool was_interactive()
+    {
+        return m_was_interactive;
+    }
+
+    void set_was_interactive()
+    {
+        m_was_interactive = true;
+    }
+
     DisplayLine mode_line() const override
     {
         return { "prompt", context().faces()["StatusLineMode"] };
@@ -1189,6 +1200,7 @@ private:
     LineEditor     m_line_editor;
     bool           m_line_changed = false;
     PromptFlags    m_flags;
+    bool           m_was_interactive;
     Register&      m_history;
     int            m_current_history;
     bool           m_auto_complete;
@@ -1197,7 +1209,7 @@ private:
 
     void history_push(StringView entry)
     {
-        if (entry.empty() or context().noninteractive() or
+        if (entry.empty() or not was_interactive() or
             (m_flags & PromptFlags::DropHistoryEntriesWithBlankPrefix and
              is_horizontal_blank(entry[0_byte])))
             return;
@@ -1710,6 +1722,12 @@ void InputHandler::set_prompt_face(Face prompt_face)
         prompt->set_prompt_face(prompt_face);
 }
 
+bool InputHandler::history_enabled() const
+{
+    auto* prompt = dynamic_cast<InputModes::Prompt*>(&current_mode());
+    return prompt and prompt->was_interactive();
+}
+
 void InputHandler::menu(Vector<DisplayLine> choices, MenuCallback callback)
 {
     push_mode(new InputModes::Menu(*this, std::move(choices), std::move(callback)));
@@ -1760,7 +1778,13 @@ void InputHandler::handle_key(Key key)
 
     const bool was_recording = is_recording();
     ++m_handle_key_level;
-    auto dec = on_scope_end([this]{ --m_handle_key_level; });
+    auto dec = on_scope_end([this]{
+        --m_handle_key_level;
+        if (m_handle_key_level == 0)
+            for (auto& mode : m_mode_stack)
+                if (auto* prompt = dynamic_cast<InputModes::Prompt*>(&*mode))
+                    prompt->set_was_interactive();
+    });
 
     auto process_key = [&](Key key) {
         if (m_last_insert.recording)

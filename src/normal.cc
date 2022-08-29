@@ -1016,7 +1016,7 @@ void select_regex(Context& context, NormalParams params)
         RegisterManager::instance()[reg].restore(context, saved_reg);
         if (event == PromptEvent::Abort)
             return;
-        if (not context.noninteractive())
+        if (context.input_handler().history_enabled())
             RegisterManager::instance()[reg].set(context, ex.str());
 
         auto& selections = context.selections();
@@ -1038,7 +1038,7 @@ void split_regex(Context& context, NormalParams params)
         RegisterManager::instance()[reg].restore(context, saved_reg);
         if (event == PromptEvent::Abort)
             return;
-        if (not context.noninteractive())
+        if (context.input_handler().history_enabled())
             RegisterManager::instance()[reg].set(context, ex.str());
 
         auto& selections = context.selections();
@@ -1142,7 +1142,7 @@ void keep(Context& context, NormalParams params)
         RegisterManager::instance()[reg].restore(context, saved_reg);
         if (event == PromptEvent::Abort)
             return;
-        if (not context.noninteractive())
+        if (context.input_handler().history_enabled())
             RegisterManager::instance()[reg].set(context, regex.str());
 
         if (regex.empty() or regex.str().empty())
