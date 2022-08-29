@@ -2,6 +2,7 @@
 
 #include "assert.hh"
 #include "buffer.hh"
+#include "buffer_utils.hh"
 #include "client_manager.hh"
 #include "exception.hh"
 #include "file.hh"
@@ -82,10 +83,7 @@ Buffer& BufferManager::get_buffer(StringView name)
 Buffer& BufferManager::get_first_buffer()
 {
     if (all_of(m_buffers, [](auto& b) { return (b->flags() & Buffer::Flags::Debug); }))
-        create_buffer("*scratch*", Buffer::Flags::None,
-                      {StringData::create({"*** this is a *scratch* buffer which won't be automatically saved ***\n"}),
-                       StringData::create({"*** use it for notes or open a file buffer with the :edit command ***\n"})},
-                      ByteOrderMark::None, EolFormat::Lf, {InvalidTime, {}, {}});
+        create_buffer_from_string("*scratch*", Buffer::Flags::None, {});
 
     return *m_buffers.back();
 }
