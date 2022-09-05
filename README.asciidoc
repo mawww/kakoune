@@ -516,10 +516,8 @@ Changes
  * `y`: yank selections
  * `p`: paste after current selection end
  * `P`: paste before current selection begin
- * `<a-p>`: paste all after current selection end, and
-            select each pasted string.
- * `<a-P>`: paste all before current selection begin, and
-            select each pasted string.
+ * `<a-p>`: paste all after current selection end
+ * `<a-P>`: paste all before current selection begin
  * `R`: replace current selection with yanked text
  * `<a-R>`: replace current selection with every yanked text
 
