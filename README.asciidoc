@@ -359,7 +359,7 @@ directed range of characters. A selection has two ends, the anchor and the
 cursor.
 
 There is always at least one selection, and a selection is always at least
-one character (in which case the anchor and cursor of the selections are
+one character (in which case the anchor and cursor of the selection are
 on the same character).
 
 Normal Mode
@@ -528,7 +528,7 @@ Changes
  * `<a-j>`: join selected lines
  * `<a-J>`: join selected lines and select spaces inserted
             in place of line breaks
- * `<a-m>`: merge contiguous selections together (works across lines as well)
+ * `<a-_>`: merge contiguous selections together (works across lines as well)
 
  * `<gt> (>)`: indent selected lines
  * `<a-gt>`: indent selected lines, including empty lines
@@ -537,7 +537,7 @@ Changes
         indent (3 leading spaces when indent is 4)
 
  * `|`: pipe each selection through the given external filter program
-        and replace the selection with it's output.
+        and replace the selection with its output.
  * `<a-|>`: pipe each selection through the given external filter program
         and ignore its output
 
@@ -564,7 +564,7 @@ Changes
             tabstop option or the count parameter for tabstop.
 
  * `<a-)>`: rotate selections content, if specified, the count groups
-            selections, so `3<a-)>` rotate (1, 2, 3) and (3, 4, 6)
+            selections, so `3<a-)>` rotate (1, 2, 3) and (4, 5, 6)
             independently.
  * `<a-(>`: rotate selections content backwards
 
@@ -702,7 +702,7 @@ saved in the command history.
    ** `-debug`: print the given text to the `\*debug*` buffer
  * `nop`: does nothing, but as with every other commands, arguments may be
      evaluated. So nop can be used for example to execute a shell command
-     while being sure that it's output will not be interpreted by kak.
+     while being sure that its output will not be interpreted by kak.
      `:%sh{ echo echo tchou }` will echo tchou in Kakoune, whereas
      `:nop %sh{ echo echo tchou }` will not, but both will execute the
      shell command.
