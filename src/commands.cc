@@ -1452,7 +1452,7 @@ KeymapMode parse_keymap_mode(StringView str, const KeymapManager::UserModeList& 
     return (KeymapMode)(std::distance(user_modes.begin(), it) + offset);
 }
 
-static constexpr Array<StringView, 8> modes = { "normal", "insert", "menu", "prompt", "goto", "view", "user", "object" };
+static constexpr auto modes = make_array<StringView>({ "normal", "insert", "menu", "prompt", "goto", "view", "user", "object" });
 
 const CommandDesc debug_cmd = {
     "debug",
