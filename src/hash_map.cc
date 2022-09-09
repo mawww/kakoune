@@ -95,8 +95,8 @@ UnitTest test_hash_set{[] {
     // Basic usage
     {
         HashSet<int> set;
-        set.insert({10});
-        set.insert({20});
+        set.insert(10);
+        set.insert(20);
         kak_assert(set.find_index(0) == -1);
         kak_assert(set.find_index(10) == 0);
         kak_assert(set.find_index(20) == 1);
@@ -113,8 +113,8 @@ UnitTest test_hash_set{[] {
     // Replace Multiple entries with the same key
     {
         HashSet<int> set;
-        set.insert({10});
-        set.insert({10});
+        set.insert(10);
+        set.insert(10);
         kak_assert(set.find_index(10) == 0);
         kak_assert(set.size() == 1);
         set.remove(10);
@@ -124,15 +124,15 @@ UnitTest test_hash_set{[] {
     // Multiple entries with the same key
     {
         MultiHashSet<int> set;
-        set.insert({10});
-        set.insert({10});
+        set.insert(10);
+        set.insert(10);
         kak_assert(set.find_index(10) == 0);
         set.remove(10);
         kak_assert(set.find_index(10) == 0);
         set.remove(10);
         kak_assert(set.find_index(10) == -1);
-        set.insert({20});
-        set.insert({20});
+        set.insert(20);
+        set.insert(20);
         set.remove_all(20);
         kak_assert(set.find_index(20) == -1);
     }
@@ -140,7 +140,7 @@ UnitTest test_hash_set{[] {
     // Check hash compatible support
     {
         HashSet<String> set;
-        set.insert({"test"});
+        set.insert("test");
         kak_assert(set["test"_sv] == "test");
         set.remove("test"_sv);
     }
