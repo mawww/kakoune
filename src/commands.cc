@@ -1556,8 +1556,7 @@ const CommandDesc debug_cmd = {
                 KeymapMode m = parse_keymap_mode(mode, user_modes);
                 for (auto& key : keymaps.get_mapped_keys(m))
                     write_to_debug_buffer(format(" * {} {}: {}",
-                                          mode, key_to_str(key),
-                                          keymaps.get_mapping(key, m).docstring));
+                                          mode, key, keymaps.get_mapping(key, m).docstring));
             }
         }
         else if (parser[0] == "regex")
@@ -1838,7 +1837,7 @@ static Completions map_key_completer(const Context& context, CompletionFlags fla
 
         return { 0_byte, params[2].length(),
                  complete(params[2], pos_in_token,
-                          keys | transform([](Key k) { return key_to_str(k); })
+                          keys | transform([](Key k) { return to_string(k); })
                                | gather<Vector<String>>()) };
     }
     return {};
@@ -2290,7 +2289,7 @@ const CommandDesc on_key_cmd = {
         context.input_handler().on_next_key(
             parser.get_switch("mode-name").value_or("on-key"),
             KeymapMode::None, [=](Key key, Context& context) mutable {
-            sc.env_vars["key"_sv] = key_to_str(key);
+            sc.env_vars["key"_sv] = to_string(key);
             ScopedSetBool disable_history{context.history_disabled()};
 
             CommandManager::instance().execute(command, context, sc);

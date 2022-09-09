@@ -92,8 +92,7 @@ bool Client::process_pending_inputs()
         try
         {
             if (debug_keys)
-                write_to_debug_buffer(format("Client '{}' got key '{}'",
-                                             context().name(), key_to_str(key)));
+                write_to_debug_buffer(format("Client '{}' got key '{}'", context().name(), key));
 
             if (key == Key::FocusIn)
                 context().hooks().run_hook(Hook::FocusIn, context().name(), context());
@@ -102,7 +101,7 @@ bool Client::process_pending_inputs()
             else
                 m_input_handler.handle_key(key);
 
-            context().hooks().run_hook(Hook::RawKey, key_to_str(key), context());
+            context().hooks().run_hook(Hook::RawKey, to_string(key), context());
         }
         catch (Kakoune::runtime_error& error)
         {
@@ -327,7 +326,7 @@ void Client::on_buffer_reload_key(Key key)
     }
     else
     {
-        print_status({ format("'{}' is not a valid choice", key_to_str(key)),
+        print_status({ format("'{}' is not a valid choice", key),
                        context().faces()["Error"] });
         m_input_handler.on_next_key("buffer-reload", KeymapMode::None, [this](Key key, Context&){ on_buffer_reload_key(key); });
         return;
