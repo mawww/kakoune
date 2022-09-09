@@ -190,11 +190,24 @@ const ParameterDesc single_param{ {}, ParameterDesc::Flags::None, 1, 1 };
 const ParameterDesc single_optional_param{ {}, ParameterDesc::Flags::None, 0, 1 };
 const ParameterDesc double_params{ {}, ParameterDesc::Flags::None, 2, 2 };
 
-static constexpr auto scopes = { "global", "buffer", "window" };
-
 static Completions complete_scope(const Context&, CompletionFlags,
                                   StringView prefix, ByteCount cursor_pos)
 {
+   static constexpr StringView scopes[] = { "global", "buffer", "window", };
+   return { 0_byte, cursor_pos, complete(prefix, cursor_pos, scopes) };
+}
+
+static Completions complete_scope_including_current(const Context&, CompletionFlags,
+                                  StringView prefix, ByteCount cursor_pos)
+{
+   static constexpr StringView scopes[] = { "global", "buffer", "window", "current" };
+   return { 0_byte, cursor_pos, complete(prefix, cursor_pos, scopes) };
+}
+
+static Completions complete_scope_no_global(const Context&, CompletionFlags,
+                                            StringView prefix, ByteCount cursor_pos)
+{
+   static constexpr StringView scopes[] = { "buffer", "window", "current" };
    return { 0_byte, cursor_pos, complete(prefix, cursor_pos, scopes) };
 }
 
@@ -967,7 +980,7 @@ const CommandDesc arrange_buffers_cmd = {
     CommandHelper{},
     [](const Context& context, CompletionFlags flags, CommandParameters params, size_t, ByteCount cursor_pos)
     {
-        return complete_buffer_name<false>(context, flags, params.back(), cursor_pos);
+        return menu(complete_buffer_name<false>)(context, flags, params.back(), cursor_pos);
     },
     [](const ParametersParser& parser, Context&, const ShellContext&)
     {
@@ -1089,7 +1102,7 @@ const CommandDesc add_hook_cmd = {
     },
     CommandFlags::None,
     CommandHelper{},
-    make_completer(complete_scope, complete_hooks, complete_nothing,
+    make_completer(menu(complete_scope), menu(complete_hooks), complete_nothing,
                    [](const Context& context, CompletionFlags flags,
                       StringView prefix, ByteCount cursor_pos)
                    { return CommandManager::instance().complete(
@@ -1128,13 +1141,13 @@ const CommandDesc remove_hook_cmd = {
        ByteCount pos_in_token) -> Completions
     {
         if (token_to_complete == 0)
-            return { 0_byte, params[0].length(),
-                     complete(params[0], pos_in_token, scopes) };
+            return menu(complete_scope)(context, flags, params[0], pos_in_token);
         else if (token_to_complete == 1)
         {
             if (auto scope = get_scope_ifp(params[0], context))
                 return { 0_byte, params[0].length(),
-                         scope->hooks().complete_hook_group(params[1], pos_in_token) };
+                         scope->hooks().complete_hook_group(params[1], pos_in_token),
+                         Completions::Flags::Menu };
         }
         return {};
     },
@@ -1357,7 +1370,7 @@ const CommandDesc alias_cmd = {
     ParameterDesc{{}, ParameterDesc::Flags::None, 3, 3},
     CommandFlags::None,
     CommandHelper{},
-    make_completer(complete_scope, complete_alias_name, complete_command_name),
+    make_completer(menu(complete_scope), complete_alias_name, complete_command_name),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         if (not CommandManager::instance().command_defined(parser[2]))
@@ -1376,7 +1389,7 @@ const CommandDesc unalias_cmd = {
     ParameterDesc{{}, ParameterDesc::Flags::None, 2, 3},
     CommandFlags::None,
     CommandHelper{},
-    make_completer(complete_scope, complete_alias_name, complete_command_name),
+    make_completer(menu(complete_scope), complete_alias_name, complete_command_name),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         AliasRegistry& aliases = get_scope(parser[0], context).aliases();
@@ -1474,7 +1487,7 @@ const CommandDesc debug_cmd = {
            StringView prefix, ByteCount cursor_pos) -> Completions {
                auto c = {"info", "buffers", "options", "memory", "shared-strings",
                          "profile-hash-maps", "faces", "mappings", "regex", "registers"};
-               return { 0_byte, cursor_pos, complete(prefix, cursor_pos, c) };
+               return { 0_byte, cursor_pos, complete(prefix, cursor_pos, c), Completions::Flags::Menu };
     }),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
@@ -1655,18 +1668,16 @@ const CommandDesc set_option_cmd = {
     },
     CommandFlags::None,
     option_doc_helper,
-    [](const Context& context, CompletionFlags,
+    [](const Context& context, CompletionFlags flags,
        CommandParameters params, size_t token_to_complete,
        ByteCount pos_in_token) -> Completions
     {
-        static constexpr auto scopes = { "global", "buffer", "window", "current" };
-
         if (token_to_complete == 0)
-            return { 0_byte, params[0].length(),
-                     complete(params[0], pos_in_token, scopes) };
+            return menu(complete_scope_including_current)(context, flags, params[0], pos_in_token);
         else if (token_to_complete == 1)
             return { 0_byte, params[1].length(),
-                     GlobalScope::instance().option_registry().complete_option_name(params[1], pos_in_token) };
+                     GlobalScope::instance().option_registry().complete_option_name(params[1], pos_in_token),
+                     Completions::Flags::Menu };
         else if (token_to_complete == 2  and params[2].empty() and
                  GlobalScope::instance().option_registry().option_exists(params[1]))
         {
@@ -1694,18 +1705,16 @@ const CommandDesc set_option_cmd = {
     }
 };
 
-Completions complete_option(const Context& context, CompletionFlags,
+Completions complete_option(const Context& context, CompletionFlags flags,
                             CommandParameters params, size_t token_to_complete,
                             ByteCount pos_in_token)
 {
     if (token_to_complete == 0)
-    {
-        static constexpr auto scopes = { "buffer", "window", "current" };
-        return { 0_byte, params[0].length(), complete(params[0], pos_in_token, scopes) };
-    }
+        return menu(complete_scope_no_global)(context, flags, params[0], pos_in_token);
     else if (token_to_complete == 1)
         return { 0_byte, params[1].length(),
-                 GlobalScope::instance().option_registry().complete_option_name(params[1], pos_in_token) };
+                 GlobalScope::instance().option_registry().complete_option_name(params[1], pos_in_token),
+                 Completions::Flags::Menu };
     return Completions{};
 }
 
@@ -1773,7 +1782,7 @@ const CommandDesc declare_option_cmd = {
         [](const Context& context, CompletionFlags flags,
            StringView prefix, ByteCount cursor_pos) -> Completions {
                auto c = {"int", "bool", "str", "regex", "int-list", "str-list", "completions", "line-specs", "range-specs", "str-to-str-map"};
-               return { 0_byte, cursor_pos, complete(prefix, cursor_pos, c) };
+               return { 0_byte, cursor_pos, complete(prefix, cursor_pos, c), Completions::Flags::Menu };
     }),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
@@ -1821,13 +1830,13 @@ static Completions map_key_completer(const Context& context, CompletionFlags fla
                                      ByteCount pos_in_token)
 {
     if (token_to_complete == 0)
-        return { 0_byte, params[0].length(),
-                 complete(params[0], pos_in_token, scopes) };
+        return menu(complete_scope)(context, flags, params[0], pos_in_token);
     if (token_to_complete == 1)
     {
         auto& user_modes = get_scope(params[0], context).keymaps().user_modes();
         return { 0_byte, params[1].length(),
-                 complete(params[1], pos_in_token, concatenated(modes, user_modes)) };
+                 complete(params[1], pos_in_token, concatenated(modes, user_modes)),
+                 Completions::Flags::Menu };
     }
     if (unmap and token_to_complete == 2)
     {
@@ -1838,7 +1847,8 @@ static Completions map_key_completer(const Context& context, CompletionFlags fla
         return { 0_byte, params[2].length(),
                  complete(params[2], pos_in_token,
                           keys | transform([](Key k) { return to_string(k); })
-                               | gather<Vector<String>>()) };
+                               | gather<Vector<String>>()),
+                 Completions::Flags::Menu };
     }
     return {};
 }
@@ -2437,7 +2447,7 @@ const CommandDesc set_face_cmd = {
     ParameterDesc{{}, ParameterDesc::Flags::None, 3, 3},
     CommandFlags::None,
     face_doc_helper,
-    make_completer(complete_scope, complete_face, complete_face),
+    make_completer(menu(complete_scope), complete_face, complete_face),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         get_scope(parser[0], context).faces().add_face(parser[1], parser[2], true);
@@ -2454,7 +2464,7 @@ const CommandDesc unset_face_cmd = {
     double_params,
     CommandFlags::None,
     face_doc_helper,
-    make_completer(complete_scope, complete_face),
+    make_completer(menu(complete_scope), menu(complete_face)),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
        get_scope(parser[0], context).faces().remove_face(parser[1]);
@@ -2544,7 +2554,8 @@ const CommandDesc change_directory_cmd = {
              return { 0_byte, cursor_pos,
                       complete_filename(prefix,
                                         context.options()["ignored_files"].get<Regex>(),
-                                        cursor_pos, FilenameFlags::OnlyDirectories) };
+                                        cursor_pos, FilenameFlags::OnlyDirectories),
+                      Completions::Flags::Menu };
         }),
     [](const ParametersParser& parser, Context&, const ShellContext&)
     {
@@ -2642,7 +2653,8 @@ const CommandDesc enter_user_mode_cmd = {
         if (token_to_complete == 0)
         {
             return { 0_byte, params[0].length(),
-                     complete(params[0], pos_in_token, context.keymaps().user_modes()) };
+                     complete(params[0], pos_in_token, context.keymaps().user_modes()),
+                     Completions::Flags::Menu };
         }
         return {};
     },
@@ -2687,10 +2699,10 @@ const CommandDesc require_module_cmd = {
     single_param,
     CommandFlags::None,
     CommandHelper{},
-    make_completer(
+    make_completer(menu(
          [](const Context&, CompletionFlags, StringView prefix, ByteCount cursor_pos) {
             return CommandManager::instance().complete_module_name(prefix.substr(0, cursor_pos));
-        }),
+        })),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         CommandManager::instance().load_module(parser[0], context);
