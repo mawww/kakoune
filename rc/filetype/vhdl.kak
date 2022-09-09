@@ -104,7 +104,7 @@ evaluate-commands %sh[
         side
         signed unsigned
         string text
-        time
+        time time_vector
     "
 
     functions="
