@@ -493,33 +493,33 @@ it when pasting text.
 Changes
 ~~~~~~~
 
- * `i`: enter insert mode before current selection
- * `a`: enter insert mode after current selection
- * `d`: yank and delete current selection
- * `c`: yank and delete current selection and enter insert mode
+ * `i`: enter insert mode before each selection
+ * `a`: enter insert mode after each selection
+ * `d`: yank and delete each selection
+ * `c`: yank and delete each selection and enter insert mode
  * `.`: repeat last insert mode change (`i`, `a`, or `c`, including
         the inserted text)
 
- * `<a-d>`: delete current selection
- * `<a-c>`: delete current selection and enter insert mode
+ * `<a-d>`: delete each selection
+ * `<a-c>`: delete each selection and enter insert mode
 
- * `I`: enter insert mode at current selection begin line start
- * `A`: enter insert mode at current selection end line end
+ * `I`: enter insert mode at each selection begin line start
+ * `A`: enter insert mode at each selection end line end
  * `o`: enter insert mode in one (or given count) new lines below
-        current selection end
+        each selection end
  * `O`: enter insert mode in one (or given count)  new lines above
-        current selection begin
+        each selection begin
 
- * `<a-o>`: add an empty line below cursor
- * `<a-O>`: add an empty line above cursor
+ * `<a-o>`: add an empty line below each cursor
+ * `<a-O>`: add an empty line above each cursor
 
  * `y`: yank selections
- * `p`: paste after current selection end
- * `P`: paste before current selection begin
- * `<a-p>`: paste all after current selection end
- * `<a-P>`: paste all before current selection begin
- * `R`: replace current selection with yanked text
- * `<a-R>`: replace current selection with every yanked text
+ * `p`: paste after each selection end
+ * `P`: paste before each selection begin
+ * `<a-p>`: paste all after each selection end
+ * `<a-P>`: paste all before each selection begin
+ * `R`: replace each selection with yanked text
+ * `<a-R>`: replace each selection with every yanked text
 
  * `r`: replace each character with the next entered one
 
@@ -539,15 +539,15 @@ Changes
  * `<a-|>`: pipe each selection through the given external filter program
         and ignore its output
 
- * `!`: insert command output before selection
- * `<a-!>`: append command output after selection
+ * `!`: insert command output before each selection
+ * `<a-!>`: append command output after each selection
 
  * `u`: undo last change
  * `<a-u>`: move backward in history
  * `U`: redo last change
  * `<a-U>`: move forward in history
 
- * `&`: align selection, align the cursor of selections by inserting
+ * `&`: align selections, align the cursor of selections by inserting
         spaces before the first character of the selection
  * `<a-&>`: copy indent, copy the indentation of the main selection
         (or the count one if a count is given) to all other ones
@@ -556,10 +556,10 @@ Changes
  * `~`: to upper case
  * ``<a-`>``: swap case
 
- * `@`: convert tabs to spaces in current selections, uses the buffer
-        tabstop option or the count parameter for tabstop.
- * `<a-@>`: convert spaces to tabs in current selections, uses the buffer
-            tabstop option or the count parameter for tabstop.
+ * `@`: convert selected tabs to spaces, uses the buffer tabstop option or
+        the count parameter for tabstop.
+ * `<a-@>`: convert selected spaces to tabs, uses the buffer tabstop option
+            or the count parameter for tabstop.
 
  * `<a-)>`: rotate selections content, if specified, the count groups
             selections, so `3<a-)>` rotate (1, 2, 3) and (4, 5, 6)
