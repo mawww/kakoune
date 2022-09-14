@@ -144,6 +144,7 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
 
     kak_assert(&buffer() == &context.buffer());
     const DisplaySetup setup = compute_display_setup(context);
+    m_display_buffer.set_display_setup(setup);
 
     for (LineCount line = 0; line < setup.line_count; ++line)
     {

@@ -36,18 +36,6 @@ constexpr bool with_bit_ops(Meta::Type<HighlightPass>) { return true; }
 
 struct Highlighter;
 
-struct DisplaySetup
-{
-    LineCount first_line;
-    LineCount line_count;
-    ColumnCount first_column;
-    ColumnCount widget_columns;
-    // Position of the cursor in the window
-    DisplayCoord cursor_pos;
-    // Offset of line and columns that must remain visible around cursor
-    DisplayCoord scroll_offset;
-};
-
 using HighlighterIdList = ConstArrayView<StringView>;
 
 struct HighlightContext

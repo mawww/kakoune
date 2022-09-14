@@ -149,6 +149,7 @@ private:
     void write_field(const DisplayBuffer& display_buffer)
     {
         write_field(display_buffer.lines());
+        write_field(display_buffer.display_setup());
     }
 
 private:
@@ -370,6 +371,7 @@ struct MsgReader::Reader<DisplayBuffer> {
     {
         DisplayBuffer db;
         db.lines() = Reader<Vector<DisplayLine>>::read(reader);
+        db.set_display_setup(Reader<DisplaySetup>::read(reader));
         return db;
     }
 };
