@@ -147,26 +147,27 @@ void LineRangeSet::update(ConstArrayView<LineModification> modifs)
 
 void LineRangeSet::add_range(LineRange range, FunctionRef<void (LineRange)> on_new_range)
 {
-    auto it = std::lower_bound(begin(), end(), range.begin,
-                               [](LineRange range, LineCount line) { return range.end < line; });
-    if (it == end() or it->begin > range.end)
+    auto insert_at = std::lower_bound(begin(), end(), range.begin,
+                                      [](LineRange range, LineCount line) { return range.end < line; });
+    if (insert_at == end() or insert_at->begin > range.end)
         on_new_range(range);
     else
     {
         auto pos = range.begin;
-        while (it != end() and it->begin <= range.end)
+        auto it = insert_at;
+        for (; it != end() and it->begin <= range.end; ++it)
         {
             if (pos < it->begin)
                 on_new_range({pos, it->begin});
 
             range = LineRange{std::min(range.begin, it->begin), std::max(range.end, it->end)};
             pos = it->end;
-            it = erase(it);
         }
+        insert_at = erase(insert_at, it);
         if (pos < range.end)
             on_new_range({pos, range.end});
     }
-    insert(it, range);
+    insert(insert_at, range);
 }
 
 void LineRangeSet::remove_range(LineRange range)
