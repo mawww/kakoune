@@ -435,6 +435,7 @@ struct FlattenedView
         using iterator_category = std::forward_iterator_tag;
         using difference_type = std::size_t;
         using reference = value_type&;
+        using pointer = value_type*;
 
         Iterator() = default;
         Iterator(OuterIt begin, OuterIt end) : m_outer_it{begin}, m_outer_end{end}
