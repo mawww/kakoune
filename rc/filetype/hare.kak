@@ -47,6 +47,9 @@ provide-module hare %§
     add-highlighter shared/hare/code/ regex "\buse\s.*?(?=;)" 0:module
     add-highlighter shared/hare/code/ regex "\buse\b" 0:meta
 
+    # functions
+    add-highlighter shared/hare/code/ regex "\b([a-zA-Z_]*)\h*\(" 1:function
+
     # attributes
     add-highlighter shared/hare/code/ regex "@(offset|init|fini|test|noreturn|symbol)\b" 0:attribute
 
@@ -86,9 +89,14 @@ provide-module hare %§
     add-highlighter shared/hare/code/ regex "\b[0-9]+([eE][-+]?[0-9]+)?(f32|f64)\b" 0:value
     add-highlighter shared/hare/code/ regex "\b[0-9]+([eE][-+]?[0-9]+)?(?=f)" 0:value
 
+    # constants
+    add-highlighter shared/hare/code/ regex "\b[A-Z0-9_]*\b" 0:value
 
     # control flow
     add-highlighter shared/hare/code/ regex "\b(for|if|else|switch|match|return|break|continue|defer|yield|case|static)\b" 0:keyword
+
+    # operators
+    add-highlighter shared/hare/code/ regex "(=|\+|-|\*|/|<|>|!|\?|&|\||\.\.\.)" 0:operator
 
     # commands
     define-command -hidden hare-indent-on-new-line %{ evaluate-commands -draft -itersel %{
