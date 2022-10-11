@@ -96,7 +96,7 @@ provide-module hare %§
     add-highlighter shared/hare/code/ regex "\b(for|if|else|switch|match|return|break|continue|defer|yield|case|static)\b" 0:keyword
 
     # operators
-    add-highlighter shared/hare/code/ regex "(=|\+|-|\*|/|<|>|!|\?|&|\||\.\.\.)" 0:operator
+    add-highlighter shared/hare/code/ regex "(=|\+|-|\*|/|<|>|!|\?|&|\||\.\.(\.)?)" 0:operator
 
     # commands
     define-command -hidden hare-indent-on-new-line %{ evaluate-commands -draft -itersel %{
