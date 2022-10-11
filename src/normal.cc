@@ -2364,8 +2364,8 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
 
     { {'_'}, {"trim selections", trim_selections} },
 
-    { {'C'}, {"copy selection on next lines", copy_selections_on_next_lines<Forward>} },
-    { {alt('C')}, {"copy selection on previous lines", copy_selections_on_next_lines<Backward>} },
+    { {'C'}, {"duplicate selections on the lines that follow them.", copy_selections_on_next_lines<Forward>} },
+    { {alt('C')}, {"duplicate selections on the lines that precede them.", copy_selections_on_next_lines<Backward>} },
 
     { {Key::Space}, {"user mappings", exec_user_mappings} },
 

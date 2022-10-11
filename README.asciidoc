@@ -635,8 +635,8 @@ use `n` followed by `,`, in order to remove a selection, use `<a-,>`.
 contains a match for this regex. Using `<a-K>` you can keep the selections
 not containing a match.
 
-`C` copies the current selection to the next line (or lines if a count is given)
-`<a-C>` does the same to previous lines.
+`C` duplicates selections on the lines that follow them.
+`<a-C>` does the same but on the preceding lines.
 
 `$` allows you to enter a shell command and pipe each selection to it.
 Selections whose shell command returns 0 will be kept, other will be dropped.
