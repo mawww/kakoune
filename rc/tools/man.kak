@@ -12,7 +12,7 @@ hook -group man-highlight global WinSetOption filetype=man %{
     # Command line options
     add-highlighter window/man-highlight/ regex '^ {7}-[^\s,]+(,\s+-[^\s,]+)*' 0:list
     # References to other manpages
-    add-highlighter window/man-highlight/ regex [-a-zA-Z0-9_.]+\([a-z0-9]+\) 0:header
+    add-highlighter window/man-highlight/ regex '(\w|\d|-|_|((-|‐)\n +))+\([\d|\w]+\)' 0:header
 
     map window normal <ret> :man-jump<ret>
 
@@ -134,8 +134,45 @@ define-command man-link %{ evaluate-commands -save-regs / %{
 
 define-command -docstring 'Try to jump to a man page' \
 man-jump %{
-  try %{ man-link } catch %{ man-link-here } catch %{ fail 'Not a valid man page link' }
-  try %{ man } catch %{ fail 'No man page link to follow' }
+  # Get to the start of the expression
+  execute-keys "<a-f> "
+
+  # Tries to select a multiline expression
+  try %{
+    # Tries to go back
+    execute-keys "bB"
+    # Attempts to select a newline,
+    # if you can then this means a wrap.
+    execute-keys "s$<ret>"
+    execute-keys "<a-f> "
+  } catch %{
+	# Corrects everything
+    execute-keys "wwl"
+    execute-keys "<a-f> ;"
+  }
+
+  evaluate-commands -draft %{
+	# Goes to the next bracket or whitespace. This should be a bracket
+	execute-keys "/(?<![\s])( |\()"
+	execute-keys "<ret>"
+
+	
+	try %{
+	  # Tests for a bracket
+      execute-keys "s\(<ret>"
+	} catch %{
+      fail "No man page link to follow"
+	}
+  }
+
+  # Selects the whole word
+  execute-keys "l;F)"
+
+  # Run the commands
+  evaluate-commands %sh{
+	man_link=$(echo $kak_selection | sed -e '1h;2,$H;$!d;g' -e 's/[-‐]//g' | sed "s/ //g")
+    echo try %{ man $man_link } catch %{ fail "No man page link to follow" }
+  }
 }
 
 # Suggested keymaps for a user mode
