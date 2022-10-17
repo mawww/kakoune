@@ -150,7 +150,7 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
         LineCount buffer_line = setup.first_line + line;
         if (buffer_line >= buffer().line_count())
             break;
-        lines.emplace_back(AtomList{{buffer(), buffer_line, {buffer_line, buffer()[buffer_line].length()}}});
+        lines.emplace_back(AtomList{{buffer(), {buffer_line, {buffer_line, buffer()[buffer_line].length()}}}});
     }
 
     m_display_buffer.compute_range();

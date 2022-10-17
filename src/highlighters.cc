@@ -747,7 +747,7 @@ struct WrapHighlighter : Highlighter
                     new_line.insert(new_line.begin(), {m_marker, face_marker});
                 if (indent > marker_len)
                 {
-                    auto it = new_line.insert(new_line.begin() + (marker_len > 0), {buffer, coord, coord});
+                    auto it = new_line.insert(new_line.begin() + (marker_len > 0), {buffer, {coord, coord}});
                     it->replace(String{' ', indent - marker_len});
                 }
 
