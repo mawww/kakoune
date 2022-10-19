@@ -179,14 +179,14 @@ String build_autoinfo_for_mapping(const Context& context, KeymapMode mode,
     {
         String keys = join(built_in.keys |
                            filter([&](Key k){ return not keymaps.is_mapped(k, mode); }) |
-                           transform(key_to_str),
+                           transform((String(*)(Key))to_string),
                            ',', false);
         if (not keys.empty())
             descs.emplace_back(std::move(keys), built_in.docstring);
     }
 
     for (auto& key : keymaps.get_mapped_keys(mode))
-        descs.emplace_back(key_to_str(key),
+        descs.emplace_back(to_string(key),
                            keymaps.get_mapping(key, mode).docstring);
 
     auto max_len = 0_col;
@@ -983,7 +983,7 @@ void use_selection_as_search_pattern(Context& context, NormalParams params)
                       smart and is_bow(buffer, beg) ? "\\b" : "",
                       escape(buffer.string(beg, end), "^$\\.*+?()[]{}|", '\\'),
                       smart and is_eow(buffer, end) ? "\\b" : "");
-    });
+    }) | gather<HashSet>();
     String pattern = join(patterns, '|', false);
 
     const char reg = to_lower(params.reg ? params.reg : '/');
@@ -2364,8 +2364,8 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
 
     { {'_'}, {"trim selections", trim_selections} },
 
-    { {'C'}, {"copy selection on next lines", copy_selections_on_next_lines<Forward>} },
-    { {alt('C')}, {"copy selection on previous lines", copy_selections_on_next_lines<Backward>} },
+    { {'C'}, {"duplicate selections on the lines that follow them.", copy_selections_on_next_lines<Forward>} },
+    { {alt('C')}, {"duplicate selections on the lines that precede them.", copy_selections_on_next_lines<Backward>} },
 
     { {Key::Space}, {"user mappings", exec_user_mappings} },
 

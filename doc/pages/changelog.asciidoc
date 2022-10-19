@@ -18,7 +18,7 @@ released versions.
 * Prompt history registers `%reg{colon}`, `%reg{slash}` and `%reg{pipe}` now
   have reverse chronological order
 
-* Executing user mode mappings no longer adds to prompt history registers by default.
+* Executing user mode mappings no longer adds to prompt history registers.
 
 == Kakoune 2021.11.07
 

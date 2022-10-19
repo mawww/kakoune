@@ -5,6 +5,7 @@
 #include "changes.hh"
 #include "command_manager.hh"
 #include "context.hh"
+#include "clock.hh"
 #include "display_buffer.hh"
 #include "face_registry.hh"
 #include "highlighter_group.hh"
@@ -746,7 +747,7 @@ struct WrapHighlighter : Highlighter
                     new_line.insert(new_line.begin(), {m_marker, face_marker});
                 if (indent > marker_len)
                 {
-                    auto it = new_line.insert(new_line.begin() + (marker_len > 0), {buffer, coord, coord});
+                    auto it = new_line.insert(new_line.begin() + (marker_len > 0), {buffer, {coord, coord}});
                     it->replace(String{' ', indent - marker_len});
                 }
 
@@ -1838,121 +1839,11 @@ struct RegexMatch
 
 using RegexMatchList = Vector<RegexMatch, MemoryDomain::Regions>;
 
-void insert_matches(const Buffer& buffer, RegexMatchList& matches, const Regex& regex, bool capture, LineRange range)
-{
-    size_t pivot = matches.size();
-    capture = capture and regex.mark_count() > 0;
-    ThreadedRegexVM<const char*, RegexMode::Forward | RegexMode::Search> vm{*regex.impl()};
-    for (auto line = range.begin; line < range.end; ++line)
-    {
-        const StringView l = buffer[line];
-        const auto flags = RegexExecFlags::NotEndOfLine; // buffer line already ends with \n
-        for (auto&& m : RegexIterator{l.begin(), l.end(), vm, flags})
-        {
-            const bool with_capture = capture and m[1].matched and
-                                      m[0].second - m[0].first < std::numeric_limits<uint16_t>::max();
-            matches.push_back({
-                line,
-                (int)(m[0].first - l.begin()),
-                (int)(m[0].second - l.begin()),
-                (uint16_t)(with_capture ? m[1].first - m[0].first : 0),
-                (uint16_t)(with_capture ? m[1].second - m[1].first : 0)
-            });
-        }
-    }
-
-    auto pos = std::lower_bound(matches.begin(), matches.begin() + pivot, range.begin,
-                                [](const RegexMatch& m, LineCount l) { return m.line < l; });
-    kak_assert(pos == matches.begin() + pivot or pos->line >= range.end); // We should not have had matches for range
-
-    // Move new matches into position.
-    std::rotate(pos, matches.begin() + pivot, matches.end());
-}
-
-void update_matches(const Buffer& buffer, ConstArrayView<LineModification> modifs,
-                    RegexMatchList& matches)
-{
-    // remove out of date matches and update line for others
-    auto ins_pos = matches.begin();
-    for (auto it = ins_pos; it != matches.end(); ++it)
-    {
-        auto modif_it = std::upper_bound(modifs.begin(), modifs.end(), it->line,
-                                         [](const LineCount& l, const LineModification& c)
-                                         { return l < c.old_line; });
-
-        if (modif_it != modifs.begin())
-        {
-            auto& prev = *(modif_it-1);
-            if (it->line < prev.old_line + prev.num_removed)
-                continue; // match removed
-
-            it->line += prev.diff();
-        }
-
-        kak_assert(buffer.is_valid(it->begin_coord()) or
-                   buffer[it->line].length() == it->begin);
-        kak_assert(buffer.is_valid(it->end_coord()) or
-                   buffer[it->line].length() == it->end);
-
-        if (ins_pos != it)
-            *ins_pos = std::move(*it);
-        ++ins_pos;
-    }
-    matches.erase(ins_pos, matches.end());
-}
-
 struct RegionMatches : UseMemoryDomain<MemoryDomain::Highlight>
 {
     RegexMatchList begin_matches;
     RegexMatchList end_matches;
     RegexMatchList recurse_matches;
-
-    static bool compare_to_begin(const RegexMatch& lhs, BufferCoord rhs)
-    {
-        return lhs.begin_coord() < rhs;
-    }
-
-    RegexMatchList::const_iterator find_next_begin(BufferCoord pos) const
-    {
-        return std::lower_bound(begin_matches.begin(), begin_matches.end(),
-                                pos, compare_to_begin);
-    }
-
-    RegexMatchList::const_iterator find_matching_end(const Buffer& buffer, BufferCoord beg_pos, Optional<StringView> capture) const
-    {
-        auto end_it = end_matches.begin();
-        auto rec_it = recurse_matches.begin();
-        int recurse_level = 0;
-        while (true)
-        {
-            end_it = std::lower_bound(end_it, end_matches.end(), beg_pos,
-                                      compare_to_begin);
-            rec_it = std::lower_bound(rec_it, recurse_matches.end(), beg_pos,
-                                      compare_to_begin);
-
-            if (end_it == end_matches.end())
-                return end_it;
-
-            while (rec_it != recurse_matches.end() and
-                   rec_it->end_coord() <= end_it->end_coord())
-            {
-                if (not capture or rec_it->capture(buffer) == *capture)
-                    ++recurse_level;
-                ++rec_it;
-            }
-
-            if (not capture or *capture == end_it->capture(buffer))
-            {
-                if (recurse_level == 0)
-                    return end_it;
-                --recurse_level;
-            }
-
-            if (beg_pos != end_it->end_coord())
-                beg_pos = end_it->end_coord();
-            ++end_it;
-        }
-    }
 };
 
 const HighlighterDesc default_region_desc = {
@@ -2120,21 +2011,20 @@ public:
         if (parser[0].empty() or parser[1].empty())
             throw runtime_error("begin and end must not be empty");
 
-        const RegexCompileFlags flags = match_capture ?
-            RegexCompileFlags::Optimize : RegexCompileFlags::NoSubs | RegexCompileFlags::Optimize;
-
         const auto& type = parser[2];
         auto& registry = HighlighterRegistry::instance();
         auto it = registry.find(type);
         if (it == registry.end())
             throw runtime_error(format("no such highlighter type: '{}'", type));
 
-        Regex recurse;
+        // validate regexes, TODO: less costly
+        Regex{parser[0]};
+        Regex{parser[1]};
         if (auto recurse_switch = parser.get_switch("recurse"))
-            recurse = Regex{*recurse_switch, flags};
+            Regex{*recurse_switch};
 
         auto delegate = it->value.factory(parser.positionals_from(3), nullptr);
-        return std::make_unique<RegionHighlighter>(std::move(delegate), Regex{parser[0], flags}, Regex{parser[1], flags}, recurse, match_capture);
+        return std::make_unique<RegionHighlighter>(std::move(delegate), parser[0], parser[1], parser.get_switch("recurse").value_or("").str(), match_capture);
     }
 
     static std::unique_ptr<Highlighter> create_default_region(HighlighterParameters params, Highlighter* parent)
@@ -2158,129 +2048,28 @@ private:
     };
     using RegionList = Vector<Region, MemoryDomain::Highlight>;
 
+    struct RegexKey
+    {
+        StringView regex;
+        bool match_captures;
+
+        friend size_t hash_value(const RegexKey& key) { return hash_values(key.regex, key.match_captures); }
+        friend bool operator==(const RegexKey&, const RegexKey&) = default;
+    };
+
     struct Cache
     {
         size_t buffer_timestamp = 0;
         size_t regions_timestamp = 0;
         LineRangeSet ranges;
-        std::unique_ptr<RegionMatches[]> matches;
+        HashMap<RegexKey, RegexMatchList> matches;
         HashMap<BufferRange, RegionList, MemoryDomain::Highlight> regions;
     };
-
-    using RegionAndMatch = std::pair<size_t, RegexMatchList::const_iterator>;
-
-    // find the begin closest to pos in all matches
-    RegionAndMatch find_next_begin(const Cache& cache, BufferCoord pos) const
-    {
-        RegionAndMatch res{0, cache.matches[0].find_next_begin(pos)};
-        for (size_t i = 1; i < m_regions.size(); ++i)
-        {
-            const auto& matches = cache.matches[i];
-            auto it = matches.find_next_begin(pos);
-            if (it != matches.begin_matches.end() and
-                (res.second == cache.matches[res.first].begin_matches.end() or
-                 it->begin_coord() < res.second->begin_coord()))
-                res = RegionAndMatch{i, it};
-        }
-        return res;
-    }
-
-    bool update_matches(Cache& cache, const Buffer& buffer, LineRange range)
-    {
-        const size_t buffer_timestamp = buffer.timestamp();
-        if (cache.buffer_timestamp == 0 or
-            cache.regions_timestamp != m_regions_timestamp)
-        {
-            cache.matches.reset(new RegionMatches[m_regions.size()]);
-            for (size_t i = 0; i < m_regions.size(); ++i)
-            {
-                cache.matches[i] = RegionMatches{};
-                m_regions.item(i).value->add_matches(buffer, range, cache.matches[i]);
-            }
-            cache.ranges.reset(range);
-            cache.buffer_timestamp = buffer_timestamp;
-            cache.regions_timestamp = m_regions_timestamp;
-            return true;
-        }
-        else
-        {
-            bool modified = false;
-            if (cache.buffer_timestamp != buffer_timestamp)
-            {
-                auto modifs = compute_line_modifications(buffer, cache.buffer_timestamp);
-                for (size_t i = 0; i < m_regions.size(); ++i)
-                {
-                    Kakoune::update_matches(buffer, modifs, cache.matches[i].begin_matches);
-                    Kakoune::update_matches(buffer, modifs, cache.matches[i].end_matches);
-                    Kakoune::update_matches(buffer, modifs, cache.matches[i].recurse_matches);
-                }
-
-                cache.ranges.update(modifs);
-                cache.buffer_timestamp = buffer_timestamp;
-                modified = true;
-            }
-
-            cache.ranges.add_range(range, [&, this](const LineRange& range) {
-                if (range.begin == range.end)
-                    return;
-                for (size_t i = 0; i < m_regions.size(); ++i)
-                    m_regions.item(i).value->add_matches(buffer, range, cache.matches[i]);
-                modified = true;
-            });
-            return modified;
-        }
-    }
-
-    const RegionList& get_regions_for_range(const Buffer& buffer, BufferRange range)
-    {
-        Cache& cache = m_cache.get(buffer);
-        if (update_matches(cache, buffer, {range.begin.line, std::min(buffer.line_count(), range.end.line + 1)}))
-            cache.regions.clear();
-
-        auto it = cache.regions.find(range);
-        if (it != cache.regions.end())
-            return it->value;
-
-        RegionList& regions = cache.regions[range];
-
-        for (auto begin = find_next_begin(cache, range.begin),
-                  end = RegionAndMatch{ 0, cache.matches[0].begin_matches.end() };
-             begin != end; )
-        {
-            const RegionMatches& matches = cache.matches[begin.first];
-            auto& region = m_regions.item(begin.first);
-            auto beg_it = begin.second;
-            auto end_it = matches.find_matching_end(buffer, beg_it->end_coord(),
-                                                    region.value->match_capture() ? beg_it->capture(buffer) : Optional<StringView>{});
-
-            if (end_it == matches.end_matches.end() or end_it->end_coord() >= range.end) // region continue past range end
-            {
-                auto begin_coord = beg_it->begin_coord();
-                if (begin_coord < range.end)
-                    regions.push_back({begin_coord, range.end, region.key});
-                break;
-            }
-
-            auto end_coord = end_it->end_coord();
-            regions.push_back({beg_it->begin_coord(), end_coord, region.key});
-
-            // With empty begin and end matches (for example if the regexes
-            // are /"\K/ and /(?=")/), that case can happen, and would
-            // result in an infinite loop.
-            if (end_coord == beg_it->begin_coord())
-            {
-                kak_assert(beg_it->empty() and end_it->empty());
-                ++end_coord.column;
-            }
-            begin = find_next_begin(cache, end_coord);
-        }
-        return regions;
-    }
 
     struct RegionHighlighter : public Highlighter
     {
         RegionHighlighter(std::unique_ptr<Highlighter>&& delegate,
-                          Regex begin, Regex end, Regex recurse,
+                          String begin, String end, String recurse,
                           bool match_capture)
             : Highlighter{delegate->passes()},
               m_delegate{std::move(delegate)},
@@ -2329,33 +2118,289 @@ private:
             return m_delegate->highlight(context, display_buffer, range);
         }
 
-        void add_matches(const Buffer& buffer, LineRange range, RegionMatches& matches) const
-        {
-            if (m_default)
-                return;
-
-            Kakoune::insert_matches(buffer, matches.begin_matches, m_begin, m_match_capture, range);
-            Kakoune::insert_matches(buffer, matches.end_matches, m_end, m_match_capture, range);
-            if (not m_recurse.empty())
-                Kakoune::insert_matches(buffer, matches.recurse_matches, m_recurse, m_match_capture, range);
-        }
 
         bool match_capture() const { return m_match_capture; }
         bool is_default() const { return m_default; }
 
         Highlighter& delegate() { return *m_delegate; }
 
-    private:
+    // private:
         std::unique_ptr<Highlighter> m_delegate;
 
-        Regex m_begin;
-        Regex m_end;
-        Regex m_recurse;
+        String m_begin;
+        String m_end;
+        String m_recurse;
         bool  m_match_capture = false;
         bool  m_default = false;
     };
 
+
+    using RegionAndMatch = std::pair<size_t, RegexMatchList::const_iterator>;
+
+    static bool compare_to_begin(const RegexMatch& lhs, BufferCoord rhs)
+    {
+        return lhs.begin_coord() < rhs;
+    }
+
+    RegexMatchList::const_iterator find_matching_end(const Buffer& buffer, BufferCoord beg_pos, const RegexMatchList& end_matches, const RegexMatchList& recurse_matches, Optional<StringView> capture) const
+    {
+        auto end_it = end_matches.begin();
+        auto rec_it = recurse_matches.begin();
+        int recurse_level = 0;
+        while (true)
+        {
+            end_it = std::lower_bound(end_it, end_matches.end(), beg_pos,
+                                      compare_to_begin);
+            rec_it = std::lower_bound(rec_it, recurse_matches.end(), beg_pos,
+                                      compare_to_begin);
+
+            if (end_it == end_matches.end())
+                return end_it;
+
+            while (rec_it != recurse_matches.end() and
+                   rec_it->end_coord() <= end_it->end_coord())
+            {
+                if (not capture or rec_it->capture(buffer) == *capture)
+                    ++recurse_level;
+                ++rec_it;
+            }
+
+            if (not capture or *capture == end_it->capture(buffer))
+            {
+                if (recurse_level == 0)
+                    return end_it;
+                --recurse_level;
+            }
+
+            if (beg_pos != end_it->end_coord())
+                beg_pos = end_it->end_coord();
+            ++end_it;
+        }
+    }
+
+    // find the begin closest to pos in all matches
+    Optional<RegionAndMatch> find_next_begin(const Cache& cache, BufferCoord pos) const
+    {
+        Optional<RegionAndMatch> res;
+
+        for (size_t i = 0; i < m_regions.size(); ++i)
+        {
+            const auto& [key, region] = m_regions.item(i);
+            if (region->is_default())
+                continue;
+
+            const auto& matches = cache.matches.get(RegexKey{region->m_begin, region->match_capture()});
+            auto it = std::lower_bound(matches.begin(), matches.end(), pos, compare_to_begin);
+            if (it != matches.end() and (not res or it->begin_coord() < res->second->begin_coord()))
+                res = RegionAndMatch{i, it};
+        }
+        return res;
+    }
+
+    void add_regex(const String& str, bool captures)
+    {
+        const RegexKey key{str, captures};
+        if (str.empty() or m_regexes.contains(key))
+            return;
+
+        auto flags = RegexCompileFlags::Optimize;
+        if (not captures)
+            flags |= RegexCompileFlags::NoSubs;
+
+        m_regexes.insert({key, Regex{str, flags}});
+    }
+
+    class MatchAdder
+    {
+    public:
+        MatchAdder(RegionsHighlighter& region, const Buffer& buffer, Cache& cache) : m_buffer(buffer)
+        {
+            for (auto& [key, regex] : region.m_regexes)
+                cache.matches[key];
+            for (auto& [key, regex] : region.m_regexes)
+                m_matchers.push_back(Matcher{cache.matches.get(key), regex});
+        }
+
+        ~MatchAdder()
+        {
+            // Move new matches into position.
+            for (auto& [matches, regex, pivot, vm] : m_matchers)
+                std::inplace_merge(matches.begin(), matches.begin() + pivot, matches.end(),
+                                   [](const auto& lhs, const auto& rhs) { return lhs.line < rhs.line; });
+        }
+
+        void add(LineRange range)
+        {
+            for (auto line = range.begin; line < range.end; ++line)
+            {
+                const StringView l = m_buffer[line];
+                const auto flags = RegexExecFlags::NotEndOfLine; // buffer line already ends with \n
+
+                for (auto& [matches, regex, pivot, vm] : m_matchers)
+                {
+                    auto extra_flags = RegexExecFlags::None;
+                    auto pos = l.begin();
+                    while (vm.exec(pos, l.end(), l.begin(), l.end(), flags | extra_flags))
+                    {
+                        ConstArrayView<const char*> captures = vm.captures();
+                        const bool with_capture = regex.mark_count() > 0 and captures[2] != nullptr and
+                                                  captures[1] - captures[0] < std::numeric_limits<uint16_t>::max();
+                        matches.push_back({
+                            line,
+                            (int)(captures[0] - l.begin()),
+                            (int)(captures[1] - l.begin()),
+                            (uint16_t)(with_capture ? captures[2] - captures[0] : 0),
+                            (uint16_t)(with_capture ? captures[3] - captures[2] : 0)
+                        });
+                        pos = captures[1];
+
+                        extra_flags = (captures[0] == captures[1]) ? RegexExecFlags::NotInitialNull : RegexExecFlags::None;
+                    }
+                }
+            }
+        }
+
+    private:
+        struct Matcher
+        {
+            RegexMatchList& matches;
+            const Regex& regex;
+            size_t pivot = matches.size();
+            ThreadedRegexVM<const char*, RegexMode::Forward | RegexMode::Search> vm{*regex.impl()};
+        };
+
+        const Buffer& m_buffer;
+        Vector<Matcher> m_matchers;
+    };
+
+    void update_changed_lines(const Buffer& buffer, ConstArrayView<LineModification> modifs, Cache& cache)
+    {
+        for (auto& [key, matches] : cache.matches)
+        {
+            // remove out of date matches and update line for others
+            auto ins_pos = matches.begin();
+            for (auto it = ins_pos; it != matches.end(); ++it)
+            {
+                auto modif_it = std::upper_bound(modifs.begin(), modifs.end(), it->line,
+                                                 [](const LineCount& l, const LineModification& c)
+                                                 { return l < c.old_line; });
+
+                if (modif_it != modifs.begin())
+                {
+                    auto& prev = *(modif_it-1);
+                    if (it->line < prev.old_line + prev.num_removed)
+                        continue; // match removed
+
+                    it->line += prev.diff();
+                }
+
+                kak_assert(buffer.is_valid(it->begin_coord()) or
+                           buffer[it->line].length() == it->begin);
+                kak_assert(buffer.is_valid(it->end_coord()) or
+                           buffer[it->line].length() == it->end);
+
+                if (ins_pos != it)
+                    *ins_pos = std::move(*it);
+                ++ins_pos;
+            }
+            matches.erase(ins_pos, matches.end());
+        }
+    }
+
+    bool update_matches(Cache& cache, const Buffer& buffer, LineRange range)
+    {
+        const size_t buffer_timestamp = buffer.timestamp();
+        if (cache.buffer_timestamp == 0 or
+            cache.regions_timestamp != m_regions_timestamp)
+        {
+            m_regexes.clear();
+            cache.matches.clear();
+            for (auto& [key, region] : m_regions)
+            {
+                add_regex(region->m_begin, region->match_capture());
+                add_regex(region->m_end, region->match_capture());
+                add_regex(region->m_recurse, region->match_capture());
+            }
+
+            MatchAdder{*this, buffer, cache}.add(range);
+            cache.ranges.reset(range);
+            cache.buffer_timestamp = buffer_timestamp;
+            cache.regions_timestamp = m_regions_timestamp;
+            return true;
+        }
+        else
+        {
+            bool modified = false;
+            if (cache.buffer_timestamp != buffer_timestamp)
+            {
+                auto modifs = compute_line_modifications(buffer, cache.buffer_timestamp);
+                update_changed_lines(buffer, modifs, cache);
+                cache.ranges.update(modifs);
+                cache.buffer_timestamp = buffer_timestamp;
+                modified = true;
+            }
+
+            MatchAdder matches{*this, buffer, cache};
+            cache.ranges.add_range(range, [&](const LineRange& range) {
+                if (range.begin == range.end)
+                    return;
+                matches.add(range);
+                modified = true;
+            });
+            return modified;
+        }
+    }
+
+    const RegionList& get_regions_for_range(const Buffer& buffer, BufferRange range)
+    {
+        Cache& cache = m_cache.get(buffer);
+        if (update_matches(cache, buffer, {range.begin.line, std::min(buffer.line_count(), range.end.line + 1)}))
+            cache.regions.clear();
+
+        auto it = cache.regions.find(range);
+        if (it != cache.regions.end())
+            return it->value;
+
+        RegionList& regions = cache.regions[range];
+        RegexMatchList empty_matches{};
+
+        for (auto begin = find_next_begin(cache, range.begin); begin; )
+        {
+            auto& [index, beg_it] = *begin;
+            auto& [name, region] = m_regions.item(index);
+            auto& end_matches = cache.matches.get(RegexKey{region->m_end, region->match_capture()});
+            auto& recurse_matches = region->m_recurse.empty() ?
+                empty_matches : cache.matches.get(RegexKey{region->m_recurse, region->match_capture()});
+
+            auto end_it = find_matching_end(buffer, beg_it->end_coord(), end_matches, recurse_matches,
+                                            region->match_capture() ? beg_it->capture(buffer) : Optional<StringView>{});
+
+            if (end_it == end_matches.end() or end_it->end_coord() >= range.end) // region continue past range end
+            {
+                auto begin_coord = beg_it->begin_coord();
+                if (begin_coord < range.end)
+                    regions.push_back({begin_coord, range.end, name});
+                break;
+            }
+
+            auto end_coord = end_it->end_coord();
+            regions.push_back({beg_it->begin_coord(), end_coord, name});
+
+            // With empty begin and end matches (for example if the regexes
+            // are /"\K/ and /(?=")/), that case can happen, and would
+            // result in an infinite loop.
+            if (end_coord == beg_it->begin_coord())
+            {
+                kak_assert(beg_it->empty() and end_it->empty());
+                ++end_coord.column;
+            }
+            begin = find_next_begin(cache, end_coord);
+        }
+        return regions;
+    }
+
     HashMap<String, std::unique_ptr<RegionHighlighter>, MemoryDomain::Highlight> m_regions;
+    HashMap<RegexKey, Regex> m_regexes;
     String m_default_region;
 
     size_t m_regions_timestamp = 0;

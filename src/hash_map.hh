@@ -154,16 +154,29 @@ private:
 template<typename Key, typename Value>
 struct HashItem
 {
+    Key key{};
+    Value value{};
+
+    friend bool operator==(const HashItem&, const HashItem&) = default;
+};
+
+template<typename Key>
+struct HashItem<Key, void>
+{
     Key key;
-    Value value;
+
+    friend bool operator==(const HashItem&, const HashItem&) = default;
 };
 
 template<typename Key, typename Value,
          MemoryDomain domain = MemoryDomain::Undefined,
-         template<typename, MemoryDomain> class Container = Vector>
+         template<typename, MemoryDomain> class Container = Vector,
+         bool multi_key = false>
 struct HashMap
 {
-    using Item = HashItem<Key, Value>;
+    static constexpr bool has_value = not std::is_void_v<Value>;
+    using Item = std::conditional_t<has_value, HashItem<Key, Value>, Key>;
+    using EffectiveValue = std::conditional_t<has_value, Value, const Key>;
     using ContainerType = Container<Item, domain>;
 
     constexpr HashMap() = default;
@@ -174,12 +187,29 @@ struct HashMap
             m_index.add(hash_value(m_items[i].key), i);
     }
 
-    constexpr Value& insert(Item item)
+    template<typename Iterator>
+    constexpr HashMap(Iterator begin, Iterator end)
     {
+        while (begin != end)
+            insert(*begin++);
+    }
+
+    constexpr EffectiveValue& insert(Item item)
+    {
+        const auto hash = hash_value(item_key(item));
+        if constexpr (not multi_key)
+        {
+            if (auto index = find_index(item_key(item), hash); index >= 0)
+            {
+                m_items[index] = std::move(item);
+                return item_value(m_items[index]);
+            }
+        }
+
         m_index.reserve(m_items.size()+1);
-        m_index.add(hash_value(item.key), (int)m_items.size());
+        m_index.add(hash, (int)m_items.size());
         m_items.push_back(std::move(item));
-        return m_items.back().value;
+        return item_value(m_items.back());
     }
 
     template<typename KeyType> requires IsHashCompatible<Key, KeyType>
@@ -190,7 +220,7 @@ struct HashMap
             auto& entry = m_index[slot];
             if (entry.index == -1)
                 return -1;
-            if (entry.hash == hash and m_items[entry.index].key == key)
+            if (entry.hash == hash and item_key(m_items[entry.index]) == key)
                 return entry.index;
         }
         return -1;
@@ -203,17 +233,32 @@ struct HashMap
     constexpr bool contains(const KeyType& key) const { return find_index(key) >= 0; }
 
     template<typename KeyType> requires IsHashCompatible<Key, std::remove_cvref_t<KeyType>>
-    constexpr Value& operator[](KeyType&& key)
+    constexpr EffectiveValue& operator[](KeyType&& key) 
     {
         const auto hash = hash_value(key);
         auto index = find_index(key, hash);
         if (index >= 0)
-            return m_items[index].value;
+            return item_value(m_items[index]);
 
         m_index.reserve(m_items.size()+1);
         m_index.add(hash, (int)m_items.size());
-        m_items.push_back({Key(std::forward<KeyType>(key)), {}});
-        return m_items.back().value;
+        m_items.push_back({Key(std::forward<KeyType>(key))});
+        return item_value(m_items.back());
+    }
+
+    template<typename KeyType> requires IsHashCompatible<Key, std::remove_cvref_t<KeyType>>
+    constexpr const EffectiveValue& get(KeyType&& key) const
+    {
+        return const_cast<HashMap&>(*this).get(key);
+    }
+
+    template<typename KeyType> requires IsHashCompatible<Key, std::remove_cvref_t<KeyType>>
+    constexpr EffectiveValue& get(KeyType&& key)
+    {
+        const auto hash = hash_value(key);
+        auto index = find_index(key, hash);
+        kak_assert(index >= 0);
+        return item_value(m_items[index]);
     }
 
     template<typename KeyType> requires IsHashCompatible<Key, KeyType>
@@ -240,7 +285,7 @@ struct HashMap
             m_items.pop_back();
             m_index.remove(hash, index);
             if (index != m_items.size())
-                m_index.unordered_fix_entries(hash_value(m_items[index].key), m_items.size(), index);
+                m_index.unordered_fix_entries(hash_value(item_key(m_items[index])), m_items.size(), index);
         }
     }
 
@@ -297,11 +342,7 @@ struct HashMap
     template<MemoryDomain otherDomain>
     constexpr bool operator==(const HashMap<Key, Value, otherDomain, Container>& other) const
     {
-        return size() == other.size() and
-            std::equal(begin(), end(), other.begin(),
-                       [](const Item& lhs, const Item& rhs) {
-                           return lhs.key == rhs.key and lhs.value == rhs.value;
-                       });
+        return size() == other.size() and std::equal(begin(), end(), other.begin());
     }
 
     template<MemoryDomain otherDomain>
@@ -311,9 +352,34 @@ struct HashMap
     }
 
 private:
+    static auto& item_value(auto& item)
+    {
+        if constexpr (has_value) { return item.value; } else { return item; }
+    }
+
+    static const Key& item_key(const Item& item)
+    {
+        if constexpr (has_value) { return item.key; } else { return item; }
+    }
+
     ContainerType m_items;
     HashIndex<domain, Container> m_index;
 };
+
+template<typename Key, typename Value,
+         MemoryDomain domain = MemoryDomain::Undefined,
+         template<typename, MemoryDomain> class Container = Vector>
+ using MultiHashMap = HashMap<Key, Value, domain, Container, true>;
+
+template<typename Value,
+         MemoryDomain domain = MemoryDomain::Undefined,
+         template<typename, MemoryDomain> class Container = Vector>
+ using HashSet = HashMap<Value, void, domain, Container>;
+
+template<typename Value,
+         MemoryDomain domain = MemoryDomain::Undefined,
+         template<typename, MemoryDomain> class Container = Vector>
+ using MultiHashSet = HashMap<Value, void, domain, Container, true>;
 
 void profile_hash_maps();
 

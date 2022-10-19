@@ -310,7 +310,7 @@ public:
             {
                 auto autoinfo = context().options()["autoinfo"].get<AutoInfo>();
                 if (autoinfo & AutoInfo::Normal and context().has_client())
-                    context().client().info_show(key_to_str(key), command->docstring.str(),
+                    context().client().info_show(to_string(key), command->docstring.str(),
                                                  {}, InfoStyle::Prompt);
 
                 // reset m_params now to be reentrant
@@ -323,7 +323,7 @@ public:
                 m_params = { 0, 0 };
         }
 
-        context().hooks().run_hook(Hook::NormalKey, key_to_str(key), context());
+        context().hooks().run_hook(Hook::NormalKey, to_string(key), context());
         if (enabled() and not transient) // The hook might have changed mode
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
@@ -1403,7 +1403,7 @@ public:
                     if (auto cp = get_raw_codepoint(key))
                     {
                         insert(*cp);
-                        context().hooks().run_hook(Hook::InsertKey, key_to_str(key), context());
+                        context().hooks().run_hook(Hook::InsertKey, to_string(key), context());
                         if (enabled() and not transient)
                             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
                     }
@@ -1416,9 +1416,9 @@ public:
             return;
         }
 
-        context().hooks().run_hook(Hook::InsertKey, key_to_str(key), context());
+        context().hooks().run_hook(Hook::InsertKey, to_string(key), context());
         if (moved)
-            context().hooks().run_hook(Hook::InsertMove, key_to_str(key), context());
+            context().hooks().run_hook(Hook::InsertMove, to_string(key), context());
 
         if (update_completions and enabled() and not transient) // Hooks might have disabled us
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
@@ -1723,7 +1723,7 @@ void InputHandler::handle_key(Key key)
     // do not record the key that made us enter or leave recording mode,
     // and the ones that are triggered recursively by previous keys.
     if (was_recording and is_recording() and m_handle_key_level == m_recording_level)
-        m_recorded_keys += key_to_str(key);
+        m_recorded_keys += to_string(key);
 
     if (m_handle_key_level < m_recording_level)
     {

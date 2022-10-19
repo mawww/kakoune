@@ -33,12 +33,18 @@ constexpr bool with_bit_ops(Meta::Type<CharacterType>) { return true; }
 
 struct CharacterClass
 {
-    struct Range { Codepoint min, max; };
+    struct Range
+    {
+        Codepoint min, max;
+        friend bool operator==(const Range&, const Range&) = default;
+    };
 
     Vector<Range, MemoryDomain::Regex> ranges;
     CharacterType ctypes = CharacterType::None;
     bool negative = false;
     bool ignore_case = false;
+
+    friend bool operator==(const CharacterClass&, const CharacterClass&) = default;
 };
 
 bool is_character_class(const CharacterClass& character_class, Codepoint cp);
@@ -203,6 +209,8 @@ public:
                    (not forward and program.first_backward_inst != -1));
     }
 
+    ThreadedRegexVM(ThreadedRegexVM&&) = default;
+    ThreadedRegexVM& operator=(ThreadedRegexVM&&) = default;
     ThreadedRegexVM(const ThreadedRegexVM&) = delete;
     ThreadedRegexVM& operator=(const ThreadedRegexVM&) = delete;
 
@@ -227,10 +235,8 @@ public:
         constexpr bool search = (mode & RegexMode::Search);
 
         ConstArrayView<CompiledRegex::Instruction> instructions{m_program.instructions};
-        if (forward)
-            instructions = instructions.subrange(0, m_program.first_backward_inst);
-        else
-            instructions = instructions.subrange(m_program.first_backward_inst);
+        instructions = forward ? instructions.subrange(0, m_program.first_backward_inst)
+                               : instructions.subrange(m_program.first_backward_inst);
 
         const ExecConfig config{
             Sentinel{forward ? begin : end},
@@ -579,14 +585,14 @@ private:
     {
         if (pos == config.subject_begin)
             return not (config.flags & RegexExecFlags::NotBeginOfLine);
-        return utf8::codepoint(utf8::previous(pos, config.subject_begin), config.subject_end) == '\n';
+        return *(pos-1) == '\n';
     }
 
     static bool is_line_end(const Iterator& pos, const ExecConfig& config)
     {
         if (pos == config.subject_end)
             return not (config.flags & RegexExecFlags::NotEndOfLine);
-        return utf8::codepoint(pos, config.subject_end) == '\n';
+        return *pos == '\n';
     }
 
     static bool is_word_boundary(const Iterator& pos, const ExecConfig& config)
@@ -611,6 +617,11 @@ private:
     {
         DualThreadStack() = default;
         DualThreadStack(const DualThreadStack&) = delete;
+        DualThreadStack(DualThreadStack&& other)
+          : m_data{other.m_data}, m_capacity{other.m_capacity}, m_current{other.m_current}, m_next{other.m_next}
+        {
+            other.m_data = nullptr;
+        }
         ~DualThreadStack() { delete[] m_data; }
 
         bool current_is_empty() const { return m_current == 0; }

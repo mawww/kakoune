@@ -90,6 +90,8 @@ add-highlighter shared/kakrc/double_string/escape regex '""' 0:default+b
 add-highlighter shared/kakrc/single_string/fill fill string
 add-highlighter shared/kakrc/single_string/escape regex "''" 0:default+b
 
+add-highlighter shared/kak ref kakrc
+
 # Commands
 # ‾‾‾‾‾‾‾‾
 

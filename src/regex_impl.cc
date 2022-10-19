@@ -119,6 +119,7 @@ struct Children
         Index operator*() const { return m_pos; }
         bool operator!=(Sentinel) const { return m_pos != m_end; }
 
+    private:
         Index find_prev(Index parent, Index pos) const
         {
             Index child = parent+1;
@@ -544,8 +545,10 @@ private:
             character_class.ranges.empty())
             return add_node(ParsedRegex::CharType, (Codepoint)character_class.ctypes);
 
-        auto class_id = m_parsed_regex.character_classes.size();
-        m_parsed_regex.character_classes.push_back(std::move(character_class));
+        auto it = std::find(m_parsed_regex.character_classes.begin(), m_parsed_regex.character_classes.end(), character_class);
+        auto class_id = it - m_parsed_regex.character_classes.begin();
+        if (it == m_parsed_regex.character_classes.end())
+            m_parsed_regex.character_classes.push_back(std::move(character_class));
 
         return add_node(ParsedRegex::CharClass, class_id);
     }
@@ -1534,6 +1537,12 @@ auto test_regex = UnitTest{[]{
     {
         TestVM<> vm{R"([\t-\r]+)"};
         kak_assert(vm.exec("\t\n\v\f\r"));
+    }
+
+    {
+        TestVM<> vm{R"([\t-\r]\h+[\t-\r])"};
+        kak_assert(vm.character_classes.size() == 1);
+        kak_assert(vm.exec("\n  \f"));
     }
 
     {

@@ -12,6 +12,15 @@ hook global WinSetOption filetype=restructuredtext %{
     require-module restructuredtext
 }
 
+hook -group restructuredtext-load-languages global WinSetOption filetype=restructuredtext %{
+    restructuredtext-load-languages '%'
+}
+
+hook -group restructuredtext-load-languages global WinSetOption filetype=restructuredtext %{
+    hook -group restructuredtext-load-languages window NormalIdle .* %{restructuredtext-load-languages gtGbGl}
+    hook -group restructuredtext-load-languages window InsertIdle .* %{restructuredtext-load-languages gtGbGl}
+}
+
 hook -group restructuredtext-highlight global WinSetOption filetype=restructuredtext %{
     add-highlighter window/restructuredtext ref restructuredtext
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/restructuredtext }
@@ -25,17 +34,6 @@ provide-module restructuredtext %{
 add-highlighter shared/restructuredtext regions
 add-highlighter shared/restructuredtext/content default-region group
 add-highlighter shared/restructuredtext/code region ::\h*\n ^(?=\S)  fill meta
-
-evaluate-commands %sh{
-    for ft in c cabal clojure coffee cpp css cucumber ddiff dockerfile \
-              fish gas go haml haskell html ini java javascript json \
-              julia kak kickstart latex lisp lua makefile moon objc \
-              perl pug python ragel ruby rust sass scala scss sh swift \
-              tupfile yaml; do
-        if [ "$ft" = kak ]; then ref="kakrc"; else ref="$ft"; fi
-        printf 'add-highlighter shared/restructuredtext/%s region %s %s ref %s\n' "$ft" '\.\.\h*'$ft'::\h*c\h*\n' '^(?=\S)' "$ref"
-    done
-}
 
 # Setext-style header
 # Valid header characters:
@@ -78,5 +76,17 @@ add-highlighter shared/restructuredtext/content/ regex (\A|\n\n)(~{3,}\n)?[^\n]+
 add-highlighter shared/restructuredtext/content/ regex [^*](\*\*([^\s*]|([^\s*][^*]*[^\s*]))\*\*)[^*] 1:+b
 add-highlighter shared/restructuredtext/content/ regex [^*](\*([^\s*]|([^\s*][^*]*[^\s*]))\*)[^*] 1:+i
 add-highlighter shared/restructuredtext/content/ regex [^`](``([^\s`]|([^\s`][^`]*[^\s`]))``)[^`] 1:mono
+
+define-command restructuredtext-load-languages -params 1 %{
+    evaluate-commands -draft %{ try %{
+        execute-keys "%arg{1}s^\.\.\h*code-block::\h*\K\w+<ret>"
+        evaluate-commands -itersel %{ try %{
+            require-module %val{selection}
+            add-highlighter "shared/restructuredtext/%val{selection}" region "\.\.\h*code-block::\h*%val{selection}\h*\n" '^(?=\S)' regions
+            add-highlighter "shared/restructuredtext/%val{selection}/" default-region fill meta
+            add-highlighter "shared/restructuredtext/%val{selection}/inner" region \A\.\.\h*code-block::[^\n]*\K '^(?=\S)' ref %val{selection}
+        }}
+    }}
+}
 
 }

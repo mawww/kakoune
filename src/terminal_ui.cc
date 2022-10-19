@@ -1073,6 +1073,9 @@ void TerminalUI::menu_show(ConstArrayView<DisplayLine> items,
     const LineCount height = is_search ?
         1 : (min<LineCount>(max_height, div_round_up(item_count, m_menu.columns)));
 
+    if (height == 0)
+        return;
+
     const ColumnCount maxlen = (m_menu.columns > 1 and item_count > 1) ?
         max_width / m_menu.columns - 1 : max_width;
 
