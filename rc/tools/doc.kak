@@ -164,7 +164,7 @@ define-command -params 0..2 \
                     ' < $page | tr '[A-Z ]' '[a-z-]'
                 fi;;
         esac
-    } \
+    } -menu \
     doc -docstring %{
         doc <topic> [<keyword>]: open a buffer containing documentation about a given topic
         An optional keyword argument can be passed to the function, which will be automatically selected in the documentation
