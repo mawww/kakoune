@@ -72,7 +72,12 @@ define-command make-next-error -docstring 'Jump to the next make error' %{
         execute-keys "%opt{make_current_error_line}ggl" "/^(?:\w:)?[^:\n]+:\d+:(?:\d+:)?%opt{make_error_pattern}<ret>"
         make-jump
     }
-    try %{ evaluate-commands -client %opt{toolsclient} %{ execute-keys %opt{make_current_error_line}g } }
+    try %{
+        evaluate-commands -client %opt{toolsclient} %{
+            buffer '*make*'
+            execute-keys %opt{make_current_error_line}g
+        }
+    }
 }
 
 define-command make-previous-error -docstring 'Jump to the previous make error' %{
@@ -81,5 +86,10 @@ define-command make-previous-error -docstring 'Jump to the previous make error' 
         execute-keys "%opt{make_current_error_line}g" "<a-/>^(?:\w:)?[^:\n]+:\d+:(?:\d+:)?%opt{make_error_pattern}<ret>"
         make-jump
     }
-    try %{ evaluate-commands -client %opt{toolsclient} %{ execute-keys %opt{make_current_error_line}g } }
+    try %{
+        evaluate-commands -client %opt{toolsclient} %{
+            buffer '*make*'
+            execute-keys %opt{make_current_error_line}g
+        }
+    }
 }
