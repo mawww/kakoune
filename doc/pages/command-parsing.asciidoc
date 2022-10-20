@@ -50,7 +50,34 @@ of `(`, `[`, `{` and `<`), it is parsed as a balanced string whose closing
 delimiter matches that of its opening delimiter (respectively, `)`, `]`,
 `}`, and `>`).
 
-Characters may be escaped in the same manner as those for quoted strings.
+There is no way to escape the opening and closing characters, even if they
+are nested inside some other kind of string. For example, this will **not**
+work, because the `{` in the map command interferes with the delimiters for the
+hook's command block:
+
+----
+# DOES NOT WORK
+hook global WinSetOption filetype=latex %{
+    map window user b 'o\begin{'
+}
+----
+
+You can solve this by using a different outer delimiter:
+
+----
+hook global WinSetOption filetype=latex %[
+    # Note different delimiter used -----^
+    map window user b o\begin{
+]
+----
+
+...or just by including matching delimiters inside comments:
+
+----
+hook global WinSetOption filetype=latex %{
+    map window user b o\begin{ # matched pair to keep Kakoune happy: }
+}
+----
 
 === Balanced Strings Examples
 
