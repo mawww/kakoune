@@ -12,8 +12,9 @@ prompt, are parsed according to the following rules:
 == Quoted Strings
 
 If a word starts with `'`, `"`, or `%X` with `X` a _non-nestable_ punctuation
-character (see below for nestable characters), it is parsed as a quoted
-string whose delimiter is, respectively, `'`, `"`, or `X`.
+character (see <<command-parsing#balanced-strings,Balanced Strings>> below for
+nestable characters), it is parsed as a quoted string whose delimiter is,
+respectively, `'`, `"`, or `X`.
 
 A quoted string contains every character (including whitespaces).  Doubling
 a closing delimiter escapes it.  Thus, for example, entering two closing
