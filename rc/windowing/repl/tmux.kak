@@ -17,9 +17,15 @@ define-command -hidden -params 1.. tmux-repl-impl %{
             exit
         fi
         tmux_args="$1"
+        if [ "${1%%-*}" = split ]; then
+            tmux_args="$tmux_args -t ${kak_client_env_TMUX_PANE}"
+        elif [ "${1%% *}" = new-window ]; then
+            session_id=$(tmux display-message -p -t ${kak_client_env_TMUX_PANE} '#{session_id}')
+            tmux_args="$tmux_args -t $session_id"
+        fi
         shift
-        tmux $tmux_args "$@"
-        printf "set-option current tmux_repl_id '%s'" $(tmux display-message -p '#{pane_id}')
+        repl_pane_id=$(tmux $tmux_args -P -F '#{pane_id}' "$@")
+        printf "set-option current tmux_repl_id '%s'" "$repl_pane_id"
     }
 }
 
@@ -50,13 +56,12 @@ define-command -params 0..1 tmux-repl-set-pane -docstring %{
             exit
         fi
         if [ $# -eq 0 ]; then
-            curr_pane="$(tmux display-message -p '#{pane_id}')"
-            curr_pane_no="${curr_pane#%}"
+            curr_pane_no="${kak_client_env_TMUX_PANE#%}"
             tgt_pane=$((curr_pane_no+1))
         else
             tgt_pane="$1"
         fi
-        curr_win="$(tmux display-message -p '#{window_id}')" 
+        curr_win="$(tmux display-message -t ${kak_client_env_TMUX_PANE} -p '#{window_id}')" 
         if tmux list-panes -t "$curr_win" -F \#D | grep -Fxq "%"$tgt_pane; then
             printf "set-option current tmux_repl_id '%s'" %$tgt_pane
         else
