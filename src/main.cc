@@ -44,7 +44,7 @@ struct {
     unsigned int version;
     StringView notes;
 } constexpr version_notes[] = { {
-        0,
+        20221031,
         "» {+b}<esc>{} does not end macro recording anymore, use {+b}Q{}\n"
         "» pipe commands do not append final end-of-lines anymore\n"
         "» {+u}complete-command{} to configure command completion\n"

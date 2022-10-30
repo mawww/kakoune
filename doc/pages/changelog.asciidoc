@@ -3,7 +3,7 @@
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
-== Development version
+== Kakoune 2022.10.31
 
 * `complete-command` (See <<commands#configuring-command-completion,`:doc commands configuring-command-completion`>>)
 
