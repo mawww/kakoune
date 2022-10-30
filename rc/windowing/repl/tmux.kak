@@ -19,7 +19,7 @@ define-command -hidden -params 1.. tmux-repl-impl %{
         tmux_args="$1"
         shift
         tmux $tmux_args "$@"
-        printf "set-option current tmux_repl_id '%s'" $(tmux display-message -p '#{session_id}:#{window_id}.#{pane_id}')
+        printf "set-option current tmux_repl_id '%s'" $(tmux display-message -p '#{pane_id}')
     }
 }
 
@@ -58,7 +58,7 @@ define-command -params 0..1 tmux-repl-set-pane -docstring %{
         fi
         curr_win="$(tmux display-message -p '#{window_id}')" 
         if tmux list-panes -t "$curr_win" -F \#D | grep -Fxq "%"$tgt_pane; then
-            printf "set-option current tmux_repl_id '%s'" $(tmux display-message -p '#{session_id}:#{window_id}.')%$tgt_pane
+            printf "set-option current tmux_repl_id '%s'" %$tgt_pane
         else
             echo 'fail The correct pane is not there. Activate using tmux-terminal-* or some other way'
         fi
