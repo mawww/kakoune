@@ -71,13 +71,14 @@ define-command -hidden tmux-send-text -params 0..1 -docstring %{
         tmux-send-text [text]: Send text to the REPL pane.
         If no text is passed, then the selection is used
     } %{
-    nop %sh{
+    evaluate-commands %sh{
         if [ $# -eq 0 ]; then
             tmux set-buffer -b kak_selection -- "${kak_selection}"
         else
             tmux set-buffer -b kak_selection -- "$1"
         fi
-        tmux paste-buffer -b kak_selection -t "$kak_opt_tmux_repl_id"
+        tmux paste-buffer -b kak_selection -t "$kak_opt_tmux_repl_id" ||
+        echo 'fail tmux-send-text: failed to send text, see *debug* buffer for details'
     }
 }
 
