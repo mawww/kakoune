@@ -51,15 +51,13 @@ define-command -params 0..1 tmux-repl-set-pane -docstring %{
         fi
         if [ $# -eq 0 ]; then
             curr_pane="$(tmux display-message -p '#{pane_id}')"
-            curr_pane_no="${curr_pane:1}"
+            curr_pane_no="${curr_pane#%}"
             tgt_pane=$((curr_pane_no+1))
         else
             tgt_pane="$1"
         fi
         curr_win="$(tmux display-message -p '#{window_id}')" 
-        curr_win_no="${curr_win:1}"
-        current=$(tmux list-panes -t $curr_win_no -F \#D)
-        if [[ "$current" =~ "%"$tgt_pane ]]; then
+        if tmux list-panes -t "$curr_win" -F \#D | grep -Fxq "%"$tgt_pane; then
             printf "set-option current tmux_repl_id '%s'" $(tmux display-message -p '#{session_id}:#{window_id}.')%$tgt_pane
         else
             echo 'fail The correct pane is not there. Activate using tmux-terminal-* or some other way'
