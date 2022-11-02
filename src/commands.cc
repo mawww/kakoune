@@ -2285,7 +2285,8 @@ const CommandDesc on_key_cmd = {
     "on-key [<switches>] <command>: wait for next user key and then execute <command>, "
     "with key available in the `key` value",
     ParameterDesc{
-        { { "mode-name", { true, "set mode name to use" } } },
+        { { "mode-name", { true, "set mode name to use" } },
+          { "info", { true, "informational message hinting that input is required" } } },
         ParameterDesc::Flags::None, 1, 1
     },
     CommandFlags::None,
@@ -2295,6 +2296,9 @@ const CommandDesc on_key_cmd = {
     {
         String command = parser[0];
 
+        if (auto info = parser.get_switch("info"))
+            context.client().info_show({}, info->str(), {}, InfoStyle::Prompt);
+
         CapturedShellContext sc{shell_context};
         context.input_handler().on_next_key(
             parser.get_switch("mode-name").value_or("on-key"),
@@ -2302,6 +2306,7 @@ const CommandDesc on_key_cmd = {
             sc.env_vars["key"_sv] = to_string(key);
             ScopedSetBool disable_history{context.history_disabled()};
 
+            context.client().info_hide();
             CommandManager::instance().execute(command, context, sc);
         });
     }

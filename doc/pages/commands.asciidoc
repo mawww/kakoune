@@ -329,10 +329,11 @@ but not really useful in that context.
     `evaluate-commands -draft`, it is invisible and only responds to
     an `execute-keys` command in the same context.
 
-*on-key* <command>::
+*on-key* [-info <info>] <command>::
     wait for next key from user, then execute <command>, the key is
     available through the `key` value, accessible through `$kak_key`
-    in shells, or `%val{key}` in commands.
+    in shells, or `%val{key}` in commands. If specified, <info> will
+    first be displayed in an information box until a key is hit.
 
     NOTE: The key press must come from the current client context,
     so inside a draft context like `evaluate-commands -draft`, it only
