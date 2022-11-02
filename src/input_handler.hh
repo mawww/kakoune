@@ -60,6 +60,14 @@ enum class InsertMode : unsigned
     OpenLineAbove
 };
 
+struct UserCompletionMapping
+{
+    String option_name;
+    String docstring;
+};
+
+using UserCompletionMappings = HashMap<Key, UserCompletionMapping>;
+
 class InputHandler : public SafeCountable
 {
 public:
@@ -69,7 +77,7 @@ public:
     ~InputHandler();
 
     // switch to insert mode
-    void insert(InsertMode mode, int count);
+    void insert(InsertMode mode, int count, const UserCompletionMappings* user_completion_mappings);
     // repeat last insert mode key sequence
     void repeat_last_insert();
 
@@ -138,7 +146,8 @@ private:
         Vector<Key> keys;
         bool disable_hooks;
         int count;
-    } m_last_insert = { {}, InsertMode::Insert, {}, false, 1 };
+        const UserCompletionMappings* user_completion_mappings;
+    } m_last_insert = { {}, InsertMode::Insert, {}, false, 1, nullptr };
 
     char   m_recording_reg = 0;
     String m_recorded_keys;

@@ -216,6 +216,11 @@ of the file onto the filesystem
     *-lock*:::
         stay in mode until `<esc>` is pressed
 
+*complete* [-docstring <docstring>] <key> <option>::
+    declare a user completion engine mapped to `<key>` and taking candidates
+    from `<option>`; if specified, `<docstring>` will be shown in the
+    insert completion menu to describe the mapping (See <<keys#insert-mode-completion,`:doc keys insert-mode-completion`>>)
+
 == Hooks
 
 *hook* [<switches>] <scope> <hook_name> <filtering_regex> <command>::
