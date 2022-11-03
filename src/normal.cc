@@ -179,14 +179,14 @@ String build_autoinfo_for_mapping(const Context& context, KeymapMode mode,
     {
         String keys = join(built_in.keys |
                            filter([&](Key k){ return not keymaps.is_mapped(k, mode); }) |
-                           transform(key_to_str),
+                           transform((String(*)(Key))to_string),
                            ',', false);
         if (not keys.empty())
             descs.emplace_back(std::move(keys), built_in.docstring);
     }
 
     for (auto& key : keymaps.get_mapped_keys(mode))
-        descs.emplace_back(key_to_str(key),
+        descs.emplace_back(to_string(key),
                            keymaps.get_mapping(key, mode).docstring);
 
     auto max_len = 0_col;
@@ -764,7 +764,6 @@ void insert_output(Context& context, NormalParams params)
             auto& selections = context.selections();
             auto& buffer = context.buffer();
             const size_t old_main = selections.main_index();
-            Vector<BufferRange> ins_range;
 
             selections.for_each([&](size_t index, Selection& sel) {
                 selections.set_main_index(index);
@@ -772,16 +771,13 @@ void insert_output(Context& context, NormalParams params)
                     cmdline, context, content(context.buffer(), sel),
                     ShellManager::Flags::WaitForStdout);
 
+                auto& min = sel.min();
+                auto& max = sel.max();
                 auto range = insert(buffer, sel, paste_pos(buffer, sel, mode, false), out);
-                ins_range.push_back(range);
+                min = range.begin;
+                max = range.end > range.begin ? buffer.char_prev(range.end) : range.begin;
             });
-
-            selections.set(ins_range | transform([&buffer](auto& range) {
-                if (range.empty())
-                    return Selection{range.begin, range.end};
-                return Selection{range.begin,
-                                 buffer.char_prev(range.end)};
-            }) | gather<Vector>(), old_main);
+            selections.set_main_index(old_main);
         });
 }
 
@@ -983,7 +979,7 @@ void use_selection_as_search_pattern(Context& context, NormalParams params)
                       smart and is_bow(buffer, beg) ? "\\b" : "",
                       escape(buffer.string(beg, end), "^$\\.*+?()[]{}|", '\\'),
                       smart and is_eow(buffer, end) ? "\\b" : "");
-    });
+    }) | gather<HashSet>();
     String pattern = join(patterns, '|', false);
 
     const char reg = to_lower(params.reg ? params.reg : '/');
@@ -2014,6 +2010,7 @@ void exec_user_mappings(Context& context, NormalParams params)
 
         auto& mapping = context.keymaps().get_mapping(key, KeymapMode::User);
         ScopedSetBool disable_keymaps(context.keymaps_disabled());
+        ScopedSetBool disable_history(context.history_disabled());
 
         InputHandler::ScopedForceNormal force_normal{context.input_handler(), params};
 
@@ -2363,8 +2360,8 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
 
     { {'_'}, {"trim selections", trim_selections} },
 
-    { {'C'}, {"copy selection on next lines", copy_selections_on_next_lines<Forward>} },
-    { {alt('C')}, {"copy selection on previous lines", copy_selections_on_next_lines<Backward>} },
+    { {'C'}, {"duplicate selections on the lines that follow them.", copy_selections_on_next_lines<Forward>} },
+    { {alt('C')}, {"duplicate selections on the lines that precede them.", copy_selections_on_next_lines<Backward>} },
 
     { {Key::Space}, {"user mappings", exec_user_mappings} },
 

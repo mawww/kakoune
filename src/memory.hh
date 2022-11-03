@@ -33,7 +33,6 @@ enum class MemoryDomain
     Client,
     WordDB,
     Selections,
-    History,
     Remote,
     Events,
     Completion,
@@ -65,7 +64,6 @@ inline const char* domain_name(MemoryDomain domain)
         case MemoryDomain::Registers: return "Registers";
         case MemoryDomain::Client: return "Client";
         case MemoryDomain::Selections: return "Selections";
-        case MemoryDomain::History: return "History";
         case MemoryDomain::Remote: return "Remote";
         case MemoryDomain::Events: return "Events";
         case MemoryDomain::Completion: return "Completion";

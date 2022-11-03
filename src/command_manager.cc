@@ -648,13 +648,78 @@ Completions CommandManager::complete_module_name(StringView query) const
                                                                | transform(&ModuleMap::Item::key))};
 }
 
+static Completions complete_expansion(const Context& context, CompletionFlags flags,
+                                      Token token, ByteCount start,
+                                      ByteCount cursor_pos, ByteCount pos_in_token)
+{
+    switch (token.type) {
+    case Token::Type::RegisterExpand:
+        return { start, cursor_pos,
+                 RegisterManager::instance().complete_register_name(
+                     token.content, pos_in_token) };
+
+    case Token::Type::OptionExpand:
+        return { start, cursor_pos,
+                 GlobalScope::instance().option_registry().complete_option_name(
+                     token.content, pos_in_token) };
+
+    case Token::Type::ShellExpand:
+        return offset_pos(shell_complete(context, flags, token.content,
+                                         pos_in_token), start);
+
+    case Token::Type::ValExpand:
+        return { start, cursor_pos,
+                 ShellManager::instance().complete_env_var(
+                     token.content, pos_in_token) };
+
+    case Token::Type::FileExpand:
+    {
+        const auto& ignored_files = context.options()["ignored_files"].get<Regex>();
+        return { start, cursor_pos, complete_filename(
+                 token.content, ignored_files, pos_in_token, FilenameFlags::Expand) };
+    }
+
+    default:
+        kak_assert(false);
+        throw runtime_error("unknown expansion");
+    }
+}
+
+static Completions complete_raw_eval(const Context& context, CompletionFlags flags,
+                                     StringView prefix, ByteCount start,
+                                     ByteCount cursor_pos, ByteCount pos_in_token)
+{
+    ParseState state{prefix, prefix.begin()};
+    while (state)
+    {
+        if (*state.pos++ == '%')
+        {
+            if (state and *state.pos == '%')
+                ++state.pos;
+            else
+            {
+                auto token = parse_percent_token(state, false);
+                if (token.terminated)
+                    continue;
+                if (token.type == Token::Type::Raw or token.type == Token::Type::RawQuoted)
+                    return {};
+                return complete_expansion(context, flags, token,
+                                          start + token.pos, cursor_pos,
+                                          pos_in_token - token.pos);
+            }
+        }
+    }
+    return {};
+}
+
 Completions CommandManager::complete(const Context& context,
                                      CompletionFlags flags,
                                      StringView command_line,
                                      ByteCount cursor_pos)
 {
-    CommandParser parser{command_line};
-    const char* cursor = command_line.begin() + (int)cursor_pos;
+    auto prefix = command_line.substr(0_byte, cursor_pos);
+    CommandParser parser{prefix};
+    const char* cursor = prefix.begin() + (int)cursor_pos;
     Vector<Token> tokens;
 
     bool is_last_token = true;
@@ -675,7 +740,7 @@ Completions CommandManager::complete(const Context& context,
     }
 
     if (is_last_token)
-        tokens.push_back({Token::Type::Raw, command_line.length(), {}});
+        tokens.push_back({Token::Type::Raw, prefix.length(), {}});
     kak_assert(not tokens.empty());
     const auto& token = tokens.back();
 
@@ -712,37 +777,17 @@ Completions CommandManager::complete(const Context& context,
     if (tokens.size() == 1 and (token.type == Token::Type::Raw or
                                 token.type == Token::Type::RawQuoted))
     {
-        StringView query = command_line.substr(start, pos_in_token);
-        return offset_pos(requote(complete_command_name(context, query), token.type), start);
+        return offset_pos(requote(complete_command_name(context, prefix), token.type), start);
     }
 
     switch (token.type)
     {
     case Token::Type::RegisterExpand:
-        return {start , cursor_pos,
-                RegisterManager::instance().complete_register_name(
-                    token.content, pos_in_token) };
-
     case Token::Type::OptionExpand:
-        return {start , cursor_pos,
-                GlobalScope::instance().option_registry().complete_option_name(
-                    token.content, pos_in_token) };
-
     case Token::Type::ShellExpand:
-        return offset_pos(shell_complete(context, flags, token.content,
-                                         pos_in_token), start);
-
     case Token::Type::ValExpand:
-        return {start , cursor_pos,
-                ShellManager::instance().complete_env_var(
-                    token.content, pos_in_token) };
-
     case Token::Type::FileExpand:
-    {
-        const auto& ignored_files = context.options()["ignored_files"].get<Regex>();
-        return {start , cursor_pos, complete_filename(
-                token.content, ignored_files, pos_in_token, FilenameFlags::Expand) };
-    }
+        return complete_expansion(context, flags, token, start, cursor_pos, pos_in_token);
 
     case Token::Type::Raw:
     case Token::Type::RawQuoted:
@@ -763,12 +808,16 @@ Completions CommandManager::complete(const Context& context,
         const bool has_switches = not command.param_desc.switches.empty();
         auto is_switch = [=](StringView s) { return has_switches and s.substr(0_byte, 1_byte) == "-"; };
 
-        if (is_switch(token.content))
+        if (is_switch(token.content)
+            and not contains(tokens | drop(1) | transform(&Token::content), "--"))
         {
             auto switches = Kakoune::complete(token.content.substr(1_byte), pos_in_token,
-                                              command.param_desc.switches |
-                                              transform(&SwitchMap::Item::key));
-            return switches.empty() ? Completions{} : Completions{start+1, cursor_pos, std::move(switches)};
+                                              concatenated(command.param_desc.switches
+                                                               | transform(&SwitchMap::Item::key),
+                                                           ConstArrayView<String>{"-"}));
+            return switches.empty()
+                    ? Completions{}
+                    : Completions{start+1, cursor_pos, std::move(switches), Completions::Flags::Menu};
         }
         if (not command.completer)
             return Completions{};
@@ -779,6 +828,7 @@ Completions CommandManager::complete(const Context& context,
         return offset_pos(requote(command.completer(context, flags, params, index, pos_in_token), token.type), start);
     }
     case Token::Type::RawEval:
+        return complete_raw_eval(context, flags, token.content, start, cursor_pos, pos_in_token);
     default:
         break;
     }

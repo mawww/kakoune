@@ -16,9 +16,8 @@ define-command -hidden modeline-parse-impl %{
 
         # Translate a vim option into the corresponding kakoune one
         translate_opt_vim() {
-            key="$1"
-            value="$2"
-            tr=""
+            local key="$1"
+            local value="$2"
 
             case "${key}" in
                 so|scrolloff)
@@ -60,8 +59,8 @@ define-command -hidden modeline-parse-impl %{
 
         # Pass a few whitelisted options to kakoune directly
         translate_opt_kakoune() {
-            readonly key="$1"
-            readonly value="$2"
+            local readonly key="$1"
+            local readonly value="$2"
 
             case "${key}" in
                 scrolloff|tabstop|indentwidth|autowrap_column|eolformat|filetype|BOM|spell_lang);;

@@ -75,7 +75,8 @@ Completions HighlighterGroup::complete_child(StringView path, ByteCount cursor_p
                        | transform([](auto& hl) { return hl.value->has_children() ? hl.key + "/" : hl.key; })
                        | gather<Vector<String>>());
 
-    return { 0, 0, std::move(candidates) };
+    auto completions_flags = group ? Completions::Flags::None : Completions::Flags::Menu;
+    return { 0, 0, std::move(candidates), completions_flags };
 }
 
 void Highlighters::highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range)

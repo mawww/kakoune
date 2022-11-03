@@ -24,11 +24,11 @@ struct DisplayAtom : public UseMemoryDomain<MemoryDomain::Display>
 public:
     enum Type { Range, ReplacedRange, Text, Whitespace };
 
-    DisplayAtom(const Buffer& buffer, BufferCoord begin, BufferCoord end, Face face = {})
-        : face(face), m_type(Range), m_buffer(&buffer), m_range{begin, end} {}
+    DisplayAtom(const Buffer& buffer, BufferRange range, Face face = {})
+        : face(face), m_type(Range), m_buffer(&buffer), m_range{range} {}
 
-    DisplayAtom(const Buffer& buffer, BufferCoord begin, BufferCoord end, String str, Face face = {})
-        : face(face), m_type(ReplacedRange), m_buffer(&buffer), m_range{begin, end}, m_text{std::move(str)} {}
+    DisplayAtom(const Buffer& buffer, BufferRange range, String str, Face face = {})
+        : face(face), m_type(ReplacedRange), m_buffer(&buffer), m_range{range}, m_text{std::move(str)} {}
 
     DisplayAtom(String str, Face face)
         : face(face), m_type(Text), m_text(std::move(str)) {}

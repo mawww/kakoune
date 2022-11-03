@@ -22,11 +22,18 @@ define-command -hidden -params 2.. iterm-terminal-split-impl %{
                 fi
             done
         )
+
         # go through another round of escaping for osascript
         # \ -> \\
         # " -> \"
-        escaped=$(printf %s "$args" | sed -e 's|\\|\\\\|g; s|"|\\"|g')
-        cmd="env PATH='${PATH}' TMPDIR='${TMPDIR}' $escaped"
+        do_esc() {
+            printf %s "$*" | sed -e 's|\\|\\\\|g; s|"|\\"|g'
+        }
+
+        escaped=$(do_esc "$args")
+        esc_path=$(do_esc "$PATH")
+        esc_tmp=$(do_esc "$TMPDIR")
+        cmd="env PATH='${esc_path}' TMPDIR='${esc_tmp}' $escaped"
         osascript                                                                             \
         -e "tell application \"iTerm\""                                                       \
         -e "    tell current session of current window"                                       \
@@ -136,7 +143,7 @@ If no client is passed then the current one is used' \
         fi
     }
 }
-complete-command iterm-focus client
+complete-command -menu iterm-focus client
 
 alias global focus iterm-focus
 alias global terminal iterm-terminal-vertical

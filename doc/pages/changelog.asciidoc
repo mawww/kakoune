@@ -3,7 +3,7 @@
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
-== Development version
+== Kakoune 2022.10.31
 
 * `complete-command` (See <<commands#configuring-command-completion,`:doc commands configuring-command-completion`>>)
 
@@ -15,8 +15,10 @@ released versions.
 * User mappings is now bound to `<space>` while keeping/removing main selection
   moved to `,` and `<a-,>`
 
-* History registers `%reg{colon}`, `%reg{slash}` and `%reg{pipe}` now
+* Prompt history registers `%reg{colon}`, `%reg{slash}` and `%reg{pipe}` now
   have reverse chronological order
+
+* Executing user mode mappings no longer adds to prompt history registers.
 
 == Kakoune 2021.11.07
 

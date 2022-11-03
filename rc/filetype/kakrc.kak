@@ -48,10 +48,10 @@ add-highlighter shared/kakrc/shell1 region -recurse '\{' '(^|\h)\K%?%sh\{' '\}' 
 add-highlighter shared/kakrc/shell2 region -recurse '\(' '(^|\h)\K%?%sh\(' '\)' ref sh
 add-highlighter shared/kakrc/shell3 region -recurse '\[' '(^|\h)\K%?%sh\[' '\]' ref sh
 add-highlighter shared/kakrc/shell4 region -recurse '<'  '(^|\h)\K%?%sh<'  '>'  ref sh
-add-highlighter shared/kakrc/shell5 region -recurse '\{' '(^|\h)\K-shell-script-(completion|candidates)\h+%\{' '\}' ref sh
-add-highlighter shared/kakrc/shell6 region -recurse '\(' '(^|\h)\K-shell-script-(completion|candidates)\h+%\(' '\)' ref sh
-add-highlighter shared/kakrc/shell7 region -recurse '\[' '(^|\h)\K-shell-script-(completion|candidates)\h+%\[' '\]' ref sh
-add-highlighter shared/kakrc/shell8 region -recurse '<'  '(^|\h)\K-shell-script-(completion|candidates)\h+%<'  '>'  ref sh
+add-highlighter shared/kakrc/shell5 region -recurse '\{' '(^|\h)\K-?shell-script-(completion|candidates)\h+%\{' '\}' ref sh
+add-highlighter shared/kakrc/shell6 region -recurse '\(' '(^|\h)\K-?shell-script-(completion|candidates)\h+%\(' '\)' ref sh
+add-highlighter shared/kakrc/shell7 region -recurse '\[' '(^|\h)\K-?shell-script-(completion|candidates)\h+%\[' '\]' ref sh
+add-highlighter shared/kakrc/shell8 region -recurse '<'  '(^|\h)\K-?shell-script-(completion|candidates)\h+%<'  '>'  ref sh
 
 evaluate-commands %sh{
     # Grammar
@@ -89,6 +89,8 @@ add-highlighter shared/kakrc/double_string/fill fill string
 add-highlighter shared/kakrc/double_string/escape regex '""' 0:default+b
 add-highlighter shared/kakrc/single_string/fill fill string
 add-highlighter shared/kakrc/single_string/escape regex "''" 0:default+b
+
+add-highlighter shared/kak ref kakrc
 
 # Commands
 # ‾‾‾‾‾‾‾‾

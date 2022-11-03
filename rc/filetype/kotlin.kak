@@ -77,7 +77,7 @@ add-highlighter shared/kotlin/character/ regex ('.{1})(.+)(') 2:meta
 add-highlighter shared/kotlin/code/methods     regex ::([A-Za-z_][\w]*)|\.([A-Za-z_][\w]*)\s*?[\(\{]|\.([A-Za-z_][\w]*)[\s\)\}>](?=[^\(\{]) 1:function 2:function 3:function
 
 # Test suite functions: fun `this is a valid character function test`()
-add-highlighter shared/kotlin/code/fun_tests   regex ^\h*?fun\s*?`(.[^<>\[\]\\\.]+?)`\h*?(?=\() 1:default+uF
+add-highlighter shared/kotlin/code/fun_tests   regex ^\h*?fun\s*?`(.[^<>:/\[\]\\\.]+?)`\h*?(?=\() 1:default+iuf
 add-highlighter shared/kotlin/code/delimiters  regex (\(|\)|\[|\]|\{|\}|\;|') 1:operator
 add-highlighter shared/kotlin/code/operators   regex (\+|-|\*|&|=|\\|\?|%|\|-|!|\||->|\.|,|<|>|:|\^|/) 1:operator
 add-highlighter shared/kotlin/code/numbers     regex \b((0(x|X)[0-9a-fA-F]*)|(([0-9]+\.?[0-9]*)|(\.[0-9]+))((e|E)(\+|-)?[0-9]+)?)([LlFf])?\b 0:value

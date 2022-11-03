@@ -6,7 +6,7 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate .*/?Dockerfile(\.\w+)?$ %{
+hook global BufCreate .*/?Dockerfile(\..+)?$ %{
     set-option buffer filetype dockerfile
 }
 

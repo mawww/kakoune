@@ -58,7 +58,7 @@ const String& HistoryRegister::get_main(const Context&, size_t)
     return m_content.empty() ? String::ms_empty : m_content.front();
 }
 
-static const HashMap<String, Codepoint> reg_names = {
+static const HashMap<StringView, Codepoint> reg_names {
     { "slash", '/' },
     { "dquote", '"' },
     { "pipe", '|' },
@@ -101,7 +101,7 @@ void RegisterManager::add_register(Codepoint c, std::unique_ptr<Register> reg)
 
 CandidateList RegisterManager::complete_register_name(StringView prefix, ByteCount cursor_pos) const
 {
-    return complete(prefix, cursor_pos, reg_names | transform([](auto& i) { return i.key; }) | gather<Vector<String>>());
+    return complete(prefix, cursor_pos, reg_names | transform([](auto& i) { return i.key; }));
 }
 
 }

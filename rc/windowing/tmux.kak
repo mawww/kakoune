@@ -71,7 +71,7 @@ If no client is passed then the current one is used' \
         fi
     }
 }
-complete-command tmux-focus client
+complete-command -menu tmux-focus client
 
 ## The default behaviour for the `new` command is to open an horizontal pane in a tmux session
 alias global focus tmux-focus

@@ -110,6 +110,10 @@ DisplayLine::iterator DisplayLine::split(iterator it, ColumnCount count)
     auto pos = utf8::advance(get_iterator(it->buffer(), it->begin()),
                              get_iterator(it->buffer(), it->end()),
                              count).coord();
+    if (pos == it->begin()) // Can happen if we try to split in the middle of a multi-column codepoint
+        return m_atoms.insert(it, {it->buffer(), {pos, pos}, it->face});
+    if (pos == it->end())
+        return std::prev(m_atoms.insert(std::next(it), {it->buffer(), {pos, pos}, it->face}));
     return split(it, pos);
 }
 
