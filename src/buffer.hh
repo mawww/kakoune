@@ -174,8 +174,6 @@ public:
     BufferIterator end() const;
     LineCount      line_count() const;
 
-    Optional<BufferCoord> last_modification_coord() const;
-
     StringView operator[](LineCount line) const
     { return m_lines[line]; }
 
@@ -240,6 +238,8 @@ public:
     };
 
     using UndoGroup = Vector<Modification, MemoryDomain::BufferMeta>;
+
+    const UndoGroup& last_modification_coords() const;
 
     struct HistoryNode : UseMemoryDomain<MemoryDomain::BufferMeta>
     {

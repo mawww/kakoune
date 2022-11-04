@@ -322,13 +322,12 @@ void goto_commands(Context& context, NormalParams params)
             }
             case '.':
             {
-                context.push_jump();
-                auto pos = buffer.last_modification_coord();
-                if (not pos)
-                    throw runtime_error("no last modification position");
-                if (*pos >= buffer.back_coord())
-                    pos = buffer.back_coord();
-                select_coord<mode>(buffer, *pos, context.selections());
+                auto selections = buffer.last_modification_coords()
+                                    | transform([](auto& mod) { return Selection{mod.coord}; })
+                                    | gather<Vector<Selection>>();
+                SelectionList new_list = {buffer, selections};
+                new_list.merge_consecutive();
+                context.selections() = new_list;
                 break;
             }
             default:
