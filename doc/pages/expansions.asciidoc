@@ -373,6 +373,10 @@ The following expansions are supported (with required context _in italics_):
     _in window scope_ +
     unquoted list of the lengths (in codepoints) of the selections
 
+*%val{selection_count}*::
+    _in window scope_ +
+    the number of selections
+
 *%val{session}*::
     name of the current session
 

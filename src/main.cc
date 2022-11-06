@@ -350,6 +350,10 @@ static const EnvVarDesc builtin_env_vars[] = { {
                          return to_string(char_length(context.buffer(), s));
                      }) | gather<Vector<String>>(); }
     }, {
+        "selection_count", false,
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {to_string(context.selections().size())}; }
+    }, {
         "window_width", false,
         [](StringView name, const Context& context) -> Vector<String>
         { return {to_string(context.window().dimensions().column)}; }
