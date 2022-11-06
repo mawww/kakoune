@@ -420,7 +420,7 @@ See <<Appending>> below for instructions on extending (appending to) the current
  * `m`: select to matching character
  * `M`: extend selection to matching character
 
- * `<x>`: expand selections to contain full lines (including end-of-lines)
+ * `x`: expand selections to contain full lines (including end-of-lines)
  * `<a-x>`: trim selections to only contain full lines (not including last
             end-of-line)
 
