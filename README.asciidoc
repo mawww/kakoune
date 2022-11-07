@@ -359,7 +359,7 @@ directed range of characters. A selection has two ends, the anchor and the
 cursor.
 
 There is always at least one selection, and a selection is always at least
-one character (in which case the anchor and cursor of the selections are
+one character (in which case the anchor and cursor of the selection are
 on the same character).
 
 Normal Mode
@@ -420,11 +420,8 @@ See <<Appending>> below for instructions on extending (appending to) the current
  * `m`: select to matching character
  * `M`: extend selection to matching character
 
- * `x`: select line on which selection end lies (or next line when end lies on
-        an end-of-line)
- * `X`: similar to `x`, except the current selection is extended
- * `<a-x>`: expand selections to contain full lines (including end-of-lines)
- * `<a-X>`: trim selections to only contain full lines (not including last
+ * `x`: expand selections to contain full lines (including end-of-lines)
+ * `<a-x>`: trim selections to only contain full lines (not including last
             end-of-line)
 
  * `%`: select whole buffer
@@ -493,42 +490,40 @@ it when pasting text.
 Changes
 ~~~~~~~
 
- * `i`: enter insert mode before current selection
- * `a`: enter insert mode after current selection
- * `d`: yank and delete current selection
- * `c`: yank and delete current selection and enter insert mode
+ * `i`: enter insert mode before each selection
+ * `a`: enter insert mode after each selection
+ * `d`: yank and delete each selection
+ * `c`: yank and delete each selection and enter insert mode
  * `.`: repeat last insert mode change (`i`, `a`, or `c`, including
         the inserted text)
 
- * `<a-d>`: delete current selection
- * `<a-c>`: delete current selection and enter insert mode
+ * `<a-d>`: delete each selection
+ * `<a-c>`: delete each selection and enter insert mode
 
- * `I`: enter insert mode at current selection begin line start
- * `A`: enter insert mode at current selection end line end
+ * `I`: enter insert mode at each selection begin line start
+ * `A`: enter insert mode at each selection end line end
  * `o`: enter insert mode in one (or given count) new lines below
-        current selection end
+        each selection end
  * `O`: enter insert mode in one (or given count)  new lines above
-        current selection begin
+        each selection begin
 
- * `<a-o>`: add an empty line below cursor
- * `<a-O>`: add an empty line above cursor
+ * `<a-o>`: add an empty line below each cursor
+ * `<a-O>`: add an empty line above each cursor
 
  * `y`: yank selections
- * `p`: paste after current selection end
- * `P`: paste before current selection begin
- * `<a-p>`: paste all after current selection end, and
-            select each pasted string.
- * `<a-P>`: paste all before current selection begin, and
-            select each pasted string.
- * `R`: replace current selection with yanked text
- * `<a-R>`: replace current selection with every yanked text
+ * `p`: paste after each selection end
+ * `P`: paste before each selection begin
+ * `<a-p>`: paste all after each selection end
+ * `<a-P>`: paste all before each selection begin
+ * `R`: replace each selection with yanked text
+ * `<a-R>`: replace each selection with every yanked text
 
  * `r`: replace each character with the next entered one
 
  * `<a-j>`: join selected lines
  * `<a-J>`: join selected lines and select spaces inserted
             in place of line breaks
- * `<a-m>`: merge contiguous selections together (works across lines as well)
+ * `<a-_>`: merge contiguous selections together (works across lines as well)
 
  * `<gt> (>)`: indent selected lines
  * `<a-gt>`: indent selected lines, including empty lines
@@ -537,19 +532,19 @@ Changes
         indent (3 leading spaces when indent is 4)
 
  * `|`: pipe each selection through the given external filter program
-        and replace the selection with it's output.
+        and replace the selection with its output.
  * `<a-|>`: pipe each selection through the given external filter program
         and ignore its output
 
- * `!`: insert command output before selection
- * `<a-!>`: append command output after selection
+ * `!`: insert command output before each selection
+ * `<a-!>`: append command output after each selection
 
  * `u`: undo last change
  * `<a-u>`: move backward in history
  * `U`: redo last change
  * `<a-U>`: move forward in history
 
- * `&`: align selection, align the cursor of selections by inserting
+ * `&`: align selections, align the cursor of selections by inserting
         spaces before the first character of the selection
  * `<a-&>`: copy indent, copy the indentation of the main selection
         (or the count one if a count is given) to all other ones
@@ -558,13 +553,13 @@ Changes
  * `~`: to upper case
  * ``<a-`>``: swap case
 
- * `@`: convert tabs to spaces in current selections, uses the buffer
-        tabstop option or the count parameter for tabstop.
- * `<a-@>`: convert spaces to tabs in current selections, uses the buffer
-            tabstop option or the count parameter for tabstop.
+ * `@`: convert selected tabs to spaces, uses the buffer tabstop option or
+        the count parameter for tabstop.
+ * `<a-@>`: convert selected spaces to tabs, uses the buffer tabstop option
+            or the count parameter for tabstop.
 
  * `<a-)>`: rotate selections content, if specified, the count groups
-            selections, so `3<a-)>` rotate (1, 2, 3) and (3, 4, 6)
+            selections, so `3<a-)>` rotate (1, 2, 3) and (4, 5, 6)
             independently.
  * `<a-(>`: rotate selections content backwards
 
@@ -702,7 +697,7 @@ saved in the command history.
    ** `-debug`: print the given text to the `\*debug*` buffer
  * `nop`: does nothing, but as with every other commands, arguments may be
      evaluated. So nop can be used for example to execute a shell command
-     while being sure that it's output will not be interpreted by kak.
+     while being sure that its output will not be interpreted by kak.
      `:%sh{ echo echo tchou }` will echo tchou in Kakoune, whereas
      `:nop %sh{ echo echo tchou }` will not, but both will execute the
      shell command.

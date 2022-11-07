@@ -136,36 +136,7 @@ define-command -params 1 -hidden doc-render %{
     map buffer normal <ret> :doc-follow-link<ret>
 }
 
-define-command -params 0..2 \
-    -shell-script-candidates %{
-        case "$kak_token_to_complete" in
-            0)
-                find -L \
-                    "${kak_config}/autoload/" \
-                    "${kak_runtime}/doc/" \
-                    "${kak_runtime}/rc/" \
-                    "${kak_opt_docsextrapaths}" \
-                    -type f -name "*.asciidoc" 2>/dev/null |
-                    sed 's,.*/,,; s/\.[^.]*$//';;
-            1)
-                page=$(
-                    find -L \
-                        "${kak_config}/autoload/" \
-                        "${kak_runtime}/doc/" \
-                        "${kak_runtime}/rc/" \
-                        "${kak_opt_docsextrapaths}" \
-                        -type f -name "$1.asciidoc" 2>/dev/null |
-                        head -1
-                )
-                if [ -f "${page}" ]; then
-                    awk '
-                        /^==+ +/ { sub(/^==+ +/, ""); print }
-                        /^\[\[[^\]]+\]\]/ { sub(/^\[\[/, ""); sub(/\]\].*/, ""); print }
-                    ' < $page | tr '[A-Z ]' '[a-z-]'
-                fi;;
-        esac
-    } -menu \
-    doc -docstring %{
+define-command doc -params 0..2 -menu -docstring %{
         doc <topic> [<keyword>]: open a buffer containing documentation about a given topic
         An optional keyword argument can be passed to the function, which will be automatically selected in the documentation
 
@@ -195,6 +166,33 @@ define-command -params 0..2 \
             printf 'fail No such doc file: %s\n' "$topic.asciidoc"
         fi
     }
+}
+
+complete-command doc shell-script-candidates %{
+    case "$kak_token_to_complete" in
+        0)
+            find -L \
+                "${kak_config}/autoload/" \
+                "${kak_runtime}/doc/" \
+                "${kak_runtime}/rc/" \
+                -type f -name "*.asciidoc" 2>/dev/null |
+                sed 's,.*/,,; s/\.[^.]*$//';;
+        1)
+            page=$(
+                find -L \
+                    "${kak_config}/autoload/" \
+                    "${kak_runtime}/doc/" \
+                    "${kak_runtime}/rc/" \
+                    -type f -name "$1.asciidoc" 2>/dev/null |
+                    head -1
+            )
+            if [ -f "${page}" ]; then
+                awk '
+                    /^==+ +/ { sub(/^==+ +/, ""); print }
+                    /^\[\[[^\]]+\]\]/ { sub(/^\[\[/, ""); sub(/\]\].*/, ""); print }
+                ' < $page | tr '[A-Z ]' '[a-z-]'
+            fi;;
+    esac
 }
 
 alias global help doc

@@ -5,7 +5,7 @@ hook global BufCreate .*[.][cm]?(js)x? %{
     set-option buffer filetype javascript
 }
 
-hook global BufCreate .*[.](ts)x? %{
+hook global BufCreate .*[.][cm]?(ts)x? %{
     set-option buffer filetype typescript
 }
 

@@ -479,7 +479,7 @@ const ParameterDesc write_params = {
         { "method", { true, "explicit writemethod (replace|overwrite)" } },
         { "force", { false, "Allow overwriting existing file with explicit filename" } }
     },
-    ParameterDesc::Flags::SwitchesOnlyAtStart, 0, 1
+    ParameterDesc::Flags::None, 0, 1
 };
 
 const ParameterDesc write_params_except_force = {
@@ -487,7 +487,7 @@ const ParameterDesc write_params_except_force = {
         { "sync", { false, "force the synchronization of the file onto the filesystem" } },
         { "method", { true, "explicit writemethod (replace|overwrite)" } },
     },
-    ParameterDesc::Flags::SwitchesOnlyAtStart, 0, 1
+    ParameterDesc::Flags::None, 0, 1
 };
 
 auto parse_write_method(StringView str)
@@ -1427,13 +1427,14 @@ const CommandDesc echo_cmd = {
         { { "markup", { false, "parse markup" } },
           { "quoting", { true, "quote each argument separately using the given style (raw|kakoune|shell)" } },
           { "to-file", { true, "echo contents to given filename" } },
+          { "to-shell-script", { true, "pipe contents to given shell script" } },
           { "debug", { false, "write to debug buffer instead of status line" } } },
         ParameterDesc::Flags::SwitchesOnlyAtStart
     },
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
     {
         String message;
         if (auto quoting = parser.get_switch("quoting"))
@@ -1443,9 +1444,10 @@ const CommandDesc echo_cmd = {
             message = join(parser, ' ', false);
 
         if (auto filename = parser.get_switch("to-file"))
-            return write_to_file(*filename, message);
-
-        if (parser.get_switch("debug"))
+            write_to_file(*filename, message);
+        else if (auto command = parser.get_switch("to-shell-script"))
+            ShellManager::instance().eval(*command, context, message, ShellManager::Flags::None, shell_context);
+        else if (parser.get_switch("debug"))
             write_to_debug_buffer(message);
         else if (parser.get_switch("markup"))
             context.print_status(parse_display_line(message, context.faces()));
@@ -1872,11 +1874,6 @@ const CommandDesc map_key_cmd = {
         KeyList key = parse_keys(parser[2]);
         if (key.size() != 1)
             throw runtime_error("only a single key can be mapped");
-
-        KeymapMode lower_case_only_modes[] = {KeymapMode::Goto};
-        if (key[0].codepoint().map(iswupper).value_or(false) and
-            contains(lower_case_only_modes, keymap_mode))
-            throw runtime_error("mode only supports lower case mappings");
 
         KeyList mapping = parse_keys(parser[3]);
         keymaps.map_key(key[0], keymap_mode, std::move(mapping),
@@ -2642,7 +2639,7 @@ const CommandDesc enter_user_mode_cmd = {
     "enter-user-mode [<switches>] <name>: enable <name> keymap mode for next key",
     ParameterDesc{
         { { "lock", { false, "stay in mode until <esc> is pressed" } } },
-        ParameterDesc::Flags::SwitchesOnlyAtStart, 1, 1
+        ParameterDesc::Flags::None, 1, 1
     },
     CommandFlags::None,
     CommandHelper{},

@@ -260,6 +260,10 @@ of the file onto the filesystem
         write the given text to the given file on the host
         filesystem.
 
+    *-to-shell-script* <script>:::
+        execute the given shell script with the given text
+        written to its standard input
+
     *-quoting* <quoting>:::
         define how arguments are quoted in echo output:
 

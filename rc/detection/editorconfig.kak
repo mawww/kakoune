@@ -57,3 +57,4 @@ define-command editorconfig-load -params ..1 -docstring "editorconfig-load [file
         esac
     }
 }
+complete-command editorconfig-load file

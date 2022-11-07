@@ -86,7 +86,7 @@ add-highlighter shared/rust/code/question_mark          regex \? 0:meta
 add-highlighter shared/rust/code/function_call          regex _?[a-zA-Z]\w*\s*(?=\() 0:function
 add-highlighter shared/rust/code/generic_function_call  regex _?[a-zA-Z]\w*\s*(?=::<) 0:function
 add-highlighter shared/rust/code/function_declaration   regex (?:fn\h+)(_?\w+)(?:<[^>]+?>)?\( 1:function
-add-highlighter shared/rust/code/keywords               regex \b(?:as|break|continue|crate|else|enum|extern|false|fn|for|if|impl|in|let|loop|match|mod|pub|return|self|Self|struct|super|trait|true|type|unsafe|use|where|while|async|await|dyn|abstract|become|box|do|try)\b 0:keyword
+add-highlighter shared/rust/code/keywords               regex \b(?:as|break|continue|crate|else|enum|extern|false|fn|for|if|impl|in|let|loop|match|mod|pub|return|self|Self|struct|super|trait|true|type|union|unsafe|use|where|while|async|await|dyn|abstract|become|box|do|try)\b 0:keyword
 add-highlighter shared/rust/code/storage                regex \b(move|mut|ref|static|const)\b 0:type
 add-highlighter shared/rust/code/pub_with_scope         regex \b(pub)\h*(\()\h*(crate|super|self|in\h+[\w:]+)\h*(\)) 1:keyword 2:meta 4:meta
 # after let can be an arbitrary pattern match
