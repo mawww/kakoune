@@ -175,6 +175,7 @@ complete-command doc shell-script-candidates %{
                 "${kak_config}/autoload/" \
                 "${kak_runtime}/doc/" \
                 "${kak_runtime}/rc/" \
+                "${kak_opt_docsextrapaths}" \
                 -type f -name "*.asciidoc" 2>/dev/null |
                 sed 's,.*/,,; s/\.[^.]*$//';;
         1)
@@ -183,6 +184,7 @@ complete-command doc shell-script-candidates %{
                     "${kak_config}/autoload/" \
                     "${kak_runtime}/doc/" \
                     "${kak_runtime}/rc/" \
+                    "${kak_opt_docsextrapaths}" \
                     -type f -name "$1.asciidoc" 2>/dev/null |
                     head -1
             )
