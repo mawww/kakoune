@@ -239,7 +239,6 @@ void Context::SelectionHistory::undo()
         select_parent();
     else
         m_context.change_buffer(history_node(parent).selections.buffer(), { std::move(select_parent) });
-                                                                           // });
 }
 
 void Context::SelectionHistory::redo()
