@@ -72,7 +72,7 @@ public:
     Context& operator=(const Context&) = delete;
 
     Buffer& buffer() const;
-    bool has_buffer() const { return (bool)m_selections; }
+    bool has_buffer() const { return not m_selection_history.empty(); }
 
     Window& window() const;
     bool has_window() const { return (bool)m_window; }
@@ -83,14 +83,18 @@ public:
     InputHandler& input_handler() const;
     bool has_input_handler() const { return (bool)m_input_handler; }
 
-    SelectionList& selections();
-    const SelectionList& selections() const;
+    SelectionList& selections(bool update = true);
+    const SelectionList& selections(bool update = true) const;
     Vector<String>  selections_content() const;
 
     // Return potentially out of date selections
     SelectionList& selections_write_only();
 
-    void change_buffer(Buffer& buffer);
+    void end_selection_edition() { m_selection_history.end_edition(); }
+    void undo_selection_change();
+    void redo_selection_change();
+
+    void change_buffer(Buffer& buffer, Optional<FunctionRef<void()>> set_selection = {});
     void forget_buffer(Buffer& buffer);
 
     void set_client(Client& client);
@@ -113,6 +117,7 @@ public:
 
     bool is_editing() const { return m_edition_level!= 0; }
     void disable_undo_handling() { m_edition_level = -1; }
+    bool is_editing_selection() const { return m_selection_history.in_edition(); }
 
     NestedBool& hooks_disabled() { return m_hooks_disabled; }
     const NestedBool& hooks_disabled() const { return m_hooks_disabled; }
@@ -145,6 +150,7 @@ private:
     size_t m_edition_timestamp = 0;
 
     friend struct ScopedEdition;
+    friend struct ScopedSelectionEdition;
 
     Flags m_flags = Flags::None;
 
@@ -152,7 +158,45 @@ private:
     SafePtr<Window>       m_window;
     SafePtr<Client>       m_client;
 
-    Optional<SelectionList> m_selections;
+    class SelectionHistory {
+    public:
+        SelectionHistory(Context& context);
+        SelectionHistory(Context& context, SelectionList selections);
+        void initialize(SelectionList selections);
+        bool empty() const { return m_history.empty() and not m_staging; }
+        SelectionList& selections(bool update = true);
+
+        void begin_edition();
+        void end_edition();
+        bool in_edition() const { return m_in_edition; }
+
+        void undo();
+        void redo();
+        void forget_buffer(Buffer& buffer);
+    private:
+        enum class HistoryId : size_t { First = 0, Invalid = (size_t)-1 };
+
+        struct HistoryNode
+        {
+            HistoryNode(SelectionList selections, HistoryId parent) : selections(selections), parent(parent) {}
+
+            SelectionList selections;
+            HistoryId parent;
+            HistoryId redo_child = HistoryId::Invalid;
+        };
+
+              HistoryId next_history_id() const noexcept    { return (HistoryId)m_history.size(); }
+              HistoryNode& history_node(HistoryId id)       { return m_history[(size_t)id]; }
+        const HistoryNode& history_node(HistoryId id) const { return m_history[(size_t)id]; }
+              HistoryNode& current_history_node()           { kak_assert((size_t)m_history_id < m_history.size()); return m_history[(size_t)m_history_id]; }
+
+        Context&              m_context;
+        Vector<HistoryNode>   m_history;
+        HistoryId             m_history_id = HistoryId::Invalid;
+        Optional<HistoryNode> m_staging;
+        NestedBool            m_in_edition;
+    };
+    SelectionHistory m_selection_history;
 
     String m_name;
 
@@ -175,6 +219,21 @@ struct ScopedEdition
     ~ScopedEdition() { if (m_buffer) m_context.end_edition(); }
 
     Context& context() const { return m_context; }
+private:
+    Context& m_context;
+    SafePtr<Buffer> m_buffer;
+};
+
+struct ScopedSelectionEdition
+{
+    ScopedSelectionEdition(Context& context)
+        : m_context{context},
+          m_buffer{context.has_buffer() ? &context.buffer() : nullptr}
+    { if (m_buffer) m_context.m_selection_history.begin_edition(); }
+    ScopedSelectionEdition(ScopedSelectionEdition&& other) : m_context{other.m_context}, m_buffer{other.m_buffer}
+    { other.m_buffer = nullptr; }
+
+    ~ScopedSelectionEdition() { if (m_buffer) m_context.m_selection_history.end_edition(); }
 private:
     Context& m_context;
     SafePtr<Buffer> m_buffer;

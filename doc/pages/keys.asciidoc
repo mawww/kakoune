@@ -314,6 +314,12 @@ Yanking (copying) and pasting use the *"* register by default (See <<registers#,
 *<a-U>*::
     move forward in history
 
+*<c-h>*::
+    undo last selection change
+
+*<c-k>*::
+    redo last selection change
+
 *&*::
     align selections, align the cursor of each selection by inserting spaces
     before the first character of each selection

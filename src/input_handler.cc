@@ -93,59 +93,69 @@ struct MouseHandler
 
         Buffer& buffer = context.buffer();
         BufferCoord cursor;
-        auto& selections = context.selections();
         constexpr auto modifiers = Key::Modifiers::Control | Key::Modifiers::Alt | Key::Modifiers::Shift | Key::Modifiers::MouseButtonMask;
         switch ((key.modifiers & ~modifiers).value)
         {
         case Key::Modifiers::MousePress:
             switch (key.mouse_button())
             {
-            case Key::MouseButton::Right:
-                m_dragging = false;
+            case Key::MouseButton::Right: {
+                kak_assert(not context.is_editing_selection());
+                m_dragging.reset();
                 cursor = context.window().buffer_coord(key.coord());
+                ScopedSelectionEdition selection_edition{context};
+                auto& selections = context.selections();
                 if (key.modifiers & Key::Modifiers::Control)
                     selections = {{selections.begin()->anchor(), cursor}};
                 else
                     selections.main() = {selections.main().anchor(), cursor};
                 selections.sort_and_merge_overlapping();
                 return true;
+            }
 
-            case Key::MouseButton::Left:
-                m_dragging = true;
+            case Key::MouseButton::Left: {
+                kak_assert(not context.is_editing_selection());
+                m_dragging.reset(new ScopedSelectionEdition{context});
                 m_anchor = context.window().buffer_coord(key.coord());
                 if (not (key.modifiers & Key::Modifiers::Control))
                     context.selections_write_only() = { buffer, m_anchor};
                 else
                 {
+                    auto& selections = context.selections();
                     size_t main = selections.size();
                     selections.push_back({m_anchor});
                     selections.set_main_index(main);
                     selections.sort_and_merge_overlapping();
                 }
                 return true;
+            }
 
             default: return true;
             }
 
-        case Key::Modifiers::MouseRelease:
+        case Key::Modifiers::MouseRelease: {
             if (not m_dragging)
                 return true;
-            m_dragging = false;
+            auto& selections = context.selections();
             cursor = context.window().buffer_coord(key.coord());
             selections.main() = {buffer.clamp(m_anchor), cursor};
             selections.sort_and_merge_overlapping();
+            m_dragging.reset();
             return true;
+        }
 
-        case Key::Modifiers::MousePos:
+        case Key::Modifiers::MousePos: {
             if (not m_dragging)
                 return true;
             cursor = context.window().buffer_coord(key.coord());
+            auto& selections = context.selections();
             selections.main() = {buffer.clamp(m_anchor), cursor};
             selections.sort_and_merge_overlapping();
             return true;
+        }
 
         case Key::Modifiers::Scroll:
-            scroll_window(context, static_cast<int32_t>(key.key), m_dragging);
+            scroll_window(context, static_cast<int32_t>(key.key), (bool)m_dragging);
             return true;
 
         default: return false;
@@ -153,7 +163,7 @@ struct MouseHandler
     }
 
 private:
-    bool m_dragging = false;
+    std::unique_ptr<ScopedSelectionEdition> m_dragging;
     BufferCoord m_anchor;
 };
 
@@ -1199,6 +1209,7 @@ public:
     Insert(InputHandler& input_handler, InsertMode mode, int count)
         : InputMode(input_handler),
           m_edition(context()),
+          m_selection_edition(context()),
           m_completer(context()),
           m_restore_cursor(mode == InsertMode::Append),
           m_auto_complete{context().options()["autocomplete"].get<AutoComplete>() & AutoComplete::Insert},
@@ -1549,6 +1560,7 @@ private:
     }
 
     ScopedEdition   m_edition;
+    ScopedSelectionEdition m_selection_edition;
     InsertCompleter m_completer;
     const bool      m_restore_cursor;
     bool            m_auto_complete;
@@ -1806,6 +1818,7 @@ void scroll_window(Context& context, LineCount offset, bool mouse_dragging)
 
     win_pos.line = clamp(win_pos.line + offset, 0_line, line_count-1);
 
+    ScopedSelectionEdition selection_edition{context};
     SelectionList& selections = context.selections();
     Selection& main_selection = selections.main();
     const BufferCoord anchor = main_selection.anchor();

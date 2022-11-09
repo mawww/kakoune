@@ -169,7 +169,7 @@ DisplayLine Client::generate_mode_line() const
     return modeline;
 }
 
-void Client::change_buffer(Buffer& buffer)
+void Client::change_buffer(Buffer& buffer, Optional<FunctionRef<void()>> set_selections)
 {
     if (m_buffer_reload_dialog_opened)
         close_buffer_reload_dialog();
@@ -180,12 +180,20 @@ void Client::change_buffer(Buffer& buffer)
     m_window->options().unregister_watcher(*this);
     m_window->set_client(nullptr);
     client_manager.add_free_window(std::move(m_window),
-                                   std::move(context().selections()));
+                                   context().selections());
 
     m_window = std::move(ws.window);
     m_window->set_client(this);
     m_window->options().register_watcher(*this);
-    context().selections_write_only() = std::move(ws.selections);
+
+    if (set_selections)
+        (*set_selections)();
+    else
+    {
+        ScopedSelectionEdition selection_edition{context()};
+        context().selections_write_only() = std::move(ws.selections);
+    }
+
     context().set_window(*m_window);
 
     m_window->set_dimensions(m_ui->dimensions());
