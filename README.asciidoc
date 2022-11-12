@@ -420,11 +420,8 @@ See <<Appending>> below for instructions on extending (appending to) the current
  * `m`: select to matching character
  * `M`: extend selection to matching character
 
- * `x`: select line on which selection end lies (or next line when end lies on
-        an end-of-line)
- * `X`: similar to `x`, except the current selection is extended
- * `<a-x>`: expand selections to contain full lines (including end-of-lines)
- * `<a-X>`: trim selections to only contain full lines (not including last
+ * `x`: expand selections to contain full lines (including end-of-lines)
+ * `<a-x>`: trim selections to only contain full lines (not including last
             end-of-line)
 
  * `%`: select whole buffer

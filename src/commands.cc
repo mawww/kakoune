@@ -1427,13 +1427,14 @@ const CommandDesc echo_cmd = {
         { { "markup", { false, "parse markup" } },
           { "quoting", { true, "quote each argument separately using the given style (raw|kakoune|shell)" } },
           { "to-file", { true, "echo contents to given filename" } },
+          { "to-shell-script", { true, "pipe contents to given shell script" } },
           { "debug", { false, "write to debug buffer instead of status line" } } },
         ParameterDesc::Flags::SwitchesOnlyAtStart
     },
     CommandFlags::None,
     CommandHelper{},
     CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
     {
         String message;
         if (auto quoting = parser.get_switch("quoting"))
@@ -1443,9 +1444,10 @@ const CommandDesc echo_cmd = {
             message = join(parser, ' ', false);
 
         if (auto filename = parser.get_switch("to-file"))
-            return write_to_file(*filename, message);
-
-        if (parser.get_switch("debug"))
+            write_to_file(*filename, message);
+        else if (auto command = parser.get_switch("to-shell-script"))
+            ShellManager::instance().eval(*command, context, message, ShellManager::Flags::None, shell_context);
+        else if (parser.get_switch("debug"))
             write_to_debug_buffer(message);
         else if (parser.get_switch("markup"))
             context.print_status(parse_display_line(message, context.faces()));
@@ -1873,11 +1875,6 @@ const CommandDesc map_key_cmd = {
         if (key.size() != 1)
             throw runtime_error("only a single key can be mapped");
 
-        KeymapMode lower_case_only_modes[] = {KeymapMode::Goto};
-        if (key[0].codepoint().map(iswupper).value_or(false) and
-            contains(lower_case_only_modes, keymap_mode))
-            throw runtime_error("mode only supports lower case mappings");
-
         KeyList mapping = parse_keys(parser[3]);
         keymaps.map_key(key[0], keymap_mode, std::move(mapping),
                         trim_indent(parser.get_switch("docstring").value_or("")));
@@ -2023,6 +2020,7 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
 
     ScopedSetBool disable_history(c.history_disabled());
     ScopedEdition edition{c};
+    ScopedSelectionEdition selection_edition{c};
 
     if (parser.get_switch("itersel"))
     {
@@ -2537,6 +2535,7 @@ const CommandDesc select_cmd = {
         else if (parser.get_switch("display-column"))
             column_type = ColumnType::DisplayColumn;
         ColumnCount tabstop = context.options()["tabstop"].get<int>();
+        ScopedSelectionEdition selection_edition{context};
         context.selections_write_only() = selection_list_from_strings(buffer, column_type, parser.positionals_from(0), timestamp, 0, tabstop);
     }
 };

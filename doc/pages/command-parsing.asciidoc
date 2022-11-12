@@ -12,8 +12,9 @@ prompt, are parsed according to the following rules:
 == Quoted Strings
 
 If a word starts with `'`, `"`, or `%X` with `X` a _non-nestable_ punctuation
-character (see below for nestable characters), it is parsed as a quoted
-string whose delimiter is, respectively, `'`, `"`, or `X`.
+character (see <<command-parsing#balanced-strings,Balanced Strings>> below for
+nestable characters), it is parsed as a quoted string whose delimiter is,
+respectively, `'`, `"`, or `X`.
 
 A quoted string contains every character (including whitespaces).  Doubling
 a closing delimiter escapes it.  Thus, for example, entering two closing
@@ -49,7 +50,8 @@ of `(`, `[`, `{` and `<`), it is parsed as a balanced string whose closing
 delimiter matches that of its opening delimiter (respectively, `)`, `]`,
 `}`, and `>`).
 
-Characters may be escaped in the same manner as those for quoted strings.
+There is no way to escape the opening and closing characters, even if they
+are nested inside some other kind of string.
 
 === Balanced Strings Examples
 
@@ -60,6 +62,10 @@ Characters may be escaped in the same manner as those for quoted strings.
 - `foo%{bar}` contains *foo%{bar}*.
 
 - `"foo %{bar}"` is a single word whose content is *foo bar*.
+
+- `%{foo\{}` is a parse error, since the `{}` delimiters are not balanced.
+
+- `%[foo\{]` contains *foo\{*, since it uses different delimiters.
 
 == Non-Quoted words
 

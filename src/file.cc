@@ -435,8 +435,8 @@ void make_directory(StringView dir, mode_t mode)
     }
 }
 
-template<typename Filter>
-Vector<String> list_files(StringView dirname, Filter filter)
+template<MemoryDomain domain = MemoryDomain::Undefined, typename Filter>
+Vector<String, domain> list_files(StringView dirname, Filter filter)
 {
     char buffer[PATH_MAX+1];
     format_to(buffer, "{}", dirname);
@@ -446,7 +446,7 @@ Vector<String> list_files(StringView dirname, Filter filter)
 
     auto close_dir = on_scope_end([dir]{ closedir(dir); });
 
-    Vector<String> result;
+    Vector<String, domain> result;
     while (dirent* entry = readdir(dir))
     {
         StringView filename = entry->d_name;
@@ -466,11 +466,17 @@ Vector<String> list_files(StringView dirname, Filter filter)
     return result;
 }
 
-Vector<String> list_files(StringView directory)
+template<MemoryDomain domain = MemoryDomain::Undefined>
+Vector<String, domain> list_files(StringView directory)
 {
     return list_files(directory, [](const dirent& entry, const struct stat&) {
                           return StringView{entry.d_name}.substr(0_byte, 1_byte) != ".";
                       });
+}
+
+Vector<String> list_files(StringView directory)
+{
+    return list_files<>(directory);
 }
 
 static CandidateList candidates(ConstArrayView<RankedMatch> matches, StringView dirname)
@@ -547,7 +553,7 @@ CandidateList complete_command(StringView prefix, ByteCount cursor_pos)
     struct CommandCache
     {
         TimeSpec mtim = {};
-        Vector<String> commands;
+        Vector<String, MemoryDomain::Completion> commands;
     };
     static HashMap<String, CommandCache, MemoryDomain::Commands> command_cache;
 
@@ -570,7 +576,7 @@ CandidateList complete_command(StringView prefix, ByteCount cursor_pos)
                 return S_ISREG(st.st_mode) and executable;
             };
 
-            cache.commands = list_files(dirname, filter);
+            cache.commands = list_files<MemoryDomain::Completion>(dirname, filter);
             memcpy(&cache.mtim, &st.st_mtim, sizeof(TimeSpec));
         }
         for (auto& cmd : cache.commands)

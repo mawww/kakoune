@@ -44,7 +44,7 @@ struct {
     unsigned int version;
     StringView notes;
 } constexpr version_notes[] = { {
-        0,
+        20221031,
         "» {+b}<esc>{} does not end macro recording anymore, use {+b}Q{}\n"
         "» pipe commands do not append final end-of-lines anymore\n"
         "» {+u}complete-command{} to configure command completion\n"
@@ -349,6 +349,10 @@ static const EnvVarDesc builtin_env_vars[] = { {
                      transform([&](const Selection& s) -> String {
                          return to_string(char_length(context.buffer(), s));
                      }) | gather<Vector<String>>(); }
+    }, {
+        "selection_count", false,
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {to_string(context.selections().size())}; }
     }, {
         "window_width", false,
         [](StringView name, const Context& context) -> Vector<String>
