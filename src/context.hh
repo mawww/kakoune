@@ -179,7 +179,7 @@ private:
 
         struct HistoryNode
         {
-            HistoryNode(SelectionList selections, HistoryId parent) : selections(selections), parent(parent) {}
+            HistoryNode(SelectionList selections, HistoryId parent) : selections(std::move(selections)), parent(parent) {}
 
             SelectionList selections;
             HistoryId parent;
