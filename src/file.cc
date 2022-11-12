@@ -518,6 +518,14 @@ CandidateList complete_filename(StringView prefix, const Regex& ignored_regex,
         if (RankedMatch match{file, fileprefix})
             matches.push_back(match);
     }
+    // Hack: when completing directories, also echo back the query if it
+    // is a valid directory. This enables menu completion to select the
+    // directory instead of a child.
+    if (only_dirs and not dirname.empty() and dirname.back() == '/' and fileprefix.empty()
+        and /* exists on disk */ not files.empty())
+    {
+        matches.push_back(RankedMatch{fileprefix, fileprefix});
+    }
     std::sort(matches.begin(), matches.end());
     const bool expand = (flags & FilenameFlags::Expand);
     return candidates(matches, expand ? parsed_dirname : dirname);
