@@ -1,4 +1,4 @@
-hook global BufCreate .+\.(conf|repo|cfg|properties|desktop) %{
+hook global BufCreate .+\.(repo|cfg|properties|desktop) %{
     set-option buffer filetype conf
 }
 
