@@ -745,11 +745,12 @@ struct convert_to_client_mode
 
 enum class ServerFlags
 {
-    None        = 0,
-    IgnoreKakrc = 1 << 0,
-    Daemon      = 1 << 1,
-    ReadOnly    = 1 << 2,
-    StartupInfo = 1 << 3,
+    None            = 0,
+    IgnoreKakrc     = 1 << 0,
+    Daemon          = 1 << 1,
+    ReadOnly        = 1 << 2,
+    StartupInfo     = 1 << 3,
+    SystemKakrcOnly = 1 << 4,
 };
 constexpr bool with_bit_ops(Meta::Type<ServerFlags>) { return true; }
 
@@ -807,7 +808,8 @@ int run_server(StringView session, StringView server_init,
     if (not (flags & ServerFlags::IgnoreKakrc)) try
     {
         Context init_context{Context::EmptyContextFlag{}};
-        command_manager.execute(format("source {}/kakrc", runtime_directory()),
+        command_manager.execute(format("source {}/kakrc {}", runtime_directory(),
+                                       (flags & ServerFlags::SystemKakrcOnly) ? "true" : "false"),
                                 init_context);
     }
     catch (runtime_error& error)
@@ -1077,6 +1079,7 @@ int main(int argc, char* argv[])
                    { "e", { true,  "execute argument on client initialisation" } },
                    { "E", { true,  "execute argument on server initialisation" } },
                    { "n", { false, "do not source kakrc files on startup" } },
+                   { "N", { false, "do not source user configuration files on startup" } },
                    { "s", { true,  "set session name" } },
                    { "d", { false, "run as a headless session (requires -s)" } },
                    { "p", { true,  "just send stdin as commands to the given session" } },
@@ -1142,7 +1145,7 @@ int main(int argc, char* argv[])
 
         if (auto session = parser.get_switch("p"))
         {
-            for (auto opt : { "c", "n", "s", "d", "e", "E", "ro" })
+            for (auto opt : { "c", "n", "N", "s", "d", "e", "E", "ro" })
             {
                 if (parser.get_switch(opt))
                 {
@@ -1202,7 +1205,7 @@ int main(int argc, char* argv[])
 
         if (auto server_session = parser.get_switch("c"))
         {
-            for (auto opt : { "n", "s", "d", "E", "ro" })
+            for (auto opt : { "n", "N", "s", "d", "E", "ro" })
             {
                 if (parser.get_switch(opt))
                 {
@@ -1228,11 +1231,20 @@ int main(int argc, char* argv[])
             try
             {
                 auto ignore_kakrc = (bool)parser.get_switch("n");
-                auto flags = (ignore_kakrc                                ? ServerFlags::IgnoreKakrc : ServerFlags::None) |
-                             (parser.get_switch("d")                      ? ServerFlags::Daemon      : ServerFlags::None) |
-                             (parser.get_switch("ro")                     ? ServerFlags::ReadOnly    : ServerFlags::None) |
-                             ((argc == 1 or (ignore_kakrc and argc == 2))
-                              and isatty(0)                               ? ServerFlags::StartupInfo : ServerFlags::None);
+                auto ignore_user_kakrc = (bool)parser.get_switch("N");
+
+                if (ignore_kakrc and ignore_user_kakrc)
+                {
+                    write_stderr("error: -N is incompatible with -n\n");
+                    return -1;
+                }
+
+                auto flags = (ignore_kakrc            ? ServerFlags::IgnoreKakrc     : ServerFlags::None) |
+                             (parser.get_switch("N")  ? ServerFlags::SystemKakrcOnly : ServerFlags::None) |
+                             (parser.get_switch("d")  ? ServerFlags::Daemon          : ServerFlags::None) |
+                             (parser.get_switch("ro") ? ServerFlags::ReadOnly        : ServerFlags::None) |
+                             ((argc == 1 or ((ignore_kakrc or ignore_user_kakrc) and argc == 2))
+                              and isatty(0)           ? ServerFlags::StartupInfo     : ServerFlags::None);
                 auto debug_flags = option_from_string(Meta::Type<DebugFlags>{}, parser.get_switch("debug").value_or(""));
                 return run_server(session, server_init, client_init, init_coord, flags, ui_type, debug_flags, files);
             }
