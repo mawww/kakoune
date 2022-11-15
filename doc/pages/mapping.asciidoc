@@ -159,3 +159,38 @@ In normal mode:
 
 Shift version of those mappings exist as well
 (for example `<s-left>` maps to `H`).
+
+
+== Additional notes
+
+Some keys cannot be mapped directly but they can still mapped by using an alias.
+
+Here some of the keys that may be maped this way followed by one or more aliases:
+
+*<c-space>*::
+  <c-2>, <c-@>, <c-`>
+
+*<esc>*::
+  <c-[>, <c-3>, <c-{>
+
+*<c-\>*::
+  <c-4>
+
+*<c-]>*::
+  <c-5>, <c-}>
+
+*<c-^>*::
+  <c-6>, <c-s-6>, <c-~>
+
+*<c-_>*::
+  <c-7>, <c-/>
+
+*<backspace>*::
+  <c-8>, on some terminals <c-h>
+
+*<tab>*::
+  <c-i>
+
+*<ret>*::
+  <c-j>, <c-m>
+
