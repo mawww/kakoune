@@ -1,4 +1,4 @@
-hook global BufCreate .*\.(nginx) %{
+hook global BufCreate .*\(_params) %{
     set-option buffer filetype nginx
 }
 
