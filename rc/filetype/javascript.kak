@@ -99,7 +99,7 @@ define-command -hidden javascript-insert-on-new-line %<
         # trim trailing whitespace on the previous line
         try %[ execute-keys -draft s\h+$<ret> d ]
         # align the new star with the previous one
-        execute-keys Kx1s^[^*]*(\*)<ret>&
+        execute-keys Kx1s^[^*]*(\*)<ret><a-(><a-&>
     ]
     >
 >
