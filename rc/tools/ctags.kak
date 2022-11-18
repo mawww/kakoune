@@ -72,7 +72,7 @@ define-command ctags-complete -docstring "Complete the current selection" %{
                 eval "set -- $kak_quoted_opt_ctagsfiles"
                 for ctagsfile in "$@"; do
                     ${kak_opt_readtagscmd} -p -t "$ctagsfile" ${kak_selection}
-                done | awk '{ uniq[$1]++ } END { for (elem in uniq) printf " %1$s||%1$s", elem }'
+                done | awk '{ uniq[$1]++ } END { for (elem in uniq) printf " %s||%s", elem, elem }'
             )
             printf %s\\n "evaluate-commands -client ${kak_client} set-option buffer=${kak_bufname} ctags_completions ${header}${compl}" | \
                 kak -p ${kak_session}
