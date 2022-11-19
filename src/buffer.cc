@@ -24,9 +24,7 @@ Buffer::HistoryNode::HistoryNode(HistoryId parent)
     : parent{parent}, committed{Clock::now()}
 {}
 
-Buffer::Buffer(String name, Flags flags, BufferLines lines,
-               ByteOrderMark bom, EolFormat eolformat,
-               FsStatus fs_status)
+Buffer::Buffer(String name, Flags flags, ParsedBuffer data)
     : Scope{GlobalScope::instance()},
       m_name{(flags & Flags::File) ? real_path(parse_filename(name)) : std::move(name)},
       m_display_name{(flags & Flags::File) ? compact_path(m_name) : m_name},
@@ -34,19 +32,19 @@ Buffer::Buffer(String name, Flags flags, BufferLines lines,
       m_history{{HistoryId::Invalid}},
       m_history_id{HistoryId::First},
       m_last_save_history_id{HistoryId::First},
-      m_fs_status{fs_status}
+      m_fs_status{data.fs_status}
 {
     #ifdef KAK_DEBUG
-    for (auto& line : lines)
+    for (auto& line : data.lines)
         kak_assert(not (line->length == 0) and
                    line->data()[line->length-1] == '\n');
     #endif
-    static_cast<BufferLines&>(m_lines) = std::move(lines);
+    static_cast<BufferLines&>(m_lines) = std::move(data.lines);
 
     m_changes.push_back({ Change::Insert, {0,0}, line_count() });
 
-    options().get_local_option("eolformat").set(eolformat);
-    options().get_local_option("BOM").set(bom);
+    options().get_local_option("eolformat").set(data.eolformat);
+    options().get_local_option("BOM").set(data.bom);
 
     // now we may begin to record undo data
     if (not (flags & Flags::NoUndo))
@@ -192,7 +190,7 @@ Buffer::Modification Buffer::Modification::inverse() const
     return {type == Insert ? Erase : Insert, coord, content};
 }
 
-void Buffer::reload(BufferLines lines, ByteOrderMark bom, EolFormat eolformat, FsStatus fs_status)
+void Buffer::reload(ParsedBuffer new_data)
 {
     const bool record_undo = not (m_flags & Flags::NoUndo);
 
@@ -206,21 +204,21 @@ void Buffer::reload(BufferLines lines, ByteOrderMark bom, EolFormat eolformat, F
         m_history = {HistoryNode{HistoryId::Invalid}};
 
         m_changes.push_back({ Change::Erase, {0,0}, line_count() });
-        static_cast<BufferLines&>(m_lines) = std::move(lines);
+        static_cast<BufferLines&>(m_lines) = std::move(new_data.lines);
         m_changes.push_back({ Change::Insert, {0,0}, line_count() });
     }
     else
     {
         Vector<Diff> diff;
         for_each_diff(m_lines.begin(), m_lines.size(),
-                      lines.begin(), lines.size(),
+                      new_data.lines.begin(), new_data.lines.size(),
                       [&diff](DiffOp op, int len)
                       { diff.push_back({op, len}); },
                       [](const StringDataPtr& lhs, const StringDataPtr& rhs)
                       { return lhs->strview() == rhs->strview(); });
 
         auto it = m_lines.begin();
-        auto new_it = lines.begin();
+        auto new_it = new_data.lines.begin();
         for (auto& [op, len] : diff)
         {
             if (op == DiffOp::Keep)
@@ -257,12 +255,12 @@ void Buffer::reload(BufferLines lines, ByteOrderMark bom, EolFormat eolformat, F
 
     commit_undo_group();
 
-    options().get_local_option("eolformat").set(eolformat);
-    options().get_local_option("BOM").set(bom);
+    options().get_local_option("eolformat").set(new_data.eolformat);
+    options().get_local_option("BOM").set(new_data.bom);
 
 
     m_last_save_history_id = m_history_id;
-    m_fs_status = fs_status;
+    m_fs_status = new_data.fs_status;
 }
 
 void Buffer::commit_undo_group()

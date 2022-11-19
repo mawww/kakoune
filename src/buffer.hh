@@ -48,9 +48,25 @@ constexpr auto enum_desc(Meta::Type<ByteOrderMark>)
     });
 }
 
-class Buffer;
+using BufferLines = Vector<StringDataPtr, MemoryDomain::BufferContent>;
 
 constexpr timespec InvalidTime = { -1, -1 };
+
+struct ParsedBuffer {
+    BufferLines lines;
+    ByteOrderMark bom;
+    EolFormat eolformat;
+    FsStatus fs_status;
+
+    ParsedBuffer(BufferLines lines,
+                 ByteOrderMark bom = ByteOrderMark::None,
+                 EolFormat eolformat = EolFormat::Lf,
+                 FsStatus fs_status = {InvalidTime, {}, {}})
+        : lines(std::move(lines)), bom(bom), eolformat(eolformat), fs_status(fs_status) {}
+    ParsedBuffer(std::initializer_list<StringDataPtr>&& lines) : ParsedBuffer(BufferLines{lines}) {}
+};
+
+class Buffer;
 
 // A BufferIterator permits to iterate over the characters of a buffer
 class BufferIterator
@@ -99,7 +115,6 @@ private:
     StringView m_line;
 };
 
-using BufferLines = Vector<StringDataPtr, MemoryDomain::BufferContent>;
 using BufferRange = Range<BufferCoord>;
 
 // A Buffer is a in-memory representation of a file
@@ -125,10 +140,7 @@ public:
 
     enum class HistoryId : size_t { First = 0, Invalid = (size_t)-1 };
 
-    Buffer(String name, Flags flags, BufferLines lines,
-           ByteOrderMark bom = ByteOrderMark::None,
-           EolFormat eolformat = EolFormat::Lf,
-           FsStatus fs_status = {InvalidTime, {}, {}});
+    Buffer(String name, Flags flags, ParsedBuffer data);
     Buffer(const Buffer&) = delete;
     Buffer& operator= (const Buffer&) = delete;
     ~Buffer();
@@ -208,7 +220,7 @@ public:
     void run_hook_in_own_context(Hook hook, StringView param,
                                  String client_name = {});
 
-    void reload(BufferLines lines, ByteOrderMark bom, EolFormat eolformat, FsStatus status);
+    void reload(ParsedBuffer new_data);
 
     void check_invariant() const;
 
