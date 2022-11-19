@@ -139,7 +139,12 @@ decltype(auto) parse_file(StringView filename, Func&& func)
     auto eolformat = crlf ? EolFormat::Crlf : EolFormat::Lf;
 
     FsStatus fs_status{file.st.st_mtim, file.st.st_size, hash_data(file.data, file.st.st_size)};
-    return func({ parse_lines(pos, end, eolformat), bom, eolformat, fs_status });
+    EolAtEof eol_at_eof = file.st.st_size == 0
+                            ? EolAtEof::EmptyFile
+                            : *(end-1) == '\n'
+                                ? EolAtEof::Present
+                                : EolAtEof::Missing;
+    return func({ parse_lines(pos, end, eolformat), bom, eolformat, eol_at_eof, fs_status });
 }
 
 Buffer* open_file_buffer(StringView filename, Buffer::Flags flags)

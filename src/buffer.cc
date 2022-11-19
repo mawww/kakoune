@@ -32,6 +32,7 @@ Buffer::Buffer(String name, Flags flags, ParsedBuffer data)
       m_history{{HistoryId::Invalid}},
       m_history_id{HistoryId::First},
       m_last_save_history_id{HistoryId::First},
+      m_eol_at_eof{data.eol_at_eof},
       m_fs_status{data.fs_status}
 {
     #ifdef KAK_DEBUG
@@ -260,6 +261,7 @@ void Buffer::reload(ParsedBuffer new_data)
 
 
     m_last_save_history_id = m_history_id;
+    m_eol_at_eof = new_data.eol_at_eof;
     m_fs_status = new_data.fs_status;
 }
 
