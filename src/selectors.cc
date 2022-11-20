@@ -483,7 +483,7 @@ select_sentence(const Context& context, const Selection& selection,
     BufferIterator first = buffer.iterator_at(selection.cursor());
     BufferIterator last;
 
-    for (++count; count > 0; --count)
+    for (int i = 0; i <= count; ++i)
     {
         if (not (flags & ObjectFlags::ToEnd) and first != buffer.begin())
         {
@@ -494,7 +494,7 @@ select_sentence(const Context& context, const Selection& selection,
                 first = prev_non_blank;
         }
 
-        if (last == BufferIterator{})
+        if (i == 0)
             last = first;
 
         if (flags & ObjectFlags::ToBegin)
@@ -552,7 +552,7 @@ select_paragraph(const Context& context, const Selection& selection,
     BufferIterator first = buffer.iterator_at(selection.cursor());
     BufferIterator last;
 
-    for (++count; count > 0; --count)
+    for (int i = 0; i <= count; ++i)
     {
         if (not (flags & ObjectFlags::ToEnd) and first.coord() > BufferCoord{0,1} and
             is_eol(*(first-1)) and first-1 != buffer.begin() and is_eol(*(first-2)))
@@ -561,7 +561,7 @@ select_paragraph(const Context& context, const Selection& selection,
                  first != buffer.begin() and (first+1) != buffer.end() and
                  is_eol(*(first-1)) and is_eol(*first))
             ++first;
-        if (last == BufferIterator{})
+        if (i == 0)
             last = first;
 
         if ((flags & ObjectFlags::ToBegin) and first != buffer.begin())

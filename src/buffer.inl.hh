@@ -104,7 +104,8 @@ inline BufferIterator::BufferIterator(const Buffer& buffer, BufferCoord coord) n
 
 inline bool BufferIterator::operator==(const BufferIterator& iterator) const noexcept
 {
-    return m_buffer == iterator.m_buffer and m_coord == iterator.m_coord;
+    kak_assert(m_buffer == iterator.m_buffer);
+    return m_coord == iterator.m_coord;
 }
 
 inline std::strong_ordering BufferIterator::operator<=>(const BufferIterator& iterator) const noexcept

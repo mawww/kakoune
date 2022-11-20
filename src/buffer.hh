@@ -75,6 +75,8 @@ public:
     const char& operator[](size_t n) const noexcept;
     size_t operator- (const BufferIterator& iterator) const;
 
+    explicit operator bool() const { return static_cast<bool>(m_buffer); }
+
     BufferIterator operator+ (ByteCount size) const;
     BufferIterator operator- (ByteCount size) const;
 

@@ -39,7 +39,7 @@ struct MatchResults
     {
         SubMatch() = default;
         SubMatch(Iterator begin, Iterator end)
-            : std::pair<Iterator, Iterator>{begin, end}, matched{begin != Iterator{}}
+            : std::pair<Iterator, Iterator>{begin, end}, matched{static_cast<bool>(begin)}
         {}
 
         bool matched = false;
