@@ -8,7 +8,7 @@ evaluate-commands %sh{
     [ -z "${kak_opt_windowing_modules}" ] || [ "$TERM_PROGRAM" = "iTerm.app" ] || echo 'fail iTerm not detected'
 }
 
-define-command -hidden -params 2.. iterm-terminal-split-impl %{
+define-command -hidden -params 2.. iterm-terminal-impl %{
     nop %sh{
         direction="$1"
         shift
@@ -30,12 +30,26 @@ define-command -hidden -params 2.. iterm-terminal-split-impl %{
         esc_path=$(do_esc "$PATH")
         esc_tmp=$(do_esc "$TMPDIR")
         cmd="env PATH='${esc_path}' TMPDIR='${esc_tmp}' $escaped"
-        osascript                                                                             \
-        -e "tell application \"iTerm\""                                                       \
-        -e "    tell current session of current window"                                       \
-        -e "        tell (split ${direction} with same profile command \"${cmd}\") to select" \
-        -e "    end tell"                                                                     \
-        -e "end tell" >/dev/null
+        if [ "$direction" = 'tab' ]; then
+            osascript                                                       \
+            -e "tell application \"iTerm\""                                 \
+            -e "    tell current window"                                    \
+            -e "        create tab with default profile command \"${cmd}\"" \
+            -e "    end tell"                                               \
+            -e "end tell" >/dev/null
+        elif [ "$direction" = 'window' ]; then
+            osascript                                                      \
+            -e "tell application \"iTerm\""                                \
+            -e "    create window with default profile command \"${cmd}\"" \
+            -e "end tell" >/dev/null
+        else
+            osascript                                                                             \
+            -e "tell application \"iTerm\""                                                       \
+            -e "    tell current session of current window"                                       \
+            -e "        tell (split ${direction} with same profile command \"${cmd}\") to select" \
+            -e "    end tell"                                                                     \
+            -e "end tell" >/dev/null
+        fi
     }
 }
 
@@ -44,7 +58,7 @@ iterm-terminal-vertical <program> [<arguments>]: create a new terminal as an ite
 The current pane is split into two, left and right
 The program passed as argument will be executed in the new terminal'\
 %{
-    iterm-terminal-split-impl 'vertically' %arg{@}
+    iterm-terminal-impl 'vertically' %arg{@}
 }
 complete-command iterm-terminal-vertical shell
 
@@ -53,7 +67,7 @@ iterm-terminal-horizontal <program> [<arguments>]: create a new terminal as an i
 The current pane is split into two, top and bottom
 The program passed as argument will be executed in the new terminal'\
 %{
-    iterm-terminal-split-impl 'horizontally' %arg{@}
+    iterm-terminal-impl 'horizontally' %arg{@}
 }
 complete-command iterm-terminal-horizontal shell
 
@@ -61,22 +75,7 @@ define-command iterm-terminal-tab -params 1.. -docstring '
 iterm-terminal-tab <program> [<arguments>]: create a new terminal as an iterm tab
 The program passed as argument will be executed in the new terminal'\
 %{
-    nop %sh{
-        # see above
-        args=$(
-            for i in "$@"; do
-                printf "'%s' " "$(printf %s "$i" | sed "s|'|'\\\\''|g")"
-            done
-        )
-        escaped=$(printf %s "$args" | sed -e 's|\\|\\\\|g; s|"|\\"|g')
-        cmd="env PATH='${PATH}' TMPDIR='${TMPDIR}' $escaped"
-        osascript                                                       \
-        -e "tell application \"iTerm\""                                 \
-        -e "    tell current window"                                    \
-        -e "        create tab with default profile command \"${cmd}\"" \
-        -e "    end tell"                                               \
-        -e "end tell" >/dev/null
-    }
+    iterm-terminal-impl 'tab' %arg{@}
 }
 complete-command iterm-terminal-tab shell
 
@@ -84,20 +83,7 @@ define-command iterm-terminal-window -params 1.. -docstring '
 iterm-terminal-window <program> [<arguments>]: create a new terminal as an iterm window
 The program passed as argument will be executed in the new terminal'\
 %{
-    nop %sh{
-        # see above
-        args=$(
-            for i in "$@"; do
-                printf "'%s' " "$(printf %s "$i" | sed "s|'|'\\\\''|g")"
-            done
-        )
-        escaped=$(printf %s "$args" | sed -e 's|\\|\\\\|g; s|"|\\"|g')
-        cmd="env PATH='${PATH}' TMPDIR='${TMPDIR}' $escaped"
-        osascript                                                      \
-        -e "tell application \"iTerm\""                                \
-        -e "    create window with default profile command \"${cmd}\"" \
-        -e "end tell" >/dev/null
-    }
+    iterm-terminal-impl 'window' %arg{@}
 }
 complete-command iterm-terminal-window shell
 
