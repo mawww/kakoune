@@ -15,11 +15,7 @@ define-command -hidden -params 2.. iterm-terminal-split-impl %{
         # join the arguments as one string for the shell execution (see x11.kak)
         args=$(
             for i in "$@"; do
-                if [ "$i" = '' ]; then
-                    printf "'' "
-                else
-                    printf %s "$i" | sed -e "s|'|'\\\\''|g; s|^|'|; s|$|' |"
-                fi
+                printf "'%s' " "$(printf %s "$i" | sed "s|'|'\\\\''|g")"
             done
         )
 
@@ -69,11 +65,7 @@ The program passed as argument will be executed in the new terminal'\
         # see above
         args=$(
             for i in "$@"; do
-                if [ "$i" = '' ]; then
-                    printf "'' "
-                else
-                    printf %s "$i" | sed -e "s|'|'\\\\''|g; s|^|'|; s|$|' |"
-                fi
+                printf "'%s' " "$(printf %s "$i" | sed "s|'|'\\\\''|g")"
             done
         )
         escaped=$(printf %s "$args" | sed -e 's|\\|\\\\|g; s|"|\\"|g')
@@ -96,11 +88,7 @@ The program passed as argument will be executed in the new terminal'\
         # see above
         args=$(
             for i in "$@"; do
-                if [ "$i" = '' ]; then
-                    printf "'' "
-                else
-                    printf %s "$i" | sed -e "s|'|'\\\\''|g; s|^|'|; s|$|' |"
-                fi
+                printf "'%s' " "$(printf %s "$i" | sed "s|'|'\\\\''|g")"
             done
         )
         escaped=$(printf %s "$args" | sed -e 's|\\|\\\\|g; s|"|\\"|g')
