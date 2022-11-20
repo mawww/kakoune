@@ -7,8 +7,8 @@ hook global BufCreate .*[.]ha %{
 hook global WinSetOption filetype=hare %{
     require-module hare
     hook window ModeChange pop:insert:.* -group hare-trim-indent hare-trim-indent
-    hook window InsertChar \n -group hare-indent hare-indent-on-new-line
     hook window InsertChar \n -group hare-insert hare-insert-on-new-line
+    hook window InsertChar \n -group hare-indent hare-indent-on-new-line
     hook window InsertChar \{ -group hare-indent hare-indent-on-opening-curly-brace
     hook window InsertChar \} -group hare-indent hare-indent-on-closing-curly-brace
 }
