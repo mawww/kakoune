@@ -400,7 +400,25 @@ static const EnvVarDesc builtin_env_vars[] = { {
         "uncommitted_modifications", false,
         [](StringView name, const Context& context) -> Vector<String>
         { return undo_group_as_strings(context.buffer().current_undo_group()); }
-    }
+    }, {
+        "eol_at_eof", true,
+        [](StringView name, const Context& context) -> Vector<String>
+        { 
+            if (not context.has_buffer())
+                throw runtime_error{"eol_at_eof option is only available in buffer scope"};
+            const auto& buffer = context.buffer();
+            switch (buffer.eol_at_eof()) {
+                case EolAtEof::Present: return {"true"};
+                case EolAtEof::Missing: return {"false"};
+                case EolAtEof::EmptyFile:
+                    if (buffer.line_count() == 1 and buffer[0] == "\n")
+                        return {"false"};
+                    return {"true"};
+            }
+            kak_assert(false);
+            return {"true"};
+        }
+    },
 };
 
 void register_registers()
