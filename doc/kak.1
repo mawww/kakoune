@@ -28,6 +28,10 @@
 .
 .Nm
 .Fl l
+.
+.Nm
+.Fl L
+.
 .Nm
 .Fl clear
 .
@@ -79,7 +83,13 @@ Do not load the system's kakrc.
 .Pq often, Pa /usr/share/kak/kakrc
 .
 .It Fl l
-List existing sessions.
+List existing sessions, return 1 if dead sessions were detected, -1 on error,
+0 otherwise.
+.
+.It Fl L
+Same as
+.Ic Fl l
+but also connect to the session to describe it.
 .
 .It Fl d
 Run as a headless session

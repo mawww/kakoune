@@ -28,6 +28,8 @@
 #include "window.hh"
 #include "clock.hh"
 
+#include <chrono>
+#include <thread>
 #include <fcntl.h>
 #include <locale.h>
 #include <sys/stat.h>
@@ -1055,6 +1057,76 @@ void signal_handler(int signal)
         abort();
 }
 
+static int describe_sessions(bool verbose)
+{
+    bool found_dead = false;
+
+    for (auto& session : list_files(session_directory()))
+    {
+        const bool valid = check_session(session);
+        if (not valid)
+        {
+            found_dead = true;
+            write_stdout(format("{} (dead)\n", session));
+        }
+        else
+        {
+            String info;
+
+            if (verbose)
+            {
+                auto name_temporary_file = [] {
+                    String path;
+
+                    path = format("{}/kak-describe_session-XXXXXX", tmpdir());
+
+                    auto fd = mkstemp(path.data());
+                    auto close_fd = on_scope_end([fd](){ close(fd); });
+
+                    return path;
+                };
+                auto path_result = name_temporary_file();
+
+                const auto command = format("eval -save-regs m %(                 \
+                    reg m %sh(mktemp);                                            \
+                    echo -to-file %reg(m) -quoting shell %val(buflist);           \
+                    echo -to-file '{}' %sh(                                       \
+                        eval set -- $(cat -- \"$kak_main_reg_m\"); nb_buffers=$#; \
+                        eval set -- \"$kak_client_list\"; nb_clients=$#;          \
+                        printf 'clients: %d | buffers: %d | directory: %s'        \
+                            $nb_clients $nb_buffers \"$PWD\";                     \
+                        rm -f -- \"$kak_main_reg_m\";                             \
+                    );"
+                ");", path_result);
+                send_command(session, command);
+
+                const int max_tries = 3;
+                for (int nb_try = 0; nb_try < max_tries; nb_try++)
+                {
+                    try
+                    {
+                        const auto contents_file = read_file(path_result, true);
+                        if (not contents_file.empty())
+                        {
+                            info = format(" | {}", contents_file);
+                            break;
+                        }
+                    }
+                    catch (const runtime_error& e) {}
+
+                    using namespace std::chrono_literals;
+                    std::this_thread::sleep_for(250ms);
+                }
+                std::remove(path_result.c_str());
+            }
+
+            write_stdout(format("{}{}\n", session, info));
+        }
+    }
+
+    return found_dead ? 1 : 0;
+}
+
 }
 
 int main(int argc, char* argv[])
@@ -1085,6 +1157,7 @@ int main(int argc, char* argv[])
                    { "q", { false, "in filter mode, be quiet about errors applying keys" } },
                    { "ui", { true, "set the type of user interface to use (terminal, dummy, or json)" } },
                    { "l", { false, "list existing sessions" } },
+                   { "L", { false, "list and describe existing sessions" } },
                    { "clear", { false, "clear dead sessions" } },
                    { "debug", { true, "initial debug option value" } },
                    { "version", { false, "display kakoune version and exit" } },
@@ -1126,15 +1199,17 @@ int main(int argc, char* argv[])
         }
 
         const bool list_sessions = (bool)parser.get_switch("l");
+        const bool describe_sessions = (bool)parser.get_switch("L");
+        if (list_sessions or describe_sessions)
+            return Kakoune::describe_sessions(describe_sessions);
+
         const bool clear_sessions = (bool)parser.get_switch("clear");
-        if (list_sessions or clear_sessions)
+        if (clear_sessions)
         {
             for (auto& session : list_files(session_directory()))
             {
                 const bool valid = check_session(session);
-                if (list_sessions)
-                    write_stdout(format("{}{}\n", session, valid ? "" : " (dead)"));
-                if (not valid and clear_sessions)
+                if (not valid)
                     unlink(session_path(session).c_str());
             }
             return 0;
