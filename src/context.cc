@@ -247,6 +247,9 @@ void Context::SelectionHistory::undo()
             m_context.change_buffer(destination_buffer, { std::move(select_next) });
     }
     while (selections() == old_selections);
+    m_context.print_status({ format("jumped to #{} ({})",
+                           (size_t)m_history_id, m_history.size() - 1),
+                           m_context.faces()["Information"] });
 }
 
 void Context::SelectionHistory::forget_buffer(Buffer& buffer)
