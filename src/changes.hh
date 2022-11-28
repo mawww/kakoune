@@ -82,7 +82,7 @@ void update_backward(ConstArrayView<Buffer::Change> changes, RangeContainer& ran
 }
 
 template<typename RangeContainer>
-void update_ranges(Buffer& buffer, size_t& timestamp, RangeContainer&& ranges)
+void update_ranges(Buffer& buffer, size_t timestamp, RangeContainer&& ranges)
 {
     if (timestamp == buffer.timestamp())
         return;
@@ -104,7 +104,6 @@ void update_ranges(Buffer& buffer, size_t& timestamp, RangeContainer&& ranges)
             change_it = backward_end;
         }
     }
-    timestamp = buffer.timestamp();
 }
 
 }

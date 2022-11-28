@@ -495,6 +495,8 @@ void InsertCompleter::reset()
     {
         auto& buffer = m_context.buffer();
         update_ranges(buffer, m_completions.timestamp, m_inserted_ranges);
+        m_completions.timestamp = buffer.timestamp();
+
         hook_param = join(m_inserted_ranges | filter([](auto&& r) { return not r.empty(); }) | transform([&](auto&& r) {
                 return selection_to_string(ColumnType::Byte, buffer, {r.begin, buffer.char_prev(r.end)});
             }), ' ');

@@ -137,7 +137,7 @@ struct SelectionList
     void force_timestamp(size_t timestamp) { m_timestamp = timestamp; }
 
     using ApplyFunc = FunctionRef<void (size_t index, Selection& sel)>;
-    void for_each(ApplyFunc apply);
+    void for_each(ApplyFunc apply, bool may_append);
 
     void replace(ConstArrayView<String> strings);
 

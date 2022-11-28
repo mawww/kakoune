@@ -1588,6 +1588,7 @@ void option_list_postprocess(Vector<RangeAndString, MemoryDomain::Options>& opt)
 void option_update(RangeAndStringList& opt, const Context& context)
 {
     update_ranges(context.buffer(), opt.prefix, opt.list);
+    opt.prefix = context.buffer().timestamp();
 }
 
 bool option_add_from_strings(Vector<RangeAndString, MemoryDomain::Options>& opt, ConstArrayView<String> strs)
@@ -1618,6 +1619,7 @@ private:
         auto& buffer = context.context.buffer();
         auto& range_and_faces = get_option(context);
         update_ranges(buffer, range_and_faces.prefix, range_and_faces.list);
+        range_and_faces.prefix = buffer.timestamp();
 
         for (auto& [range, face] : range_and_faces.list)
         {
@@ -1662,6 +1664,7 @@ private:
         auto& sels = context.context.selections();
         auto& range_and_faces = get_option(context);
         update_ranges(buffer, range_and_faces.prefix, range_and_faces.list);
+        range_and_faces.prefix = buffer.timestamp();
 
         for (auto& [range, spec] : range_and_faces.list)
         {
@@ -1693,6 +1696,7 @@ private:
         auto& range_and_faces = get_option(context);
         const int tabstop = context.context.options()["tabstop"].get<int>();
         update_ranges(buffer, range_and_faces.prefix, range_and_faces.list);
+        range_and_faces.prefix = buffer.timestamp();
 
         for (auto& [range, spec] : range_and_faces.list)
         {

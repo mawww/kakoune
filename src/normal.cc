@@ -429,7 +429,7 @@ void replace_with_char(Context& context, NormalParams)
         context.selections().for_each([&](size_t index, Selection& sel) {
             CharCount count = char_length(buffer, sel);
             replace(buffer, sel, String{*cp, count});
-        });
+        }, false);
     }, "replace with char", "enter char to replace with\n");
 }
 
@@ -455,7 +455,7 @@ void for_each_codepoint(Context& context, NormalParams)
              begin != end; ++begin)
             utf8::dump(std::back_inserter(str), func(*begin));
         replace(buffer, sel, str);
-    });
+    }, false);
 }
 
 void command(const Context& context, EnvVarMap env_vars, char reg = 0)
@@ -664,14 +664,14 @@ enum class PasteMode
     Replace
 };
 
-BufferCoord paste_pos(Buffer& buffer, const Selection& sel, PasteMode mode, bool linewise)
+BufferCoord paste_pos(Buffer& buffer, BufferCoord min, BufferCoord max, PasteMode mode, bool linewise)
 {
     switch (mode)
     {
         case PasteMode::Append:
-            return linewise ? std::min(buffer.line_count(), sel.max().line+1) : buffer.char_next(sel.max());
+            return linewise ? std::min(buffer.line_count(), max.line+1) : buffer.char_next(max);
         case PasteMode::Insert:
-            return linewise ? sel.min().line : sel.min();
+            return linewise ? min.line : min;
         default:
             kak_assert(false);
             return {};
@@ -690,16 +690,17 @@ void paste(Context& context, NormalParams params)
     auto& buffer = context.buffer();
     ScopedEdition edition(context);
     ScopedSelectionEdition selection_edition{context};
-    context.selections().for_each([&](size_t index, Selection& sel) {
+    context.selections().for_each([&, last=BufferCoord{}](size_t index, Selection& sel) mutable {
         auto& str = strings[std::min(strings.size()-1, index)];
         auto& min = sel.min();
         auto& max = sel.max();
         BufferRange range = (mode == PasteMode::Replace) ?
             buffer.replace(min, buffer.char_next(max), str)
-          : buffer.insert(paste_pos(buffer, sel, mode, linewise), str);
+          : buffer.insert(paste_pos(buffer, min, std::max(max, last), mode, linewise), str);
         min = range.begin;
         max = range.end > range.begin ? buffer.char_prev(range.end) : range.begin;
-    });
+        last = max;
+    }, mode == PasteMode::Append);
 }
 
 template<PasteMode mode>
@@ -733,7 +734,7 @@ void paste_all(Context& context, NormalParams params)
         selections.for_each([&](size_t, const Selection& sel) {
             auto range = (mode == PasteMode::Replace) ?
                 buffer.replace(sel.min(), buffer.char_next(sel.max()), all)
-              : buffer.insert(paste_pos(buffer, sel, mode, linewise), all);
+              : buffer.insert(paste_pos(buffer, sel.min(), sel.max(), mode, linewise), all);
 
             ByteCount pos_offset = 0;
             BufferCoord pos = range.begin;
@@ -744,7 +745,7 @@ void paste_all(Context& context, NormalParams params)
                 pos = buffer.next(end);
                 pos_offset = offset;
             }
-        });
+        }, mode == PasteMode::Append);
     }
     selections = std::move(result);
 }
@@ -784,10 +785,10 @@ void insert_output(Context& context, NormalParams params)
 
                 auto& min = sel.min();
                 auto& max = sel.max();
-                auto range = insert(buffer, sel, paste_pos(buffer, sel, mode, false), out);
+                auto range = insert(buffer, sel, paste_pos(buffer, min, max, mode, false), out);
                 min = range.begin;
                 max = range.end > range.begin ? buffer.char_prev(range.end) : range.begin;
-            });
+            }, mode == PasteMode::Append);
             selections.set_main_index(old_main);
         });
 }

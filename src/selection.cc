@@ -362,22 +362,45 @@ static void fix_overflowing_selections(Vector<Selection>& selections,
     }
 }
 
-void SelectionList::for_each(ApplyFunc func)
+bool any_overlaps(ConstArrayView<Selection> sels)
+{
+    for (int i = 0; i + 1 < sels.size(); ++i)
+    {
+        if (overlaps(sels[i], sels[i+1]))
+            return true;
+    }
+    return false;
+}
+
+void SelectionList::for_each(ApplyFunc func, bool may_append)
 {
     update();
 
-    ForwardChangesTracker changes_tracker;
-    for (size_t index = 0; index < m_selections.size(); ++index)
+    if (may_append and any_overlaps(m_selections))
     {
-        auto& sel = m_selections[index];
+        size_t timestamp = m_buffer->timestamp();
+        for (size_t index = 0; index < m_selections.size(); ++index)
+        {
+            auto& sel = m_selections[index];
+            update_ranges(*m_buffer, timestamp, ArrayView<Selection>(sel));
+            func(index, sel);
+        }
+    }
+    else
+    {
+        ForwardChangesTracker changes_tracker;
+        for (size_t index = 0; index < m_selections.size(); ++index)
+        {
+            auto& sel = m_selections[index];
 
-        sel.anchor() = changes_tracker.get_new_coord_tolerant(sel.anchor());
-        sel.cursor() = changes_tracker.get_new_coord_tolerant(sel.cursor());
-        kak_assert(m_buffer->is_valid(sel.anchor()) and m_buffer->is_valid(sel.cursor()));
+            sel.anchor() = changes_tracker.get_new_coord_tolerant(sel.anchor());
+            sel.cursor() = changes_tracker.get_new_coord_tolerant(sel.cursor());
+            kak_assert(m_buffer->is_valid(sel.anchor()) and m_buffer->is_valid(sel.cursor()));
 
-        func(index, sel);
+            func(index, sel);
 
-        changes_tracker.update(*m_buffer, m_timestamp);
+            changes_tracker.update(*m_buffer, m_timestamp);
+        }
     }
 
     // We might just have been deleting text if strings were empty,
@@ -414,7 +437,7 @@ void SelectionList::replace(ConstArrayView<String> strings)
 
     for_each([&](size_t index, Selection& sel) {
         Kakoune::replace(*m_buffer, sel, strings[std::min(strings.size()-1, index)]);
-    });
+    }, false);
 }
 
 void SelectionList::erase()

@@ -1470,7 +1470,7 @@ private:
         context().selections().for_each([strings, &buffer=context().buffer()]
                                         (size_t index, Selection& sel) {
             Kakoune::insert(buffer, sel, sel.cursor(), strings[std::min(strings.size()-1, index)]);
-        });
+        }, false);
     }
 
     void insert(Codepoint key)
