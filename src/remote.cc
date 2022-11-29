@@ -183,6 +183,9 @@ private:
         }
     };
 
+    template<typename T>
+    struct Reader<ArrayView<T>> : Reader<Vector<std::remove_cv_t<T>, MemoryDomain::Undefined>> {};
+
     template<typename Key, typename Value, MemoryDomain domain>
     struct Reader<HashMap<Key, Value, domain>> {
         static HashMap<Key, Value, domain> read(MsgReader& reader)
@@ -256,7 +259,7 @@ public:
     }
 
     template<typename T>
-    T read()
+    auto read()
     {
         return Reader<T>::read(*this);
     }
@@ -664,6 +667,17 @@ RemoteClient::RemoteClient(StringView session, StringView name, std::unique_ptr<
         if (events & FdEvents::Write and send_data(sock, m_send_buffer))
             watcher.events() &= ~FdEvents::Write;
 
+        auto exec = [&]<typename ...Args>(void (UserInterface::*method)(Args...)) {
+            struct Impl // Use a constructor to ensure left-to-right parameter evaluation
+            {
+                Impl(UserInterface& ui, void (UserInterface::*method)(Args...), Args... args)
+                {
+                    (ui.*method)(std::forward<Args>(args)...);
+                }
+            };
+            Impl{*m_ui, method, reader.read<std::remove_cvref_t<Args>>()...};
+        };
+
         while (events & FdEvents::Read and
                not reader.ready() and fd_readable(sock))
         {
@@ -676,62 +690,34 @@ RemoteClient::RemoteClient(StringView session, StringView name, std::unique_ptr<
             switch (reader.type())
             {
             case MessageType::MenuShow:
-            {
-                auto choices = reader.read<Vector<DisplayLine>>();
-                auto anchor = reader.read<DisplayCoord>();
-                auto fg = reader.read<Face>();
-                auto bg = reader.read<Face>();
-                auto style = reader.read<MenuStyle>();
-                m_ui->menu_show(choices, anchor, fg, bg, style);
+                exec(&UserInterface::menu_show);
                 break;
-            }
             case MessageType::MenuSelect:
-                m_ui->menu_select(reader.read<int>());
+                exec(&UserInterface::menu_select);
                 break;
             case MessageType::MenuHide:
-                m_ui->menu_hide();
+                exec(&UserInterface::menu_hide);
                 break;
             case MessageType::InfoShow:
-            {
-                auto title = reader.read<DisplayLine>();
-                auto content = reader.read<DisplayLineList>();
-                auto anchor = reader.read<DisplayCoord>();
-                auto face = reader.read<Face>();
-                auto style = reader.read<InfoStyle>();
-                m_ui->info_show(title, content, anchor, face, style);
+                exec(&UserInterface::info_show);
                 break;
-            }
             case MessageType::InfoHide:
-                m_ui->info_hide();
+                exec(&UserInterface::info_hide);
                 break;
             case MessageType::Draw:
-            {
-                auto display_buffer = reader.read<DisplayBuffer>();
-                auto default_face = reader.read<Face>();
-                auto padding_face = reader.read<Face>();
-                m_ui->draw(display_buffer, default_face, padding_face);
+                exec(&UserInterface::draw);
                 break;
-            }
             case MessageType::DrawStatus:
-            {
-                auto status_line = reader.read<DisplayLine>();
-                auto mode_line = reader.read<DisplayLine>();
-                auto default_face = reader.read<Face>();
-                m_ui->draw_status(status_line, mode_line, default_face);
+                exec(&UserInterface::draw_status);
                 break;
-            }
             case MessageType::SetCursor:
-            {
-                auto mode = reader.read<CursorMode>();
-                auto coord = reader.read<DisplayCoord>();
-                m_ui->set_cursor(mode, coord);
+                exec(&UserInterface::set_cursor);
                 break;
-            }
             case MessageType::Refresh:
-                m_ui->refresh(reader.read<bool>());
+                exec(&UserInterface::refresh);
                 break;
             case MessageType::SetOptions:
-                m_ui->set_ui_options(reader.read<HashMap<String, String, MemoryDomain::Options>>());
+                exec(&UserInterface::set_ui_options);
                 break;
             case MessageType::Exit:
                 m_exit_status = reader.read<int>();
