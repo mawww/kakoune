@@ -292,7 +292,7 @@ Yanking (copying) and pasting use the *"* register by default (See <<registers#,
 *>*, *<gt>*::
     indent selected lines
 
-*<a\->>*, *<a-gt>*::
+*<a-\>>*, *<a-gt>*::
     indent selected lines, including empty lines
 
 *<*, *<lt>*::
