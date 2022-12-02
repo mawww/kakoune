@@ -69,7 +69,7 @@ define-command -hidden -params 1 gopls-cmd %{
 define-command -hidden -params 0 gopls-def %{
     evaluate-commands %sh{
         jump=$( gopls definition "${kak_buffile}:${kak_cursor_line}:${kak_cursor_column}" 2> /dev/null \
-            |sed -e 's/-.*//; s/:/ /g; q' )
+            |sed -e 's/-[0-9]\+:.*//; s/:/ /g; q' )
         if [ -n "${jump}" ]; then
             printf %s\\n "evaluate-commands -try-client '${kak_opt_jumpclient}' %{
                 edit ${jump}
