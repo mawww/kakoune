@@ -82,9 +82,9 @@ public:
     ColumnCount column_count_to(ByteCount count) const
     { return utf8::column_distance(begin(), begin() + (int)count); }
 
-    StringView substr(ByteCount from, ByteCount length = INT_MAX) const;
-    StringView substr(CharCount from, CharCount length = INT_MAX) const;
-    StringView substr(ColumnCount from, ColumnCount length = INT_MAX) const;
+    StringView substr(ByteCount from, ByteCount length = -1) const;
+    StringView substr(CharCount from, CharCount length = -1) const;
+    StringView substr(ColumnCount from, ColumnCount length = -1) const;
 
 private:
     [[gnu::always_inline]]
@@ -284,29 +284,23 @@ inline String String::no_copy(StringView str) { return {NoCopy{}, str}; }
 template<typename Type, typename CharType>
 inline StringView StringOps<Type, CharType>::substr(ByteCount from, ByteCount length) const
 {
-    if (length < 0)
-        length = INT_MAX;
     const auto str_len = type().length();
     kak_assert(from >= 0 and from <= str_len);
-    return StringView{ type().data() + (int)from, std::min(str_len - from, length) };
+    return StringView{type().data() + (int)from, std::min(str_len - from, length >= 0 ? length : str_len)};
 }
 
 template<typename Type, typename CharType>
 inline StringView StringOps<Type, CharType>::substr(CharCount from, CharCount length) const
 {
-    if (length < 0)
-        length = INT_MAX;
     auto beg = utf8::advance(begin(), end(), from);
-    return StringView{ beg, utf8::advance(beg, end(), length) };
+    return StringView{beg, length >= 0 ? utf8::advance(beg, end(), length) : end()};
 }
 
 template<typename Type, typename CharType>
 inline StringView StringOps<Type, CharType>::substr(ColumnCount from, ColumnCount length) const
 {
-    if (length < 0)
-        length = INT_MAX;
     auto beg = utf8::advance(begin(), end(), from);
-    return StringView{ beg, utf8::advance(beg, end(), length) };
+    return StringView{beg, (length >= 0) ? utf8::advance(beg, end(), length) : end()};
 }
 
 template<typename Type, typename CharType>
