@@ -241,10 +241,11 @@ void Context::SelectionHistory::undo()
             current_history_node().redo_child = previous_id;
         m_staging = current_history_node();
     };
-    if (&history_node(next).selections.buffer() == &m_context.buffer())
+    Buffer& destination_buffer = history_node(next).selections.buffer();
+    if (&destination_buffer == &m_context.buffer())
         select_next();
     else
-        m_context.change_buffer(history_node(next).selections.buffer(), { std::move(select_next) });
+        m_context.change_buffer(destination_buffer, { std::move(select_next) });
 }
 
 void Context::SelectionHistory::forget_buffer(Buffer& buffer)
