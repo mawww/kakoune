@@ -123,6 +123,7 @@ struct SelectionList
     const Selection* data() const { return m_selections.data(); }
     size_t size() const { return m_selections.size(); }
 
+    // Used only by jump list and selection history. Ignores main selection index because that's easy to undo manually.
     bool operator==(const SelectionList& other) const { return m_buffer == other.m_buffer and m_selections == other.m_selections; }
     bool operator!=(const SelectionList& other) const { return not ((*this) == other); }
 
