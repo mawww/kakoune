@@ -203,9 +203,11 @@ void Context::SelectionHistory::end_edition()
 
     if (m_history_id != HistoryId::Invalid and current_history_node().selections == m_staging->selections)
     {
-        auto& sels = m_history[(size_t)m_history_id].selections;
-        sels.force_timestamp(m_staging->selections.timestamp());
-        sels.set_main_index(m_staging->selections.main_index());
+        // No change, except maybe the index of the main selection.
+        // Update timestamp to potentially improve interaction with content undo.
+        auto& node = current_history_node();
+        node.selections.force_timestamp(m_staging->selections.timestamp());
+        node.selections.set_main_index(m_staging->selections.main_index());
     }
     else
     {
