@@ -2012,7 +2012,7 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
 
     ScopedSetBool disable_history(c.history_disabled());
     ScopedEdition edition{c};
-    ScopedSelectionEdition selection_edition{c};
+    ScopedSelectionEdition selection_edition{c, PushJump::MaybeLater};
 
     if (parser.get_switch("itersel"))
     {
