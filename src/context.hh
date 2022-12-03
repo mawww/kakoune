@@ -37,12 +37,15 @@ struct JumpList
 
     size_t current_index() const { return m_current; }
 
+    uint64_t timestamp() const { return m_timestamp; }
+
     ConstArrayView<SelectionList> get_as_list() const { return m_jumps; }
 
 private:
     using Contents = Vector<SelectionList, MemoryDomain::Selections>;
     Contents m_jumps;
     size_t m_current = 0;
+    uint64_t m_timestamp = 0;
 };
 
 using LastSelectFunc = std::function<void (Context&)>;

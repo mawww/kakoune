@@ -90,6 +90,7 @@ void JumpList::push(SelectionList jump, Optional<size_t> index)
                       end(m_jumps));
     m_jumps.push_back(jump);
     m_current = m_jumps.size();
+    m_timestamp++;
 }
 
 const SelectionList& JumpList::forward(Context& context, int count)
@@ -161,6 +162,7 @@ void JumpList::forget_buffer(Buffer& buffer)
         else
             ++i;
     }
+    m_timestamp++;
 }
 
 Context::SelectionHistory::SelectionHistory(Context& context) : m_context(context) {}
