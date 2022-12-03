@@ -100,7 +100,6 @@ struct MouseHandler
             switch (key.mouse_button())
             {
             case Key::MouseButton::Right: {
-                kak_assert(not context.is_editing_selection());
                 m_dragging.reset();
                 cursor = context.window().buffer_coord(key.coord());
                 ScopedSelectionEdition selection_edition{context};
@@ -114,7 +113,6 @@ struct MouseHandler
             }
 
             case Key::MouseButton::Left: {
-                kak_assert(not context.is_editing_selection());
                 m_dragging.reset(new ScopedSelectionEdition{context});
                 m_anchor = context.window().buffer_coord(key.coord());
                 if (not (key.modifiers & Key::Modifiers::Control))
