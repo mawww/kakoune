@@ -96,7 +96,7 @@ public:
     SelectionList& selections_write_only();
 
     void end_selection_edition() { m_selection_history.end_edition(); }
-    template<Direction direction>
+    template<Direction direction, bool to_jump>
     void undo_selection_change();
 
     void change_buffer(Buffer& buffer, bool push_jump = false, Optional<FunctionRef<void()>> set_selection = {});
@@ -165,22 +165,25 @@ private:
 
     class SelectionHistory {
     public:
+        enum class HistoryId : size_t { First = 0, Invalid = (size_t)-1 };
+
         SelectionHistory(Context& context);
         SelectionHistory(Context& context, SelectionList selections);
         void initialize(SelectionList selections);
         bool empty() const { return m_history.empty() and not m_staging; }
+        HistoryId history_index() const { return m_history_id; }
         SelectionList& selections(bool update = true);
 
         void begin_edition();
         void end_edition();
         bool in_edition() const { return m_in_edition; }
 
-        template<Direction direction>
+        void push_jump(HistoryId from_index) { history_node(from_index).is_jump = true; }
+
+        template<Direction direction, bool to_jump>
         void undo();
         void forget_buffer(Buffer& buffer);
     private:
-        enum class HistoryId : size_t { First = 0, Invalid = (size_t)-1 };
-
         struct HistoryNode
         {
             HistoryNode(SelectionList selections, HistoryId parent) : selections(selections), parent(parent) {}
@@ -188,6 +191,7 @@ private:
             SelectionList selections;
             HistoryId parent;
             HistoryId redo_child = HistoryId::Invalid;
+            bool is_jump = false;
         };
 
               HistoryId next_history_id() const noexcept    { return (HistoryId)m_history.size(); }
@@ -235,23 +239,44 @@ struct ScopedSelectionEdition
 {
     ScopedSelectionEdition(Context& context, PushJump push_jump = PushJump::Never)
         : m_context{context},
-          m_buffer{context.has_buffer() ? &context.buffer() : nullptr}
+          m_buffer{context.has_buffer() ? &context.buffer() : nullptr},
+          m_push_jump{push_jump}
     {
         if (not m_buffer)
             return;
         m_context.m_selection_history.begin_edition();
-        if (push_jump == PushJump::Now)
-            m_context.push_jump();
+        if (m_push_jump != PushJump::Never)
+        {
+            m_initial_jump_list_timestamp = m_context.jump_list().timestamp();
+            m_initial_selection_history_index = m_context.m_selection_history.history_index();
+            if (m_push_jump == PushJump::Now)
+                m_context.push_jump();
+        }
     }
     ScopedSelectionEdition(ScopedSelectionEdition&& other) :
         m_context{other.m_context},
-        m_buffer{other.m_buffer}
+        m_buffer{other.m_buffer},
+        m_initial_jump_list_timestamp{other.m_initial_jump_list_timestamp},
+        m_initial_selection_history_index{other.m_initial_selection_history_index},
+        m_push_jump{other.m_push_jump}
     { other.m_buffer = nullptr; }
 
-    ~ScopedSelectionEdition() { if (m_buffer) m_context.m_selection_history.end_edition(); }
+    ~ScopedSelectionEdition()
+    {
+        if (not m_buffer)
+            return;
+        m_context.m_selection_history.end_edition();
+        if (m_push_jump != PushJump::Never and
+            m_initial_jump_list_timestamp != m_context.jump_list().timestamp() and
+            m_initial_selection_history_index != Context::SelectionHistory::HistoryId::Invalid)
+            m_context.m_selection_history.push_jump(m_initial_selection_history_index);
+     }
 private:
     Context& m_context;
     SafePtr<Buffer> m_buffer;
+    uint64_t m_initial_jump_list_timestamp;
+    Context::SelectionHistory::HistoryId m_initial_selection_history_index;
+    PushJump m_push_jump;
 };
 
 }

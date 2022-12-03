@@ -219,34 +219,43 @@ void Context::SelectionHistory::end_edition()
     m_staging.reset();
 }
 
-template<Direction direction>
+template<Direction direction, bool to_jump>
 void Context::SelectionHistory::undo()
 {
     static constexpr bool backward = direction == Backward;
     if (in_edition())
         throw runtime_error("selection undo is only supported at top-level");
     kak_assert(not empty());
+    if (backward and to_jump)
+        current_history_node().is_jump = true;
     SelectionList old_selections = selections();
     HistoryId next;
     do
     {
-        if constexpr (backward)
-            next = current_history_node().parent;
-        else
-            next = current_history_node().redo_child;
+        HistoryId current = m_history_id;
+        while (true)
+        {
+            if constexpr (backward)
+                next = history_node(current).parent;
+            else
+                next = history_node(current).redo_child;
+            if (next == HistoryId::Invalid)
+                throw runtime_error(to_jump ? "no previous jump"
+                                            : (backward ? "no selection change to undo" : "no selection change to redo"));
+            if constexpr (backward)
+                history_node(next).redo_child = current;
+            if (to_jump and not history_node(next).is_jump)
+                current = next;
+            else
+                break;
+        }
         if (next == HistoryId::Invalid)
             throw runtime_error(backward ? "no selection change to undo" : "no selection change to redo");
-        auto select_next = [&, next] {
-            HistoryId previous_id = m_history_id;
-            m_history_id = next;
-            if constexpr (backward)
-                current_history_node().redo_child = previous_id;
-        };
         Buffer& destination_buffer = history_node(next).selections.buffer();
         if (&destination_buffer == &m_context.buffer())
-            select_next();
+            m_history_id = next;
         else
-            m_context.change_buffer(destination_buffer, false, { std::move(select_next) });
+            m_context.change_buffer(destination_buffer, false, { [&, next] { m_history_id = next; } });
     }
     while (selections() == old_selections);
     m_context.print_status({ format("jumped to #{} ({})",
@@ -365,13 +374,15 @@ SelectionList& Context::selections(bool update)
     return m_selection_history.selections(update);
 }
 
-template<Direction direction>
+template<Direction direction, bool to_jump>
 void Context::undo_selection_change()
 {
-    m_selection_history.undo<direction>();
+    m_selection_history.undo<direction, to_jump>();
 }
-template void Context::undo_selection_change<Backward>();
-template void Context::undo_selection_change<Forward>();
+template void Context::undo_selection_change<Backward, true>();
+template void Context::undo_selection_change<Backward, false>();
+template void Context::undo_selection_change<Forward, true>();
+template void Context::undo_selection_change<Forward, false>();
 
 SelectionList& Context::selections_write_only()
 {
