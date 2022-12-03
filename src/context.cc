@@ -215,8 +215,10 @@ void Context::SelectionHistory::end_edition()
     m_staging.reset();
 }
 
+template<Direction direction>
 void Context::SelectionHistory::undo()
 {
+    static constexpr bool backward = direction == Backward;
     if (in_edition())
         throw runtime_error("selection undo is only supported at top-level");
     kak_assert(not empty());
@@ -225,43 +227,24 @@ void Context::SelectionHistory::undo()
         kak_assert(current_history_node().selections == m_staging->selections);
         end_edition();
     });
-    HistoryId parent = current_history_node().parent;
-    if (parent == HistoryId::Invalid)
-        throw runtime_error("no selection change to undo");
-    auto select_parent = [&, parent] {
-        HistoryId before_undo = m_history_id;
-        m_history_id = parent;
-        current_history_node().redo_child = before_undo;
+    HistoryId next;
+    if constexpr (backward)
+        next = current_history_node().parent;
+    else
+        next = current_history_node().redo_child;
+    if (next == HistoryId::Invalid)
+        throw runtime_error(backward ? "no selection change to undo" : "no selection change to redo");
+    auto select_next = [&, next] {
+        HistoryId previous_id = m_history_id;
+        m_history_id = next;
+        if constexpr (backward)
+            current_history_node().redo_child = previous_id;
         m_staging = current_history_node();
     };
-    if (&history_node(parent).selections.buffer() == &m_context.buffer())
-        select_parent();
+    if (&history_node(next).selections.buffer() == &m_context.buffer())
+        select_next();
     else
-        m_context.change_buffer(history_node(parent).selections.buffer(), { std::move(select_parent) });
-                                                                           // });
-}
-
-void Context::SelectionHistory::redo()
-{
-    if (in_edition())
-        throw runtime_error("selection redo is only supported at top-level");
-    kak_assert(not empty());
-    begin_edition();
-    auto end = on_scope_end([&] {
-        kak_assert(current_history_node().selections == m_staging->selections);
-        end_edition();
-    });
-    HistoryId child = current_history_node().redo_child;
-    if (child == HistoryId::Invalid)
-        throw runtime_error("no selection change to redo");
-    auto select_child = [&, child] {
-        m_history_id = child;
-        m_staging = current_history_node();
-    };
-    if (&history_node(child).selections.buffer() == &m_context.buffer())
-        select_child();
-    else
-        m_context.change_buffer(history_node(child).selections.buffer(), { std::move(select_child) });
+        m_context.change_buffer(history_node(next).selections.buffer(), { std::move(select_next) });
 }
 
 void Context::SelectionHistory::forget_buffer(Buffer& buffer)
@@ -375,15 +358,13 @@ SelectionList& Context::selections(bool update)
     return m_selection_history.selections(update);
 }
 
+template<Direction direction>
 void Context::undo_selection_change()
 {
-    m_selection_history.undo();
+    m_selection_history.undo<direction>();
 }
-
-void Context::redo_selection_change()
-{
-    m_selection_history.redo();
-}
+template void Context::undo_selection_change<Backward>();
+template void Context::undo_selection_change<Forward>();
 
 SelectionList& Context::selections_write_only()
 {
