@@ -2072,7 +2072,7 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
         if (auto index = jump_list.current_index();
             collapse_jumps and index > prev_index and
             contains(BufferManager::instance(), &jump->buffer()))
-            jump_list.push(std::move(*jump), prev_index);
+            jump_list.push({ std::move(*jump), context.selection_history().current_index() }, prev_index);
     }
 }
 

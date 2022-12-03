@@ -77,7 +77,7 @@ void Context::print_status(DisplayLine status) const
         client().print_status(std::move(status));
 }
 
-void JumpList::push(SelectionList jump, Optional<size_t> index)
+void JumpList::push(Entry jump, Optional<size_t> index)
 {
     if (index)
     {
@@ -88,20 +88,22 @@ void JumpList::push(SelectionList jump, Optional<size_t> index)
     m_jumps.erase(m_jumps.begin()+m_current, m_jumps.end());
     m_jumps.erase(std::remove(begin(m_jumps), end(m_jumps), jump),
                       end(m_jumps));
-    m_jumps.push_back(jump);
+    m_jumps.push_back(std::move(jump));
     m_current = m_jumps.size();
     m_timestamp++;
 }
 
-const SelectionList& JumpList::forward(Context& context, int count)
+const JumpList::Entry& JumpList::forward(Context& context, int count)
 {
     if (m_current != m_jumps.size() and
         m_current + count < m_jumps.size())
     {
         m_current += count;
-        SelectionList& res = m_jumps[m_current];
-        res.update();
-        context.print_status({ format("jumped to #{} ({})",
+        Entry& res = m_jumps[m_current];
+        res.selections.update();
+        context.print_status({ format("jumped to #{} ({}), jump #{} ({})",
+                               (size_t)context.selection_history().current_index(),
+                               context.selection_history().size() - 1,
                                m_current, m_jumps.size() - 1),
                                context.faces()["Information"] });
         return res;
@@ -109,20 +111,22 @@ const SelectionList& JumpList::forward(Context& context, int count)
     throw runtime_error("no next jump");
 }
 
-const SelectionList& JumpList::backward(Context& context, int count)
+const JumpList::Entry& JumpList::backward(Context& context, int count)
 {
     if ((int)m_current - count < 0)
         throw runtime_error("no previous jump");
 
     const SelectionList& current = context.selections();
     if (m_current != m_jumps.size() and
-        m_jumps[m_current] != current)
+        m_jumps[m_current].selections != current)
     {
-        push(current);
+        push({ current, context.selection_history().current_index() });
         m_current -= count;
-        SelectionList& res = m_jumps[m_current];
-        res.update();
-        context.print_status({ format("jumped to #{} ({})",
+        Entry& res = m_jumps[m_current];
+        res.selections.update();
+        context.print_status({ format("jumped to #{} ({}), jump #{} ({})",
+                               (size_t)context.selection_history().current_index(),
+                               context.selection_history().size() - 1,
                                m_current, m_jumps.size() - 1),
                                context.faces()["Information"] });
         return res;
@@ -131,14 +135,16 @@ const SelectionList& JumpList::backward(Context& context, int count)
     {
         if (m_current == m_jumps.size())
         {
-            push(current);
+            push({ current, context.selection_history().current_index() });
             if (--m_current == 0)
                 throw runtime_error("no previous jump");
         }
         m_current -= count;
-        SelectionList& res = m_jumps[m_current];
-        res.update();
-        context.print_status({ format("jumped to #{} ({})",
+        Entry& res = m_jumps[m_current];
+        res.selections.update();
+        context.print_status({ format("jumped to #{} ({}), jump #{} ({})",
+                               (size_t)context.selection_history().current_index(),
+                               context.selection_history().size() - 1,
                                m_current, m_jumps.size() - 1),
                                context.faces()["Information"] });
         return res;
@@ -146,11 +152,11 @@ const SelectionList& JumpList::backward(Context& context, int count)
     throw runtime_error("no previous jump");
 }
 
-void JumpList::forget_buffer(Buffer& buffer)
+void JumpList::forget_buffer(Buffer& buffer, const std::function<SelectionHistory::HistoryId(SelectionHistory::HistoryId)>& new_id)
 {
     for (size_t i = 0; i < m_jumps.size();)
     {
-        if (&m_jumps[i].buffer() == &buffer)
+        if (&m_jumps[i].selections.buffer() == &buffer)
         {
             if (i < m_current)
                 --m_current;
@@ -160,7 +166,10 @@ void JumpList::forget_buffer(Buffer& buffer)
             m_jumps.erase(m_jumps.begin() + i);
         }
         else
+        {
+            m_jumps[i].history_id = new_id(m_jumps[i].history_id);
             ++i;
+        }
     }
     m_timestamp++;
 }
@@ -253,7 +262,7 @@ void SelectionHistory::undo()
                            m_context.faces()["Information"] });
 }
 
-void SelectionHistory::forget_buffer(Buffer& buffer)
+std::function<SelectionHistory::HistoryId(SelectionHistory::HistoryId)> SelectionHistory::forget_buffer(Buffer& buffer)
 {
     Vector<HistoryId, MemoryDomain::Selections> new_ids;
     size_t bias = 0;
@@ -270,7 +279,7 @@ void SelectionHistory::forget_buffer(Buffer& buffer)
             id = (HistoryId)(i - bias);
         new_ids.push_back(id);
     }
-    auto new_id = [&new_ids](HistoryId old_id) -> HistoryId {
+    auto new_id = [new_ids = std::move(new_ids)](HistoryId old_id) -> HistoryId {
         return old_id == HistoryId::Invalid ? HistoryId::Invalid : new_ids[(size_t)old_id];
     };
 
@@ -290,6 +299,7 @@ void SelectionHistory::forget_buffer(Buffer& buffer)
         kak_assert(m_staging->redo_child == HistoryId::Invalid);
     }
     kak_assert(m_history_id != HistoryId::Invalid or m_staging);
+    return new_id;
 }
 
 void Context::change_buffer(Buffer& buffer, bool push_jump, Optional<FunctionRef<void()>> set_selections)
@@ -324,8 +334,6 @@ void Context::change_buffer(Buffer& buffer, bool push_jump, Optional<FunctionRef
 
 void Context::forget_buffer(Buffer& buffer)
 {
-    m_jump_list.forget_buffer(buffer);
-
     if (&this->buffer() == &buffer)
     {
         if (is_editing() && has_input_handler())
@@ -335,7 +343,8 @@ void Context::forget_buffer(Buffer& buffer)
         change_buffer(last_buffer ? *last_buffer : BufferManager::instance().get_first_buffer());
     }
 
-    m_selection_history.forget_buffer(buffer);
+    auto new_id = m_selection_history.forget_buffer(buffer);
+    m_jump_list.forget_buffer(buffer, new_id);
 }
 
 Buffer* Context::last_buffer() const
@@ -344,19 +353,19 @@ Buffer* Context::last_buffer() const
     if (jump_list.empty())
         return nullptr;
 
-    auto predicate = [this](const auto& sels) {
-        return &sels.buffer() != &this->buffer();
+    auto predicate = [this](const auto& entry) {
+        return &entry.selections.buffer() != &this->buffer();
     };
 
     auto next_buffer = find_if(jump_list.subrange(m_jump_list.current_index()-1),
                                predicate);
     if (next_buffer != jump_list.end())
-        return &next_buffer->buffer();
+        return &next_buffer->selections.buffer();
 
     auto previous_buffer = find_if(jump_list.subrange(0, m_jump_list.current_index()) | reverse(),
                                    predicate);
 
-    return previous_buffer != jump_list.rend() ? &previous_buffer->buffer() : nullptr;
+    return previous_buffer != jump_list.rend() ? &previous_buffer->selections.buffer() : nullptr;
 }
 
 SelectionList& Context::selections(bool update)

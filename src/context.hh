@@ -23,10 +23,13 @@ enum Direction { Backward = -1, Forward = 1 };
 
 struct SelectionHistory
 {
+    enum class HistoryId : size_t { First = 0, Invalid = (size_t)-1 };
+
     SelectionHistory(Context& context);
     SelectionHistory(Context& context, SelectionList selections);
     void initialize(SelectionList selections);
     bool empty() const { return m_history.empty() and not m_staging; }
+    size_t size() const { return m_history.size(); }
     SelectionList& selections(bool update = true);
 
     void begin_edition();
@@ -35,9 +38,7 @@ struct SelectionHistory
 
     template<Direction direction>
     void undo();
-    void forget_buffer(Buffer& buffer);
-private:
-    enum class HistoryId : size_t { First = 0, Invalid = (size_t)-1 };
+    std::function<HistoryId(HistoryId)> forget_buffer(Buffer& buffer);
 
     struct HistoryNode
     {
@@ -54,6 +55,10 @@ private:
     const HistoryNode& history_node(HistoryId id) const { return m_history[(size_t)id]; }
           HistoryNode& current_history_node()           { kak_assert((size_t)m_history_id < m_history.size()); return m_history[(size_t)m_history_id]; }
 
+    HistoryId current_index() const { return m_history_id; }
+    void set_index(HistoryId index) { m_history_id = index; }
+
+private:
     Context&              m_context;
     Vector<HistoryNode>   m_history;
     HistoryId             m_history_id = HistoryId::Invalid;
@@ -63,19 +68,26 @@ private:
 
 struct JumpList
 {
-    void push(SelectionList jump, Optional<size_t> index = {});
-    const SelectionList& forward(Context& context, int count);
-    const SelectionList& backward(Context& context, int count);
-    void forget_buffer(Buffer& buffer);
+    struct Entry
+    {
+        SelectionList selections;
+        SelectionHistory::HistoryId history_id;
+
+        bool operator==(const Entry& other) const { return selections == other.selections; }
+    };
+
+    void push(Entry jump, Optional<size_t> index = {});
+    const Entry& forward(Context& context, int count);
+    const Entry& backward(Context& context, int count);
+    void forget_buffer(Buffer& buffer, const std::function<SelectionHistory::HistoryId(SelectionHistory::HistoryId)>& new_id);
 
     size_t current_index() const { return m_current; }
 
     uint64_t timestamp() const { return m_timestamp; }
 
-    ConstArrayView<SelectionList> get_as_list() const { return m_jumps; }
-
+    ConstArrayView<Entry> get_as_list() const { return m_jumps; }
 private:
-    using Contents = Vector<SelectionList, MemoryDomain::Selections>;
+    using Contents = Vector<Entry, MemoryDomain::Selections>;
     Contents m_jumps;
     size_t m_current = 0;
     uint64_t m_timestamp = 0;
@@ -167,11 +179,18 @@ public:
 
     Flags flags() const { return m_flags; }
 
+    SelectionHistory& selection_history() { return m_selection_history; }
+
     JumpList& jump_list() { return m_jump_list; }
     void push_jump(bool force = false)
     {
         if (force or not (m_flags & Flags::Draft))
-            m_jump_list.push(selections());
+        {
+            auto index = selection_history().in_edition()
+                           ? selection_history().current_index()
+                           : selection_history().current_history_node().parent;
+            m_jump_list.push({ selections(), index });
+        }
     }
 
     template<typename Func>

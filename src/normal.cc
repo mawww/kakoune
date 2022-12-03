@@ -1599,11 +1599,20 @@ void jump(Context& context, NormalParams params)
                  context.jump_list().backward(context, count);
 
     Buffer* oldbuf = &context.buffer();
-    Buffer& buffer = const_cast<Buffer&>(jump.buffer());
-    ScopedSelectionEdition selection_edition{context};
-    if (&buffer != oldbuf)
-        context.change_buffer(buffer);
-    context.selections_write_only() = jump;
+    Buffer& buffer = const_cast<Buffer&>(jump.selections.buffer());
+    auto select_next = [&] {
+        if (context.selection_history().in_edition())
+            context.selections_write_only() = jump.selections;
+        else
+        {
+            context.selection_history().set_index(jump.history_id);
+            kak_assert(jump.selections == context.selections());
+        }
+    };
+    if (&buffer == oldbuf)
+        select_next();
+    else
+        context.change_buffer(buffer, false, { std::move(select_next) });
 }
 
 void push_selections(Context& context, NormalParams)
