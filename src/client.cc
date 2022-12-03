@@ -169,7 +169,7 @@ DisplayLine Client::generate_mode_line() const
     return modeline;
 }
 
-void Client::change_buffer(Buffer& buffer, Optional<FunctionRef<void()>> set_selections)
+void Client::change_buffer(Buffer& buffer, bool push_jump, Optional<FunctionRef<void()>> set_selections)
 {
     if (m_buffer_reload_dialog_opened)
         close_buffer_reload_dialog();
@@ -187,10 +187,13 @@ void Client::change_buffer(Buffer& buffer, Optional<FunctionRef<void()>> set_sel
     m_window->options().register_watcher(*this);
 
     if (set_selections)
+    {
+        kak_assert(not push_jump);
         (*set_selections)();
+    }
     else
     {
-        ScopedSelectionEdition selection_edition{context()};
+        ScopedSelectionEdition selection_edition{context(), push_jump ? PushJump::Now : PushJump::Never};
         context().selections_write_only() = std::move(ws.selections);
     }
 

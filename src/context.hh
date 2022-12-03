@@ -96,7 +96,7 @@ public:
     template<Direction direction>
     void undo_selection_change();
 
-    void change_buffer(Buffer& buffer, Optional<FunctionRef<void()>> set_selection = {});
+    void change_buffer(Buffer& buffer, bool push_jump = false, Optional<FunctionRef<void()>> set_selection = {});
     void forget_buffer(Buffer& buffer);
 
     void set_client(Client& client);
@@ -226,13 +226,23 @@ private:
     SafePtr<Buffer> m_buffer;
 };
 
+enum class PushJump { Now, Never };
+
 struct ScopedSelectionEdition
 {
-    ScopedSelectionEdition(Context& context)
+    ScopedSelectionEdition(Context& context, PushJump push_jump = PushJump::Never)
         : m_context{context},
-          m_buffer{not (m_context.flags() & Context::Flags::Draft) and context.has_buffer() ? &context.buffer() : nullptr}
-    { if (m_buffer) m_context.m_selection_history.begin_edition(); }
-    ScopedSelectionEdition(ScopedSelectionEdition&& other) : m_context{other.m_context}, m_buffer{other.m_buffer}
+          m_buffer{context.has_buffer() ? &context.buffer() : nullptr}
+    {
+        if (not m_buffer)
+            return;
+        m_context.m_selection_history.begin_edition();
+        if (push_jump == PushJump::Now)
+            m_context.push_jump();
+    }
+    ScopedSelectionEdition(ScopedSelectionEdition&& other) :
+        m_context{other.m_context},
+        m_buffer{other.m_buffer}
     { other.m_buffer = nullptr; }
 
     ~ScopedSelectionEdition() { if (m_buffer) m_context.m_selection_history.end_edition(); }

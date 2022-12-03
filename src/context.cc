@@ -189,7 +189,7 @@ SelectionList& Context::SelectionHistory::selections(bool update)
 
 void Context::SelectionHistory::begin_edition()
 {
-    if (not in_edition())
+    if (not (m_context.flags() & Context::Flags::Draft) and not in_edition())
         m_staging = HistoryNode{selections(), m_history_id};
     m_in_edition.set();
 }
@@ -198,7 +198,7 @@ void Context::SelectionHistory::end_edition()
 {
     kak_assert(in_edition());
     m_in_edition.unset();
-    if (in_edition())
+    if ((m_context.flags() & Context::Flags::Draft) or in_edition())
         return;
 
     if (m_history_id != HistoryId::Invalid and current_history_node().selections == m_staging->selections)
@@ -244,7 +244,7 @@ void Context::SelectionHistory::undo()
         if (&destination_buffer == &m_context.buffer())
             select_next();
         else
-            m_context.change_buffer(destination_buffer, { std::move(select_next) });
+            m_context.change_buffer(destination_buffer, false, { std::move(select_next) });
     }
     while (selections() == old_selections);
     m_context.print_status({ format("jumped to #{} ({})",
@@ -291,7 +291,7 @@ void Context::SelectionHistory::forget_buffer(Buffer& buffer)
     kak_assert(m_history_id != HistoryId::Invalid or m_staging);
 }
 
-void Context::change_buffer(Buffer& buffer, Optional<FunctionRef<void()>> set_selections)
+void Context::change_buffer(Buffer& buffer, bool push_jump, Optional<FunctionRef<void()>> set_selections)
 {
     if (has_buffer() and &buffer == &this->buffer())
         return;
@@ -303,7 +303,7 @@ void Context::change_buffer(Buffer& buffer, Optional<FunctionRef<void()>> set_se
     {
         client().info_hide();
         client().menu_hide();
-        client().change_buffer(buffer, std::move(set_selections));
+        client().change_buffer(buffer, push_jump, std::move(set_selections));
     }
     else
     {
@@ -312,7 +312,7 @@ void Context::change_buffer(Buffer& buffer, Optional<FunctionRef<void()>> set_se
             m_selection_history.initialize(SelectionList{buffer, Selection{}});
         else
         {
-            ScopedSelectionEdition selection_edition{*this};
+            ScopedSelectionEdition selection_edition{*this, push_jump ? PushJump::Now : PushJump::Never};
             selections_write_only() = SelectionList{buffer, Selection{}};
         }
     }

@@ -419,11 +419,9 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
     Buffer* current_buffer = context.has_buffer() ? &context.buffer() : nullptr;
 
     const size_t param_count = parser.positional_count();
-    if (current_buffer and (buffer != current_buffer or param_count > 1))
-        context.push_jump();
-
+    const bool push_jump = current_buffer and (buffer != current_buffer or param_count > 1);
     if (buffer != current_buffer)
-        context.change_buffer(*buffer);
+        context.change_buffer(*buffer, push_jump);
     buffer = &context.buffer(); // change_buffer hooks might change the buffer again
 
     if (parser.get_switch("fifo") and not parser.get_switch("scroll"))
@@ -765,10 +763,7 @@ const CommandDesc buffer_cmd = {
     {
         Buffer& buffer = BufferManager::instance().get_buffer(parser[0]);
         if (&buffer != &context.buffer())
-        {
-            context.push_jump();
-            context.change_buffer(buffer);
-        }
+            context.change_buffer(buffer, /*push_jump=*/true);
     }
 };
 
@@ -801,10 +796,7 @@ void cycle_buffer(const ParametersParser& parser, Context& context, const ShellC
         cycle();
 
     if (newbuf != oldbuf)
-    {
-        context.push_jump();
-        context.change_buffer(*newbuf);
-    }
+        context.change_buffer(*newbuf, /*push_jump=*/true);
 }
 
 const CommandDesc buffer_next_cmd = {
