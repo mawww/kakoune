@@ -19,6 +19,8 @@ class DisplayLine;
 class KeymapManager;
 class AliasRegistry;
 
+enum Direction { Backward = -1, Forward = 1 };
+
 struct JumpList
 {
     void push(SelectionList jump, Optional<size_t> index = {});
@@ -91,8 +93,8 @@ public:
     SelectionList& selections_write_only();
 
     void end_selection_edition() { m_selection_history.end_edition(); }
+    template<Direction direction>
     void undo_selection_change();
-    void redo_selection_change();
 
     void change_buffer(Buffer& buffer, Optional<FunctionRef<void()>> set_selection = {});
     void forget_buffer(Buffer& buffer);
@@ -170,8 +172,8 @@ private:
         void end_edition();
         bool in_edition() const { return m_in_edition; }
 
+        template<Direction direction>
         void undo();
-        void redo();
         void forget_buffer(Buffer& buffer);
     private:
         enum class HistoryId : size_t { First = 0, Invalid = (size_t)-1 };
