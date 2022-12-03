@@ -227,7 +227,7 @@ private:
     SafePtr<Buffer> m_buffer;
 };
 
-enum class PushJump { Now, Never };
+enum class PushJump { Now, Never, MaybeLater };
 
 struct ScopedSelectionEdition
 {

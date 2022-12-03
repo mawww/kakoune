@@ -828,7 +828,7 @@ void regex_prompt(Context& context, String prompt, char reg, T func)
                        [&](auto&& m) { candidates.push_back(m.candidate().str()); return true; });
             return {(int)(word.begin() - regex.begin()), pos,  std::move(candidates) };
         },
-        [=, func=T(std::move(func)), selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
+        [=, func=T(std::move(func)), selection_edition=std::make_shared<ScopedSelectionEdition>(context, PushJump::MaybeLater)]
         (StringView str, PromptEvent event, Context& context) mutable {
             try
             {
