@@ -141,10 +141,10 @@ void select_and_set_last(Context& context, Func&& func)
 }
 
 template<SelectMode mode = SelectMode::Replace>
-void select_coord(Context& context, BufferCoord coord)
+void select_coord(Context& context, BufferCoord coord, PushJump push_jump)
 {
     Buffer& buffer = context.buffer();
-    ScopedSelectionEdition selection_edition{context};
+    ScopedSelectionEdition selection_edition{context, push_jump};
     SelectionList& selections = context.selections();
     coord = buffer.clamp(coord);
     if (mode == SelectMode::Replace)
@@ -215,8 +215,7 @@ void goto_commands(Context& context, NormalParams params)
 {
     if (params.count != 0)
     {
-        context.push_jump();
-        select_coord<mode>(context, LineCount{params.count - 1});
+        select_coord<mode>(context, LineCount{params.count - 1}, PushJump::Now);
         if (context.has_window())
             context.window().center_line(LineCount{params.count-1});
     }
@@ -232,8 +231,7 @@ void goto_commands(Context& context, NormalParams params)
             {
             case 'g':
             case 'k':
-                context.push_jump();
-                select_coord<mode>(context, BufferCoord{0,0});
+                select_coord<mode>(context, BufferCoord{0,0}, PushJump::Now);
                 break;
             case 'l':
                 select<mode, select_to_line_end<true>>(context, {});
@@ -245,18 +243,16 @@ void goto_commands(Context& context, NormalParams params)
                 select<mode, select_to_first_non_blank>(context, {});
                 break;
             case 'j':
-                context.push_jump();
-                select_coord<mode>(context, buffer.line_count() - 1);
+                select_coord<mode>(context, buffer.line_count() - 1, PushJump::Now);
                 break;
             case 'e':
-                context.push_jump();
-                select_coord<mode>(context, buffer.back_coord());
+                select_coord<mode>(context, buffer.back_coord(), PushJump::Now);
                 break;
             case 't':
                 if (context.has_window())
                 {
                     auto line = context.window().position().line;
-                    select_coord<mode>(context, line);
+                    select_coord<mode>(context, line, PushJump::Never);
                 }
                 break;
             case 'b':
@@ -264,7 +260,7 @@ void goto_commands(Context& context, NormalParams params)
                 {
                     auto& window = context.window();
                     auto line = window.position().line + window.dimensions().line - 1;
-                    select_coord<mode>(context, line);
+                    select_coord<mode>(context, line, PushJump::Never);
                 }
                 break;
             case 'c':
@@ -272,7 +268,7 @@ void goto_commands(Context& context, NormalParams params)
                 {
                     auto& window = context.window();
                     auto line = window.position().line + window.dimensions().line / 2;
-                    select_coord<mode>(context, line);
+                    select_coord<mode>(context, line, PushJump::Never);
                 }
                 break;
             case 'a':
@@ -282,7 +278,7 @@ void goto_commands(Context& context, NormalParams params)
                 {
                     throw runtime_error("no last buffer");
                 }
-                context.push_jump();
+                ScopedSelectionEdition selection_edition{context, PushJump::Now};
                 context.change_buffer(*target);
                 break;
             }
@@ -319,20 +315,19 @@ void goto_commands(Context& context, NormalParams params)
                 }
                 if (buffer_main and buffer_main != &context.buffer())
                 {
-                    context.push_jump();
+                    ScopedSelectionEdition selection_edition{context, PushJump::Now};
                     context.change_buffer(*buffer_main);
                 }
                 break;
             }
             case '.':
             {
-                context.push_jump();
                 auto pos = buffer.last_modification_coord();
                 if (not pos)
                     throw runtime_error("no last modification position");
                 if (*pos >= buffer.back_coord())
                     pos = buffer.back_coord();
-                select_coord<mode>(context, *pos);
+                select_coord<mode>(context, *pos, PushJump::Now);
                 break;
             }
             default:
