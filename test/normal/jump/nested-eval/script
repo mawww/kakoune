@@ -1,0 +1,4 @@
+ui_out -ignore 4
+ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ ":edit -scratch<ret>" ] }'
+ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ ":evaluate-commands %{evaluate-commands %{edit -scratch}}<ret>" ] }'
+ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "<c-o><c-o>iok<esc>" ] }'
