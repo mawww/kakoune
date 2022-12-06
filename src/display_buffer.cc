@@ -55,24 +55,56 @@ ColumnCount DisplayAtom::length() const
     return 0;
 }
 
-void DisplayAtom::trim_begin(ColumnCount count)
+bool DisplayAtom::empty() const
 {
     if (m_type == Range)
-        m_range.begin = utf8::advance(get_iterator(*m_buffer, m_range.begin),
-                                      get_iterator(*m_buffer, m_range.end),
-                                      count).coord();
+        return m_range.begin == m_range.end;
     else
-        m_text = m_text.substr(count).str();
+        return m_text.empty();
 }
 
-void DisplayAtom::trim_end(ColumnCount count)
+ColumnCount DisplayAtom::trim_begin(ColumnCount count)
 {
+    ColumnCount res = 0;
     if (m_type == Range)
-        m_range.end = utf8::advance(get_iterator(*m_buffer, m_range.end),
-                                    get_iterator(*m_buffer, m_range.begin),
-                                    -count).coord();
+    {
+        auto it = get_iterator(*m_buffer, m_range.begin);
+        auto end = get_iterator(*m_buffer, m_range.end);
+        while (it != end and res < count)
+            res += codepoint_width(utf8::read_codepoint(it, end));
+        m_range.begin = std::min(it.coord(), m_range.end);
+    }
     else
-        m_text = m_text.substr(0, m_text.column_length() - count).str();
+    {
+        auto it = m_text.begin();
+        while (it != m_text.end() and res < count)
+            res += codepoint_width(utf8::read_codepoint(it, m_text.end()));
+        m_text = String{it, m_text.end()};
+    }
+
+    return res;
+}
+
+ColumnCount DisplayAtom::trim_end_to_length(ColumnCount count)
+{
+    ColumnCount res = 0;
+    if (m_type == Range)
+    {
+        auto it = get_iterator(*m_buffer, m_range.begin);
+        auto end = get_iterator(*m_buffer, m_range.end);
+        while (it != end and res < count)
+            res += codepoint_width(utf8::read_codepoint(it, end));
+        m_range.end = std::min(it.coord(), m_range.end);
+    }
+    else
+    {
+        auto it = m_text.begin();
+        while (it != m_text.end() and res < count)
+            res += codepoint_width(utf8::read_codepoint(it, m_text.end()));
+        m_text = String{m_text.begin(), it};
+    }
+
+    return res;
 }
 
 DisplayLine::DisplayLine(AtomList atoms)
@@ -222,26 +254,15 @@ bool DisplayLine::trim_from(ColumnCount first_col, ColumnCount front, ColumnCoun
 
     while (front > 0 and it != end())
     {
-        auto len = it->length();
-        if (len <= front)
-        {
-            m_atoms.erase(it);
-            front -= len;
-        }
-        else
-        {
-            it->trim_begin(front);
-            front = 0;
-        }
+        front -= it->trim_begin(front);
+        if (it->empty())
+            it = m_atoms.erase(it);
     }
 
     it = begin();
     for (; it != end() and col_count > 0; ++it)
-        col_count -= it->length();
-
-    bool did_trim = it != end() || col_count < 0;
-    if (col_count < 0)
-        (it-1)->trim_end(-col_count);
+        col_count -= it->trim_end_to_length(col_count);
+    bool did_trim = it != end() && col_count == 0;
     m_atoms.erase(it, end());
 
     compute_range();

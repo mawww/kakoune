@@ -38,6 +38,7 @@ public:
 
     StringView content() const;
     ColumnCount length() const;
+    bool empty() const;
 
     const BufferCoord& begin() const
     {
@@ -74,8 +75,8 @@ public:
 
     Type type() const { return m_type; }
 
-    void trim_begin(ColumnCount count);
-    void trim_end(ColumnCount count);
+    ColumnCount trim_begin(ColumnCount count);
+    ColumnCount trim_end_to_length(ColumnCount count);
 
     bool operator==(const DisplayAtom& other) const
     {
