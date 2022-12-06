@@ -793,7 +793,7 @@ private:
                 auto* ui = new RemoteUI{sock, dimensions};
                 ClientManager::instance().create_client(
                     std::unique_ptr<UserInterface>(ui), pid, std::move(name),
-                    std::move(env_vars), init_cmds, init_coord,
+                    std::move(env_vars), init_cmds, {}, init_coord,
                     [ui](int status) { ui->exit(status); });
 
                 Server::instance().remove_accepter(this);

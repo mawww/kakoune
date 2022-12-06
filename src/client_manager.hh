@@ -21,7 +21,7 @@ public:
 
     Client* create_client(std::unique_ptr<UserInterface>&& ui, int pid,
                           String name, EnvVarMap env_vars, StringView init_cmds,
-                          Optional<BufferCoord> init_coord,
+                          StringView init_buffer, Optional<BufferCoord> init_coord,
                           Client::OnExitCallback on_exit);
 
     bool   empty() const { return m_clients.empty(); }

@@ -47,10 +47,12 @@ String ClientManager::generate_name() const
 
 Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui, int pid,
                                      String name, EnvVarMap env_vars, StringView init_cmds,
-                                     Optional<BufferCoord> init_coord,
+                                     StringView init_buffer, Optional<BufferCoord> init_coord,
                                      Client::OnExitCallback on_exit)
 {
-    Buffer& buffer = BufferManager::instance().get_first_buffer();
+    Buffer& buffer = init_buffer.empty() ? BufferManager::instance().get_first_buffer()
+                                         : BufferManager::instance().get_buffer(init_buffer);
+
     WindowAndSelections ws = get_free_window(buffer);
     Client* client = new Client{std::move(ui), std::move(ws.window),
                                 std::move(ws.selections), pid,

@@ -754,7 +754,7 @@ enum class ServerFlags
 constexpr bool with_bit_ops(Meta::Type<ServerFlags>) { return true; }
 
 int run_server(StringView session, StringView server_init,
-               StringView client_init, Optional<BufferCoord> init_coord,
+               StringView client_init, StringView init_buffer, Optional<BufferCoord> init_coord,
                ServerFlags flags, UIType ui_type, DebugFlags debug_flags,
                ConstArrayView<StringView> files)
 {
@@ -836,9 +836,7 @@ int run_server(StringView session, StringView server_init,
 
     if (not files.empty()) try
     {
-        // create buffers in reverse order so that the first given buffer
-        // is the most recently created one.
-        for (auto& file : files | reverse())
+        for (auto& file : files)
         {
             try
             {
@@ -867,7 +865,7 @@ int run_server(StringView session, StringView server_init,
         if (not server.is_daemon())
         {
             local_client = client_manager.create_client(
-                 create_local_ui(ui_type), getpid(), {}, get_env_vars(), client_init, std::move(init_coord),
+                 create_local_ui(ui_type), getpid(), {}, get_env_vars(), client_init, init_buffer, std::move(init_coord),
                  [](int status) { local_client_exit = status; });
 
             if (startup_error and local_client)
@@ -1234,7 +1232,7 @@ int main(int argc, char* argv[])
                              ((argc == 1 or (ignore_kakrc and argc == 2))
                               and isatty(0)                               ? ServerFlags::StartupInfo : ServerFlags::None);
                 auto debug_flags = option_from_string(Meta::Type<DebugFlags>{}, parser.get_switch("debug").value_or(""));
-                return run_server(session, server_init, client_init, init_coord, flags, ui_type, debug_flags, files);
+                return run_server(session, server_init, client_init, files.empty() ? StringView{} : files[0], init_coord, flags, ui_type, debug_flags, files);
             }
             catch (convert_to_client_mode& convert)
             {
