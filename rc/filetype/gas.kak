@@ -37,7 +37,7 @@ add-highlighter shared/gas/code/ regex ^\h*([A-Za-z0-9_.-]+): 0:operator
 add-highlighter shared/gas/code/ regex ((^|\s+)\.([248]byte|align|arch(_extension)?|arm|bsscantunwind|code|[cf]pu|[dq]n|eabi_attribute|even|extend|ldouble|fnend|fnstart|force_thumb|handlerdata|inst(\.[nw])?|ltorg|movsp|object_arch|packed|pad|personality(index)?|pool|req|save|setfp|screl32|syntax|thumb(_func|_set)?|tlsdescseq|unreq|unwind_raw|vsave)(\h+|$)) 0:type
 
 # Assembler Directives
-add-highlighter shared/gas/code/ regex ((^|\s+)\.(abort|ABORT|align|app-file|ascii|asciz|balign[wl]|byte|comm|data|def|desc|dim|double|eject|else|endif|equ|extern|file|fill|float|global|globl|hword|ident|if|include|int|irp|irpc|lcomm|iflags|line|linkonce|ln|mri|list|loc|local|long|macro|nolist|octa|org|print|purgem|p2align[wl]|psize|quad|rept|sbttl|section|set|short|single|size|skip|space|stab[dns]|string|struct|tag|text|title|type|title|uleb128|val|vtable_entry|weak|word|rodata|zero)(\h+|$)) 0:type
+add-highlighter shared/gas/code/ regex ((^|\s+)\.(abort|ABORT|align|app-file|ascii|asciz|balign[wl]|byte|comm|data|def|desc|dim|double|eject|else|endif|equ|extern|file|fill|float|global|globl|hword|ident|if|include|int|irp|irpc|lcomm|iflags|line|linkonce|ln|mri|list|loc|local|long|macro|nolist|octa|org|print|purgem|p2align[wl]?|psize|quad|rept|sbttl|section|set|short|single|size|skip|space|stab[dns]|string|struct|tag|text|title|type|title|uleb128|val|vtable_entry|weak|word|rodata|zero)(\h+|$)) 0:type
 
 # Registers
 add-highlighter shared/gas/code/ regex \%(([re](ax|bx|cx|dx|si|di|bp|sp))|(al|bl|cl|dl|sil|dil|bpl|spl)|(r[8-9][dwb])|(r1[0-5][dwb])|(cs|ds|es|fs|gs|ss|ip|eflags)|([xy]mm[0-9]|[xy]mm1[0-5]))\b 0:variable
