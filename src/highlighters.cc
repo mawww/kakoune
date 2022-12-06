@@ -1329,24 +1329,24 @@ void expand_unprintable(HighlightContext context, DisplayBuffer& display_buffer,
     {
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
         {
-            if (atom_it->type() == DisplayAtom::Range)
-            {
-                for (auto it  = get_iterator(buffer, atom_it->begin()),
-                          end = get_iterator(buffer, atom_it->end()); it < end;)
-                {
-                    auto coord = it.coord();
-                    Codepoint cp = utf8::read_codepoint(it, end);
-                    if (cp != '\n' and not iswprint((wchar_t)cp))
-                    {
-                        if (coord != atom_it->begin())
-                            atom_it = ++line.split(atom_it, coord);
-                        if (it.coord() < atom_it->end())
-                            atom_it = line.split(atom_it, it.coord());
+            if (atom_it->type() != DisplayAtom::Range)
+                continue;
 
-                        atom_it->replace("�");
-                        atom_it->face = error;
-                        break;
-                    }
+            for (auto it  = get_iterator(buffer, atom_it->begin()),
+                      end = get_iterator(buffer, atom_it->end()); it < end;)
+            {
+                auto coord = it.coord();
+                Codepoint cp = utf8::read_codepoint(it, end);
+                if (cp != '\n' and (cp < ' ' or cp > '~') and not iswprint((wchar_t)cp))
+                {
+                    if (coord != atom_it->begin())
+                        atom_it = ++line.split(atom_it, coord);
+                    if (it.coord() < atom_it->end())
+                        atom_it = line.split(atom_it, it.coord());
+
+                    atom_it->replace("�");
+                    atom_it->face = error;
+                    break;
                 }
             }
         }
