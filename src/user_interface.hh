@@ -43,6 +43,7 @@ enum class CursorMode
 };
 
 using OnKeyCallback = std::function<void(Key key)>;
+using OnPasteCallback = std::function<void(StringView content)>;
 
 class UserInterface
 {
@@ -78,6 +79,7 @@ public:
     virtual void refresh(bool force) = 0;
 
     virtual void set_on_key(OnKeyCallback callback) = 0;
+    virtual void set_on_paste(OnPasteCallback callback) = 0;
 
     using Options = HashMap<String, String, MemoryDomain::Options>;
     virtual void set_ui_options(const Options& options) = 0;

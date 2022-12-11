@@ -1,5 +1,6 @@
 #include "terminal_ui.hh"
 
+#include "buffer_utils.hh"
 #include "display_buffer.hh"
 #include "event_manager.hh"
 #include "exception.hh"
@@ -683,12 +684,16 @@ Optional<Key> TerminalUI::get_next_key()
         return resize(dimensions());
     }
 
-    static auto get_char = []() -> Optional<unsigned char> {
+    static auto get_char = [this]() -> Optional<unsigned char> {
         if (not fd_readable(STDIN_FILENO))
             return {};
 
         if (unsigned char c = 0; read(STDIN_FILENO, &c, 1) == 1)
+        {
+            if (m_paste_buffer)
+                m_paste_buffer->push_back(c);
             return c;
+        }
 
         stdin_closed = 1;
         return {};
@@ -754,7 +759,16 @@ Optional<Key> TerminalUI::get_next_key()
         return mod;
     };
 
-    auto parse_csi = [this]() -> Optional<Key> {
+    enum class PasteEvent { Begin, End };
+    struct KeyOrPasteEvent {
+        KeyOrPasteEvent() = default;
+        KeyOrPasteEvent(Key key) : key(key) {}
+        KeyOrPasteEvent(Optional<Key> key) : key(key) {}
+        KeyOrPasteEvent(PasteEvent paste) : paste(paste) {}
+        const Optional<Key> key;
+        const Optional<PasteEvent> paste;
+    };
+    auto parse_csi = [this]() -> KeyOrPasteEvent {
         auto next_char = [] { return get_char().value_or((unsigned char)0xff); };
         int params[16][4] = {};
         auto c = next_char();
@@ -819,7 +833,7 @@ Optional<Key> TerminalUI::get_next_key()
             {
                 if (params[0][0] == 2026)
                     m_synchronized.supported = (params[1][0] == 1 or params[1][0] == 2);
-                return {Key::Invalid};
+                return Key{Key::Invalid};
             }
             switch (params[0][0])
             {
@@ -863,6 +877,10 @@ Optional<Key> TerminalUI::get_next_key()
                 return Key{Key::Modifiers::Shift, Key::F7 + params[0][0] - 31}; // rxvt style
             case 33: case 34:
                 return Key{Key::Modifiers::Shift, Key::F9 + params[0][0] - 33}; // rxvt style
+            case 200:
+                return PasteEvent::Begin;
+            case 201:
+                return PasteEvent::End;
             }
             return {};
         case 'u':
@@ -944,17 +962,40 @@ Optional<Key> TerminalUI::get_next_key()
         }
     };
 
+    if (m_paste_buffer)
+    {
+        if (*c == 27 and get_char() == '[' and parse_csi().paste == PasteEvent::End)
+        {
+            m_paste_buffer->resize(m_paste_buffer->length() - "\033[201~"_str.length(), '\0');
+            m_on_paste(*m_paste_buffer);
+            m_paste_buffer.reset();
+        }
+        return get_next_key();
+    }
+
     if (*c != 27)
         return parse_key(*c);
 
     if (auto next = get_char())
     {
-        if (*next == '[') // potential CSI
-            return parse_csi().value_or(alt('['));
         if (*next == 'O') // potential SS3
             return parse_ss3().value_or(alt('O'));
-        return alt(parse_key(*next));
+        if (*next != '[')
+            return alt(parse_key(*next));
+        // potential CSI
+        KeyOrPasteEvent csi = parse_csi();
+        if (csi.paste == PasteEvent::Begin)
+        {
+            m_paste_buffer = String{};
+            return get_next_key();
+        }
+        if (csi.paste == PasteEvent::End) // Unmatched bracketed paste sequence.
+            return {};
+        if (csi.key)
+            return *csi.key;
+        return alt('[');
     }
+
     return Key{Key::Escape};
 }
 
@@ -1395,6 +1436,11 @@ void TerminalUI::set_on_key(OnKeyCallback callback)
     EventManager::instance().force_signal(0);
 }
 
+void TerminalUI::set_on_paste(OnPasteCallback callback)
+{
+    m_on_paste = std::move(callback);
+}
+
 DisplayCoord TerminalUI::dimensions()
 {
     return m_dimensions;
@@ -1422,6 +1468,7 @@ void TerminalUI::setup_terminal()
         "\033[?25l"   // hide cursor
         "\033="       // set application keypad mode, so the keypad keys send unique codes
         "\033[?2026$p" // query support for synchronize output
+        "\033[?2004h" // force enable bracketed-paste events
     );
 }
 
@@ -1435,6 +1482,7 @@ void TerminalUI::restore_terminal()
         "\033[>4;0m"
         "\033[?1004l"
         "\033[?1049l"
+        "\033[?2004l"
         "\033[m" // set the terminal output back to default colours and style
     );
 }

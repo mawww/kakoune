@@ -211,6 +211,11 @@ void JsonUI::set_on_key(OnKeyCallback callback)
     m_on_key = std::move(callback);
 }
 
+void JsonUI::set_on_paste(OnPasteCallback callback)
+{
+    m_on_paste = std::move(callback);
+}
+
 void JsonUI::eval_json(const Value& json)
 {
     if (not json.is_a<JsonObject>())

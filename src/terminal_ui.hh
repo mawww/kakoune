@@ -55,6 +55,7 @@ public:
 
     DisplayCoord dimensions() override;
     void set_on_key(OnKeyCallback callback) override;
+    void set_on_paste(OnPasteCallback callback) override;
     void set_ui_options(const Options& options) override;
 
     static void setup_terminal();
@@ -137,6 +138,8 @@ private:
 
     FDWatcher m_stdin_watcher;
     OnKeyCallback m_on_key;
+    OnPasteCallback m_on_paste;
+    Optional<String> m_paste_buffer;
 
     bool m_status_on_top = false;
     ConstArrayView<StringView> m_assistant;

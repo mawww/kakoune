@@ -626,6 +626,7 @@ std::unique_ptr<UserInterface> make_ui(UIType ui_type)
         void set_cursor(CursorMode, DisplayCoord) override {}
         void refresh(bool) override {}
         void set_on_key(OnKeyCallback) override {}
+        void set_on_paste(OnPasteCallback) override {}
         void set_ui_options(const Options&) override {}
     };
 

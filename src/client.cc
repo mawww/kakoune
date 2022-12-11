@@ -60,6 +60,9 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
         else
             m_pending_keys.push_back(key);
     });
+    m_ui->set_on_paste([this](StringView content) {
+        context().input_handler().paste(content);
+    });
 
     m_window->hooks().run_hook(Hook::WinDisplay, m_window->buffer().name(), context());
 
