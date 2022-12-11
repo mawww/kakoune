@@ -44,7 +44,10 @@ The program passed as argument will be executed in the new terminal' \
                 echo "fail 'termcmd option is not set'"
                 exit
             fi
-            setsid ${kak_opt_termcmd} "$kak_quoted_reg_a" < /dev/null > /dev/null 2>&1 &
+            termcmd=$kak_opt_termcmd
+            args=$kak_quoted_reg_a
+            unset kak_opt_termcmd kak_quoted_reg_a
+            setsid ${termcmd} "$args" < /dev/null > /dev/null 2>&1 &
         }
     }
 }
