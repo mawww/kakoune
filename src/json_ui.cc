@@ -38,6 +38,7 @@ String to_json(Attribute attributes)
     struct Attr { Attribute attr; StringView name; }
     attrs[] {
         { Attribute::Underline, "underline" },
+        { Attribute::CurlyUnderline, "curly_underline" },
         { Attribute::Reverse, "reverse" },
         { Attribute::Blink, "blink" },
         { Attribute::Bold, "bold" },
