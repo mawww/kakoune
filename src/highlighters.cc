@@ -1351,22 +1351,24 @@ void expand_unprintable(HighlightContext context, DisplayBuffer& display_buffer,
             if (atom_it->type() != DisplayAtom::Range)
                 continue;
 
-            for (auto it  = get_iterator(buffer, atom_it->begin()),
-                      end = get_iterator(buffer, atom_it->end()); it < end;)
+            auto begin = atom_it->begin();
+            auto line_data = buffer[begin.line].data();
+            for (auto it  = line_data + begin.column, end = line_data + atom_it->end().column; it < end;)
             {
-                auto coord = it.coord();
-                Codepoint cp = utf8::read_codepoint(it, end);
+                auto next = it;
+                Codepoint cp = utf8::read_codepoint(next, end);
                 if (cp != '\n' and (cp < ' ' or cp > '~') and not iswprint((wchar_t)cp))
                 {
-                    if (coord != atom_it->begin())
-                        atom_it = ++line.split(atom_it, coord);
-                    if (it.coord() < atom_it->end())
-                        atom_it = line.split(atom_it, it.coord());
+                    if (ByteCount pos(it - line_data); pos != begin.column)
+                        atom_it = ++line.split(atom_it, {begin.line, pos});
+                    if (ByteCount pos(next - line_data); pos < atom_it->end().column)
+                        atom_it = line.split(atom_it, {begin.line, pos});
 
                     atom_it->replace("�");
                     atom_it->face = error;
                     break;
                 }
+                it = next;
             }
         }
     }
