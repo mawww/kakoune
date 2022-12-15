@@ -976,26 +976,45 @@ struct TabulationHighlighter : Highlighter
         const auto& buffer = context.context.buffer();
         for (auto& line : display_buffer.lines())
         {
+            ColumnCount column = 0;
+            const char* line_data = nullptr;
+            const char* pos = nullptr;
             for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
             {
                 if (atom_it->type() != DisplayAtom::Range)
                     continue;
 
-                auto begin = get_iterator(buffer, atom_it->begin());
-                auto end = get_iterator(buffer, atom_it->end());
-                for (BufferIterator it = begin; it != end; ++it)
+                auto begin = atom_it->begin();
+                if (auto* atom_line_data = buffer[begin.line].data(); atom_line_data != line_data)
                 {
-                    if (*it == '\t')
-                    {
-                        if (it != begin)
-                            atom_it = ++line.split(atom_it, it.coord());
-                        if (it+1 != end)
-                            atom_it = line.split(atom_it, (it+1).coord());
+                    pos = line_data = atom_line_data;
+                    column = 0;
+                }
 
-                        const ColumnCount column = get_column(buffer, tabstop, it.coord());
-                        const ColumnCount count = tabstop - (column % tabstop);
-                        atom_it->replace(String{' ', count});
+                kak_assert(pos != nullptr and pos <= line_data + (int)begin.column);
+                for (auto end = line_data + (int)atom_it->end().column; pos != end; ++pos)
+                {
+                    const char* next_tab = std::find(pos, end, '\t');
+                    if (next_tab == end)
+                    {
+                        pos = end;
                         break;
+                    }
+
+                    while (pos != next_tab)
+                        column += codepoint_width(utf8::read_codepoint(pos, next_tab));
+                    const ColumnCount tabwidth = tabstop - (column % tabstop);
+                    column += tabwidth;
+
+                    if (pos >= line_data + (int)atom_it->begin().column)
+                    {
+                        if (pos != line_data + (int)atom_it->begin().column)
+                            atom_it = ++line.split(atom_it, {begin.line, ByteCount(pos - line_data)});
+                        if (pos + 1 != end)
+                            atom_it = line.split(atom_it, {begin.line, ByteCount(pos + 1 - line_data)});
+
+                        atom_it->replace(String{' ', tabwidth});
+                        ++atom_it;
                     }
                 }
             }
