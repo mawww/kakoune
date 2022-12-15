@@ -137,6 +137,10 @@ inline constexpr ByteCount operator"" _byte(unsigned long long int value)
     return ByteCount(value);
 }
 
+template<typename Byte>
+    requires (std::is_same_v<std::remove_cv_t<Byte>, char> or std::is_same_v<std::remove_cv_t<Byte>, void>)
+Byte* operator+(Byte* ptr, ByteCount count) { return ptr + (int)count; }
+
 struct CharCount : public StronglyTypedNumber<CharCount, int>
 {
     CharCount() = default;

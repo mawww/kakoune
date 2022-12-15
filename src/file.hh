@@ -139,7 +139,7 @@ struct BufferedWriter
         {
             const ByteCount length = data.length();
             const ByteCount write_len = std::min(length, size - m_pos);
-            memcpy(m_buffer + (int)m_pos, data.data(), (int)write_len);
+            memcpy(m_buffer + m_pos, data.data(), (int)write_len);
             m_pos += write_len;
             if (m_pos == size)
                 flush();

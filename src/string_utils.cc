@@ -107,7 +107,7 @@ String replace(StringView str, StringView substr, StringView replacement)
             break;
 
         res += replacement;
-        it = match + (int)substr.length();
+        it = match + substr.length();
     }
     return res;
 }

@@ -991,8 +991,8 @@ struct TabulationHighlighter : Highlighter
                     column = 0;
                 }
 
-                kak_assert(pos != nullptr and pos <= line_data + (int)begin.column);
-                for (auto end = line_data + (int)atom_it->end().column; pos != end; ++pos)
+                kak_assert(pos != nullptr and pos <= line_data + begin.column);
+                for (auto end = line_data + atom_it->end().column; pos != end; ++pos)
                 {
                     const char* next_tab = std::find(pos, end, '\t');
                     if (next_tab == end)
@@ -1006,9 +1006,9 @@ struct TabulationHighlighter : Highlighter
                     const ColumnCount tabwidth = tabstop - (column % tabstop);
                     column += tabwidth;
 
-                    if (pos >= line_data + (int)atom_it->begin().column)
+                    if (pos >= line_data + atom_it->begin().column)
                     {
-                        if (pos != line_data + (int)atom_it->begin().column)
+                        if (pos != line_data + atom_it->begin().column)
                             atom_it = ++line.split(atom_it, {begin.line, ByteCount(pos - line_data)});
                         if (pos + 1 != end)
                             atom_it = line.split(atom_it, {begin.line, ByteCount(pos + 1 - line_data)});

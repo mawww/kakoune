@@ -36,10 +36,10 @@ public:
     const_iterator begin() const { return type().data(); }
 
     [[gnu::always_inline]]
-    iterator end() { return type().data() + (int)type().length(); }
+    iterator end() { return type().data() + type().length(); }
 
     [[gnu::always_inline]]
-    const_iterator end() const { return type().data() + (int)type().length(); }
+    const_iterator end() const { return type().data() + type().length(); }
 
     reverse_iterator rbegin() { return reverse_iterator{end()}; }
     const_reverse_iterator rbegin() const { return const_reverse_iterator{end()}; }
@@ -77,10 +77,10 @@ public:
     { return utf8::advance(begin(), end(), count) - begin(); }
 
     CharCount char_count_to(ByteCount count) const
-    { return utf8::distance(begin(), begin() + (int)count); }
+    { return utf8::distance(begin(), begin() + count); }
 
     ColumnCount column_count_to(ByteCount count) const
-    { return utf8::column_distance(begin(), begin() + (int)count); }
+    { return utf8::column_distance(begin(), begin() + count); }
 
     StringView substr(ByteCount from, ByteCount length = -1) const;
     StringView substr(CharCount from, CharCount length = -1) const;

@@ -604,7 +604,7 @@ BufferCoord Buffer::char_prev(BufferCoord coord) const
         return { coord.line - 1, m_lines[coord.line - 1].length() - 1 };
 
     auto line = m_lines[coord.line];
-    auto column = (int)(utf8::character_start(line.begin() + (int)coord.column - 1, line.begin()) - line.begin());
+    auto column = (int)(utf8::character_start(line.begin() + coord.column - 1, line.begin()) - line.begin());
     return { coord.line, column };
 }
 

@@ -719,7 +719,7 @@ Completions CommandManager::complete(const Context& context,
 {
     auto prefix = command_line.substr(0_byte, cursor_pos);
     CommandParser parser{prefix};
-    const char* cursor = prefix.begin() + (int)cursor_pos;
+    const char* cursor = prefix.begin() + cursor_pos;
     Vector<Token> tokens;
 
     bool is_last_token = true;
