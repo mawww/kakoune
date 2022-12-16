@@ -228,7 +228,7 @@ struct ScopedSelectionEdition
 {
     ScopedSelectionEdition(Context& context)
         : m_context{context},
-          m_buffer{context.has_buffer() ? &context.buffer() : nullptr}
+          m_buffer{not (m_context.flags() & Context::Flags::Draft) and context.has_buffer() ? &context.buffer() : nullptr}
     { if (m_buffer) m_context.m_selection_history.begin_edition(); }
     ScopedSelectionEdition(ScopedSelectionEdition&& other) : m_context{other.m_context}, m_buffer{other.m_buffer}
     { other.m_buffer = nullptr; }
