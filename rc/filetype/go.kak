@@ -50,7 +50,9 @@ add-highlighter shared/go/single_string region "'" (?<!\\)(\\\\)*' fill string
 add-highlighter shared/go/comment region /\* \*/ fill comment
 add-highlighter shared/go/comment_line region '//' $ fill comment
 
-add-highlighter shared/go/code/ regex %{-?([0-9]*\.(?!0[xX]))?\b([0-9]+|0[xX][0-9a-fA-F]+)\.?([eE][+-]?[0-9]+)?i?\b} 0:value
+add-highlighter shared/go/code/identifier regex %{-?([0-9]*\.(?!0[xX]))?\b([0-9]+|0[xX][0-9a-fA-F]+)\.?([eE][+-]?[0-9]+)?i?\b} 0:value
+add-highlighter shared/go/code/function regex "\b(\w*)\b[ ]*\(" 1:function
+add-highlighter shared/go/code/operator regex "(\+|-|\*|/|%|\+\+|--|\+=|-=|\*=|/=|%=|==|!=|>|<|>=|<=|&|&&|\|\||!|<-|:=)" 1:operator
 
 evaluate-commands %sh{
     # Grammar
@@ -69,12 +71,11 @@ evaluate-commands %sh{
 
     # Highlight keywords
     printf %s "
-        add-highlighter shared/go/code/ regex \b($(join "${keywords}" '|'))\b 0:keyword
-        add-highlighter shared/go/code/ regex \b($(join "${attributes}" '|'))\b 0:attribute
-        add-highlighter shared/go/code/ regex \b($(join "${types}" '|'))\b 0:type
-        add-highlighter shared/go/code/ regex \b($(join "${values}" '|'))\b 0:value
-        add-highlighter shared/go/code/ regex \b($(join "${functions}" '|'))\b 0:builtin
-        add-highlighter shared/go/code/ regex := 0:attribute
+        add-highlighter shared/go/code/keyword   regex \b($(join "${keywords}" '|'))\b 0:keyword
+        add-highlighter shared/go/code/attribute regex \b($(join "${attributes}" '|'))\b 0:attribute
+        add-highlighter shared/go/code/type      regex \b($(join "${types}" '|'))\b 0:type
+        add-highlighter shared/go/code/value     regex \b($(join "${values}" '|'))\b 0:value
+        add-highlighter shared/go/code/builtin   regex \b($(join "${functions}" '|'))\b 0:builtin
     "
 }
 
