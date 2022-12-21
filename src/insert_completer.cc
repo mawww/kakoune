@@ -481,7 +481,7 @@ bool InsertCompleter::has_candidate_selected() const
 
 void InsertCompleter::try_accept()
 {
-    if (m_completions.is_valid() and m_context.has_client() and has_candidate_selected())
+    if (m_completions.is_valid() and has_candidate_selected())
         reset();
 }
 
