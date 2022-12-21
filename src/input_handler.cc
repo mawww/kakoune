@@ -1126,7 +1126,7 @@ private:
                 items.push_back({ candidate, {} });
 
             const auto menu_style = (m_flags & PromptFlags::Search) ? MenuStyle::Search : MenuStyle::Prompt;
-            context().client().menu_show(items, {}, menu_style);
+            context().client().menu_show(std::move(items), {}, menu_style);
 
             const bool menu = (bool)(m_completions.flags & Completions::Flags::Menu);
             if (menu)
