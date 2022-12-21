@@ -112,12 +112,13 @@ static Optional<SubseqRes> subsequence_match_smart_case(StringView str, StringVi
 template<typename TestFunc>
 RankedMatch::RankedMatch(StringView candidate, StringView query, TestFunc func)
 {
-    if (candidate.empty() or query.length() > candidate.length())
+    if (query.length() > candidate.length())
         return;
 
     if (query.empty())
     {
         m_candidate = candidate;
+        m_matches = true;
         return;
     }
 
@@ -129,6 +130,7 @@ RankedMatch::RankedMatch(StringView candidate, StringView query, TestFunc func)
         return;
 
     m_candidate = candidate;
+    m_matches = true;
     m_max_index = res->max_index;
 
     if (res->single_word)

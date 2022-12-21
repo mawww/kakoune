@@ -27,7 +27,7 @@ struct RankedMatch
     bool operator<(const RankedMatch& other) const;
     bool operator==(const RankedMatch& other) const { return m_candidate == other.m_candidate; }
 
-    explicit operator bool() const { return not m_candidate.empty(); }
+    explicit operator bool() const { return m_matches; }
 
 private:
     template<typename TestFunc>
@@ -48,6 +48,7 @@ private:
     friend constexpr bool with_bit_ops(Meta::Type<Flags>) { return true; }
 
     StringView m_candidate{};
+    bool m_matches = false;
     Flags m_flags = Flags::None;
     int m_word_boundary_match_count = 0;
     int m_max_index = 0;

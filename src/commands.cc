@@ -241,7 +241,8 @@ struct ShellScriptCompleter
                                                       ShellManager::Flags::WaitForStdout,
                                                       shell_context).first;
         CandidateList candidates;
-        for (auto&& candidate : output | split<StringView>('\n'))
+        for (auto&& candidate : output | split<StringView>('\n')
+                                       | filter([](auto s) { return not s.empty(); }))
             candidates.push_back(candidate.str());
 
         return {0_byte, pos_in_token, std::move(candidates), m_flags};
@@ -274,7 +275,8 @@ struct ShellCandidatesCompleter
                                                           ShellManager::Flags::WaitForStdout,
                                                           shell_context).first;
             m_candidates.clear();
-            for (auto c : output | split<StringView>('\n'))
+            for (auto c : output | split<StringView>('\n')
+                                 | filter([](auto s) { return not s.empty(); }))
                 m_candidates.emplace_back(c.str(), used_letters(c));
             m_token = token_to_complete;
         }
