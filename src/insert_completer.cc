@@ -301,10 +301,10 @@ InsertCompletion complete_option(const SelectionList& sels,
 
     for (auto& candidate : opt.list)
     {
-        if (RankedMatchAndInfo match{std::get<0>(candidate), query})
+        auto& [completion, on_select, menu, priority] = candidate;
+        if (RankedMatchAndInfo match{completion, query, priority})
         {
-            match.on_select = std::get<1>(candidate);
-            auto& menu = std::get<2>(candidate);
+            match.on_select = on_select;
             match.menu_entry = not menu.empty() ?
                 parse_display_line(expand_tabs(menu, tabstop, column), faces)
               : DisplayLine{String{}, {}};

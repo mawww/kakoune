@@ -79,6 +79,22 @@ inline Codepoint option_from_string(Meta::Type<Codepoint>, StringView str)
 }
 constexpr StringView option_type_name(Meta::Type<Codepoint>) { return "codepoint"; }
 
+template<typename T>
+String option_to_string(const Optional<T>& opt, Quoting quoting)
+{
+    if (not opt)
+        return "";
+    return option_to_string(*opt, quoting);
+}
+
+template<typename T>
+Optional<T> option_from_string(Meta::Type<Optional<T>>, StringView str)
+{
+    if (str.empty())
+        return {};
+    return option_from_string(Meta::Type<T>{}, str);
+}
+
 template<typename T, MemoryDomain domain>
 Vector<String> option_to_strings(const Vector<T, domain>& opt)
 {
@@ -225,8 +241,32 @@ String option_to_string(const std::tuple<Types...>& opt, Quoting quoting)
     return option_to_string_impl(quoting, opt, std::make_index_sequence<sizeof...(Types)>());
 }
 
+template<typename>
+struct IsOptionalImpl : std::false_type{};
+template<typename T>
+struct IsOptionalImpl<Optional<T>> : std::true_type{};
+
+template<typename...>
+struct CountTrailingOptionals {};
+template<>
+struct CountTrailingOptionals<>
+{
+    static constexpr bool all_optional = true;
+    static constexpr size_t value = 0;
+};
+template<typename Head, typename... Tail>
+struct CountTrailingOptionals<Head, Tail...>
+{
+    static constexpr bool all_optional = IsOptionalImpl<Head>::value
+                                         and CountTrailingOptionals<Tail...>::all_optional;
+    static_assert(not IsOptionalImpl<Head>::value or all_optional,
+                  "non-optional fields cannot follow optional types");
+    static constexpr size_t value = all_optional ? 1 + sizeof...(Tail) : CountTrailingOptionals<Tail...>::value;
+};
+
 template<typename... Types, size_t... I>
-std::tuple<Types...> option_from_string_impl(Meta::Type<std::tuple<Types...>>, StringView str,
+std::tuple<Types...> option_from_string_impl(Meta::Type<std::tuple<Types...>>,
+                                             StringView str,
                                              std::index_sequence<I...>)
 {
     struct error : runtime_error
@@ -237,15 +277,14 @@ std::tuple<Types...> option_from_string_impl(Meta::Type<std::tuple<Types...>>, S
     };
     auto elems = str | split<StringView>(tuple_separator, '\\')
                      | transform(unescape<tuple_separator, '\\'>)
-                     | static_gather<error, sizeof...(Types)>();
+                     | static_gather<error, sizeof...(Types), false, CountTrailingOptionals<Types...>::value>();
     return std::tuple<Types...>{option_from_string(Meta::Type<Types>{}, elems[I])...};
 }
 
 template<typename... Types>
 std::tuple<Types...> option_from_string(Meta::Type<std::tuple<Types...>>, StringView str)
 {
-    return option_from_string_impl(Meta::Type<std::tuple<Types...>>{}, str,
-                                   std::make_index_sequence<sizeof...(Types)>());
+    return option_from_string_impl(Meta::Type<std::tuple<Types...>>{}, str, std::make_index_sequence<sizeof...(Types)>());
 }
 
 template<typename RealType, typename ValueType>

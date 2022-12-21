@@ -648,34 +648,41 @@ auto gather()
     }};
 }
 
-template<typename ExceptionType, bool throw_on_extra_elements, size_t... Indexes>
+template<typename ExceptionType, bool throw_on_extra_elements, size_t optional_elements, size_t... Indexes>
 auto elements()
 {
     return ViewFactory{[=] (auto&& range) {
         using std::begin; using std::end;
+        using ElementType = std::remove_cvref_t<decltype(*begin(range))>;
         auto it = begin(range), end_it = end(range);
         auto elem = [&](size_t index) {
-            if (it == end_it) throw ExceptionType{index};
+            static_assert(sizeof...(Indexes) >= optional_elements);
+            if (it == end_it)
+            {
+                if (index >= sizeof...(Indexes) - optional_elements)
+                    return ElementType{};
+                throw ExceptionType{index};
+            }
             return *it++;
         };
         // Note that initializer lists elements are guaranteed to be sequenced
-        Array<std::remove_cvref_t<decltype(*begin(range))>, sizeof...(Indexes)> res{{elem(Indexes)...}};
+        Array<ElementType, sizeof...(Indexes)> res{{elem(Indexes)...}};
         if (throw_on_extra_elements and it != end_it)
             throw ExceptionType{sizeof...(Indexes)};
         return res;
     }};
 }
 
-template<typename ExceptionType, bool throw_on_extra_elements, size_t... Indexes>
+template<typename ExceptionType, bool throw_on_extra_elements, size_t optional_elements, size_t... Indexes>
 auto static_gather_impl(std::index_sequence<Indexes...>)
 {
-    return elements<ExceptionType, throw_on_extra_elements, Indexes...>();
+    return elements<ExceptionType, throw_on_extra_elements, optional_elements, Indexes...>();
 }
 
-template<typename ExceptionType, size_t size, bool throw_on_extra_elements = true>
+template<typename ExceptionType, size_t size, bool throw_on_extra_elements = true, size_t optional_elements = 0>
 auto static_gather()
 {
-    return static_gather_impl<ExceptionType, throw_on_extra_elements>(std::make_index_sequence<size>());
+    return static_gather_impl<ExceptionType, throw_on_extra_elements, optional_elements>(std::make_index_sequence<size>());
 }
 
 }

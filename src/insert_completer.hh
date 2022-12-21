@@ -45,7 +45,7 @@ inline StringView option_type_name(Meta::Type<InsertCompleterDesc>)
     return "completer";
 }
 
-using CompletionCandidate = std::tuple<String, String, String>;
+using CompletionCandidate = std::tuple<String, String, String, Optional<Priority>>;
 using CompletionList = PrefixedList<String, CompletionCandidate>;
 
 inline StringView option_type_name(Meta::Type<CompletionList>)
