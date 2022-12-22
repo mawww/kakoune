@@ -23,7 +23,8 @@ struct Completions
         None = 0,
         Quoted = 0b1,
         Menu = 0b10,
-        NoEmpty = 0b100
+        NoEmpty = 0b100,
+        Priority = 0b1000
     };
 
     constexpr friend bool with_bit_ops(Meta::Type<Flags>) { return true; }

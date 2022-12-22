@@ -36,9 +36,9 @@ using Priority = size_t;
 
 struct RankedMatch
 {
-    RankedMatch(StringView candidate, const RankedMatchQuery& query);
+    RankedMatch(StringView candidate, const RankedMatchQuery& query, Optional<Priority> priority = {});
     RankedMatch(StringView candidate, UsedLetters candidate_letters,
-                const RankedMatchQuery& query);
+                const RankedMatchQuery& query, Optional<Priority> priority = {});
 
     const StringView& candidate() const { return m_candidate; }
     bool operator<(const RankedMatch& other) const;
@@ -48,7 +48,7 @@ struct RankedMatch
 
 private:
     template<typename TestFunc>
-    RankedMatch(StringView candidate, const RankedMatchQuery& query, TestFunc test);
+    RankedMatch(StringView candidate, const RankedMatchQuery& query, Optional<Priority> priority, TestFunc test);
 
     StringView m_candidate{};
     bool m_matches = false;

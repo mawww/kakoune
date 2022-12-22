@@ -234,7 +234,7 @@ RankedMatchQuery::RankedMatchQuery(StringView input, UsedLetters used_letters)
       }) | gather<decltype(smartcase_alternative_match)>()) {}
 
 template<typename TestFunc>
-RankedMatch::RankedMatch(StringView candidate, const RankedMatchQuery& query, TestFunc func)
+RankedMatch::RankedMatch(StringView candidate, const RankedMatchQuery& query, Optional<Priority> priority, TestFunc func)
 {
     if (query.input.length() > candidate.length())
         return;
@@ -243,6 +243,8 @@ RankedMatch::RankedMatch(StringView candidate, const RankedMatchQuery& query, Te
     {
         m_candidate = candidate;
         m_matches = true;
+        if (priority)
+            m_distance = *priority;
         return;
     }
 
@@ -265,18 +267,25 @@ RankedMatch::RankedMatch(StringView candidate, const RankedMatchQuery& query, Te
 
     m_distance = distance[query_length(query) % 2][bounded_candidate.char_length()].distance
                + (int)distance.max_index * max_index_weight;
+    if (priority)
+    {
+        double effective_priority = *priority;
+        if (auto query_len = query.input.char_length(); query_len != 0)
+            effective_priority = std::pow(effective_priority, 1.0 / (double)(size_t)query_len);
+        m_distance = m_distance >= 0 ? (m_distance * effective_priority) : (m_distance / effective_priority);
+    }
 }
 
 RankedMatch::RankedMatch(StringView candidate, UsedLetters candidate_letters,
-                         const RankedMatchQuery& query)
-    : RankedMatch{candidate, query, [&] {
+                         const RankedMatchQuery& query, Optional<Priority> priority)
+    : RankedMatch{candidate, query, priority, [&] {
         return matches(to_lower(query.used_letters), to_lower(candidate_letters)) and
                matches(query.used_letters & upper_mask, candidate_letters & upper_mask);
     }} {}
 
 
-RankedMatch::RankedMatch(StringView candidate, const RankedMatchQuery& query)
-    : RankedMatch{candidate, query, [] { return true; }}
+RankedMatch::RankedMatch(StringView candidate, const RankedMatchQuery& query, Optional<Priority> priority)
+    : RankedMatch{candidate, query, priority, [] { return true; }}
 {
 }
 
@@ -435,6 +444,17 @@ UnitTest test_ranked_match{[] {
     kak_assert(ranked_match_order("fooo", "foo.o", "fo.o.o"));
     kak_assert(ranked_match_order("evilcorp-lint/bar.go", "scripts/evilcorp-lint/foo/bar.go", "src/evilcorp-client/foo/bar.go"));
     kak_assert(ranked_match_order("lang/haystack/needle.c", "git.evilcorp.com/language/haystack/aaa/needle.c", "git.evilcorp.com/aaa/ng/wrong-haystack/needle.cpp"));
+
+    auto ranked_match_order_with_priority = [&](StringView query, StringView better, Priority better_priority, StringView worse, Priority worse_priority) -> bool {
+        q = RankedMatchQuery{query};
+        distance_better = subsequence_distance<true>(*q, better);
+        distance_worse = subsequence_distance<true>(*q, worse);
+        return RankedMatch{better, *q, better_priority} < RankedMatch{worse, *q, worse_priority};
+    };
+
+    kak_assert(ranked_match_order_with_priority("", "Qualify as `std::collections::HashMap`", 1, "Extract type as type alias", 2));
+    kak_assert(ranked_match_order_with_priority("as", "Qualify as `std::collections::HashMap`", 1, "Extract type as type alias", 2));
+
 }};
 
 UnitTest test_used_letters{[]()

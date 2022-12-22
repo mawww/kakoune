@@ -299,16 +299,34 @@ struct ShellCandidatesCompleter
             m_candidates.clear();
             for (auto c : output | split<StringView>('\n')
                                  | filter([](auto s) { return not s.empty(); }))
-                m_candidates.emplace_back(c.str(), used_letters(c));
+            {
+                String candidate;
+                Optional<Priority> priority;
+                if (m_flags & Completions::Flags::Priority)
+                {
+                    priority.emplace();
+                    std::tie(candidate, *priority) = option_from_string(Meta::Type<std::tuple<String, Priority>>{}, c);
+                    if (m_flags & Completions::Flags::Priority and (int)*priority <= 0)
+                    {
+                        String error_message = "error computing shell-script-candidates: priority must be a positive integer";
+                        write_to_debug_buffer(error_message);
+                        throw runtime_error(std::move(error_message));
+                    }
+                }
+                else
+                    candidate = c.str();
+                UsedLetters letters = used_letters(candidate);
+                m_candidates.push_back(Candidate{std::move(candidate), letters, priority});
+            }
             m_token = token_to_complete;
         }
 
         StringView query = params[token_to_complete].substr(0, pos_in_token);
         RankedMatchQuery q{query, used_letters(query)};
         Vector<RankedMatch> matches;
-        for (const auto& candidate : m_candidates)
+        for (const auto& c : m_candidates)
         {
-            if (RankedMatch match{candidate.first, candidate.second, q})
+            if (RankedMatch match{c.candidate, c.used_letters, q, c.priority})
                 matches.push_back(match);
         }
 
@@ -328,7 +346,12 @@ struct ShellCandidatesCompleter
 
 private:
     String m_shell_script;
-    Vector<std::pair<String, UsedLetters>, MemoryDomain::Completion> m_candidates;
+    struct Candidate {
+        String candidate;
+        UsedLetters used_letters;
+        Optional<Priority> priority;
+    };
+    Vector<Candidate, MemoryDomain::Completion> m_candidates;
     int m_token = -1;
     Completions::Flags m_flags;
 };
@@ -1205,6 +1228,8 @@ Vector<String> params_to_shell(const ParametersParser& parser)
 
 CommandCompleter make_command_completer(StringView type, StringView param, Completions::Flags completions_flags)
 {
+    if (completions_flags & Completions::Flags::Priority and type != "shell-script-candidates")
+        throw runtime_error("-priority requires shell-script-candidates");
     if (type == "file")
     {
         return [=](const Context& context, CompletionFlags flags,
@@ -1280,6 +1305,8 @@ CommandCompleter make_command_completer(StringView type, StringView param, Compl
 }
 
 static CommandCompleter parse_completion_switch(const ParametersParser& parser, Completions::Flags completions_flags) {
+    if (completions_flags & Completions::Flags::Priority and not parser.get_switch("shell-script-candidates"))
+        throw runtime_error("-priority requires -shell-script-candidates");
     for (StringView completion_switch : {"file-completion", "client-completion", "buffer-completion",
                                          "shell-script-completion", "shell-script-candidates",
                                          "command-completion", "shell-completion"})
@@ -1293,6 +1320,16 @@ static CommandCompleter parse_completion_switch(const ParametersParser& parser, 
         }
     }
     return {};
+}
+
+static Completions::Flags make_completions_flags(const ParametersParser& parser)
+{
+    Completions::Flags flags = Completions::Flags::None;
+    if (parser.get_switch("menu"))
+        flags |= Completions::Flags::Menu;
+    if (parser.get_switch("priority"))
+        flags |= Completions::Flags::Priority;
+    return flags;
 }
 
 void define_command(const ParametersParser& parser, Context& context, const ShellContext&)
@@ -1309,10 +1346,6 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
     CommandFlags flags = CommandFlags::None;
     if (parser.get_switch("hidden"))
         flags = CommandFlags::Hidden;
-
-    bool menu = (bool)parser.get_switch("menu");
-    const Completions::Flags completions_flags = menu ?
-        Completions::Flags::Menu : Completions::Flags::None;
 
     const String& commands = parser[1];
     CommandFunc cmd;
@@ -1347,8 +1380,9 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
         };
     }
 
+    const Completions::Flags completions_flags = make_completions_flags(parser);
     CommandCompleter completer = parse_completion_switch(parser, completions_flags);
-    if (menu and not completer) 
+    if (completions_flags & Completions::Flags::Menu and not completer)
         throw runtime_error(format("menu switch requires a completion switch", cmd_name));
     auto docstring = trim_indent(parser.get_switch("docstring").value_or(StringView{}));
 
@@ -1366,6 +1400,7 @@ const CommandDesc define_command_cmd = {
           { "hidden",                   { {}, "do not display the command in completion candidates" } },
           { "docstring",                { ArgCompleter{},  "define the documentation string for command" } },
           { "menu",                     { {}, "treat completions as the only valid inputs" } },
+          { "priority",                 { {}, "shell script candidates have candidate|priority syntax" } },
           { "file-completion",          { {}, "complete parameters using filename completion" } },
           { "client-completion",        { {}, "complete parameters using client name completion" } },
           { "buffer-completion",        { {}, "complete parameters using buffer name completion" } },
@@ -1433,14 +1468,15 @@ const CommandDesc complete_command_cmd = {
     "complete-command [<switches>] <name> <type> [<param>]\n"
     "define command completion",
     ParameterDesc{
-        { { "menu",                     { {}, "treat completions as the only valid inputs" } }, },
+        { { "menu",                     { {}, "treat completions as the only valid inputs" } },
+          { "priority",                 { {}, "shell script candidates have candidate|priority syntax" } }, },
         ParameterDesc::Flags::None, 2, 3},
     CommandFlags::None,
     CommandHelper{},
     make_completer(complete_command_name),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        const Completions::Flags flags = parser.get_switch("menu") ? Completions::Flags::Menu : Completions::Flags::None;
+        const Completions::Flags flags = make_completions_flags(parser);
         CommandCompleter completer = make_command_completer(parser[1], parser.positional_count() >= 3 ? parser[2] : StringView{}, flags);
         CommandManager::instance().set_command_completer(parser[0], std::move(completer));
     }
@@ -2179,6 +2215,7 @@ const CommandDesc prompt_cmd = {
         { { "init", { ArgCompleter{}, "set initial prompt content" } },
           { "password", { {}, "Do not display entered text and clear reg after command" } },
           { "menu", { {}, "treat completions as the only valid inputs" } },
+          { "priority", { {}, "shell script candidates have candidate|priority syntax" } },
           { "file-completion", { {}, "use file completion for prompt" } },
           { "client-completion", { {}, "use client completion for prompt" } },
           { "buffer-completion", { {}, "use buffer completion for prompt" } },
@@ -2198,9 +2235,7 @@ const CommandDesc prompt_cmd = {
         const String& command = parser[1];
         auto initstr = parser.get_switch("init").value_or(StringView{});
 
-        const Completions::Flags completions_flags = parser.get_switch("menu") ?
-            Completions::Flags::Menu : Completions::Flags::None;
-        PromptCompleterAdapter completer = parse_completion_switch(parser, completions_flags);
+        PromptCompleterAdapter completer = parse_completion_switch(parser, make_completions_flags(parser));
 
         const auto flags = parser.get_switch("password") ?
             PromptFlags::Password : PromptFlags::None;
