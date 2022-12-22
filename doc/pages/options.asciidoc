@@ -142,7 +142,7 @@ are exclusively available to built-in options.
     escaped as `\|` or `\\`.
 
 *completions*::
-    a list of `<text>|<select cmd>|<menu text>` candidates,
+    a list of `<text>|<select cmd>|<menu text>[|<priority>]` candidates,
     except for the first element which follows the
     `<line>.<column>[+<length>]@<timestamp>` format to define where the
     completion apply in the buffer.
@@ -152,8 +152,11 @@ are exclusively available to built-in options.
 
     Options of this type are are meant to be added to the `completers`
     option to provide insert mode completion. Candidates are shown if the
-    text typed by the user (between `<line>.<column>` and the cursor) is a
-    subsequence of `<text>`.
+    query typed by the user (the text between `<line>.<column>` and the
+    cursor) is a subsequence of `<text>`. Candidates are sorted by how well
+    they match the query - by length of matching subsequences and number
+    of matched word boundaries (higher is better) as well as the optional
+    `<priority>` field, which is a positive integer (lower is better).
 
     For each remaining candidate, the completion menu displays
     `<text>`, followed by `<menu text>`, which is a Markup string (see
