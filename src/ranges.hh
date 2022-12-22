@@ -654,16 +654,14 @@ auto elements()
     return ViewFactory{[=] (auto&& range) {
         using std::begin; using std::end;
         auto it = begin(range), end_it = end(range);
-        size_t i = 0;
         auto elem = [&](size_t index) {
-            for (; i < index; ++i)
-                if (++it == end_it) throw ExceptionType{i};
-            return *it;
+            if (it == end_it) throw ExceptionType{index};
+            return *it++;
         };
         // Note that initializer lists elements are guaranteed to be sequenced
         Array<std::remove_cvref_t<decltype(*begin(range))>, sizeof...(Indexes)> res{{elem(Indexes)...}};
-        if (exact_size and ++it != end_it)
-            throw ExceptionType{++i};
+        if (exact_size and it != end_it)
+            throw ExceptionType{sizeof...(Indexes)};
         return res;
     }};
 }
