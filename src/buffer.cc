@@ -575,9 +575,9 @@ BufferCoord Buffer::advance(BufferCoord coord, ByteCount count) const
         count += coord.column;
         while (count < 0)
         {
-            count += m_lines[--line].length();
-            if (line < 0)
+            if (--line < 0)
                 return {0, 0};
+            count += m_lines[line].length();
         }
         return { line, count };
     }
