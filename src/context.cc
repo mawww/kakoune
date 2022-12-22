@@ -224,11 +224,6 @@ void Context::SelectionHistory::undo()
     if (in_edition())
         throw runtime_error("selection undo is only supported at top-level");
     kak_assert(not empty());
-    begin_edition();
-    auto end = on_scope_end([&] {
-        kak_assert(current_history_node().selections == m_staging->selections);
-        end_edition();
-    });
     HistoryId next;
     if constexpr (backward)
         next = current_history_node().parent;
@@ -241,7 +236,6 @@ void Context::SelectionHistory::undo()
         m_history_id = next;
         if constexpr (backward)
             current_history_node().redo_child = previous_id;
-        m_staging = current_history_node();
     };
     Buffer& destination_buffer = history_node(next).selections.buffer();
     if (&destination_buffer == &m_context.buffer())
