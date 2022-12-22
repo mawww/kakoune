@@ -648,7 +648,7 @@ auto gather()
     }};
 }
 
-template<typename ExceptionType, bool exact_size, size_t... Indexes>
+template<typename ExceptionType, bool throw_on_extra_elements, size_t... Indexes>
 auto elements()
 {
     return ViewFactory{[=] (auto&& range) {
@@ -660,22 +660,22 @@ auto elements()
         };
         // Note that initializer lists elements are guaranteed to be sequenced
         Array<std::remove_cvref_t<decltype(*begin(range))>, sizeof...(Indexes)> res{{elem(Indexes)...}};
-        if (exact_size and it != end_it)
+        if (throw_on_extra_elements and it != end_it)
             throw ExceptionType{sizeof...(Indexes)};
         return res;
     }};
 }
 
-template<typename ExceptionType, bool exact_size, size_t... Indexes>
+template<typename ExceptionType, bool throw_on_extra_elements, size_t... Indexes>
 auto static_gather_impl(std::index_sequence<Indexes...>)
 {
-    return elements<ExceptionType, exact_size, Indexes...>();
+    return elements<ExceptionType, throw_on_extra_elements, Indexes...>();
 }
 
-template<typename ExceptionType, size_t size, bool exact_size = true>
+template<typename ExceptionType, size_t size, bool throw_on_extra_elements = true>
 auto static_gather()
 {
-    return static_gather_impl<ExceptionType, exact_size>(std::make_index_sequence<size>());
+    return static_gather_impl<ExceptionType, throw_on_extra_elements>(std::make_index_sequence<size>());
 }
 
 }
