@@ -224,24 +224,29 @@ void Context::SelectionHistory::undo()
     if (in_edition())
         throw runtime_error("selection undo is only supported at top-level");
     kak_assert(not empty());
+    SelectionList old_selections = selections();
     HistoryId next;
-    if constexpr (backward)
-        next = current_history_node().parent;
-    else
-        next = current_history_node().redo_child;
-    if (next == HistoryId::Invalid)
-        throw runtime_error(backward ? "no selection change to undo" : "no selection change to redo");
-    auto select_next = [&, next] {
-        HistoryId previous_id = m_history_id;
-        m_history_id = next;
+    do
+    {
         if constexpr (backward)
-            current_history_node().redo_child = previous_id;
-    };
-    Buffer& destination_buffer = history_node(next).selections.buffer();
-    if (&destination_buffer == &m_context.buffer())
-        select_next();
-    else
-        m_context.change_buffer(destination_buffer, { std::move(select_next) });
+            next = current_history_node().parent;
+        else
+            next = current_history_node().redo_child;
+        if (next == HistoryId::Invalid)
+            throw runtime_error(backward ? "no selection change to undo" : "no selection change to redo");
+        auto select_next = [&, next] {
+            HistoryId previous_id = m_history_id;
+            m_history_id = next;
+            if constexpr (backward)
+                current_history_node().redo_child = previous_id;
+        };
+        Buffer& destination_buffer = history_node(next).selections.buffer();
+        if (&destination_buffer == &m_context.buffer())
+            select_next();
+        else
+            m_context.change_buffer(destination_buffer, { std::move(select_next) });
+    }
+    while (selections() == old_selections);
 }
 
 void Context::SelectionHistory::forget_buffer(Buffer& buffer)
