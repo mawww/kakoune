@@ -423,11 +423,8 @@ select_to_reverse(const Context& context, const Selection& selection,
 
     // if we are selecting backwards from the beginning of the buffer,
     // there is nothing more that can be selected.
-    // Unless its inclusive, in which its possible that the current
-    // location of the cursor contains the Codepoint being looked for.
-    if(!inclusive && selection.cursor() == buffer.begin()){
+    if (selection.cursor() == buffer.begin())
         return {};
-    }
 
     Utf8Iterator begin{buffer.iterator_at(selection.cursor()), buffer};
     Utf8Iterator end = begin;
