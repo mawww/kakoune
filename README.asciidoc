@@ -580,18 +580,20 @@ view. Using `V` will lock view mode until `<esc>` is hit
 
 See <<doc/pages/keys#view-commands,`:doc keys view-commands`>>.
 
-Jump list
-~~~~~~~~~
+Selection undo
+~~~~~~~~~~~~~~
 
-Some commands, like the goto commands, buffer switch or search commands,
-push the previous selections to the client's jump list.
+In each client, every change to the selections' extent can be undone.
+This allows to recover from mistakes. Additionally, some commands like the goto
+commands, buffer switch or search commands mark the previous selections as jump
+target. It is possible to undo selection changes until the next jump target.
 
-See <<doc/pages/keys#jump-list,`:doc keys jump-list`>>.
+See <<doc/pages/keys#selection-undo,`:doc keys selection-undo`>>.
 
 Marks
 ~~~~~
 
-Current selections position can be saved in a register and restored later on.
+The extent of the current selections can also be saved in a register and restored later on.
 
 See <<doc/pages/keys#marks,`:doc keys marks`>>.
 
