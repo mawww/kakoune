@@ -580,13 +580,6 @@ view. Using `V` will lock view mode until `<esc>` is hit
 
 See <<doc/pages/keys#view-commands,`:doc keys view-commands`>>.
 
-Marks
-~~~~~
-
-Current selections position can be saved in a register and restored later on.
-
-See <<doc/pages/keys#marks,`:doc keys marks`>>.
-
 Jump list
 ~~~~~~~~~
 
@@ -594,6 +587,13 @@ Some commands, like the goto commands, buffer switch or search commands,
 push the previous selections to the client's jump list.
 
 See <<doc/pages/keys#jump-list,`:doc keys jump-list`>>.
+
+Marks
+~~~~~
+
+Current selections position can be saved in a register and restored later on.
+
+See <<doc/pages/keys#marks,`:doc keys marks`>>.
 
 Multi Selection
 ~~~~~~~~~~~~~~~
