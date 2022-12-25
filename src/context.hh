@@ -98,6 +98,8 @@ public:
     void end_selection_edition() { m_selection_history.end_edition(); }
     template<Direction direction, bool to_jump>
     void undo_selection_change();
+    template<Direction direction>
+    void toggle_selection_history_branch(size_t count);
 
     void change_buffer(Buffer& buffer, bool push_jump = false, Optional<FunctionRef<void()>> set_selection = {});
     void forget_buffer(Buffer& buffer);
@@ -182,6 +184,8 @@ private:
 
         template<Direction direction, bool to_jump>
         void undo();
+        template<Direction direction>
+        void toggle_branch(size_t count);
         void forget_buffer(Buffer& buffer);
     private:
         struct HistoryNode
@@ -190,7 +194,8 @@ private:
 
             SelectionList selections;
             HistoryId parent;
-            HistoryId redo_child = HistoryId::Invalid;
+            Vector<HistoryId, MemoryDomain::Selections> redo_children;
+            int redo_children_index = -1;
             bool is_jump = false;
         };
 
@@ -198,6 +203,8 @@ private:
               HistoryNode& history_node(HistoryId id)       { return m_history[(size_t)id]; }
         const HistoryNode& history_node(HistoryId id) const { return m_history[(size_t)id]; }
               HistoryNode& current_history_node()           { kak_assert((size_t)m_history_id < m_history.size()); return m_history[(size_t)m_history_id]; }
+        template<bool did_jump>
+        void print_status();
 
         Context&              m_context;
         Vector<HistoryNode>   m_history;

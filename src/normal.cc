@@ -2045,6 +2045,13 @@ void undo_selection_change(Context& context, NormalParams params)
         context.undo_selection_change<direction, to_jump>();
 }
 
+template<Direction direction>
+void toggle_selection_history_branch(Context& context, NormalParams params)
+{
+    int count = std::max(1, params.count);
+    context.toggle_selection_history_branch<direction>(count);
+}
+
 void exec_user_mappings(Context& context, NormalParams params)
 {
     on_next_key_with_autoinfo(context, "user-mapping", KeymapMode::None,
@@ -2372,6 +2379,8 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
 
     { {ctrl('h')}, {"undo selection change", undo_selection_change<Backward, false>} },
     { {ctrl('k')}, {"redo selection change", undo_selection_change<Forward, false>} },
+    { {ctrl('j')}, {"previous selection history branch", toggle_selection_history_branch<Backward>} },
+    { {ctrl('J')}, {"next selection history branch", toggle_selection_history_branch<Forward>} },
 
     { {alt('i')}, {"select inner object", select_object<ObjectFlags::ToBegin | ObjectFlags::ToEnd | ObjectFlags::Inner>} },
     { {alt('a')}, {"select whole object", select_object<ObjectFlags::ToBegin | ObjectFlags::ToEnd>} },

@@ -235,22 +235,39 @@ void Context::SelectionHistory::undo()
         HistoryId current = m_history_id;
         while (true)
         {
+            auto& current_node = history_node(current);
             if constexpr (backward)
-                next = history_node(current).parent;
+            {
+                next = current_node.parent;
+            }
             else
-                next = history_node(current).redo_child;
+            {
+                if (current_node.redo_children_index == -1)
+                    next = HistoryId::Invalid;
+                else
+                    next = current_node.redo_children.at(current_node.redo_children_index);
+            }
             if (next == HistoryId::Invalid)
                 throw runtime_error(to_jump ? "no previous jump"
                                             : (backward ? "no selection change to undo" : "no selection change to redo"));
             if constexpr (backward)
-                history_node(next).redo_child = current;
+            {
+                auto& next_node = history_node(next);
+                if (auto it = find(next_node.redo_children, current); it != next_node.redo_children.end())
+                {
+                    next_node.redo_children_index = std::distance(next_node.redo_children.begin(), it);
+                }
+                else
+                {
+                    next_node.redo_children_index = next_node.redo_children.size();
+                    next_node.redo_children.push_back(current);
+                }
+            }
             if (to_jump and not history_node(next).is_jump)
                 current = next;
             else
                 break;
         }
-        if (next == HistoryId::Invalid)
-            throw runtime_error(backward ? "no selection change to undo" : "no selection change to redo");
         Buffer& destination_buffer = history_node(next).selections.buffer();
         if (&destination_buffer == &m_context.buffer())
             m_history_id = next;
@@ -258,9 +275,35 @@ void Context::SelectionHistory::undo()
             m_context.change_buffer(destination_buffer, false, { [&, next] { m_history_id = next; } });
     }
     while (selections() == old_selections);
-    m_context.print_status({ format("jumped to #{} ({})",
-                           (size_t)m_history_id, m_history.size() - 1),
-                           m_context.faces()["Information"] });
+    print_status<true>();
+}
+
+template<bool did_jump>
+void Context::SelectionHistory::print_status()
+{
+    const auto& node = current_history_node();
+    String alternative_branch_info;
+    if (node.redo_children.size() > 1)
+        alternative_branch_info = format(" (selected redo branch: {}/{})",
+                                       node.redo_children_index,
+                                       node.redo_children.size() - 1);
+    auto string = format("{} #{}{}",
+                         did_jump ? "jumped to" : "selection",
+                         (size_t)m_history_id, alternative_branch_info);
+    m_context.print_status({ std::move(string), m_context.faces()["Information"] });
+}
+
+template<Direction direction>
+void Context::SelectionHistory::toggle_branch(size_t count)
+{
+    auto& node = current_history_node();
+    if (node.redo_children.size() <= 1)
+        throw runtime_error("no alternative selection history branch");
+    node.redo_children_index += direction * count;
+    node.redo_children_index %= node.redo_children.size();
+    if (node.redo_children_index < 0)
+        node.redo_children_index += node.redo_children.size();
+    print_status<false>();
 }
 
 void Context::SelectionHistory::forget_buffer(Buffer& buffer)
@@ -291,13 +334,14 @@ void Context::SelectionHistory::forget_buffer(Buffer& buffer)
     for (auto& node : m_history)
     {
         node.parent = new_id(node.parent);
-        node.redo_child = new_id(node.redo_child);
+        for (auto& redo_child : node.redo_children)
+            redo_child = new_id(redo_child);
     }
     m_history_id = new_id(m_history_id);
     if (m_staging)
     {
         m_staging->parent = new_id(m_staging->parent);
-        kak_assert(m_staging->redo_child == HistoryId::Invalid);
+        kak_assert(m_staging->redo_children.empty());
     }
     kak_assert(m_history_id != HistoryId::Invalid or m_staging);
 }
@@ -383,6 +427,14 @@ template void Context::undo_selection_change<Backward, true>();
 template void Context::undo_selection_change<Backward, false>();
 template void Context::undo_selection_change<Forward, true>();
 template void Context::undo_selection_change<Forward, false>();
+
+template<Direction direction>
+void Context::toggle_selection_history_branch(size_t count)
+{
+    m_selection_history.toggle_branch<direction>(count);
+}
+template void Context::toggle_selection_history_branch<Backward>(size_t);
+template void Context::toggle_selection_history_branch<Forward>(size_t);
 
 SelectionList& Context::selections_write_only()
 {

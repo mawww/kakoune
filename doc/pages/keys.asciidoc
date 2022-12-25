@@ -493,6 +493,17 @@ Searches use the */* register by default (See <<registers#,`:doc registers`>>)
 *<c-k>*::
     redo last selection change
 
+When there are multiple selection changes to redo (for example after
+`j<c-h>l<c-h>`), the latest one will be chosen by default.  Whenever a
+selection undo command visits such a junction point, it will show the active
+redo branch in the status line. The active branch can be toggled using:
+
+*<c-j>*::
+    previous selection history branch
+
+*<c-J>*::
+    next selection history branch
+
 Some commands, like the goto commands, buffer switch or search commands,
 mark the previous selections as jump target. It is possible to undo selection
 changes until a jump target:
