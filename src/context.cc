@@ -202,6 +202,8 @@ void SelectionHistory::end_edition()
     if ((m_context.flags() & Context::Flags::Draft) or in_edition())
         return;
 
+    auto cleanup = on_scope_end([&] { m_staging.reset(); });
+
     if (m_history_id != HistoryId::Invalid and current_history_node().selections == m_staging->selections)
     {
         // No change, except maybe the index of the main selection.
@@ -209,13 +211,17 @@ void SelectionHistory::end_edition()
         auto& node = current_history_node();
         node.selections.force_timestamp(m_staging->selections.timestamp());
         node.selections.set_main_index(m_staging->selections.main_index());
+        return;
     }
-    else
+
+    HistoryId parent_id = m_history_id;
+    m_history.push_back(std::move(*m_staging));
+    m_history_id = (HistoryId)(m_history.size() - 1);
+    if (parent_id != HistoryId::Invalid)
     {
-        m_history_id = next_history_id();
-        m_history.push_back(std::move(*m_staging));
+        auto& parent = history_node(parent_id);
+        parent.redo_child = m_history_id;
     }
-    m_staging.reset();
 }
 
 template<Direction direction>
@@ -235,17 +241,11 @@ void SelectionHistory::undo()
             next = current_history_node().redo_child;
         if (next == HistoryId::Invalid)
             throw runtime_error(backward ? "no selection change to undo" : "no selection change to redo");
-        auto select_next = [&, next] {
-            HistoryId previous_id = m_history_id;
-            m_history_id = next;
-            if constexpr (backward)
-                current_history_node().redo_child = previous_id;
-        };
         Buffer& destination_buffer = history_node(next).selections.buffer();
         if (&destination_buffer == &m_context.buffer())
-            select_next();
+            m_history_id = next;
         else
-            m_context.change_buffer(destination_buffer, false, { std::move(select_next) });
+            m_context.change_buffer(destination_buffer, false, { [&] { m_history_id = next; } });
     }
     while (selections() == old_selections);
     m_context.print_status({ format("jumped to #{} ({})",

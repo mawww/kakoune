@@ -50,7 +50,6 @@ private:
         HistoryId redo_child = HistoryId::Invalid;
     };
 
-          HistoryId next_history_id() const noexcept    { return (HistoryId)m_history.size(); }
           HistoryNode& history_node(HistoryId id)       { return m_history[(size_t)id]; }
     const HistoryNode& history_node(HistoryId id) const { return m_history[(size_t)id]; }
           HistoryNode& current_history_node()           { kak_assert((size_t)m_history_id < m_history.size()); return m_history[(size_t)m_history_id]; }
