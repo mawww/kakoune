@@ -196,7 +196,6 @@ void Context::SelectionHistory::begin_edition()
 
 void Context::SelectionHistory::end_edition()
 {
-    kak_assert(in_edition());
     m_in_edition.unset();
     if (in_edition())
         return;
