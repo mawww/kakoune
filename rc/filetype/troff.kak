@@ -33,7 +33,8 @@ add-highlighter shared/troff/ regex '\\fI(.+?)\\f[A-Z]' 1:+i
 add-highlighter shared/troff/ regex '^\.[a-zA-Z]{1,2}\b' 0:meta
 add-highlighter shared/troff/ regex '^\.\.$' 0:meta
 add-highlighter shared/troff/ regex '^\.TH\s+[^\n]+' 0:title
-add-highlighter shared/troff/ regex '^\.SH\s+[^\n]+' 0:header
+add-highlighter shared/troff/ regex '^\.NH(\s+\d+(\s+\d+)?)?\s*\n' 0:header
+add-highlighter shared/troff/ regex '^\.SH(\s+\d+)?\s*\n' 0:header
 add-highlighter shared/troff/ regex '^\.IR\s+(\S+)' 1:+i
 add-highlighter shared/troff/ regex '^\.BR\s+(\S+)' 1:+b
 add-highlighter shared/troff/ regex '^\.I\s+([^\n]+)' 1:+i
