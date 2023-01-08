@@ -21,6 +21,47 @@ class AliasRegistry;
 
 enum Direction { Backward = -1, Forward = 1 };
 
+struct SelectionHistory
+{
+    SelectionHistory(Context& context);
+    SelectionHistory(Context& context, SelectionList selections);
+    void initialize(SelectionList selections);
+    bool empty() const { return m_history.empty() and not m_staging; }
+    SelectionList& selections(bool update = true);
+
+    void begin_edition();
+    void end_edition();
+    bool in_edition() const { return m_in_edition; }
+
+    template<Direction direction>
+    void undo();
+    void forget_buffer(Buffer& buffer);
+private:
+    enum class HistoryId : size_t { First = 0, Invalid = (size_t)-1 };
+
+    struct HistoryNode
+    {
+        static constexpr MemoryDomain Domain = SelectionList::Domain;
+
+        HistoryNode(SelectionList selections, HistoryId parent) : selections(std::move(selections)), parent(parent) {}
+
+        SelectionList selections;
+        HistoryId parent;
+        HistoryId redo_child = HistoryId::Invalid;
+    };
+
+          HistoryId next_history_id() const noexcept    { return (HistoryId)m_history.size(); }
+          HistoryNode& history_node(HistoryId id)       { return m_history[(size_t)id]; }
+    const HistoryNode& history_node(HistoryId id) const { return m_history[(size_t)id]; }
+          HistoryNode& current_history_node()           { kak_assert((size_t)m_history_id < m_history.size()); return m_history[(size_t)m_history_id]; }
+
+    Context&              m_context;
+    Vector<HistoryNode>   m_history;
+    HistoryId             m_history_id = HistoryId::Invalid;
+    Optional<HistoryNode> m_staging;
+    NestedBool            m_in_edition;
+};
+
 struct JumpList
 {
     void push(SelectionList jump, Optional<size_t> index = {});
@@ -162,46 +203,6 @@ private:
     SafePtr<Window>       m_window;
     SafePtr<Client>       m_client;
 
-    class SelectionHistory {
-    public:
-        SelectionHistory(Context& context);
-        SelectionHistory(Context& context, SelectionList selections);
-        void initialize(SelectionList selections);
-        bool empty() const { return m_history.empty() and not m_staging; }
-        SelectionList& selections(bool update = true);
-
-        void begin_edition();
-        void end_edition();
-        bool in_edition() const { return m_in_edition; }
-
-        template<Direction direction>
-        void undo();
-        void forget_buffer(Buffer& buffer);
-    private:
-        enum class HistoryId : size_t { First = 0, Invalid = (size_t)-1 };
-
-        struct HistoryNode
-        {
-            static constexpr MemoryDomain Domain = SelectionList::Domain;
-
-            HistoryNode(SelectionList selections, HistoryId parent) : selections(std::move(selections)), parent(parent) {}
-
-            SelectionList selections;
-            HistoryId parent;
-            HistoryId redo_child = HistoryId::Invalid;
-        };
-
-              HistoryId next_history_id() const noexcept    { return (HistoryId)m_history.size(); }
-              HistoryNode& history_node(HistoryId id)       { return m_history[(size_t)id]; }
-        const HistoryNode& history_node(HistoryId id) const { return m_history[(size_t)id]; }
-              HistoryNode& current_history_node()           { kak_assert((size_t)m_history_id < m_history.size()); return m_history[(size_t)m_history_id]; }
-
-        Context&              m_context;
-        Vector<HistoryNode>   m_history;
-        HistoryId             m_history_id = HistoryId::Invalid;
-        Optional<HistoryNode> m_staging;
-        NestedBool            m_in_edition;
-    };
     SelectionHistory m_selection_history;
 
     String m_name;

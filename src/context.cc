@@ -165,21 +165,21 @@ void JumpList::forget_buffer(Buffer& buffer)
     m_timestamp++;
 }
 
-Context::SelectionHistory::SelectionHistory(Context& context) : m_context(context) {}
+SelectionHistory::SelectionHistory(Context& context) : m_context(context) {}
 
-Context::SelectionHistory::SelectionHistory(Context& context, SelectionList selections)
+SelectionHistory::SelectionHistory(Context& context, SelectionList selections)
     : m_context(context),
       m_history{HistoryNode{std::move(selections), HistoryId::Invalid}},
       m_history_id(HistoryId::First) {}
 
-void Context::SelectionHistory::initialize(SelectionList selections)
+void SelectionHistory::initialize(SelectionList selections)
 {
     kak_assert(empty());
     m_history = {HistoryNode{std::move(selections), HistoryId::Invalid}};
     m_history_id = HistoryId::First;
 }
 
-SelectionList& Context::SelectionHistory::selections(bool update)
+SelectionList& SelectionHistory::selections(bool update)
 {
     if (empty())
         throw runtime_error("no selections in context");
@@ -189,14 +189,14 @@ SelectionList& Context::SelectionHistory::selections(bool update)
     return sels;
 }
 
-void Context::SelectionHistory::begin_edition()
+void SelectionHistory::begin_edition()
 {
     if (not (m_context.flags() & Context::Flags::Draft) and not in_edition())
         m_staging = HistoryNode{selections(), m_history_id};
     m_in_edition.set();
 }
 
-void Context::SelectionHistory::end_edition()
+void SelectionHistory::end_edition()
 {
     m_in_edition.unset();
     if ((m_context.flags() & Context::Flags::Draft) or in_edition())
@@ -219,7 +219,7 @@ void Context::SelectionHistory::end_edition()
 }
 
 template<Direction direction>
-void Context::SelectionHistory::undo()
+void SelectionHistory::undo()
 {
     static constexpr bool backward = direction == Backward;
     if (in_edition())
@@ -253,7 +253,7 @@ void Context::SelectionHistory::undo()
                            m_context.faces()["Information"] });
 }
 
-void Context::SelectionHistory::forget_buffer(Buffer& buffer)
+void SelectionHistory::forget_buffer(Buffer& buffer)
 {
     Vector<HistoryId, MemoryDomain::Selections> new_ids;
     size_t bias = 0;
