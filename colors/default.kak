@@ -39,6 +39,8 @@ face global MenuBackground blue,white
 face global MenuInfo cyan
 face global Information black,yellow
 face global Error black,red
+face global DiagnosticError red
+face global DiagnosticWarning yellow
 face global StatusLine cyan,default
 face global StatusLineMode yellow,default
 face global StatusLineInfo blue,default
@@ -46,5 +48,5 @@ face global StatusLineValue green,default
 face global StatusCursor black,cyan
 face global Prompt yellow,default
 face global MatchingChar default,default+b
-face global Whitespace default,default+f
+face global Whitespace default,default+fd
 face global BufferPadding blue,default

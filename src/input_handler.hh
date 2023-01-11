@@ -44,12 +44,21 @@ constexpr bool with_bit_ops(Meta::Type<PromptFlags>) { return true; }
 using KeyCallback = std::function<void (Key, Context&)>;
 
 class InputMode;
-enum class InsertMode : unsigned;
 enum class KeymapMode : char;
 enum class CursorMode;
 
 using PromptCompleter = std::function<Completions (const Context&, CompletionFlags,
                                                    StringView, ByteCount)>;
+enum class InsertMode : unsigned
+{
+    Insert,
+    Append,
+    Replace,
+    InsertAtLineBegin,
+    AppendAtLineEnd,
+    OpenLineBelow,
+    OpenLineAbove
+};
 
 class InputHandler : public SafeCountable
 {

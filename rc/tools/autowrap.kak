@@ -13,7 +13,7 @@ declare-option -docstring %{
 define-command -hidden autowrap-cursor %{ evaluate-commands -save-regs '/"|^@m' %{
     try %{
         ## if the line isn't too long, do nothing
-        execute-keys -draft "<a-x><a-k>^[^\n]{%opt{autowrap_column},}[^\n]<ret>"
+        execute-keys -draft "x<a-k>^[^\n]{%opt{autowrap_column},}[^\n]<ret>"
 
         try %{
             reg m "%val{selections_desc}"
@@ -30,7 +30,7 @@ define-command -hidden autowrap-cursor %{ evaluate-commands -save-regs '/"|^@m' 
                                  | sed "s/%c/${kak_opt_autowrap_column}/g")
                     printf %s "
                         evaluate-commands -draft %{
-                            execute-keys '<a-]>p<a-x><a-j>|${format_cmd}<ret>'
+                            execute-keys '<a-]>px<a-j>|${format_cmd}<ret>'
                             try %{ execute-keys s\h+$<ret> d }
                         }
                         select '${kak_main_reg_m}'

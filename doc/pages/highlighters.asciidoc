@@ -65,6 +65,10 @@ highlighter is replaced with the new one.
         specify a string to separate the line numbers column from
         the rest of the buffer (default is '|')
 
+    *-cursor-separator* <separator text>:::
+        identical to *-separator* but applies only to the line of the cursor
+        (default is the same value passed to *-separator*)
+
     *-min-digits* <num>:::
         always reserve room for at least *num* digits,
         so text doesn't jump around as lines are added or removed
@@ -109,7 +113,7 @@ add-highlighter window/ regex //\h*(TODO:)[^\n]* 0:cyan 1:yellow,red
 
     capture_id can be either the capture number, or its name if a
     named capture is used in the regex (See
-    <<regex#Groups, `:doc regex Groups`>>)
+    <<regex#groups, `:doc regex groups`>>)
 
 *dynregex* <expression> <capture_id>:<face> ...::
     similar to regex, but expand (like a command parameter would) the
@@ -214,15 +218,15 @@ add-highlighter <path>/<name>/<region_name> region \
 *recurse*::
     regex that defines the text that matches recursively an end token
     into the region, every match of *recurse* will consume a following
-    match of *end*, preventing it from closing the region.
+    match of *closing* regex, preventing it from closing the region.
 
 *type* and *params*::
     A highlighter type, and associated params, as they would be passed
     to `add-highlighter` if they were not applied as a region.
 
-If the *-match-capture* switch is passed, then region closing and recurse
-matches are considered valid for a given region opening match only if they
-matched the same content for the capture 1.
+If the *-match-capture* switch is passed, then region *closing* and *recurse*
+regex matches are considered valid for a given region opening match only if they
+matched the same content for the capture 1 in the *opening* regex.
 
 The *recurse* option is useful for regions that can be nested, for example
 the following construct:
@@ -262,8 +266,8 @@ highlighter as root:
 
 -----------------------------------------------------------------
 add-highlighter <path>/<lang> regions
-add-highlighter <path>/<lang>/string '"' '"' fill string
-add-highlighter <path>/<lang>/comment '//' '$' fill comment
+add-highlighter <path>/<lang>/string region '"' '"' fill string
+add-highlighter <path>/<lang>/comment region '//' '$' fill comment
 add-highlighter <path>/<lang>/code default-region group
 add-highlighter <path>/<lang>/code/variable regex ...
 add-highlighter <path>/<lang>/code/function regex ...

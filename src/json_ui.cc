@@ -38,6 +38,7 @@ String to_json(Attribute attributes)
     struct Attr { Attribute attr; StringView name; }
     attrs[] {
         { Attribute::Underline, "underline" },
+        { Attribute::CurlyUnderline, "curly_underline" },
         { Attribute::Reverse, "reverse" },
         { Attribute::Blink, "blink" },
         { Attribute::Bold, "bold" },
@@ -46,6 +47,7 @@ String to_json(Attribute attributes)
         { Attribute::FinalFg, "final_fg" },
         { Attribute::FinalBg, "final_bg" },
         { Attribute::FinalAttr, "final_attr" },
+        { Attribute::Strikethrough, "strikethrough" },
     };
 
     return "[" + join(attrs |
@@ -56,8 +58,8 @@ String to_json(Attribute attributes)
 
 String to_json(Face face)
 {
-    return format(R"(\{ "fg": {}, "bg": {}, "attributes": {} })",
-                  to_json(face.fg), to_json(face.bg), to_json(face.attributes));
+    return format(R"(\{ "fg": {}, "bg": {}, "underline": {}, "attributes": {} })",
+                  to_json(face.fg), to_json(face.bg), to_json(face.underline), to_json(face.attributes));
 }
 
 String to_json(const DisplayAtom& atom)
@@ -133,7 +135,7 @@ void rpc_call(StringView method, Args&&... args)
 }
 
 JsonUI::JsonUI()
-    : m_stdin_watcher{0, FdEvents::Read,
+    : m_stdin_watcher{0, FdEvents::Read, EventMode::Urgent,
                       [this](FDWatcher&, FdEvents, EventMode mode) {
         parse_requests(mode);
       }}, m_dimensions{24, 80}

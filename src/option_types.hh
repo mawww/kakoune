@@ -19,8 +19,8 @@ namespace Kakoune
 {
 
 template<typename T>
-std::enable_if_t<std::is_same<decltype(option_to_string(std::declval<T>())), String>::value, String>
-option_to_string(const T& value, Quoting)
+String option_to_string(const T& value, Quoting)
+    requires std::is_same_v<decltype(option_to_string(std::declval<T>())), String>
 {
     return option_to_string(value);
 }
@@ -31,9 +31,8 @@ constexpr decltype(T::option_type_name) option_type_name(Meta::Type<T>)
     return T::option_type_name;
 }
 
-template<typename Enum>
-std::enable_if_t<std::is_enum<Enum>::value, String>
-option_type_name(Meta::Type<Enum>)
+template<typename Enum> requires std::is_enum_v<Enum>
+String option_type_name(Meta::Type<Enum>)
 {
     return format("{}({})", with_bit_ops(Meta::Type<Enum>{}) ? "flags" : "enum",
                   join(enum_desc(Meta::Type<Enum>{}) |
@@ -256,8 +255,8 @@ inline String option_to_string(const StronglyTypedNumber<RealType, ValueType>& o
 }
 
 template<typename Number>
-std::enable_if_t<std::is_base_of<StronglyTypedNumber<Number, int>, Number>::value, Number>
-option_from_string(Meta::Type<Number>, StringView str)
+    requires std::is_base_of_v<StronglyTypedNumber<Number, int>, Number>
+Number option_from_string(Meta::Type<Number>, StringView str)
 {
      return Number{str_to_int(str)};
 }
@@ -290,8 +289,8 @@ inline void option_update(WorstMatch, const Context&)
 }
 
 template<typename Coord>
-std::enable_if_t<std::is_base_of<LineAndColumn<Coord, decltype(Coord::line), decltype(Coord::column)>, Coord>::value, Coord>
-option_from_string(Meta::Type<Coord>, StringView str)
+    requires std::is_base_of_v<LineAndColumn<Coord, decltype(Coord::line), decltype(Coord::column)>, Coord>
+Coord option_from_string(Meta::Type<Coord>, StringView str)
 {
     struct error : runtime_error { error(size_t) : runtime_error{"expected <line>,<column>"} {} };
     auto vals = str | split<StringView>(',')
@@ -305,8 +304,8 @@ inline String option_to_string(const LineAndColumn<EffectiveType, LineType, Colu
     return format("{},{}", opt.line, opt.column);
 }
 
-template<typename Flags, typename = decltype(enum_desc(Meta::Type<Flags>{}))>
-EnableIfWithBitOps<Flags, String> option_to_string(Flags flags)
+template<DescribedEnum Flags> requires WithBitOps<Flags>
+String option_to_string(Flags flags)
 {
     constexpr auto desc = enum_desc(Meta::Type<Flags>{});
     String res;
@@ -321,8 +320,8 @@ EnableIfWithBitOps<Flags, String> option_to_string(Flags flags)
     return res;
 }
 
-template<typename Enum, typename = decltype(enum_desc(Meta::Type<Enum>{}))>
-EnableIfWithoutBitOps<Enum, String> option_to_string(Enum e)
+template<DescribedEnum Enum> requires (not WithBitOps<Enum>)
+String option_to_string(Enum e)
 {
     constexpr auto desc = enum_desc(Meta::Type<Enum>{});
     auto it = find_if(desc, [e](const EnumDesc<Enum>& d) { return d.value == e; });
@@ -332,8 +331,8 @@ EnableIfWithoutBitOps<Enum, String> option_to_string(Enum e)
     return {};
 }
 
-template<typename Flags, typename = decltype(enum_desc(Meta::Type<Flags>{}))>
-EnableIfWithBitOps<Flags, Flags> option_from_string(Meta::Type<Flags>, StringView str)
+template<DescribedEnum Flags> requires WithBitOps<Flags>
+Flags option_from_string(Meta::Type<Flags>, StringView str)
 {
     constexpr auto desc = enum_desc(Meta::Type<Flags>{});
     Flags flags{};
@@ -347,8 +346,8 @@ EnableIfWithBitOps<Flags, Flags> option_from_string(Meta::Type<Flags>, StringVie
     return flags;
 }
 
-template<typename Enum, typename = decltype(enum_desc(Meta::Type<Enum>{}))>
-EnableIfWithoutBitOps<Enum, Enum> option_from_string(Meta::Type<Enum>, StringView str)
+template<DescribedEnum Enum> requires (not WithBitOps<Enum>)
+Enum option_from_string(Meta::Type<Enum>, StringView str)
 {
     constexpr auto desc = enum_desc(Meta::Type<Enum>{});
     auto it = find_if(desc, [str](const EnumDesc<Enum>& d) { return d.name == str; });
@@ -357,16 +356,16 @@ EnableIfWithoutBitOps<Enum, Enum> option_from_string(Meta::Type<Enum>, StringVie
     return it->value;
 }
 
-template<typename Flags, typename = decltype(enum_desc(Meta::Type<Flags>{}))>
-EnableIfWithBitOps<Flags, bool> option_add(Flags& opt, StringView str)
+template<DescribedEnum Flags> requires WithBitOps<Flags>
+bool option_add(Flags& opt, StringView str)
 {
     const Flags old = opt;
     opt |= option_from_string(Meta::Type<Flags>{}, str);
     return opt != old;
 }
 
-template<typename Flags, typename = decltype(enum_desc(Meta::Type<Flags>{}))>
-EnableIfWithBitOps<Flags, bool> option_remove(Flags& opt, StringView str)
+template<DescribedEnum Flags> requires WithBitOps<Flags>
+bool option_remove(Flags& opt, StringView str)
 {
     const Flags old = opt;
     opt &= ~option_from_string(Meta::Type<Flags>{}, str);

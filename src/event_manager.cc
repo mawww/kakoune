@@ -12,8 +12,8 @@
 namespace Kakoune
 {
 
-FDWatcher::FDWatcher(int fd, FdEvents events, Callback callback)
-    : m_fd{fd}, m_events{events}, m_callback{std::move(callback)}
+FDWatcher::FDWatcher(int fd, FdEvents events, EventMode mode, Callback callback)
+    : m_fd{fd}, m_events{events}, m_mode{mode}, m_callback{std::move(callback)}
 {
     EventManager::instance().m_fd_watchers.push_back(this);
 }
@@ -80,6 +80,9 @@ bool EventManager::handle_next_events(EventMode mode, sigset_t* sigmask, bool bl
     FD_ZERO(&rfds); FD_ZERO(&wfds); FD_ZERO(&efds);
     for (auto& watcher : m_fd_watchers)
     {
+        if (watcher->mode() == EventMode::Normal and mode == EventMode::Urgent)
+            continue;
+
         const int fd = watcher->fd();
         if (fd != -1)
         {

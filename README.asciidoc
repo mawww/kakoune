@@ -1,13 +1,11 @@
-= image:{logo}[K,30,30,link="{website}",title="Kakoune logo by p0nce"] Kakoune image:{travis-img}[link="{travis-url}"] image:{cirrus-img}[link="{cirrus-url}"] image:{irc-img}[link="{irc-url}"]
+= image:{logo}[K,30,30,link="{website}",title="Kakoune logo by p0nce"] Kakoune image:{cirrus-img}[link="{cirrus-url}"] image:{irc-img}[link="{irc-url}"]
 ifdef::env-github,env-browser[:outfilesuffix: .asciidoc]
 :logo: https://rawgit.com/mawww/kakoune/master/doc/kakoune_logo.svg
 :website: https://kakoune.org
-:travis-img: https://travis-ci.org/mawww/kakoune.svg?branch=master
-:travis-url: https://travis-ci.org/mawww/kakoune
 :cirrus-img: https://api.cirrus-ci.com/github/mawww/kakoune.svg
 :cirrus-url: https://cirrus-ci.com/github/mawww/kakoune
 :irc-img: https://img.shields.io/badge/IRC-%23kakoune-blue.svg
-:irc-url: https://webchat.freenode.net/?channels=kakoune
+:irc-url: https://web.libera.chat/?channels=kakoune
 :icons: font
 :toc: right
 :pp: ++
@@ -31,7 +29,7 @@ See https://github.com/mawww/golf for Kakoune solutions to vimgolf challenges,
 regularly beating the best Vim solution.
 
 See the link:doc/design.asciidoc[design document] for more information on
-Kakoune philosophy and design.
+Kakoune's philosophy and design.
 
 :numbered:
 
@@ -39,16 +37,15 @@ Introduction
 ------------
 
 Kakoune is a code editor that implements Vi's "keystrokes as a text editing
-language" model. As it's also a modal editor, it is somewhat similar to the
+language" model. As it is also a modal editor, it is somewhat similar to the
 Vim editor (after which Kakoune was originally inspired).
 
-Kakoune can operate in two modes, normal and insertion. In insertion mode,
+Kakoune can operate in two modes: *normal* and *insertion*. In insertion mode,
 keys are directly inserted into the current buffer. In normal mode, keys
 are used to manipulate the current selection and to enter insertion mode.
 
-Kakoune has a strong focus on interactivity, most commands provide immediate
-and incremental results, while still being competitive (as in keystroke count)
-with Vim.
+Kakoune has a strong focus on interactivity. Most commands provide immediate
+and incremental results, while being competitive with Vim in terms of keystroke count.
 
 Kakoune works on selections, which are oriented, inclusive ranges of characters.
 Selections have an anchor and a cursor. Most commands move both of
@@ -57,7 +54,7 @@ and the cursor moves around.
 
 See https://vimeo.com/82711574
 
-Join us on freenode IRC `#Kakoune`
+Join us on libera IRC `#Kakoune`
 
 Features
 ~~~~~~~~
@@ -103,11 +100,10 @@ Getting started
 Building
 ~~~~~~~~
 
-Kakoune dependencies are:
+Kakoune's dependencies are:
 
- * A {cpp}17 compliant compiler (GCC >= 7 or clang >= 6) along with its
-   associated {cpp} standard library (libstdc{pp} or libc{pp})
- * ncurses with wide-characters support (>= 5.3, generally referred to as libncursesw)
+ * A {cpp}20 compliant compiler (GCC >= 10.3 or clang >= 11) along with its
+   associated {cpp} standard library (libstdc{pp} >= 10 or libc{pp})
 
 To build, just type *make* in the src directory.
 To generate man pages, type *make man* in the src directory.
@@ -118,8 +114,8 @@ on being in a Unix-like environment, no native Windows version is planned.
 Installing
 ~~~~~~~~~~
 
-In order to install kak on your system, rather than running it directly from
-its source directory, type *make install*, you can specify the `PREFIX` and
+In order to install *kak* on your system, rather than running it directly from
+its source directory, type *make install*. You can specify the `PREFIX` and
 `DESTDIR` if needed.
 
 [TIP]
@@ -127,6 +123,15 @@ its source directory, type *make install*, you can specify the `PREFIX` and
 ====
 ---------------------------------
 brew install kakoune
+---------------------------------
+====
+
+[TIP]
+.MacPorts (macOS)
+====
+---------------------------------
+sudo port selfupdate
+sudo port install kakoune
 ---------------------------------
 ====
 
@@ -170,10 +175,11 @@ pacman -S kakoune
 .Gentoo
 ====
 Kakoune is found in portage as
-https://packages.gentoo.org/packages/app-editors/kakoune[app-editors/kakoune]
+https://packages.gentoo.org/packages/app-editors/kakoune[app-editors/kakoune].
 --------------------------------
 emerge kakoune
 --------------------------------
+https://wiki.gentoo.org/wiki/Kakoune[Installation and Gentoo specific documentation] is available.
 ====
 
 [TIP]
@@ -198,13 +204,17 @@ sudo zypper install kakoune
 [TIP]
 .Ubuntu
 ====
-Building on Ubuntu 16.04 and 18.04.
-Make sure you have .local/bin in your path to make the kak binary available from your shell.
+Kakoune can be found in the Ubuntu repositories.
+
+----------------------------
+sudo apt install kakoune
+----------------------------
+
+If you want to compile from source on 20.04 or earlier, you must force the build to use GCC 10, which is not the default. Also, make sure you have .local/bin in your path so that kak is available after the installation.
 
 ----------------------------------------------------------------
-sudo apt install libncursesw5-dev pkg-config
 git clone https://github.com/mawww/kakoune.git && cd kakoune/src
-make
+CXX=g++-10 make
 PREFIX=$HOME/.local make install
 ----------------------------------------------------------------
 ====
@@ -293,10 +303,18 @@ pkg install kakoune
 -------------------
 ====
 
+[TIP]
+.Nix
+====
+--------------------------------
+nix-env -iA nixpkgs.kakoune
+--------------------------------
+====
+
 Running
 ~~~~~~~
 
-Just running *kak* launches a new kak session with a client on local terminal.
+Running *kak* launches a new kak session with a client on local terminal.
 Run *kak -help* to discover the valid command line flags.
 
 Configuration
@@ -320,13 +338,13 @@ directory. It will first look for an `autoload` directory at
 it does not exist.
 
 Once all those files are loaded, Kakoune will try to source
-`${runtime}/kakrc.local` which is expected to contain distribution provided
+`${runtime}/kakrc.local`, which is expected to contain distribution provided
 configuration.
 
-And finally, the user configuration will be loaded from `${userconf}/kakrc`.
+Finally, the user configuration will load from `${userconf}/kakrc`.
 
 NOTE: If you create a user `autoload` directory in `${userconf}/autoload`,
-the system one at `${runtime}/autoload` will not be loaded anymore. You can
+the system one at `${runtime}/autoload` will not load anymore. You can
 add a symbolic link to it (or to individual scripts) inside
 `${userconf}/autoload` to keep loading system scripts.
 
@@ -341,14 +359,14 @@ directed range of characters. A selection has two ends, the anchor and the
 cursor.
 
 There is always at least one selection, and a selection is always at least
-one character (in which case the anchor and cursor of the selections are
+one character (in which case the anchor and cursor of the selection are
 on the same character).
 
 Normal Mode
 ~~~~~~~~~~~
 
 In normal mode, keys are not inserted directly inside the buffer, but are editing
-commands. These commands provide ways to manipulate either the selections themselves,
+commands. These commands provide ways to manipulate either the selections themselves
 or the selected text.
 
 Insert Mode
@@ -360,9 +378,9 @@ selection's cursor. Some additional keys are recognised in insert mode:
  * `<esc>`: leave insert mode
  * `<backspace>`: delete characters before cursors
  * `<del>`: delete characters under cursors
- * `<left>, <right>, <up>, <down>`: move the cursors in given direction
- * `<home>`: move cursors to line begin
- * `<end>`: move cursors to end of line
+ * `<left>, <right>, <up>, <down>`: move cursors in given direction
+ * `<home>`: move cursors to line beginning
+ * `<end>`: move cursors to line ending
 
  * `<c-n>`: select next completion candidate
  * `<c-p>`: select previous completion candidate
@@ -374,16 +392,16 @@ selection's cursor. Some additional keys are recognised in insert mode:
 
  * `<c-r>`: insert contents of the register given by next key
  * `<c-v>`: insert next keystroke directly into the buffer,
-    without interpreting it.
+    without interpreting it
 
- * `<c-u>`: commit changes up to now as a single undo group.
+ * `<c-u>`: commit changes up to now as a single undo group
 
  * `<a-;>`: escape to normal mode for a single command
 
 Movement
 ~~~~~~~~
 
-See <<Appending>> below for instructions on extending (appending to) the current selection, in order to select more text in multiple steps.
+See <<Appending>> below for instructions on extending (appending to) the current selection in order to select more text.
 
  * `h`: select the character on the left of selection end
  * `j`: select the character below the selection end
@@ -393,7 +411,7 @@ See <<Appending>> below for instructions on extending (appending to) the current
  * `w`: select the word and following whitespaces on the right of selection end
  * `b`: select preceding whitespaces and the word on the left of selection end
  * `e`: select preceding whitespaces and the word on the right of selection end
- * `<a-[wbe]>`: same as [wbe] but select WORD instead of word
+ * `<a-[wbe]>`: same as [wbe], but select WORD instead of word
 
  * `f`: select to (including) the next occurrence of the given character
  * `t`: select until (excluding) the next occurrence of the given character
@@ -402,11 +420,8 @@ See <<Appending>> below for instructions on extending (appending to) the current
  * `m`: select to matching character
  * `M`: extend selection to matching character
 
- * `x`: select line on which selection end lies (or next line when end lies on
-        an end-of-line)
- * `X`: similar to `x`, except the current selection is extended
- * `<a-x>`: expand selections to contain full lines (including end-of-lines)
- * `<a-X>`: trim selections to only contain full lines (not including last
+ * `x`: expand selections to contain full lines (including end-of-lines)
+ * `<a-x>`: trim selections to only contain full lines (not including last
             end-of-line)
 
  * `%`: select whole buffer
@@ -475,42 +490,40 @@ it when pasting text.
 Changes
 ~~~~~~~
 
- * `i`: enter insert mode before current selection
- * `a`: enter insert mode after current selection
- * `d`: yank and delete current selection
- * `c`: yank and delete current selection and enter insert mode
+ * `i`: enter insert mode before each selection
+ * `a`: enter insert mode after each selection
+ * `d`: yank and delete each selection
+ * `c`: yank and delete each selection and enter insert mode
  * `.`: repeat last insert mode change (`i`, `a`, or `c`, including
         the inserted text)
 
- * `<a-d>`: delete current selection
- * `<a-c>`: delete current selection and enter insert mode
+ * `<a-d>`: delete each selection
+ * `<a-c>`: delete each selection and enter insert mode
 
- * `I`: enter insert mode at current selection begin line start
- * `A`: enter insert mode at current selection end line end
+ * `I`: enter insert mode at each selection begin line start
+ * `A`: enter insert mode at each selection end line end
  * `o`: enter insert mode in one (or given count) new lines below
-        current selection end
+        each selection end
  * `O`: enter insert mode in one (or given count)  new lines above
-        current selection begin
+        each selection begin
 
- * `<a-o>`: add an empty line below cursor
- * `<a-O>`: add an empty line above cursor
+ * `<a-o>`: add an empty line below each cursor
+ * `<a-O>`: add an empty line above each cursor
 
  * `y`: yank selections
- * `p`: paste after current selection end
- * `P`: paste before current selection begin
- * `<a-p>`: paste all after current selection end, and
-            select each pasted string.
- * `<a-P>`: paste all before current selection begin, and
-            select each pasted string.
- * `R`: replace current selection with yanked text
- * `<a-R>`: replace current selection with every yanked text
+ * `p`: paste after each selection end
+ * `P`: paste before each selection begin
+ * `<a-p>`: paste all after each selection end
+ * `<a-P>`: paste all before each selection begin
+ * `R`: replace each selection with yanked text
+ * `<a-R>`: replace each selection with every yanked text
 
  * `r`: replace each character with the next entered one
 
  * `<a-j>`: join selected lines
  * `<a-J>`: join selected lines and select spaces inserted
             in place of line breaks
- * `<a-m>`: merge contiguous selections together (works across lines as well)
+ * `<a-_>`: merge contiguous selections together (works across lines as well)
 
  * `<gt> (>)`: indent selected lines
  * `<a-gt>`: indent selected lines, including empty lines
@@ -519,19 +532,19 @@ Changes
         indent (3 leading spaces when indent is 4)
 
  * `|`: pipe each selection through the given external filter program
-        and replace the selection with it's output.
+        and replace the selection with its output.
  * `<a-|>`: pipe each selection through the given external filter program
         and ignore its output
 
- * `!`: insert command output before selection
- * `<a-!>`: append command output after selection
+ * `!`: insert command output before each selection
+ * `<a-!>`: append command output after each selection
 
  * `u`: undo last change
  * `<a-u>`: move backward in history
  * `U`: redo last change
  * `<a-U>`: move forward in history
 
- * `&`: align selection, align the cursor of selections by inserting
+ * `&`: align selections, align the cursor of selections by inserting
         spaces before the first character of the selection
  * `<a-&>`: copy indent, copy the indentation of the main selection
         (or the count one if a count is given) to all other ones
@@ -540,13 +553,13 @@ Changes
  * `~`: to upper case
  * ``<a-`>``: swap case
 
- * `@`: convert tabs to spaces in current selections, uses the buffer
-        tabstop option or the count parameter for tabstop.
- * `<a-@>`: convert spaces to tabs in current selections, uses the buffer
-            tabstop option or the count parameter for tabstop.
+ * `@`: convert selected tabs to spaces, uses the buffer tabstop option or
+        the count parameter for tabstop.
+ * `<a-@>`: convert selected spaces to tabs, uses the buffer tabstop option
+            or the count parameter for tabstop.
 
  * `<a-)>`: rotate selections content, if specified, the count groups
-            selections, so `3<a-)>` rotate (1, 2, 3) and (3, 4, 6)
+            selections, so `3<a-)>` rotate (1, 2, 3) and (4, 5, 6)
             independently.
  * `<a-(>`: rotate selections content backwards
 
@@ -610,15 +623,15 @@ pattern uses the last one.
 As a convenience, `<a-s>` allows you to split the current selections on
 line boundaries.
 
-To clear multiple selections, use `space`. To keep only the nth selection
-use `n` followed by `space`, in order to remove a selection, use `<a-space>`.
+To clear multiple selections, use `,`. To keep only the nth selection
+use `n` followed by `,`, in order to remove a selection, use `<a-,>`.
 
 `<a-k>` allows you to enter a regex and keep only the selections that
 contains a match for this regex. Using `<a-K>` you can keep the selections
 not containing a match.
 
-`C` copies the current selection to the next line (or lines if a count is given)
-`<a-C>` does the same to previous lines.
+`C` duplicates selections on the lines that follow them.
+`<a-C>` does the same but on the preceding lines.
 
 `$` allows you to enter a shell command and pipe each selection to it.
 Selections whose shell command returns 0 will be kept, other will be dropped.
@@ -684,7 +697,7 @@ saved in the command history.
    ** `-debug`: print the given text to the `\*debug*` buffer
  * `nop`: does nothing, but as with every other commands, arguments may be
      evaluated. So nop can be used for example to execute a shell command
-     while being sure that it's output will not be interpreted by kak.
+     while being sure that its output will not be interpreted by kak.
      `:%sh{ echo echo tchou }` will echo tchou in Kakoune, whereas
      `:nop %sh{ echo echo tchou }` will not, but both will execute the
      shell command.

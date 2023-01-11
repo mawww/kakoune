@@ -173,19 +173,6 @@ select_word(const Context& context, const Selection& selection,
 template Optional<Selection> select_word<WordType::Word>(const Context&, const Selection&, int, ObjectFlags);
 template Optional<Selection> select_word<WordType::WORD>(const Context&, const Selection&, int, ObjectFlags);
 
-Optional<Selection>
-select_line(const Context& context, const Selection& selection)
-{
-    auto& buffer = context.buffer();
-    auto line = selection.cursor().line;
-    // Next line if line fully selected
-    if (selection.anchor() <= BufferCoord{line, 0_byte} and
-        selection.cursor() == BufferCoord{line, buffer[line].length() - 1} and
-        line != buffer.line_count() - 1)
-        ++line;
-    return Selection{{line, 0_byte}, {line, buffer[line].length() - 1, max_column}};
-}
-
 template<bool only_move>
 Optional<Selection>
 select_to_line_end(const Context& context, const Selection& selection)
@@ -197,7 +184,7 @@ select_to_line_end(const Context& context, const Selection& selection)
                                      buffer.iterator_at(line)).coord();
     if (end < begin) // Do not go backward when cursor is on eol
         end = begin;
-    return Selection{only_move ? end : begin, {end, max_column}};
+    return Selection{only_move ? end : begin, {end, max_non_eol_column}};
 }
 template Optional<Selection> select_to_line_end<false>(const Context&, const Selection&);
 template Optional<Selection> select_to_line_end<true>(const Context&, const Selection&);
@@ -496,7 +483,7 @@ select_sentence(const Context& context, const Selection& selection,
     BufferIterator first = buffer.iterator_at(selection.cursor());
     BufferIterator last;
 
-    for (++count; count > 0; --count)
+    for (int i = 0; i <= count; ++i)
     {
         if (not (flags & ObjectFlags::ToEnd) and first != buffer.begin())
         {
@@ -507,7 +494,7 @@ select_sentence(const Context& context, const Selection& selection,
                 first = prev_non_blank;
         }
 
-        if (last == BufferIterator{})
+        if (i == 0)
             last = first;
 
         if (flags & ObjectFlags::ToBegin)
@@ -565,7 +552,7 @@ select_paragraph(const Context& context, const Selection& selection,
     BufferIterator first = buffer.iterator_at(selection.cursor());
     BufferIterator last;
 
-    for (++count; count > 0; --count)
+    for (int i = 0; i <= count; ++i)
     {
         if (not (flags & ObjectFlags::ToEnd) and first.coord() > BufferCoord{0,1} and
             is_eol(*(first-1)) and first-1 != buffer.begin() and is_eol(*(first-2)))
@@ -574,7 +561,7 @@ select_paragraph(const Context& context, const Selection& selection,
                  first != buffer.begin() and (first+1) != buffer.end() and
                  is_eol(*(first-1)) and is_eol(*first))
             ++first;
-        if (last == BufferIterator{})
+        if (i == 0)
             last = first;
 
         if ((flags & ObjectFlags::ToBegin) and first != buffer.begin())

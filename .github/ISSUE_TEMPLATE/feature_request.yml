@@ -1,0 +1,28 @@
+name: Feature request
+description: Ask for a feature to be implemented and included in the next release
+labels: feature request
+title: "[REQUEST] "
+body:
+
+    - type: markdown
+      attributes:
+        value: |
+            Please make sure to [search issues](https://github.com/mawww/kakoune/issues?q=is%3Aissue) before creating a new one, to avoid duplicates and centralise conversations.
+
+            If you need to have a question about the editor itself (options, behaviour, code…) answered, make sure to check the [documentation](https://github.com/mawww/kakoune/tree/master/doc/pages) (also available via the `doc` command in the editor) or drop by [IRC](https://web.libera.chat/?channels=#kakoune) to get instant feedback.
+
+    - type: textarea
+      attributes:
+          label: "Feature"
+          description: "What do you want implemented that is not already available in the development version?"
+      validations:
+        required: true
+
+    - type: textarea
+      attributes:
+          label: "Usecase"
+          description: "What use do you have for the requested feature?"
+          placeholder: |
+              If the feature's usecase is self-evident, such as a hook or an option whose name hints at a functionality unequivocally, you may ignore this field.
+      validations:
+        required: false

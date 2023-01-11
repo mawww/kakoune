@@ -14,7 +14,8 @@ hook global BufCreate .*[.](coffee) %{
 hook global WinSetOption filetype=coffee %{
     require-module coffee
 
-    hook window ModeChange pop:insert:.* -group coffee-trim-indent  coffee-trim-indent
+    hook window ModeChange pop:insert:.* -group coffee-trim-indent coffee-trim-indent
+    hook window InsertChar \n -group coffee-insert coffee-insert-on-new-line
     hook window InsertChar \n -group coffee-indent coffee-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window coffee-.+ }
@@ -64,22 +65,27 @@ add-highlighter shared/coffee/code/ regex \b(break|case|catch|class|const|contin
 
 define-command -hidden coffee-trim-indent %{
     evaluate-commands -draft -itersel %{
-        execute-keys <a-x>
+        execute-keys x
         # remove trailing white spaces
         try %{ execute-keys -draft s \h + $ <ret> d }
     }
 }
 
-define-command -hidden coffee-indent-on-new-line %{
+define-command -hidden coffee-insert-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy '#' comment prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s '^\h*\K#\h*' <ret> y gh j P }
+        try %{ execute-keys -draft k x s '^\h*\K#\h*' <ret> y gh j P }
+    }
+}
+
+define-command -hidden coffee-indent-on-new-line %{
+    evaluate-commands -draft -itersel %{
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line
         try %{ execute-keys -draft k : coffee-trim-indent <ret> }
         # indent after start structure
-        try %{ execute-keys -draft k <a-x> <a-k> ^ \h * (case|catch|class|else|finally|for|function|if|switch|try|while|with) \b | (=|->) $ <ret> j <a-gt> }
+        try %{ execute-keys -draft k x <a-k> ^ \h * (case|catch|class|else|finally|for|function|if|switch|try|while|with) \b | (=|->) $ <ret> j <a-gt> }
     }
 }
 

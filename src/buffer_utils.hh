@@ -20,11 +20,6 @@ inline BufferCoord erase(Buffer& buffer, const Selection& range)
     return buffer.erase(range.min(), buffer.char_next(range.max()));
 }
 
-inline BufferRange replace(Buffer& buffer, const Selection& range, StringView content)
-{
-    return buffer.replace(range.min(), buffer.char_next(range.max()), content);
-}
-
 void replace(Buffer& buffer, ArrayView<BufferRange> ranges, ConstArrayView<String> strings);
 
 inline CharCount char_length(const Buffer& buffer, const Selection& range)
@@ -78,6 +73,7 @@ ByteCount get_byte_to_column(const Buffer& buffer, ColumnCount tabstop,
                              DisplayCoord coord);
 
 Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll = false);
+Buffer* create_buffer_from_string(String name, Buffer::Flags flags, StringView data);
 Buffer* open_file_buffer(StringView filename,
                          Buffer::Flags flags = Buffer::Flags::None);
 Buffer* open_or_create_file_buffer(StringView filename,

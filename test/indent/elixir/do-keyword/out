@@ -1,0 +1,10 @@
+test do
+    f()
+end
+
+def f1() do
+    1
+end
+
+def f2(), do: 2
+

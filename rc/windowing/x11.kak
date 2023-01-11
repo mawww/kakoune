@@ -23,7 +23,7 @@ A shell command is appended to the one set in this option at runtime} \
                    'mintty         -e sh -c' \
                    'sakura         -x      ' \
                    'gnome-terminal -e      ' \
-                   'xfce4-terminal -e      ' \
+                   'xfce4-terminal -x sh -c' \
                    'konsole        -e      '; do
         terminal=${termcmd%% *}
         if command -v $terminal >/dev/null 2>&1; then
@@ -33,8 +33,8 @@ A shell command is appended to the one set in this option at runtime} \
     done
 }
 
-define-command x11-terminal -params 1.. -shell-completion -docstring '
-x11-terminal <program> [<arguments>]: create a new terminal as an x11 window
+define-command x11-terminal -params 1.. -docstring '
+x11-terminal <program> [<arguments>]: create a new terminal as an X11 window
 The program passed as argument will be executed in the new terminal' \
 %{
     evaluate-commands -save-regs 'a' %{
@@ -48,8 +48,9 @@ The program passed as argument will be executed in the new terminal' \
         }
     }
 }
+complete-command x11-terminal shell 
 
-define-command x11-focus -params ..1 -client-completion -docstring '
+define-command x11-focus -params ..1 -docstring '
 x11-focus [<kakoune_client>]: focus a given client''s window
 If no client is passed, then the current client is used' \
 %{
@@ -62,6 +63,7 @@ If no client is passed, then the current client is used' \
         fi
     }
 }
+complete-command -menu x11-focus client 
 
 alias global focus x11-focus
 alias global terminal x11-terminal

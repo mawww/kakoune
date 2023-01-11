@@ -24,8 +24,11 @@ struct DisplayAtom : public UseMemoryDomain<MemoryDomain::Display>
 public:
     enum Type { Range, ReplacedRange, Text };
 
-    DisplayAtom(const Buffer& buffer, BufferCoord begin, BufferCoord end)
-        : m_type(Range), m_buffer(&buffer), m_range{begin, end} {}
+    DisplayAtom(const Buffer& buffer, BufferRange range, Face face = {})
+        : face(face), m_type(Range), m_buffer(&buffer), m_range{range} {}
+
+    DisplayAtom(const Buffer& buffer, BufferRange range, String str, Face face = {})
+        : face(face), m_type(ReplacedRange), m_buffer(&buffer), m_range{range}, m_text{std::move(str)} {}
 
     DisplayAtom(String str, Face face)
         : face(face), m_type(Text), m_text(std::move(str)) {}
@@ -35,6 +38,7 @@ public:
 
     StringView content() const;
     ColumnCount length() const;
+    bool empty() const;
 
     const BufferCoord& begin() const
     {
@@ -71,8 +75,8 @@ public:
 
     Type type() const { return m_type; }
 
-    void trim_begin(ColumnCount count);
-    void trim_end(ColumnCount count);
+    ColumnCount trim_begin(ColumnCount count);
+    ColumnCount trim_end_to_length(ColumnCount count);
 
     bool operator==(const DisplayAtom& other) const
     {
@@ -139,11 +143,15 @@ public:
     }
 
     iterator erase(iterator beg, iterator end);
-    void push_back(DisplayAtom atom);
+    DisplayAtom& push_back(DisplayAtom atom);
 
-    // remove first_col from the begining of the line, and make sure
+    // remove front from the begining of the line, and make sure
     // the line is less that col_count character
-    bool trim(ColumnCount first_col, ColumnCount col_count);
+    bool trim(ColumnCount front, ColumnCount col_count);
+
+    // remove front from the begining of the line + first_col, and make sure
+    // the line is less that col_count character
+    bool trim_from(ColumnCount first_col, ColumnCount front, ColumnCount col_count);
 
     // Merge together consecutive atoms sharing the same display attributes
     void optimize();
@@ -156,8 +164,8 @@ private:
 using DisplayLineList = Vector<DisplayLine>;
 class FaceRegistry;
 
-String fix_atom_text(StringView str);
 DisplayLine parse_display_line(StringView line, const FaceRegistry& faces, const HashMap<String, DisplayLine>& builtins = {});
+DisplayLineList parse_display_line_list(StringView content, const FaceRegistry& faces, const HashMap<String, DisplayLine>& builtins = {});
 
 class DisplayBuffer : public UseMemoryDomain<MemoryDomain::Display>
 {

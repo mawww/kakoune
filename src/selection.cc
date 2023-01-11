@@ -48,7 +48,7 @@ void SelectionList::set(Vector<Selection> list, size_t main)
     m_selections = std::move(list);
     m_main = main;
     m_timestamp = m_buffer->timestamp();
-    sort_and_merge_overlapping();
+    sort();
     check_invariant();
 }
 
@@ -351,29 +351,6 @@ void SelectionList::sort_and_merge_overlapping()
     merge_overlapping();
 }
 
-BufferCoord get_insert_pos(const Buffer& buffer, const Selection& sel,
-                           InsertMode mode)
-{
-    switch (mode)
-    {
-    case InsertMode::Insert:
-        return sel.min();
-    case InsertMode::InsertCursor:
-        return sel.cursor();
-    case InsertMode::Append:
-        return buffer.char_next(sel.max());
-    case InsertMode::InsertAtLineBegin:
-        return sel.min().line;
-    case InsertMode::AppendAtLineEnd:
-        return {sel.max().line, buffer[sel.max().line].length() - 1};
-    case InsertMode::InsertAtNextLineBegin:
-        return sel.max().line+1;
-    default:
-        kak_assert(false);
-        return {};
-    }
-}
-
 static void fix_overflowing_selections(Vector<Selection>& selections,
                                        const Buffer& buffer)
 {
@@ -385,64 +362,82 @@ static void fix_overflowing_selections(Vector<Selection>& selections,
     }
 }
 
-void SelectionList::insert(ConstArrayView<String> strings, InsertMode mode,
-                           Vector<BufferCoord>* out_insert_pos)
+bool any_overlaps(ConstArrayView<Selection> sels)
 {
-    if (strings.empty())
-        return;
+    for (int i = 0; i + 1 < sels.size(); ++i)
+    {
+        if (overlaps(sels[i], sels[i+1]))
+            return true;
+    }
+    return false;
+}
 
+void SelectionList::for_each(ApplyFunc func, bool may_append)
+{
     update();
 
-    Vector<BufferCoord> insert_pos;
-    if (mode != InsertMode::Replace)
+    if (may_append and any_overlaps(m_selections))
     {
-        for (auto& sel : m_selections)
-            insert_pos.push_back(get_insert_pos(*m_buffer, sel, mode));
+        size_t timestamp = m_buffer->timestamp();
+        for (size_t index = 0; index < m_selections.size(); ++index)
+        {
+            auto& sel = m_selections[index];
+            update_ranges(*m_buffer, timestamp, ArrayView<Selection>(sel));
+            func(index, sel);
+        }
     }
-
-    ForwardChangesTracker changes_tracker;
-    for (size_t index = 0; index < m_selections.size(); ++index)
+    else
     {
-        auto& sel = m_selections[index];
-
-        sel.anchor() = changes_tracker.get_new_coord_tolerant(sel.anchor());
-        sel.cursor() = changes_tracker.get_new_coord_tolerant(sel.cursor());
-        kak_assert(m_buffer->is_valid(sel.anchor()) and
-                   m_buffer->is_valid(sel.cursor()));
-
-        const String& str = strings[std::min(index, strings.size()-1)];
-
-        const auto pos = (mode == InsertMode::Replace) ?
-            sel.min() : changes_tracker.get_new_coord(insert_pos[index]);
-
-        if (mode == InsertMode::Replace)
+        ForwardChangesTracker changes_tracker;
+        for (size_t index = 0; index < m_selections.size(); ++index)
         {
-            auto range = replace(*m_buffer, sel, str);
-            // we want min and max from *before* we do any change
-            auto& min = sel.min();
-            auto& max = sel.max();
-            min = range.begin;
-            max = range.end > range.begin ? m_buffer->char_prev(range.end) : range.begin;
-        }
-        else
-        {
-            auto range = m_buffer->insert(pos, str);
-            sel.anchor() = m_buffer->clamp(update_insert(sel.anchor(), range.begin, range.end));
-            sel.cursor() = m_buffer->clamp(update_insert(sel.cursor(), range.begin, range.end));
-        }
+            auto& sel = m_selections[index];
 
-        changes_tracker.update(*m_buffer, m_timestamp);
-        if (out_insert_pos)
-            out_insert_pos->push_back(pos);
+            sel.anchor() = changes_tracker.get_new_coord_tolerant(sel.anchor());
+            sel.cursor() = changes_tracker.get_new_coord_tolerant(sel.cursor());
+            kak_assert(m_buffer->is_valid(sel.anchor()) and m_buffer->is_valid(sel.cursor()));
+
+            func(index, sel);
+
+            changes_tracker.update(*m_buffer, m_timestamp);
+        }
     }
 
     // We might just have been deleting text if strings were empty,
     // in which case we could have some selections pushed out of the buffer
-    if (mode == InsertMode::Replace)
-        fix_overflowing_selections(m_selections, *m_buffer);
+    fix_overflowing_selections(m_selections, *m_buffer);
 
     check_invariant();
     m_buffer->check_invariant();
+}
+
+
+void replace(Buffer& buffer, Selection& sel, StringView content)
+{
+    // we want min and max from *before* we do any change
+    auto& min = sel.min();
+    auto& max = sel.max();
+    BufferRange range = buffer.replace(min, buffer.char_next(max), content);
+    min = range.begin;
+    max = range.end > range.begin ? buffer.char_prev(range.end) : range.begin;
+}
+
+BufferRange insert(Buffer& buffer, Selection& sel, BufferCoord pos, StringView content)
+{
+    auto range = buffer.insert(pos, content);
+    sel.anchor() = buffer.clamp(update_insert(sel.anchor(), range.begin, range.end));
+    sel.cursor() = buffer.clamp(update_insert(sel.cursor(), range.begin, range.end));
+    return range;
+}
+
+void SelectionList::replace(ConstArrayView<String> strings)
+{
+    if (strings.empty())
+        return;
+
+    for_each([&](size_t index, Selection& sel) {
+        Kakoune::replace(*m_buffer, sel, strings[std::min(strings.size()-1, index)]);
+    }, false);
 }
 
 void SelectionList::erase()

@@ -145,20 +145,12 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
     kak_assert(&buffer() == &context.buffer());
     const DisplaySetup setup = compute_display_setup(context);
 
-    const int tabstop = context.options()["tabstop"].get<int>();
-    for (LineCount line = 0; line < setup.window_range.line; ++line)
+    for (LineCount line = 0; line < setup.line_count; ++line)
     {
-        LineCount buffer_line = setup.window_pos.line + line;
+        LineCount buffer_line = setup.first_line + line;
         if (buffer_line >= buffer().line_count())
             break;
-        auto beg_byte = get_byte_to_column(buffer(), tabstop, {buffer_line, setup.window_pos.column});
-        auto end_byte = setup.full_lines ?
-            buffer()[buffer_line].length()
-          : get_byte_to_column(buffer(), tabstop, {buffer_line, setup.window_pos.column + setup.window_range.column});
-
-        // The display buffer always has at least one buffer atom, which might be empty if
-        // beg_byte == end_byte
-        lines.emplace_back(AtomList{ {buffer(), {buffer_line, beg_byte}, {buffer_line, end_byte}} });
+        lines.emplace_back(AtomList{{buffer(), {buffer_line, {buffer_line, buffer()[buffer_line].length()}}}});
     }
 
     m_display_buffer.compute_range();
@@ -166,9 +158,12 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
     for (auto pass : { HighlightPass::Wrap, HighlightPass::Move, HighlightPass::Colorize })
         m_builtin_highlighters.highlight({context, setup, pass, {}}, m_display_buffer, range);
 
+    for (auto& line : m_display_buffer.lines())
+        line.trim_from(setup.widget_columns, setup.first_column, m_dimensions.column);
+
     m_display_buffer.optimize();
 
-    set_position(setup.window_pos);
+    set_position({setup.first_line, setup.first_column});
     m_last_setup = build_setup(context);
 
     if (profile and not (buffer().flags() & Buffer::Flags::Debug))
@@ -209,10 +204,9 @@ void Window::run_resize_hook_ifn()
 
 static void check_display_setup(const DisplaySetup& setup, const Window& window)
 {
-    kak_assert(setup.window_pos.line >= 0 and setup.window_pos.line < window.buffer().line_count());
-    kak_assert(setup.window_pos.column >= 0);
-    kak_assert(setup.window_range.column >= 0);
-    kak_assert(setup.window_range.line >= 0);
+    kak_assert(setup.first_line >= 0 and setup.first_line < window.buffer().line_count());
+    kak_assert(setup.first_column >= 0);
+    kak_assert(setup.line_count >= 0);
 }
 
 DisplaySetup Window::compute_display_setup(const Context& context) const
@@ -233,12 +227,13 @@ DisplaySetup Window::compute_display_setup(const Context& context) const
         win_pos.line = std::min(buffer().line_count()-1, cursor.line + offset.line - m_dimensions.line + 1);
 
     DisplaySetup setup{
-        win_pos,
-        m_dimensions,
+        win_pos.line,
+        m_dimensions.line,
+        win_pos.column,
+        0_col,
         {cursor.line - win_pos.line,
          get_column(buffer(), tabstop, cursor) - win_pos.column},
-        offset,
-        false
+        offset
     };
     for (auto pass : { HighlightPass::Move, HighlightPass::Wrap })
         m_builtin_highlighters.compute_display_setup({context, setup, pass, {}}, setup);
@@ -246,17 +241,17 @@ DisplaySetup Window::compute_display_setup(const Context& context) const
 
     // now ensure the cursor column is visible
     {
-        auto underflow = std::max(-setup.window_pos.column,
+        auto underflow = std::max(-setup.first_column,
                                   setup.cursor_pos.column - setup.scroll_offset.column);
         if (underflow < 0)
         {
-            setup.window_pos.column += underflow;
+            setup.first_column += underflow;
             setup.cursor_pos.column -= underflow;
         }
-        auto overflow = setup.cursor_pos.column + setup.scroll_offset.column - setup.window_range.column + 1;
+        auto overflow = setup.cursor_pos.column + setup.scroll_offset.column - (m_dimensions.column - setup.widget_columns)  + 1;
         if (overflow > 0)
         {
-            setup.window_pos.column += overflow;
+            setup.first_column += overflow;
             setup.cursor_pos.column -= overflow;
         }
         check_display_setup(setup, *this);
@@ -347,7 +342,7 @@ void Window::clear_display_buffer()
 void Window::on_option_changed(const Option& option)
 {
     run_hook_in_own_context(Hook::WinSetOption, format("{}={}", option.name(), option.get_desc_string()));
-    // an highlighter might depend on the option, so we need to redraw
+    // a highlighter might depend on the option, so we need to redraw
     force_redraw();
 }
 

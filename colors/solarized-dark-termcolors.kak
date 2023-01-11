@@ -41,6 +41,8 @@ face global MenuBackground     bright-cyan,black
 face global MenuInfo           bright-green
 face global Information        black,bright-cyan
 face global Error              red,default+b
+face global DiagnosticError    red
+face global DiagnosticWarning  yellow
 face global StatusLine         bright-cyan,black+b
 face global StatusLineMode     bright-red
 face global StatusLineInfo     cyan

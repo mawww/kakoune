@@ -1,0 +1,2 @@
+edit -scratch
+map global user d :delete-buffer<ret>

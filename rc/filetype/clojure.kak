@@ -181,7 +181,7 @@ EOF
 define-command -hidden clojure-configure-window %{
     set-option window static_words %opt{clojure_static_words}
 
-    hook window ModeChange pop:insert:.* -group clojure-trim-indent  clojure-trim-indent
+    hook window ModeChange pop:insert:.* -group clojure-trim-indent clojure-trim-indent
     hook window InsertChar \n -group clojure-indent clojure-indent-on-new-line
 
     set-option buffer extra_word_chars '_' . / * ? + - < > ! : "'"
@@ -213,7 +213,7 @@ define-command -hidden clojure-indent-on-new-line %{
         }
         try %{ execute-keys -draft '[rl"i<a-Z><gt>' }
         try %{ execute-keys -draft '[Bl"i<a-Z><gt>' }
-        execute-keys -draft ';"i<a-z>a&<space>'
+        execute-keys -draft ';"i<a-z>a&,'
     }
 }
 

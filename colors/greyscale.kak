@@ -12,7 +12,7 @@ evaluate-commands %sh{
     grey_dark_3="rgb:424242"
     grey_dark_4="rgb:212121"
 
-    cat <<- EOF
+    cat <<EOF
 
     # For Code
     set-face global keyword ${grey_dark_2}
@@ -66,6 +66,8 @@ evaluate-commands %sh{
 
     set-face global Information ${grey_light_2},${grey_dark_2}
     set-face global Error ${grey_light_2},${grey_dark_3}
+    set-face global DiagnosticError ${grey_dark_3}
+    set-face global DiagnosticWarning ${grey_dark_2}
     set-face global BufferPadding ${grey_light_1}
 
 EOF

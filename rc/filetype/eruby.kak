@@ -1,17 +1,17 @@
 # eRuby
 # http://www2a.biglobe.ne.jp/~seki/ruby/erb.html
 
-hook global BufCreate '.*\.html\.erb' %{
+hook global BufCreate '.*\.erb' %{
   set-option buffer filetype eruby
 }
 
 hook global WinSetOption filetype=eruby %{
   require-module eruby
   add-highlighter window/eruby ref eruby
-  hook -group eruby window InsertChar '\n' html-indent-on-new-line
+  hook -group eruby-indent window InsertChar '\n' html-indent-on-new-line
   hook -always -once window WinSetOption filetype=.* %{
     remove-highlighter window/eruby
-    remove-hooks window eruby
+    remove-hooks window eruby-.+
   }
 }
 

@@ -47,10 +47,12 @@ String ClientManager::generate_name() const
 
 Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui, int pid,
                                      String name, EnvVarMap env_vars, StringView init_cmds,
-                                     Optional<BufferCoord> init_coord,
+                                     StringView init_buffer, Optional<BufferCoord> init_coord,
                                      Client::OnExitCallback on_exit)
 {
-    Buffer& buffer = BufferManager::instance().get_first_buffer();
+    Buffer& buffer = init_buffer.empty() ? BufferManager::instance().get_first_buffer()
+                                         : BufferManager::instance().get_buffer(init_buffer);
+
     WindowAndSelections ws = get_free_window(buffer);
     Client* client = new Client{std::move(ui), std::move(ws.window),
                                 std::move(ws.selections), pid,
@@ -74,8 +76,7 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui, int pi
     }
     catch (Kakoune::runtime_error& error)
     {
-        client->context().print_status({ fix_atom_text(error.what().str()),
-                                         client->context().faces()["Error"] });
+        client->context().print_status({error.what().str(), client->context().faces()["Error"]});
         client->context().hooks().run_hook(Hook::RuntimeError, error.what(),
                                            client->context());
     }
@@ -84,8 +85,9 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui, int pi
     return contains(m_clients, client) ? client : nullptr;
 }
 
-void ClientManager::process_pending_inputs()
+bool ClientManager::process_pending_inputs()
 {
+    bool processed_some_input = false;
     while (true)
     {
         bool had_input = false;
@@ -101,12 +103,14 @@ void ClientManager::process_pending_inputs()
                 continue;
             }
             had_input = m_clients[i]->process_pending_inputs() or had_input;
+            processed_some_input |= had_input;
             ++i;
         }
 
         if (not had_input)
             break;
     }
+    return processed_some_input;
 }
 
 bool ClientManager::has_pending_inputs() const

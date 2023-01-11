@@ -13,7 +13,7 @@ This walk-through is an introduction to Kakoune's basic editing capabilities
 to help new users transition over easily from another editor, or simply
 learn how to write and edit documents with style.
 
-During the learning period it is useful to activate an automatically displayed
+During the learning period, it is useful to activate an automatically displayed
 contextual help for commands in normal mode: `:set -add global autoinfo normal`
 
 In the first section, you will learn about the primitives of the editing
@@ -26,7 +26,7 @@ role has a less dominant place in an everyday editing session, but still
 prove themselves powerful when used on the right occasion.
 
 Finally, as this document is in no way an exhaustive list of features, don't
-hesitate to check out the official documentation to compliment your tool-set,
+hesitate to check out the official documentation to complement your tool-set,
 ask questions to more seasoned users on IRC, and check the documentation
 using the built-in `:doc` command.
 
@@ -61,7 +61,7 @@ using the built-in `:doc` command.
  .---,---,---,---,  If you're not familiar with this concept, the proximity
  | ← | ↓ | ↑ | → |  of those four keys with the rest of the lettered keys
  `---'---'---'---`  on a `qwerty` layout allows faster interaction with the
-                    primitives than if the user had to moves their hand to
+                    primitives than if the user had to move their hand to
    .---,            reach the arrow keys.
    | g |_.
    `---' |`.---,    Another way of moving the cursor is the "goto" utility,
@@ -77,10 +77,10 @@ using the built-in `:doc` command.
 
    .---,            Displacing the cursor can sometimes move the view into an
    | v |_.          inconvenient configuration, leaving some necessary context
-   `---' |`.---,    off screen, or simply feel uncomfortable to type into.
+   `---' |`.---,    off-screen, or simply feel uncomfortable to type into.
          | | t |    Kakoune provides a menu (similar to the `goto` menu
          | `---'    mentioned in the previous section) that allows users to
-         |`.---,    move the current view in relation with the position of the
+         |`.---,    move the current view in relation to the position of the
          | | b |    cursor. Upon hitting the `v` key, a short menu appears
          | `---'    which allows us to hit a second key according to how the
           `.---,    view should be centered vertically: to leave the cursor
@@ -141,12 +141,12 @@ using the built-in `:doc` command.
      .---, .---,    expressions, certain objects are defined by default to
      |alt|+| i |    allow easy selection of text. Objects are bits of text
      `---' `---'    in the buffer that are identified according to their
-                    structure, rather than their contents, e.g. a paragraph,
+                    structure, rather than their contents, e.g., a paragraph,
      .---, .---,    a sentence, or a word. When the cursor is located within
      |alt|+| a |    the boundaries of an object you want to interact with,
      `---' `---'    several options are available: selecting the contents of an
                     object without its boundaries (`<a-i>`), a part of it (from
-        .---,       the anchor to its end or to its beginning, respectively `]`
+        .---,       the anchor to its end or its beginning, respectively `]`
         | ] |       and `[`), or the entire object (`<a-a>`). Those "selection
         `---'       ranges" are the first part of a two stages shortcut,
                     as once you've used the key that dictates what part of
@@ -163,7 +163,7 @@ using the built-in `:doc` command.
     `---' |`.---,
           | | ( |   Example: to select everything between the anchor and the
           | `---'   beginning of the current parenthesis pair, use the selection
-           `.---,   sequence is: `[ (`. Note that common objects that use
+           `.---,   sequence: `[ (`. Note that common objects that use
             | r |   pairs of opening/closing punctuation signs (brackets,
             `---'   braces, quotes etc) have an alternative second key that
                     is displayed in the information menu that you can use to
@@ -177,7 +177,7 @@ using the built-in `:doc` command.
     | [ |_.         about the buffer. As selecting objects will displace the
     `---'  `.---,   anchor into a given direction, you can wrap or move around
             | p |   particular chunks of text without using the conventional
-            `---'   means (e.g. arrow keys or jumps), turning them partially
+            `---'   means (e.g., arrow keys or jumps), turning them partially
                     into movement primitives.
     .---,
     | ] |_.         Example: one of the most used object selection combination
@@ -193,7 +193,7 @@ using the built-in `:doc` command.
 
                     Selecting an entire buffer (`%`) or parts of it (`s`) is a
                     natural and basic operation in a typical editing session,
-     .---, .---,    however there are some cases where we need to be able to
+     .---, .---,    however, there are some cases where we need to be able to
      |alt|+| k |    drop some selections arbitrarily, as opposed to trying
      `---' `---'    to select the ones we need directly. This concept becomes
                     very useful when coming up with a regular expression for
@@ -225,13 +225,13 @@ using the built-in `:doc` command.
         `---'
         .---,       Note that the default "paste" primitive will insert the
         | P |       contents of the copy register after the current selection,
-        `---'       if you want copied test to be inserted before the current
+        `---'       if you want copied text to be inserted before the current
                     selection then you can use the `P` key.
 
 
                     =[ DELETING / REPLACING SELECTIONS
 
-                    Text replacement is a two step process in Kakoune, which
+                    Text replacement is a two-step process in Kakoune, which
         .---,       involves selecting text to be replaced, and then erasing it
         | d |       to insert the replacement text. After selections have been
         `---'       made, you can simply hit the deletion primitive (`d`), then
@@ -265,7 +265,7 @@ using the built-in `:doc` command.
                     splitting primitive (`S`) allows applying a delimiter to
                     the current selection, splitting it into separate chunks.
 
-                    Example: selecting the items in a CSV-style list (e.g.
+                    Example: selecting the items in a CSV-style list (e.g.,
                     "1,2,3,4") is as simple as selecting the line, then
                     splitting it using the comma separator (`S,`). Note that
                     more advanced splitting is possible, since the delimiter
@@ -281,10 +281,10 @@ using the built-in `:doc` command.
      .---, .---,    is given by the count parameter.
      |alt|+| ) |
      `---' `---'    Example: in a numbered list where all the numbers are
-                    selected (e.g. `1 2 3 4 5 6 7 8 9 0`), a rotation using
+                    selected (e.g., `1 2 3 4 5 6 7 8 9 0`), a rotation using
                     this primitive will shift all the numbers by one selection
-                    forward, while leaving the original multiple selection
-                    untouched (e.g. `0 1 2 3 4 5 6 7 8 9`).
+                    forward, while leaving the original multiple selections
+                    untouched (e.g., `0 1 2 3 4 5 6 7 8 9`).
 
 
                     =[ COUNTS
@@ -297,11 +297,11 @@ using the built-in `:doc` command.
          |`.---,
          | | G |    Example: in order to respectively jump or select up to a
          | `---'    particular line, pass the line number to the `g` or `G`
-         |`.---,    primitives (e.g. `42g` or `7G`).
+         |`.---,    primitives (e.g., `42g` or `7G`).
          | | o |
          | `---'    Example: creating an arbitrary amount of new lines
           `.---,    above or below the current line and spawning a new selection
-           | O |    for each of them is achieved by passing the amount of lines
+           | O |    for each of them is achieved by passing the number of lines
            `---'    as a count respectively to the `o` and `O` primitives.
 
 
@@ -314,14 +314,14 @@ using the built-in `:doc` command.
            |a-z|    specific register by default, it's possible to modify which
            `---'    is going to be populated upon execution using the double
                     quote (`"`) primitive, and subsequently hitting a key that
-        .---,       will serve as identifier.
+        .---,       will serve as an identifier.
         | * |
         `---'       Example: the smart search primitive (`*`) uses the current
                     selection as a search pattern, which will be saved to the
    .---,            `/` register. In order to use this primitive to execute a
    | " |_. .---,    temporary search, one could make this primitive save the
-   `---'  `| _ |    pattern to a different register, to preserve the default one
-           `---'    e.g. `"m*` to save the pattern to the `m` register, or even
+   `---'  `| _ |    pattern to a different register, to preserve the default one,
+           `---'    e.g., `"m*` to save the pattern to the `m` register, or even
                     `"_*` to save the pattern to a "null" register, which not
                     store anything written to it.
 
@@ -337,14 +337,14 @@ using the built-in `:doc` command.
 |ctl|+| r |_.       mode can be achieved using the `%` register, which holds
 `---' `---'  `.---, this information: `<c-r>%`.
               | % |
-              `---' Another kind of registers that is set automatically are
+              `---' Other registers that are set automatically are
                     the numbered registers, which hold the values of the groups
                     matched in the last search or select operation (`/` and
 .---, .---,         `s` primitives).
 |ctl|+| r |_.
 `---' `---'  `.---, Example: when using the search primitive (`/`) with a
               |0-9| regular expression containing groups to match a list of
-              `---' first and last names (e.g. `(\w+) (\w+)` on `John Doe`),
+              `---' first and last names (e.g., `(\w+) (\w+)` on `John Doe`),
                     issuing `<c-r>1` would insert the first name (`John`),
                     and `<c-r>2` the last name (`Doe`).
 
@@ -356,14 +356,14 @@ using the built-in `:doc` command.
                     and additional manual editing of the selections is
         .---,       needed. In order to loop through all the selections and
         | ) |       remove the current one, two primitives are available:
-        `---'       respectively the parenthesis (`)`), and the alt/space
-                    key combination (`<a-space>`).
+        `---'       respectively the parenthesis (`)`), and the alt/comma
+                    key combination (`<a-,>`).
      .---, .---,
-     |alt|+|spc|    Example: given a list of three numbers all selected
-     `---' `---'    individually, (e.g. `1 2 3`), deselecting the second
+     |alt|+| , |    Example: given a list of three numbers all selected
+     `---' `---'    individually, (e.g., `1 2 3`), deselecting the second
                     selection would be done by hitting the parenthesis primitive
                     (`)`) until the according selection is the current one,
-                    then hitting `<a-space>` to end up with only the first
+                    then hitting `<a-,>` to end up with only the first
                     and third number selected.
 
                     However, being able to trim out some selections out
@@ -396,11 +396,11 @@ using the built-in `:doc` command.
                     be sent through the command's standard input.
 
                     Example: wrapping a selection can be achieved by invoking
-                    the `fold` utility, e.g. `|fold -w80`. You could also want
+                    the `fold` utility, e.g., `|fold -w80`. You could also want
                     to see a patch of all the modifications made to the buffer
                     since it was last saved: `%|diff -u <c-r>% -`. Note that
                     the `<c-r>%` has to be typed interactively, as it will
-                    insert the name name of the buffer into the command.
+                    insert the name of the buffer into the command.
 
                     Another equally useful primitive that doesn't depend on
         .---,       the contents of the current selections is the exclamation
@@ -422,7 +422,7 @@ using the built-in `:doc` command.
 
                     Example: after selecting all the lines in a buffer and
                     splitting them individually (`%`, `<a-s>`), keeping every
-                    odd numbered line can be achieved with the following
+                    odd-numbered line can be achieved with the following
                     sequence: `$` `[ $((kak_reg_hash)) -ne 0 ]`.
 
 
@@ -433,9 +433,9 @@ using the built-in `:doc` command.
                     In order to modify text efficiently or insert redundant
                     bits of data, two primitives are available. The dot `.`
         .---,       primitive repeats the last change that was made in insert
-        | . |       mode (e.g. writing down text after hitting the insert
+        | . |       mode (e.g., writing down text after hitting the insert
         `---'       primitive `i`). Similarly, repeating the last selection
-                    (make with e.g. the find primitive `f`) can be achieved
+                    (e.g., make with the find primitive `f`) can be achieved
                     using the `<a-.>` primitive.
 
                     Example: to select a paragraph to append a newline
@@ -454,7 +454,7 @@ using the built-in `:doc` command.
         .---,       solutions is to record the modifications made to one
         | Q |       chunk interactively, and replay the sequence of keys
         `---'       at will. The sequence in question is a macro: the `Q`
-                    primitive will create a new one (i.e. record all the keys
+                    primitive will create a new one (i.e., record all the keys
 .---, .---,         hit henceforth until the escape key `<esc>` is hit), and
 |ctl|+| r |_.       the `q` primitive will replay the keys saved in the macro.
 `---' `---'  `.---,

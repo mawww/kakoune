@@ -57,28 +57,16 @@ struct Token
 
     Type type;
     ByteCount pos;
-    BufferCoord coord;
     String content;
+    bool terminated = false;
 };
 
-struct Reader
+struct ParseState
 {
-public:
-    Reader(StringView s) : str{s}, pos{s.begin()}, line_start{s.begin()}, line{} {}
-
-    Codepoint operator*() const;
-    Codepoint peek_next() const;
-    Reader& operator++();
-    Reader&  next_byte();
-
-    explicit operator bool() const { return pos < str.end(); }
-    StringView substr_from(const char* start) const { return {start, pos}; }
-    BufferCoord coord() const { return {line, (int)(pos - line_start)}; }
-
     StringView str;
     const char* pos;
-    const char* line_start;
-    LineCount line;
+
+    operator bool() const { return pos != str.end(); }
 };
 
 class CommandParser
@@ -87,12 +75,11 @@ public:
     CommandParser(StringView command_line);
     Optional<Token> read_token(bool throw_on_unterminated);
 
-    const char* pos() const { return m_reader.pos; }
-    BufferCoord coord() const { return m_reader.coord(); }
-    bool done() const { return not m_reader; }
+    const char* pos() const { return m_state.pos; }
+    bool done() const { return not m_state; }
 
 private:
-    Reader m_reader;
+    ParseState m_state;
 };
 
 class CommandManager : public Singleton<CommandManager>
@@ -103,8 +90,7 @@ public:
 
     void execute_single_command(CommandParameters params,
                                 Context& context,
-                                const ShellContext& shell_context,
-                                BufferCoord pos = {});
+                                const ShellContext& shell_context);
 
 
     Completions complete(const Context& context, CompletionFlags flags,
@@ -125,6 +111,8 @@ public:
                           CommandFlags flags = CommandFlags::None,
                           CommandHelper helper = CommandHelper(),
                           CommandCompleter completer = CommandCompleter());
+
+    void set_command_completer(StringView command_name, CommandCompleter completer);
 
     Completions complete_command_name(const Context& context, StringView query) const;
 

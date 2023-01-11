@@ -111,7 +111,7 @@ define-command clang-complete -docstring "Complete the current selection" %{ cla
 
 define-command -hidden clang-show-completion-info %[ try %[
     evaluate-commands -draft %[
-        execute-keys <space>{( <a-k> ^\( <ret> b <a-k> \A\w+\z <ret>
+        execute-keys ,{( <a-k> ^\( <ret> b <a-k> \A\w+\z <ret>
         evaluate-commands %sh[
             desc=$(printf %s\\n "${kak_opt_clang_completions}" | sed -e "{ s/\([^\\]\):/\1\n/g }" | sed -ne "/^${kak_selection}|/ { s/^[^|]\+|//; s/|.*$//; s/\\\:/:/g; p }")
             if [ -n "$desc" ]; then

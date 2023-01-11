@@ -6,9 +6,25 @@ function fun2()
     foo()
 end
 
-
 function fun3()
     if true then
         foo()
     end
 end
+
+function fun4()
+    if true then
+        return 10
+    else
+        foo()
+    end
+end
+
+function fun5()
+    if true then
+        foo()
+        return 10
+end
+
+local str = "while"
+foo()

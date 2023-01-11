@@ -14,7 +14,7 @@ hook global BufCreate .*[.](lisp) %{
 hook global WinSetOption filetype=lisp %{
     require-module lisp
 
-    hook window ModeChange pop:insert:.* -group lisp-trim-indent  lisp-trim-indent
+    hook window ModeChange pop:insert:.* -group lisp-trim-indent lisp-trim-indent
     hook window InsertChar \n -group lisp-indent lisp-indent-on-new-line
     set-option buffer extra_word_chars '_' '+' '-' '*' '/' '@' '$' '%' '^' '&' '_' '=' '<' '>' '~' '.'
 
@@ -48,7 +48,7 @@ add-highlighter shared/lisp/code/ regex (\b\d+)?\.\d+([eEsSfFdDlL]\d+)?\b 0:valu
 
 define-command -hidden lisp-trim-indent %{
     # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel x s \h+$ <ret> d }
 }
 
 declare-option \
@@ -74,7 +74,7 @@ define-command -hidden lisp-indent-on-new-line %{
         }
         try %{ execute-keys -draft '[rl"i<a-Z><gt>' }
         try %{ execute-keys -draft '[Bl"i<a-Z><gt>' }
-        execute-keys -draft ';"i<a-z>a&<space>'
+        execute-keys -draft ';"i<a-z>a&,'
     }
 }
 

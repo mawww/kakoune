@@ -22,7 +22,7 @@ def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
     if [ -n "${filename}" ]; then
         printf 'source %%{%s}' "${filename}"
     else
-        echo "fail 'No such colorscheme'"
+        echo "fail 'No such colorscheme ${1}.kak'"
     fi
 }}
 

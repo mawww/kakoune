@@ -3,7 +3,19 @@ end
 
 function fun2()%( )
 
-
 function fun3()
     if true then%( )
 end
+
+function fun4()
+    if true then
+        return 10
+    else%( )
+end
+
+function fun5()
+    if true then%( )
+        return 10
+end
+
+local str = "while"%( )

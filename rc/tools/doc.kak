@@ -54,7 +54,7 @@ define-command -hidden doc-parse-anchors %{
     } }
 }
 
-define-command doc-jump-to-anchor -params 1 %{
+define-command -hidden doc-jump-to-anchor -params 1 %{
     update-option buffer doc_anchors
     evaluate-commands %sh{
         anchor="$1"
@@ -71,7 +71,7 @@ define-command doc-jump-to-anchor -params 1 %{
     }
 }
 
-define-command doc-follow-link %{
+define-command -hidden doc-follow-link %{
     update-option buffer doc_links
     evaluate-commands %sh{
         eval "set -- $kak_quoted_opt_doc_links"
@@ -125,52 +125,32 @@ define-command -params 1 -hidden doc-render %{
 
     # Remove escaping of * and `
     try %{ execute-keys -draft <percent> s \\((?=\*)|(?=`)) <ret> d }
+    # Go to beginning of file
+    execute-keys 'gg'
 
     set-option buffer readonly true
     add-highlighter buffer/ ranges doc_render_ranges
     add-highlighter buffer/ wrap -word -indent
-    map buffer normal <ret> ': doc-follow-link<ret>'
+    map buffer normal <ret> :doc-follow-link<ret>
 }
 
-define-command -params 1..2 \
-    -shell-script-candidates %{
-        if [ "$kak_token_to_complete" -eq 0 ]; then
-            find -L \
-                "${kak_config}/autoload/" \
-                "${kak_runtime}/doc/" \
-                "${kak_runtime}/rc/" \
-                -type f -name "*.asciidoc" |
-                sed 's,.*/,,; s/\.[^.]*$//'
-        elif [ "$kak_token_to_complete" -eq 1 ]; then
-            page=$(
-                find -L \
-                    "${kak_config}/autoload/" \
-                    "${kak_runtime}/doc/" \
-                    "${kak_runtime}/rc/" \
-                    -type f -name "$1.asciidoc" |
-                    head -1
-            )
-            if [ -f "${page}" ]; then
-                awk '
-                    /^==+ +/ { sub(/^==+ +/, ""); print }
-                    /^\[\[[^\]]+\]\]/ { sub(/^\[\[/, ""); sub(/\]\].*/, ""); print }
-                ' < $page | tr '[A-Z ]' '[a-z-]'
-            fi
-        fi
-    } \
-    doc -docstring %{
+define-command doc -params 0..2 -menu -docstring %{
         doc <topic> [<keyword>]: open a buffer containing documentation about a given topic
         An optional keyword argument can be passed to the function, which will be automatically selected in the documentation
 
         See `:doc doc` for details.
     } %{
     evaluate-commands %sh{
+        topic="doc"
+        if [ $# -ge 1 ]; then
+            topic="$1"
+        fi
         page=$(
             find -L \
                 "${kak_config}/autoload/" \
                 "${kak_runtime}/doc/" \
                 "${kak_runtime}/rc/" \
-                -type f -name "$1.asciidoc" |
+                -type f -name "$topic.asciidoc" 2>/dev/null |
                 head -1
         )
         if [ -f "${page}" ]; then
@@ -180,9 +160,36 @@ define-command -params 1..2 \
             fi
             printf %s\\n "evaluate-commands -try-client %opt{docsclient} %{ doc-render ${page}; ${jump_cmd} }"
         else
-            printf 'fail No such doc file: %s\n' "${page}"
+            printf 'fail No such doc file: %s\n' "$topic.asciidoc"
         fi
     }
+}
+
+complete-command doc shell-script-candidates %{
+    case "$kak_token_to_complete" in
+        0)
+            find -L \
+                "${kak_config}/autoload/" \
+                "${kak_runtime}/doc/" \
+                "${kak_runtime}/rc/" \
+                -type f -name "*.asciidoc" 2>/dev/null |
+                sed 's,.*/,,; s/\.[^.]*$//';;
+        1)
+            page=$(
+                find -L \
+                    "${kak_config}/autoload/" \
+                    "${kak_runtime}/doc/" \
+                    "${kak_runtime}/rc/" \
+                    -type f -name "$1.asciidoc" 2>/dev/null |
+                    head -1
+            )
+            if [ -f "${page}" ]; then
+                awk '
+                    /^==+ +/ { sub(/^==+ +/, ""); print }
+                    /^\[\[[^\]]+\]\]/ { sub(/^\[\[/, ""); sub(/\]\].*/, ""); print }
+                ' < $page | tr '[A-Z ]' '[a-z-]'
+            fi;;
+    esac
 }
 
 alias global help doc

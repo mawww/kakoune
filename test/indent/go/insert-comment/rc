@@ -1,0 +1,4 @@
+source "%val{runtime}/colors/default.kak"
+source "%val{runtime}/rc/filetype/go.kak"
+set buffer filetype go
+set-option global disabled_hooks go-closing-delimiter-insert

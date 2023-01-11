@@ -17,7 +17,8 @@ hook global WinSetOption filetype=purescript %{
     require-module purescript
 
     set-option buffer extra_word_chars '_' "'"
-    hook window ModeChange pop:insert:.* -group purescript-trim-indent  purescript-trim-indent
+    hook window ModeChange pop:insert:.* -group purescript-trim-indent purescript-trim-indent
+    hook window InsertChar \n -group purescript-insert purescript-insert-on-new-line
     hook window InsertChar \n -group purescript-indent purescript-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window purescript-.+ }
@@ -44,7 +45,7 @@ add-highlighter shared/purescript/code/ regex (?<!')\b0x+[A-Fa-f0-9]+ 0:value
 add-highlighter shared/purescript/code/ regex (?<!')\b\d+([.]\d+)? 0:value
 add-highlighter shared/purescript/code/ regex (?<!')\b(import|hiding|module)(?!')\b 0:keyword
 add-highlighter shared/purescript/code/ regex (?<!')\b(import)(?!')\b[^\n]+(?<!')\b(as)(?!')\b 2:keyword
-add-highlighter shared/purescript/code/ regex (?<!')\b(class|data|default|deriving|infix|infixl|infixr|instance|module|newtype|pattern|type|where)(?!')\b 0:keyword
+add-highlighter shared/purescript/code/ regex (?<!')\b(class|data|default|derive|infix|infixl|infixr|instance|module|newtype|pattern|type|where)(?!')\b 0:keyword
 add-highlighter shared/purescript/code/ regex (?<!')\b(case|do|else|if|in|let|mdo|of|proc|rec|then)(?!')\b 0:attribute
 add-highlighter shared/purescript/code/ regex (?<!')\b(type|data)\b\s+(\bfamily\b)?(?!') 0:keyword
 
@@ -93,13 +94,18 @@ add-highlighter shared/purescript/code/ regex ^\s*(?:where\s+|let\s+|default\s+)
 
 define-command -hidden purescript-trim-indent %{
     # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel x s \h+$ <ret> d }
+}
+
+define-command -hidden purescript-insert-on-new-line %{
+    evaluate-commands -draft -itersel %{
+        # copy -- comments prefix and following white spaces
+        try %{ execute-keys -draft k x s ^\h*\K--\h* <ret> y gh j P }
+    }
 }
 
 define-command -hidden purescript-indent-on-new-line %{
     evaluate-commands -draft -itersel %{
-        # copy -- comments prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*\K--\h* <ret> y gh j P }
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # align to first clause

@@ -70,7 +70,7 @@ evaluate-commands %sh{
     dark_grey="rgb:555555"
 
     # NOTE: Do not use any color that hasn't been defined above (no hardcoding)
-    cat <<- EOF
+    cat <<EOF
 
     # For Code
     set-face global keyword ${vibrant_blue}
@@ -124,6 +124,8 @@ evaluate-commands %sh{
 
     set-face global Information ${black},${light_yellow}
     set-face global Error ${white},${vibrant_red}
+    set-face global DiagnosticError ${high_contrast_red}
+    set-face global DiagnosticWarning ${high_contrast_yellow}
     set-face global BufferPadding ${dark_grey}
 
 EOF

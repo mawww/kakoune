@@ -100,27 +100,12 @@ public:
     }
 
     bool operator==(const iterator& other) const noexcept { return m_it == other.m_it; }
-    bool operator!=(const iterator& other) const noexcept { return m_it != other.m_it; }
-
-    bool operator< (const iterator& other) const noexcept { return m_it < other.m_it; }
-    bool operator<= (const iterator& other) const noexcept { return m_it <= other.m_it; }
-
-    bool operator> (const iterator& other) const noexcept { return m_it > other.m_it; }
-    bool operator>= (const iterator& other) const noexcept { return m_it >= other.m_it; }
+    auto operator<=> (const iterator& other) const noexcept { return m_it <=> other.m_it; }
 
     template<typename T>
-    std::enable_if_t<std::is_same<T, BaseIt>::value or std::is_same<T, Sentinel>::value, bool>
-    operator==(const T& other) const noexcept { return m_it == other; }
-
-    template<typename T>
-    std::enable_if_t<std::is_same<T, BaseIt>::value or std::is_same<T, Sentinel>::value, bool>
-    operator!=(const T& other) const noexcept { return m_it != other; }
-
-    bool operator< (const BaseIt& other) const noexcept { return m_it < other; }
-    bool operator<= (const BaseIt& other) const noexcept { return m_it <= other; }
-
-    bool operator> (const BaseIt& other) const noexcept { return m_it > other; }
-    bool operator>= (const BaseIt& other) const noexcept { return m_it >= other; }
+        requires std::is_same_v<T, BaseIt> or std::is_same_v<T, Sentinel>
+    bool operator==(const T& other) const noexcept { return m_it == other; }
+    auto operator<=> (const BaseIt& other) const noexcept { return m_it <=> other; }
 
     DifferenceType operator-(const iterator& other) const noexcept(noexcept_policy)
     {

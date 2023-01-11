@@ -1,0 +1,5 @@
+exec 5000oabcdefghi<esc>%yppppp
+nop %sh{
+    echo "write $kak_response_fifo" > "$kak_command_fifo"
+    cat "$kak_response_fifo"
+}

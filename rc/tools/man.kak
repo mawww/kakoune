@@ -14,7 +14,7 @@ hook -group man-highlight global WinSetOption filetype=man %{
     # References to other manpages
     add-highlighter window/man-highlight/ regex [-a-zA-Z0-9_.]+\([a-z0-9]+\) 0:header
 
-    map window normal <ret> ': man-jump<ret>'
+    map window normal <ret> :man-jump<ret>
 
     hook -once -always window WinSetOption filetype=.* %{
       remove-highlighter window/man-highlight
@@ -33,13 +33,18 @@ define-command -hidden -params ..3 man-impl %{ evaluate-commands %sh{
         exit
     fi
     shift
-    manout=$(mktemp "${TMPDIR:-/tmp}"/kak-man-XXXXXX)
-    manerr=$(mktemp "${TMPDIR:-/tmp}"/kak-man-XXXXXX)
-    colout=$(mktemp "${TMPDIR:-/tmp}"/kak-man-XXXXXX)
+    manout=$(mktemp "${TMPDIR:-/tmp}"/kak-man.XXXXXX)
+    manerr=$(mktemp "${TMPDIR:-/tmp}"/kak-man.XXXXXX)
+    colout=$(mktemp "${TMPDIR:-/tmp}"/kak-man.XXXXXX)
     env MANWIDTH=${kak_window_range##* } man "$@" > "$manout" 2> "$manerr"
     retval=$?
-    col -b -x > ${colout} < ${manout}
+    if command -v col >/dev/null; then
+        col -b -x > ${colout} < ${manout}
+    else
+        sed 's/.//g' > ${colout} < ${manout}
+    fi
     rm ${manout}
+
     if [ "${retval}" -eq 0 ]; then
         printf %s\\n "
                 edit -scratch %{*$buffer_name ${*}*}
@@ -102,9 +107,13 @@ declare-option -hidden regex man_link2 \
 
 # Define a useful command sequence for searching a given regex
 # and a given sequence of search keys.
-define-command man-search -params 2 %{
-  set-register / %arg[1]
-  execute-keys %arg[2]
+define-command -hidden man-search -params 2 %{
+    set-register / %arg[1]
+    try %{
+        execute-keys %arg[2]
+    } catch %{
+        fail "Could not find man page link"
+    }
 }
 
 define-command -docstring 'Go to next man page link' \
@@ -113,30 +122,16 @@ man-link-next %{ man-search %opt[man_link2] n }
 define-command -docstring 'Go to previous man page link' \
 man-link-prev %{ man-search %opt[man_link2] <a-n> }
 
-# Expand backward and forward, and then try to search for a man page link
-define-command man-link-here %{ evaluate-commands -save-regs / %{
-  man-search %opt[man_link2] '<a-?>\b\w<ret><a-;>?\)<ret>'
-}} -hidden
-
-# Search current selection for a man page link
-define-command man-link %{ evaluate-commands -save-regs / %{
-  man-search %opt[man_link1] s<ret>
-}} -hidden
-
 define-command -docstring 'Try to jump to a man page' \
 man-jump %{
-  try %{ man-link } catch %{ man-link-here } catch %{ fail 'Not a valid man page link' }
+  try %{ execute-keys <a-a><a-w> s %opt[man_link1] <ret> } catch %{ fail 'Not a valid man page link' }
   try %{ man } catch %{ fail 'No man page link to follow' }
 }
 
 # Suggested keymaps for a user mode
-declare-user-mode man-mode
+declare-user-mode man
 
-define-command man-mode-map -params 3 %{
-  map global man-mode %arg[1] %arg[2] -docstring %arg[3]
-} -hidden
-
-man-mode-map 'g' ': man-jump<ret>' 'Jump to a man page using selected man page link'
-man-mode-map 'j' ': try %{ man-link-next }<ret>' 'Go to next man page link'
-man-mode-map 'k' ': try %{ man-link-prev }<ret>' 'Go to previous man page link'
-man-mode-map 'm' ': man<space>' 'Look up a man page'
+map global man 'g' -docstring 'Jump to a man page using selected man page link' :man-jump<ret>
+map global man 'j' -docstring 'Go to next man page link'                        :man-link-next<ret>
+map global man 'k' -docstring 'Go to previous man page link'                    :man-link-prev<ret>
+map global man 'm' -docstring 'Look up a man page'                              :man<space>

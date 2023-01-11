@@ -58,12 +58,16 @@ of the file onto the filesystem
         Otherwise, does nothing.
 
 
-*write[!]* [-sync] [-method <writemethod>] [<filename>]::
+*write[!]* [-force] [-sync] [-method <writemethod>] [<filename>]::
     *alias* w +
     write buffer to <filename> or use its name if filename is not
     given. If the file is write-protected, its permissions are temporarily
     changed to allow saving the buffer and restored afterwards when
     the write! command is used.
+
+    *-force*:::
+        Equivalent to `!`, allow overwiting existing files if `<filename>`
+        is given and set permissions temporarily if necessary.
 
     *-sync*:::
         Synchronise the filesystem after the write
@@ -111,7 +115,7 @@ of the file onto the filesystem
     Debug buffers are skipped.
     (See <<buffers#debug-buffers,`:doc buffers debug-buffers`>>)
 
-*buffer-prev*::
+*buffer-previous*::
     *alias* bp +
     switch to the previous buffer.
     Debug buffers are skipped.
@@ -176,6 +180,11 @@ of the file onto the filesystem
     define a new alias named *name* in *scope*
     (See <<aliases,Using aliases>> and <<scopes#,`:doc scopes`>>)
 
+*complete-command* [<switches>] <name> <type> [<param>]::
+    *alias* compl +
+    configure how a command completion works
+    (See <<configuring-command-completion,Configuring command completion>>)
+
 *unalias* <scope> <name> [<command>]::
     remove an alias if its current value is the same as the one passed
     as an optional parameter, remove it unconditionally otherwise
@@ -209,13 +218,26 @@ of the file onto the filesystem
 
 == Hooks
 
-*hook* [-group <group>] <scope> <hook_name> <filtering_regex> <command>::
+*hook* [<switches>] <scope> <hook_name> <filtering_regex> <command>::
     execute *command* whenever a *hook_name* is triggered in *scope*
     (See <<hooks#,`:doc hooks`>> and <<scopes#,`:doc scopes`>>)
 
+    *-group <groupname>*:::
+        Add this hook to the *groupname* group, so it can be removed by the
+        `remove-hooks` command (below)
+        or disabled with the `disabled_hooks` option
+        (see <<options#builtin-options,`:doc options builtin-options`>>).
+
+    *-once*:::
+        This hook will be automatically removed after it has been executed.
+
+    *-always*:::
+        This hook will run even while hooks are disabled.
+        See <<hooks#disabling-hooks,`:doc hooks disabling-hooks`>>.
+
 *remove-hooks* <scope> <group>::
     *alias* rmhooks +
-    remove every hooks in *scope* that are part of the given *group*
+    remove every hook in *scope* whose group matches the regex *group*
     (See <<hooks#,`:doc hooks`>> and <<scopes#,`:doc scopes`>>)
 
 *trigger-user-hook* <param>::
@@ -237,6 +259,10 @@ of the file onto the filesystem
     *-to-file* <filename>:::
         write the given text to the given file on the host
         filesystem.
+
+    *-to-shell-script* <script>:::
+        execute the given shell script with the given text
+        written to its standard input
 
     *-quoting* <quoting>:::
         define how arguments are quoted in echo output:
@@ -406,13 +432,18 @@ but not really useful in that context.
 
 == Module commands
 
+In Kakoune, modules are a grouping of stored commands to be executed the first time
+they are needed. This allows complex configurations to be evaluated lazily, and allows
+plugins to ensure their dependencies have been loaded before they execute. The builtin
+filetype handling for Kakoune is implemented via modules.
+
 *provide-module* [<switches>] <name> <commands>::
     declares a module *name* that is defined by *commands*. *commands* will be
     evaluated as if by source the first time *require-module <name>* is run.
 
-*-override*:::
-    allow the module to replace an existing one with the same name. Fails if
-    the module has already been evaluated.
+    *-override*:::
+        allow the module to replace an existing one with the same name. Fails if
+        the module has already been evaluated.
 
 *require-module* <name>::
     guarantees the commands associated with *name* have been evaluated before
@@ -437,61 +468,34 @@ New commands can be defined using the *define-command* command:
     *commands* is a string containing the commands to execute, and *switches*
     can be any combination of the following parameters:
 
-*-params* <num>:::
-    the command accepts a *num* parameter, which can be either a number,
-    or of the form <min>..<max>, with both <min> and <max> omittable
+    *-params* <num>:::
+        the command accepts a *num* parameter, which can be either a number,
+        or of the form <min>..<max>, with both <min> and <max> omittable
 
-*-file-completion*:::
-    try file completion on any parameter passed to this command
+    *-override*:::
+        allow the new command to replace an existing one with the same name
 
-*-client-completion*:::
-    try client name completion on any parameter passed to this command
+    *-hidden*:::
+        do not show the command in command name completions
 
-*-buffer-completion*:::
-    try buffer name completion on any parameter passed to this command
+    *-docstring*:::
+        define the documentation string for the command
 
-*-command-completion*:::
-    try command completion on any parameter passed to this command
+    *-menu*:::
+    *-file-completion*:::
+    *-client-completion*:::
+    *-buffer-completion*:::
+    *-command-completion*:::
+    *-shell-completion*:::
+    *-shell-script-completion*:::
+    *-shell-script-candidates*:::
+        old-style command completion specification, function as-if
+        the switch and its eventual parameter was passed to the
+        *complete-command* command
+        (See <<configuring-command-completion,Configuring command completion>>)
 
-*-shell-completion*:::
-    try shell command completion on any parameter passed to this command
-
-*-shell-script-completion*:::
-    following string is a shell command which takes parameters as
-    positional params and outputs one completion candidate per line.
-    The provided shell command will run after each keypress
-
-    during the execution of the shell command, the following env vars are
-    available:
-
-    - *kak_token_to_complete*::::
-        Index of the token being completed in the command line.
-
-    - *kak_pos_in_token*::::
-        Position of the cursor inside the token being completed, in bytes
-        from token start.
-
-*-shell-script-candidates*:::
-    following string is a shell command which takes parameters as
-    positional params and outputs one completion candidate per line.
-    The provided shell command will run once at the beginning of each
-    completion session, candidates are cached and then used by kakoune
-    internal fuzzy engine
-
-    during the execution of the shell command, the following env vars are
-    available:
-
-    - *kak_token_to_complete*::::
-        Index of the token being completed in the command line.
-
-*-override*:::
-    allow the new command to replace an existing one with the same name
-
-*-hidden*:::
-    do not show the command in command name completions
-
-*-docstring*:::
-    define the documentation string for the command
+        The use of those switches is discouraged in favor of the
+        *complete-command* command.
 
 Using shell expansion allows defining complex commands or accessing
 Kakoune's state:
@@ -500,6 +504,66 @@ Kakoune's state:
 # create a directory for current buffer if it does not exist
 define-command mkdir %{ nop %sh{ mkdir -p $(dirname $kak_buffile) } }
 ---------------------------------------------------------------------
+
+== Configuring command completion
+
+Command completion can be configured with the *complete-command* command:
+
+*complete-command* [<switches>] <command_name> <completion_type> [<parameter>]::
+    *switches* can be:
+
+    *-menu*:::
+        the suggestions generated by the completion options are the only
+        permitted parameters. Kakoune will autoselect the best completion
+        candidate on command validation.
+
+    *completion_type* can be:
+
+    *file*:::
+        try file completion on any parameter passed to the command
+
+    *client*:::
+        try client name completion on any parameter passed to the command
+
+    *buffer*:::
+        try buffer name completion on any parameter passed to the command
+
+    *command*:::
+        try command completion on any parameter passed to the command
+
+    *shell*:::
+        try shell command completion on any parameter passed to the command
+
+    *shell-script*:::
+        following string is a shell command which takes parameters as
+        positional params and outputs one completion candidate per line.
+        The provided shell command will run after each keypress.
+        During the execution of the shell command, the following env vars are
+        available:
+
+        *$kak_token_to_complete*::::
+            Index of the token being completed in the command line.
+            Note that unlike the Unix `argv` tradition,
+            0 is the first argument, not the command name itself.
+
+        *$kak_pos_in_token*::::
+            Position of the cursor inside the token being completed, in bytes
+            from token start.
+
+    *shell-script-candidates*:::
+        following string is a shell script which takes parameters as
+        positional params and outputs one completion candidate per line.
+        The provided shell script will run once at the beginning of each
+        completion session, candidates are cached and then used by kakoune
+        internal fuzzy engine.
+
+        During the execution of the shell script, the following env vars are
+        available:
+
+        *$kak_token_to_complete*::::
+            Index of the token being completed in the command line.
+            Note that unlike the Unix `argv` tradition,
+            0 is the first argument, not the command name itself.
 
 == Aliases
 

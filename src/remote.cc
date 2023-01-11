@@ -183,6 +183,9 @@ private:
         }
     };
 
+    template<typename T>
+    struct Reader<ArrayView<T>> : Reader<Vector<std::remove_cv_t<T>, MemoryDomain::Undefined>> {};
+
     template<typename Key, typename Value, MemoryDomain domain>
     struct Reader<HashMap<Key, Value, domain>> {
         static HashMap<Key, Value, domain> read(MsgReader& reader)
@@ -256,7 +259,7 @@ public:
     }
 
     template<typename T>
-    T read()
+    auto read()
     {
         return Reader<T>::read(*this);
     }
@@ -461,7 +464,7 @@ static bool send_data(int fd, RemoteBuffer& buffer, Optional<int> ancillary_fd =
 }
 
 RemoteUI::RemoteUI(int socket, DisplayCoord dimensions)
-    : m_socket_watcher(socket,  FdEvents::Read | FdEvents::Write,
+    : m_socket_watcher(socket,  FdEvents::Read | FdEvents::Write, EventMode::Urgent,
                        [this](FDWatcher& watcher, FdEvents events, EventMode) {
           const int sock = watcher.fd();
           try
@@ -587,30 +590,26 @@ String get_user_name()
     return getenv("USER");
 }
 
-String session_directory()
+const String& session_directory()
 {
-    StringView xdg_runtime_dir = getenv("XDG_RUNTIME_DIR");
-    if (xdg_runtime_dir.empty())
-        return format("{}/kakoune/{}", tmpdir(), get_user_name());
-    else
-        return format("{}/kakoune", xdg_runtime_dir);
-}
-
-void make_session_directory()
-{
-    StringView xdg_runtime_dir = getenv("XDG_RUNTIME_DIR");
-    if (xdg_runtime_dir.empty())
-    {
-        // set sticky bit on the shared kakoune directory
-        make_directory(format("{}/kakoune", tmpdir()), 01777);
-    }
-    make_directory(session_directory(), 0711);
+    static String session_dir = [] {
+        StringView xdg_runtime_dir = getenv("XDG_RUNTIME_DIR");
+        if (not xdg_runtime_dir.empty())
+        {
+            if (struct stat st; stat(xdg_runtime_dir.zstr(), &st) == 0 && st.st_uid == geteuid())
+                return format("{}/kakoune", xdg_runtime_dir);
+            else
+                write_to_debug_buffer("XDG_RUNTIME_DIR does not exist or not owned by current user, using tmpdir");
+        }
+        return format("{}/kakoune-{}", tmpdir(), get_user_name());
+    }();
+    return session_dir;
 }
 
 String session_path(StringView session)
 {
-    if (contains(session, '/'))
-        throw runtime_error{"session names cannot have slashes"};
+    if (not all_of(session, is_identifier))
+        throw runtime_error{format("invalid session name: '{}'", session)};
     return format("{}/{}", session_directory(), session);
 }
 
@@ -618,7 +617,10 @@ static sockaddr_un session_addr(StringView session)
 {
     sockaddr_un addr;
     addr.sun_family = AF_UNIX;
-    strcpy(addr.sun_path, session_path(session).c_str());
+    String path = session_path(session);
+    if (path.length() + 1 > sizeof addr.sun_path)
+        throw runtime_error{format("socket path too long: '{}'", path)};
+    strcpy(addr.sun_path, path.c_str());
     return addr;
 }
 
@@ -659,11 +661,22 @@ RemoteClient::RemoteClient(StringView session, StringView name, std::unique_ptr<
         m_socket_watcher->events() |= FdEvents::Write;
      });
 
-    m_socket_watcher.reset(new FDWatcher{sock, FdEvents::Read | FdEvents::Write,
+    m_socket_watcher.reset(new FDWatcher{sock, FdEvents::Read | FdEvents::Write, EventMode::Urgent,
                            [this, reader = MsgReader{}](FDWatcher& watcher, FdEvents events, EventMode) mutable {
         const int sock = watcher.fd();
         if (events & FdEvents::Write and send_data(sock, m_send_buffer))
             watcher.events() &= ~FdEvents::Write;
+
+        auto exec = [&]<typename ...Args>(void (UserInterface::*method)(Args...)) {
+            struct Impl // Use a constructor to ensure left-to-right parameter evaluation
+            {
+                Impl(UserInterface& ui, void (UserInterface::*method)(Args...), Args... args)
+                {
+                    (ui.*method)(std::forward<Args>(args)...);
+                }
+            };
+            Impl{*m_ui, method, reader.read<std::remove_cvref_t<Args>>()...};
+        };
 
         while (events & FdEvents::Read and
                not reader.ready() and fd_readable(sock))
@@ -677,62 +690,34 @@ RemoteClient::RemoteClient(StringView session, StringView name, std::unique_ptr<
             switch (reader.type())
             {
             case MessageType::MenuShow:
-            {
-                auto choices = reader.read<Vector<DisplayLine>>();
-                auto anchor = reader.read<DisplayCoord>();
-                auto fg = reader.read<Face>();
-                auto bg = reader.read<Face>();
-                auto style = reader.read<MenuStyle>();
-                m_ui->menu_show(choices, anchor, fg, bg, style);
+                exec(&UserInterface::menu_show);
                 break;
-            }
             case MessageType::MenuSelect:
-                m_ui->menu_select(reader.read<int>());
+                exec(&UserInterface::menu_select);
                 break;
             case MessageType::MenuHide:
-                m_ui->menu_hide();
+                exec(&UserInterface::menu_hide);
                 break;
             case MessageType::InfoShow:
-            {
-                auto title = reader.read<DisplayLine>();
-                auto content = reader.read<DisplayLineList>();
-                auto anchor = reader.read<DisplayCoord>();
-                auto face = reader.read<Face>();
-                auto style = reader.read<InfoStyle>();
-                m_ui->info_show(title, content, anchor, face, style);
+                exec(&UserInterface::info_show);
                 break;
-            }
             case MessageType::InfoHide:
-                m_ui->info_hide();
+                exec(&UserInterface::info_hide);
                 break;
             case MessageType::Draw:
-            {
-                auto display_buffer = reader.read<DisplayBuffer>();
-                auto default_face = reader.read<Face>();
-                auto padding_face = reader.read<Face>();
-                m_ui->draw(display_buffer, default_face, padding_face);
+                exec(&UserInterface::draw);
                 break;
-            }
             case MessageType::DrawStatus:
-            {
-                auto status_line = reader.read<DisplayLine>();
-                auto mode_line = reader.read<DisplayLine>();
-                auto default_face = reader.read<Face>();
-                m_ui->draw_status(status_line, mode_line, default_face);
+                exec(&UserInterface::draw_status);
                 break;
-            }
             case MessageType::SetCursor:
-            {
-                auto mode = reader.read<CursorMode>();
-                auto coord = reader.read<DisplayCoord>();
-                m_ui->set_cursor(mode, coord);
+                exec(&UserInterface::set_cursor);
                 break;
-            }
             case MessageType::Refresh:
-                m_ui->refresh(reader.read<bool>());
+                exec(&UserInterface::refresh);
                 break;
             case MessageType::SetOptions:
-                m_ui->set_ui_options(reader.read<HashMap<String, String, MemoryDomain::Options>>());
+                exec(&UserInterface::set_ui_options);
                 break;
             case MessageType::Exit:
                 m_exit_status = reader.read<int>();
@@ -773,7 +758,7 @@ class Server::Accepter
 {
 public:
     Accepter(int socket)
-        : m_socket_watcher(socket, FdEvents::Read,
+        : m_socket_watcher(socket, FdEvents::Read, EventMode::Urgent,
                            [this](FDWatcher&, FdEvents, EventMode mode) {
                                handle_available_input(mode);
                            })
@@ -808,7 +793,7 @@ private:
                 auto* ui = new RemoteUI{sock, dimensions};
                 ClientManager::instance().create_client(
                     std::unique_ptr<UserInterface>(ui), pid, std::move(name),
-                    std::move(env_vars), init_cmds, init_coord,
+                    std::move(env_vars), init_cmds, {}, init_coord,
                     [ui](int status) { ui->exit(status); });
 
                 Server::instance().remove_accepter(this);
@@ -852,14 +837,11 @@ private:
 Server::Server(String session_name, bool is_daemon)
     : m_session{std::move(session_name)}, m_is_daemon{is_daemon}
 {
-    if (not all_of(m_session, is_identifier))
-        throw runtime_error{format("invalid session name: '{}'", session_name)};
-
     int listen_sock = socket(AF_UNIX, SOCK_STREAM, 0);
     fcntl(listen_sock, F_SETFD, FD_CLOEXEC);
     sockaddr_un addr = session_addr(m_session);
 
-    make_session_directory();
+    make_directory(session_directory(), 0711);
 
     // Do not give any access to the socket to other users by default
     auto old_mask = umask(0077);
@@ -884,14 +866,11 @@ Server::Server(String session_name, bool is_daemon)
 
         m_accepters.emplace_back(new Accepter{sock});
     };
-    m_listener.reset(new FDWatcher{listen_sock, FdEvents::Read, accepter});
+    m_listener.reset(new FDWatcher{listen_sock, FdEvents::Read, EventMode::Urgent, accepter});
 }
 
 bool Server::rename_session(StringView name)
 {
-    if (not all_of(name, is_identifier))
-        throw runtime_error{format("invalid session name: '{}'", name)};
-
     String old_socket_file = session_path(m_session);
     String new_socket_file = session_path(name);
 

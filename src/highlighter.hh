@@ -10,6 +10,7 @@
 #include "array_view.hh"
 #include "string.hh"
 #include "utils.hh"
+#include "parameters_parser.hh"
 
 #include <memory>
 
@@ -28,7 +29,7 @@ enum class HighlightPass
 };
 constexpr bool with_bit_ops(Meta::Type<HighlightPass>) { return true; }
 
-// An Highlighter is a function which mutates a DisplayBuffer in order to
+// A Highlighter is a function which mutates a DisplayBuffer in order to
 // change the visual representation of a file. It could be changing text
 // color, adding information text (line numbering for example) or replacing
 // buffer content (folding for example)
@@ -37,16 +38,14 @@ struct Highlighter;
 
 struct DisplaySetup
 {
-    // Window position relative to the buffer origin
-    DisplayCoord window_pos;
-    // Range of lines and columns from the buffer that will get displayed
-    DisplayCoord window_range;
+    LineCount first_line;
+    LineCount line_count;
+    ColumnCount first_column;
+    ColumnCount widget_columns;
     // Position of the cursor in the window
     DisplayCoord cursor_pos;
     // Offset of line and columns that must remain visible around cursor
     DisplayCoord scroll_offset;
-    // Put full lines in the initial display buffer
-    bool full_lines;
 };
 
 using HighlighterIdList = ConstArrayView<StringView>;
@@ -86,13 +85,19 @@ private:
 using HighlighterParameters = ConstArrayView<String>;
 using HighlighterFactory = std::unique_ptr<Highlighter> (*)(HighlighterParameters params, Highlighter* parent);
 
-struct HighlighterFactoryAndDocstring
+struct HighlighterDesc
 {
-    HighlighterFactory factory;
-    String docstring;
+    const char* docstring;
+    ParameterDesc params;
 };
 
-struct HighlighterRegistry : HashMap<String, HighlighterFactoryAndDocstring, MemoryDomain::Highlight>,
+struct HighlighterFactoryAndDescription
+{
+    HighlighterFactory factory;
+    const HighlighterDesc* description;
+};
+
+struct HighlighterRegistry : HashMap<String, HighlighterFactoryAndDescription, MemoryDomain::Highlight>,
                              Singleton<HighlighterRegistry>
 {};
 

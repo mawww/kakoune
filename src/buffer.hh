@@ -68,18 +68,14 @@ public:
     BufferIterator(const Buffer& buffer, BufferCoord coord) noexcept;
 
     bool operator== (const BufferIterator& iterator) const noexcept;
-    bool operator!= (const BufferIterator& iterator) const noexcept;
-    bool operator<  (const BufferIterator& iterator) const noexcept;
-    bool operator<= (const BufferIterator& iterator) const noexcept;
-    bool operator>  (const BufferIterator& iterator) const noexcept;
-    bool operator>= (const BufferIterator& iterator) const noexcept;
-
+    std::strong_ordering operator<=>(const BufferIterator& iterator) const noexcept;
     bool operator== (const BufferCoord& coord) const noexcept;
-    bool operator!= (const BufferCoord& coord) const noexcept;
 
     const char& operator* () const noexcept;
     const char& operator[](size_t n) const noexcept;
     size_t operator- (const BufferIterator& iterator) const;
+
+    explicit operator bool() const { return static_cast<bool>(m_buffer); }
 
     BufferIterator operator+ (ByteCount size) const;
     BufferIterator operator- (ByteCount size) const;
@@ -129,8 +125,10 @@ public:
 
     enum class HistoryId : size_t { First = 0, Invalid = (size_t)-1 };
 
-    Buffer(String name, Flags flags, StringView data = {},
-           timespec fs_timestamp = InvalidTime);
+    Buffer(String name, Flags flags, BufferLines lines,
+           ByteOrderMark bom = ByteOrderMark::None,
+           EolFormat eolformat = EolFormat::Lf,
+           FsStatus fs_status = {InvalidTime, {}, {}});
     Buffer(const Buffer&) = delete;
     Buffer& operator= (const Buffer&) = delete;
     ~Buffer();
@@ -192,8 +190,8 @@ public:
     // returns nearest valid coordinates from given ones
     BufferCoord clamp(BufferCoord coord) const;
 
-    BufferCoord offset_coord(BufferCoord coord, CharCount offset, ColumnCount, bool) const;
-    BufferCoordAndTarget offset_coord(BufferCoordAndTarget coord, LineCount offset, ColumnCount tabstop, bool avoid_eol) const;
+    BufferCoord offset_coord(BufferCoord coord, CharCount offset, ColumnCount) const;
+    BufferCoordAndTarget offset_coord(BufferCoordAndTarget coord, LineCount offset, ColumnCount tabstop) const;
 
     const String& name() const { return m_name; }
     const String& display_name() const { return m_display_name; }
@@ -210,7 +208,7 @@ public:
     void run_hook_in_own_context(Hook hook, StringView param,
                                  String client_name = {});
 
-    void reload(StringView data, timespec fs_timestamp = InvalidTime);
+    void reload(BufferLines lines, ByteOrderMark bom, EolFormat eolformat, FsStatus status);
 
     void check_invariant() const;
 

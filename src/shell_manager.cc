@@ -4,6 +4,7 @@
 #include "client.hh"
 #include "clock.hh"
 #include "context.hh"
+#include "command_manager.hh"
 #include "display_buffer.hh"
 #include "event_manager.hh"
 #include "face_registry.hh"
@@ -52,9 +53,13 @@ ShellManager::ShellManager(ConstArrayView<EnvVarDesc> builtin_env_vars)
     }
     else // Get a guaranteed to be POSIX shell binary
     {
+        #if defined(_CS_PATH)
         auto size = confstr(_CS_PATH, nullptr, 0);
         String path; path.resize(size-1, 0);
         confstr(_CS_PATH, path.data(), size);
+        #else
+        StringView path = "/bin:/usr/bin";
+        #endif
         for (auto dir : StringView{path} | split<StringView>(':'))
         {
             auto candidate = format("{}/sh", dir);
@@ -72,7 +77,7 @@ ShellManager::ShellManager(ConstArrayView<EnvVarDesc> builtin_env_vars)
     // have access to the kak command regardless of if the user installed it
     {
         const char* path = getenv("PATH");
-        auto new_path = format("{}:{}", path, split_path(get_kak_binary_path()).first);
+        auto new_path = format("{}../libexec/kak:{}", split_path(get_kak_binary_path()).first, path);
         setenv("PATH", new_path.c_str(), 1);
     }
 }
@@ -105,7 +110,7 @@ template<typename Func>
 pid_t spawn_shell(const char* shell, StringView cmdline,
                   ConstArrayView<String> params,
                   ConstArrayView<String> kak_env,
-                  Func setup_child)
+                  Func setup_child) noexcept
 {
     Vector<const char*> envptrs;
     for (char** envp = environ; *envp; ++envp)
@@ -128,40 +133,127 @@ pid_t spawn_shell(const char* shell, StringView cmdline,
     setup_child();
 
     execve(shell, (char* const*)execparams.data(), (char* const*)envptrs.data());
+    char buffer[1024];
+    write(STDERR_FILENO, format_to(buffer, "execve failed: {}\n", strerror(errno)));
     _exit(-1);
     return -1;
 }
 
-Vector<String> generate_env(StringView cmdline, const Context& context, const ShellContext& shell_context)
+template<typename GetValue>
+Vector<String> generate_env(StringView cmdline, const Context& context, GetValue&& get_value)
 {
     static const Regex re(R"(\bkak_(quoted_)?(\w+)\b)");
 
-    Vector<String> kak_env;
+    Vector<String> env;
     for (auto&& match : RegexIterator{cmdline.begin(), cmdline.end(), re})
     {
         StringView name{match[2].first, match[2].second};
-        Quoting quoting = match[1].matched ? Quoting::Shell : Quoting::Raw;
+        StringView shell_name{match[0].first, match[0].second};
 
         auto match_name = [&](const String& s) {
-            return s.substr(0_byte, name.length()) == name and
-                   s.substr(name.length(), 1_byte) == "=";
+            return s.substr(0_byte, shell_name.length()) == shell_name and
+                   s.substr(shell_name.length(), 1_byte) == "=";
         };
-        if (any_of(kak_env, match_name))
+        if (any_of(env, match_name))
             continue;
 
-        auto var_it = shell_context.env_vars.find(name);
         try
         {
-            String value = var_it != shell_context.env_vars.end() ?
-                var_it->value : join(ShellManager::instance().get_val(name, context) | transform(quoter(quoting)), ' ', false);
-
             StringView quoted{match[1].first, match[1].second};
-            kak_env.push_back(format("kak_{}{}={}", quoted, name, value));
+            Quoting quoting = match[1].matched ? Quoting::Shell : Quoting::Raw;
+            env.push_back(format("kak_{}{}={}", quoted, name, get_value(name, quoting)));
         } catch (runtime_error&) {}
     }
 
-    return kak_env;
+    return env;
 }
+
+template<typename OnClose>
+FDWatcher make_reader(int fd, String& contents, OnClose&& on_close)
+{
+    return {fd, FdEvents::Read, EventMode::Urgent,
+            [&contents, on_close](FDWatcher& watcher, FdEvents, EventMode) {
+        const int fd = watcher.fd();
+        char buffer[1024];
+        while (fd_readable(fd))
+        {
+            ssize_t size = ::read(fd, buffer, sizeof(buffer));
+            if (size <= 0)
+            {
+                if (size < 0 and errno == EAGAIN)
+                    continue; // try again
+
+                watcher.disable();
+                on_close(size == 0);
+                return;
+            }
+            contents += StringView{buffer, buffer+size};
+        }
+    }};
+}
+
+FDWatcher make_pipe_writer(Pipe& pipe, StringView contents)
+{
+    int flags = fcntl(pipe.write_fd(), F_GETFL, 0);
+    fcntl(pipe.write_fd(), F_SETFL, flags | O_NONBLOCK);
+    return {pipe.write_fd(), FdEvents::Write, EventMode::Urgent,
+            [contents, &pipe](FDWatcher& watcher, FdEvents, EventMode) mutable {
+        while (fd_writable(pipe.write_fd()))
+        {
+            ssize_t size = ::write(pipe.write_fd(), contents.begin(),
+                                   (size_t)contents.length());
+            if (size > 0)
+                contents = contents.substr(ByteCount{(int)size});
+            if (size == -1 and (errno == EAGAIN or errno == EWOULDBLOCK))
+                return;
+            if (size < 0 or contents.empty())
+            {
+                pipe.close_write_fd();
+                watcher.disable();
+                return;
+            }
+        }
+    }};
+}
+
+struct CommandFifos
+{
+    String base_dir;
+    String command;
+    FDWatcher command_watcher;
+
+    CommandFifos(Context& context, const ShellContext& shell_context)
+      : base_dir(format("{}/kak-fifo.XXXXXX", tmpdir())),
+        command_watcher([&] {
+            mkdtemp(base_dir.data()),
+            mkfifo(command_fifo_path().c_str(), 0600);
+            mkfifo(response_fifo_path().c_str(), 0600);
+            int fd = open(command_fifo_path().c_str(), O_RDONLY | O_NONBLOCK);
+            return make_reader(fd, command, [&, fd](bool graceful) {
+                if (not graceful)
+                {
+                    write_to_debug_buffer(format("error reading from command fifo '{}'", strerror(errno)));
+                    return;
+                }
+                CommandManager::instance().execute(command, context, shell_context);
+                command.clear();
+                command_watcher.reset_fd(fd);
+            });
+        }())
+    {
+    }
+
+    ~CommandFifos()
+    {
+        command_watcher.close_fd();
+        unlink(command_fifo_path().c_str());
+        unlink(response_fifo_path().c_str());
+        rmdir(base_dir.c_str());
+    }
+
+    String command_fifo_path() const { return format("{}/command-fifo", base_dir); }
+    String response_fifo_path() const { return format("{}/response-fifo", base_dir); }
+};
 
 }
 
@@ -176,7 +268,21 @@ std::pair<String, int> ShellManager::eval(
 
     auto start_time = profile ? Clock::now() : Clock::time_point{};
 
-    auto kak_env = generate_env(cmdline, context, shell_context);
+    Optional<CommandFifos> command_fifos;
+
+    auto kak_env = generate_env(cmdline, context, [&](StringView name, Quoting quoting) {
+        if (name == "command_fifo" or name == "response_fifo")
+        {
+            if (not command_fifos)
+                command_fifos.emplace(const_cast<Context&>(context), shell_context);
+            return name == "command_fifo" ?
+                command_fifos->command_fifo_path() : command_fifos->response_fifo_path();
+        }
+
+        if (auto it = shell_context.env_vars.find(name); it != shell_context.env_vars.end())
+            return it->value;
+        return join(get_val(name, context) | transform(quoter(quoting)), ' ', false);
+    });
 
     auto spawn_time = profile ? Clock::now() : Clock::time_point{};
 
@@ -211,58 +317,10 @@ std::pair<String, int> ShellManager::eval(
 
     auto wait_time = Clock::now();
 
-    struct PipeReader : FDWatcher
-    {
-        PipeReader(Pipe& pipe, String& contents)
-            : FDWatcher(pipe.read_fd(), FdEvents::Read,
-                        [&contents, &pipe](FDWatcher& watcher, FdEvents, EventMode) {
-                            char buffer[1024];
-                            while (fd_readable(pipe.read_fd()))
-                            {
-                                size_t size = ::read(pipe.read_fd(), buffer, 1024);
-                                if (size <= 0)
-                                {
-                                    pipe.close_read_fd();
-                                    watcher.disable();
-                                    return;
-                                }
-                                contents += StringView{buffer, buffer+size};
-                            }
-                        })
-        {}
-    };
-
-    struct PipeWriter : FDWatcher
-    {
-        PipeWriter(Pipe& pipe, StringView contents)
-            : FDWatcher(pipe.write_fd(), FdEvents::Write,
-                        [contents, &pipe](FDWatcher& watcher, FdEvents, EventMode) mutable {
-                            while (fd_writable(pipe.write_fd()))
-                            {
-                                ssize_t size = ::write(pipe.write_fd(), contents.begin(),
-                                                       (size_t)contents.length());
-                                if (size > 0)
-                                    contents = contents.substr(ByteCount{(int)size});
-                                if (size == -1 and (errno == EAGAIN or errno == EWOULDBLOCK))
-                                    return;
-                                if (size < 0 or contents.empty())
-                                {
-                                    pipe.close_write_fd();
-                                    watcher.disable();
-                                    return;
-                                }
-                            }
-                        })
-        {
-            int flags = fcntl(pipe.write_fd(), F_GETFL, 0);
-            fcntl(pipe.write_fd(), F_SETFL, flags | O_NONBLOCK);
-        }
-    };
-
     String stdout_contents, stderr_contents;
-    PipeReader stdout_reader{child_stdout, stdout_contents};
-    PipeReader stderr_reader{child_stderr, stderr_contents};
-    PipeWriter stdin_writer{child_stdin, input};
+    auto stdout_reader = make_reader(child_stdout.read_fd(), stdout_contents, [&](bool){ child_stdout.close_read_fd(); });
+    auto stderr_reader = make_reader(child_stderr.read_fd(), stderr_contents, [&](bool){ child_stderr.close_read_fd(); });
+    auto stdin_writer = make_pipe_writer(child_stdin, input);
 
     // block SIGCHLD to make sure we wont receive it before
     // our call to pselect, that will end up blocking indefinitly.
@@ -275,34 +333,43 @@ std::pair<String, int> ShellManager::eval(
     int status = 0;
     // check for termination now that SIGCHLD is blocked
     bool terminated = waitpid(pid, &status, WNOHANG) != 0;
+    bool failed = false;
 
     using namespace std::chrono;
     static constexpr seconds wait_timeout{1};
     Optional<DisplayLine> previous_status;
-    Timer wait_timer{wait_time + wait_timeout, [&](Timer& timer)
-    {
-        auto wait_duration = Clock::now() - wait_time;
-        if (context.has_client())
-        {
-            auto& client = context.client();
-            if (not previous_status)
-                previous_status = client.current_status();
+    Timer wait_timer{wait_time + wait_timeout, [&](Timer& timer) {
+        if (not context.has_client())
+            return;
 
-            client.print_status({ format("waiting for shell command to finish ({}s)",
-                                          duration_cast<seconds>(wait_duration).count()),
-                                    context.faces()["Information"] });
-            client.redraw_ifn();
-        }
-        timer.set_next_date(Clock::now() + wait_timeout);
+        const auto now = Clock::now();
+        timer.set_next_date(now + wait_timeout);
+        auto& client = context.client();
+        if (not previous_status)
+            previous_status = client.current_status();
+
+        client.print_status({format("waiting for shell command to finish{} ({}s)",
+                                     terminated ? " (shell terminated)" : "",
+                                     duration_cast<seconds>(now - wait_time).count()),
+                             context.faces()[failed ? "Error" : "Information"]});
+        client.redraw_ifn();
     }, EventMode::Urgent};
 
     while (not terminated or child_stdin.write_fd() != -1 or
            ((flags & Flags::WaitForStdout) and
             (child_stdout.read_fd() != -1 or child_stderr.read_fd() != -1)))
     {
-        EventManager::instance().handle_next_events(EventMode::Urgent, &orig_mask);
+        try
+        {
+            EventManager::instance().handle_next_events(EventMode::Urgent, &orig_mask);
+        }
+        catch (runtime_error& error)
+        {
+            write_to_debug_buffer(format("error while waiting for shell: {}", error.what()));
+            failed = true;
+        }
         if (not terminated)
-            terminated = waitpid(pid, &status, WNOHANG) != 0;
+            terminated = waitpid(pid, &status, WNOHANG) == pid;
     }
 
     if (not stderr_contents.empty())
@@ -334,7 +401,7 @@ Vector<String> ShellManager::get_val(StringView name, const Context& context) co
     });
 
     if (env_var == m_env_vars.end())
-        throw runtime_error("no such env var: " + name);
+        throw runtime_error("no such variable: " + name);
 
     return env_var->func(name, context);
 }

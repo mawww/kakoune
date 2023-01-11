@@ -16,8 +16,9 @@ hook global BufCreate .*[.](ragel|rl) %{
 hook global WinSetOption filetype=ragel %{
     require-module ragel
 
-    hook window ModeChange pop:insert:.* -group ragel-trim-indent  ragel-trim-indent
+    hook window ModeChange pop:insert:.* -group ragel-trim-indent ragel-trim-indent
     hook window InsertChar .* -group ragel-indent ragel-indent-on-char
+    hook window InsertChar \n -group ragel-insert ragel-insert-on-new-line
     hook window InsertChar \n -group ragel-indent ragel-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window ragel-.+ }
@@ -49,7 +50,7 @@ add-highlighter shared/ragel/code/ regex \b(action|alnum|alpha|any|ascii|case|cn
 
 define-command -hidden ragel-trim-indent %{
     # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel x s \h+$ <ret> d }
 }
 
 define-command -hidden ragel-indent-on-char %<
@@ -60,18 +61,23 @@ define-command -hidden ragel-indent-on-char %<
     >
 >
 
-define-command -hidden ragel-indent-on-new-line %<
+define-command -hidden ragel-insert-on-new-line %<
     evaluate-commands -draft -itersel %<
         # copy _#_ comment prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*\K#\h* <ret> y gh j P }
+        try %{ execute-keys -draft k x s ^\h*\K#\h* <ret> y gh j P }
+    >
+>
+
+define-command -hidden ragel-indent-on-new-line %<
+    evaluate-commands -draft -itersel %<
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line
         try %{ execute-keys -draft k : ragel-trim-indent <ret> }
         # indent after lines ending with opener token
-        try %< execute-keys -draft k <a-x> <a-k> [[{(*]$ <ret> j <a-gt> >
+        try %< execute-keys -draft k x <a-k> [[{(*]$ <ret> j <a-gt> >
         # align closer token to its opener when after cursor
-        try %< execute-keys -draft <a-x> <a-k> ^\h*[})\]] <ret> gh / [})\]] <ret> m <a-S> 1<a-&> >
+        try %< execute-keys -draft x <a-k> ^\h*[})\]] <ret> gh / [})\]] <ret> m <a-S> 1<a-&> >
     >
 >
 

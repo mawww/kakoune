@@ -1,0 +1,7 @@
+if A then
+end
+
+if A then
+    while B then
+    end
+end

@@ -16,6 +16,7 @@ hook global WinSetOption filetype=ruby %{
 
     set-option window static_words %opt{ruby_static_words}
 
+    hook window ModeChange pop:insert:.* -group ruby-trim-indent ruby-trim-indent
     hook window InsertChar .* -group ruby-indent ruby-indent-on-char
     hook window InsertChar \n -group ruby-indent ruby-indent-on-new-line
     hook window InsertChar \n -group ruby-insert ruby-insert-on-new-line
@@ -60,9 +61,9 @@ add-highlighter shared/ruby/              region -recurse \( '%[rxRX]\('  \)    
 add-highlighter shared/ruby/              region -recurse \{ '%[rxRX]\{'  \}         fill meta
 add-highlighter shared/ruby/              region -recurse \[ '%[rxRX]\['  \]         fill meta
 add-highlighter shared/ruby/              region -recurse  < '%[rxRX]<'    >         fill meta
-add-highlighter shared/ruby/              region -match-capture '%[qwQW]?([^0-9A-Za-z\(\{\[<>\]\}\)])' ([^0-9A-Za-z\(\{\[<>\]\}\)]) fill string
-add-highlighter shared/ruby/              region -match-capture '%[isIS]([^0-9A-Za-z\(\{\[<>\]\}\)])' ([^0-9A-Za-z\(\{\[<>\]\}\)]) fill variable
-add-highlighter shared/ruby/              region -match-capture '%[rxRX]([^0-9A-Za-z\(\{\[<>\]\}\)])' ([^0-9A-Za-z\(\{\[<>\]\}\)]) fill meta
+add-highlighter shared/ruby/              region -match-capture '%[qwQW]?([^\s0-9A-Za-z\(\{\[<>\]\}\)])' ([^\s0-9A-Za-z\(\{\[<>\]\}\)]) fill string
+add-highlighter shared/ruby/              region -match-capture '%[isIS]([^\s0-9A-Za-z\(\{\[<>\]\}\)])' ([^\s0-9A-Za-z\(\{\[<>\]\}\)]) fill variable
+add-highlighter shared/ruby/              region -match-capture '%[rxRX]([^\s0-9A-Za-z\(\{\[<>\]\}\)])' ([^\s0-9A-Za-z\(\{\[<>\]\}\)]) fill meta
 add-highlighter shared/ruby/heredoc region -match-capture '<<[-~]?(?!self)(\w+)'      '^\h*(\w+)$' fill string
 add-highlighter shared/ruby/division region '[\w\)\]]\K(/|(\h+/\h+))' '\w' group # Help Kakoune to better detect /…/ literals
 
@@ -90,7 +91,7 @@ evaluate-commands %sh{
     keywords="${keywords}|rescue|retry|return|self|super|then|true|undef|unless|until|when|while|yield"
     attributes="attr_reader|attr_writer|attr_accessor"
     values="false|true|nil"
-    meta="require|include|extend"
+    meta="require|require_relative|include|extend"
 
     # Add the language's grammar to the static completion list
     printf %s\\n "declare-option str-list ruby_static_words ${keywords} ${attributes} ${values} ${meta}" | tr '|' ' '
@@ -143,7 +144,7 @@ define-command ruby-alternative-file -docstring 'Jump to the alternate file (imp
 
 define-command -hidden ruby-trim-indent %{
     evaluate-commands -no-hooks -draft -itersel %{
-        execute-keys <a-x>
+        execute-keys x
         # remove trailing white spaces
         try %{ execute-keys -draft s \h + $ <ret> d }
     }
@@ -152,11 +153,10 @@ define-command -hidden ruby-trim-indent %{
 define-command -hidden ruby-indent-on-char %{
     evaluate-commands -no-hooks -draft -itersel %{
         # align middle and end structures to start
-        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (else)   $ <ret> <a-a> i <a-semicolon> <a-?> ^ \h * (if|case)                                               <ret> <a-S> 1<a-&> }
-        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (elsif)  $ <ret> <a-a> i <a-semicolon> <a-?> ^ \h * (if)                                                    <ret> <a-S> 1<a-&> }
-        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (when)   $ <ret> <a-a> i <a-semicolon> <a-?> ^ \h * (case)                                                  <ret> <a-S> 1<a-&> }
-        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (rescue) $ <ret> <a-a> i <a-semicolon> <a-?> ^ \h * (begin|def)                                             <ret> <a-S> 1<a-&> }
-        try %{ execute-keys -draft <a-x> <a-k> ^ \h * (end)    $ <ret> <a-a> i <a-semicolon> <a-?> ^ \h * (begin|case|class|def|for|if|module|unless|until|while) <ret> <a-S> 1<a-&> }
+        try %{ execute-keys -draft x <a-k> ^ \h * (else)   $ <ret> <a-a> i <a-semicolon> <a-?> ^ \h * (if|case)                                               <ret> <a-S> 1<a-&> }
+        try %{ execute-keys -draft x <a-k> ^ \h * (elsif)  $ <ret> <a-a> i <a-semicolon> <a-?> ^ \h * (if)                                                    <ret> <a-S> 1<a-&> }
+        try %{ execute-keys -draft x <a-k> ^ \h * (when)   $ <ret> <a-a> i <a-semicolon> <a-?> ^ \h * (case)                                                  <ret> <a-S> 1<a-&> }
+        try %{ execute-keys -draft x <a-k> ^ \h * (rescue) $ <ret> <a-a> i <a-semicolon> <a-?> ^ \h * (begin|def)                                             <ret> <a-S> 1<a-&> }
     }
 }
 
@@ -167,23 +167,23 @@ define-command -hidden ruby-indent-on-new-line %{
         # filter previous line
         try %{ execute-keys -draft k : ruby-trim-indent <ret> }
         # indent after start structure
-        try %{ execute-keys -draft k <a-x> <a-k> ^ \h * (begin|case|class|def|else|elsif|ensure|for|if|module|rescue|unless|until|when|while|.+\bdo$|.+\bdo\h\|.+(?=\|)) [^0-9A-Za-z_!?] <ret> j <a-gt> }
+        try %{ execute-keys -draft k x <a-k> ^ \h * (begin|case|class|def|else|elsif|ensure|for|if|module|rescue|unless|until|when|while|.+\bdo$|.+\bdo\h\|.+(?=\|)) [^0-9A-Za-z_!?] <ret> j <a-gt> }
     }
 }
 
 define-command -hidden ruby-insert-on-new-line %[
     evaluate-commands -no-hooks -draft -itersel %[
         # copy _#_ comment prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s '^\h*\K#\h*' <ret> y j <a-x><semicolon> P }
+        try %{ execute-keys -draft k x s ^\h*\K#\h* <ret> y jgi P }
         # wisely add end structure
         evaluate-commands -save-regs x %[
-            try %{ execute-keys -draft k <a-x> s ^ \h + <ret> \" x y } catch %{ reg x '' }
+            try %{ execute-keys -draft k x s ^ \h + <ret> \" x y } catch %{ reg x '' }
             try %[
                 evaluate-commands -draft %[
                     # Check if previous line opens a block
-                    execute-keys -draft k<a-x> <a-k>^<c-r>x(begin|case|class|def|for|if|module|unless|until|while|.+\bdo$|.+\bdo\h\|.+(?=\|))[^0-9A-Za-z_!?]<ret>
+                    execute-keys -draft kx <a-k>^<c-r>x(begin|case|class|def|for|if|module|unless|until|while|.+\bdo$|.+\bdo\h\|.+(?=\|))[^0-9A-Za-z_!?]<ret>
                     # Check that we do not already have an end for this indent level which is first set via `ruby-indent-on-new-line` hook
-                    execute-keys -draft }i J <a-x> <a-K> ^<c-r>x(end|else|elsif|rescue|when)[^0-9A-Za-z_!?]<ret>
+                    execute-keys -draft }i J x <a-K> ^<c-r>x(end|else|elsif|rescue|when)[^0-9A-Za-z_!?]<ret>
                 ]
                 execute-keys -draft o<c-r>xend<esc> # insert a new line with containing end
             ]

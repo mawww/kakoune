@@ -39,14 +39,19 @@ struct MatchResults
     {
         SubMatch() = default;
         SubMatch(Iterator begin, Iterator end)
-            : std::pair<Iterator, Iterator>{begin, end}, matched{begin != Iterator{}}
+            : std::pair<Iterator, Iterator>{begin, end}, matched{static_cast<bool>(begin)}
         {}
 
         bool matched = false;
     };
 
-    struct iterator : std::iterator<std::bidirectional_iterator_tag, SubMatch, size_t, SubMatch*, SubMatch>
+    struct iterator
     {
+        using difference_type = size_t;
+        using value_type = SubMatch;
+        using pointer = SubMatch*;
+        using reference = SubMatch;
+        using iterator_category = std::bidirectional_iterator_tag;
         using It = typename Vector<Iterator, MemoryDomain::Regex>::const_iterator;
 
         iterator() = default;

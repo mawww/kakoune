@@ -17,9 +17,7 @@ public:
 
     ~BufferManager();
 
-    Buffer* create_buffer(String name, Buffer::Flags flags,
-                          StringView data = {},
-                          timespec fs_timestamp = InvalidTime);
+    Buffer* create_buffer(String name, Buffer::Flags flags, BufferLines lines, ByteOrderMark bom, EolFormat eolformat, FsStatus fs_status);
 
     void delete_buffer(Buffer& buffer);
 

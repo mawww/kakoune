@@ -1,0 +1,3 @@
+decl range-specs range
+addhl window/ replace-ranges range
+set buffer range %val{timestamp} 1.6+0|xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx

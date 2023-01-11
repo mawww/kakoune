@@ -15,7 +15,8 @@ hook global WinSetOption filetype=gluon %{
     require-module gluon
 
     set-option window extra_word_chars '_' "'"
-    hook window ModeChange insert:.* -group gluon-trim-indent gluon-trim-indent
+    hook window ModeChange pop:insert:.* -group gluon-trim-indent gluon-trim-indent
+    hook window InsertChar \n -group gluon-insert gluon-insert-on-new-line
     hook window InsertChar \n -group gluon-indent gluon-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{
@@ -75,13 +76,18 @@ add-highlighter shared/gluon/code/ regex \B'([^\\]|[\\]['"\w\d\\])' 0:string
 
 define-command -hidden gluon-trim-indent %{
     # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel x s \h+$ <ret> d }
 }
+
+define-command -hidden gluon-insert-on-new-line %~
+    evaluate-commands -draft -itersel %_
+        # copy // and /// comments prefix and following white spaces
+        try %{ execute-keys -draft k x s ^\h*\K///?\h* <ret> y gh j P }
+    _
+~
 
 define-command -hidden gluon-indent-on-new-line %~
     evaluate-commands -draft -itersel %_
-        # copy // and /// comments prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*\K///?\h* <ret> y gh j P }
         # preserve previous line indent
         try %{ execute-keys -draft \; K <a-&> }
         # filter previous line
@@ -90,7 +96,7 @@ define-command -hidden gluon-indent-on-new-line %~
         # or in
         try %{ execute-keys -draft \; k x <a-k> (\(|\{|\[|=|->|\b(?:then|else|rec|in))$ <ret> j <a-gt> }
         # deindent closing brace(s) when after cursor
-        try %< execute-keys -draft <a-x> <a-k> ^\h*[})\]] <ret> gh / \})\]] <ret> m <a-S> 1<a-&> >
+        try %< execute-keys -draft x <a-k> ^\h*[})\]] <ret> gh / \})\]] <ret> m <a-S> 1<a-&> >
     _
 ~
 

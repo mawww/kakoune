@@ -1,1 +1,5 @@
 blank_issues_enabled: true
+contact_links:
+    - name: IRC channel
+      url: https://web.libera.chat/?channels=#kakoune
+      about: Ask your questions to get real time support on the official channel

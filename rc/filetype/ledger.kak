@@ -64,12 +64,14 @@ add-highlighter shared/ledger/other region '^(P|=|~)' '$' fill meta
 # The following highlighters implement
 # https://www.ledger-cli.org/3.0/doc/ledger3.html#Command-Directives
 
+add-highlighter shared/ledger/default default-region group
+
 # Add highlighters for simple one-line command directives
 evaluate-commands %sh{
     # TODO: Is `expr` also a command directive? The documentation confuses me.
     for cmd in 'apply account' 'apply fixed' 'assert' 'bucket' 'check' 'end' \
                'include' 'apply tag' 'test' 'year'; do
-        echo "add-highlighter shared/ledger/ region '^${cmd}' '.' fill function"
+        echo "add-highlighter shared/ledger/default/ regex '^${cmd}\b' 0:function"
     done
 }
 
@@ -129,14 +131,14 @@ define-command -hidden ledger-indent-on-new-line %[
         # preserve previous line indent
         try %[ execute-keys -draft <semicolon> K <a-&> ]
         # cleanup trailing whitespaces from previous line
-        try %[ execute-keys -draft k <a-x> s \h+$ <ret> d ]
+        try %[ execute-keys -draft k x s \h+$ <ret> d ]
         # indent after the first line of a transaction
-        try %[ execute-keys -draft k<a-x> <a-k>^[0-9]<ret> j<a-gt> ]
+        try %[ execute-keys -draft kx <a-k>^[0-9]<ret> j<a-gt> ]
     ]
 ]
 
 define-command -hidden ledger-trim-indent %{
-    try %{ execute-keys -draft <semicolon> <a-x> s ^\h+$ <ret> d }
+    try %{ execute-keys -draft <semicolon> x s ^\h+$ <ret> d }
 }
 
 ]

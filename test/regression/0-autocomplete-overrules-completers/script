@@ -1,0 +1,10 @@
+ui_out -ignore 4
+ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "i" ] }'
+sleep .2 # trigger insert completion auto update
+# Implicit completion can be toggled with <c-o>.
+ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "<esc>ji<c-o><c-n><esc>" ] }'
+# Implicit completion can be toggled with <c-n>.
+ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "ji<c-n><esc>" ] }'
+# Explicit completion still works.
+ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "ji./ui-<c-x>f<c-n>" ] }'
+

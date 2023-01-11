@@ -34,7 +34,7 @@ class FDWatcher
 {
 public:
     using Callback = std::function<void (FDWatcher& watcher, FdEvents events, EventMode mode)>;
-    FDWatcher(int fd, FdEvents events, Callback callback);
+    FDWatcher(int fd, FdEvents events, EventMode mode, Callback callback);
     FDWatcher(const FDWatcher&) = delete;
     FDWatcher& operator=(const FDWatcher&) = delete;
     ~FDWatcher();
@@ -42,15 +42,18 @@ public:
     int fd() const { return m_fd; }
     FdEvents events() const { return m_events; }
     FdEvents& events() { return m_events; }
+    EventMode mode() const { return m_mode; }
 
     void run(FdEvents events, EventMode mode);
 
+    void reset_fd(int fd) { m_fd = fd; }
     void close_fd();
     void disable() { m_fd = -1; }
 
 private:
     int      m_fd;
     FdEvents m_events;
+    EventMode m_mode;
     Callback m_callback;
 };
 
@@ -66,7 +69,8 @@ public:
     ~Timer();
 
     TimePoint next_date() const { return m_date; }
-    void      set_next_date(TimePoint date) { m_date = date; }
+    void set_next_date(TimePoint date) { m_date = date; }
+    void disable() { m_date = TimePoint::max(); }
     void run(EventMode mode);
 
 private:

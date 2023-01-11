@@ -1,0 +1,4 @@
+:update-completions<ret>
+i<c-n>a<ret><esc>
+:update-completions<ret>
+i<c-n><c-p>b<esc>

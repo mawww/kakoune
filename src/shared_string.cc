@@ -16,6 +16,8 @@ StringDataPtr StringData::create(ArrayView<const StringView> strs)
     auto* data = reinterpret_cast<char*>(res + 1);
     for (auto& str : strs)
     {
+        if (str.length() == 0) // memccpy(..., nullptr, 0) is UB
+            continue;
         memcpy(data, str.begin(), (size_t)str.length());
         data += (int)str.length();
     }

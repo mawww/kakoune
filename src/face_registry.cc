@@ -9,11 +9,12 @@ namespace Kakoune
 
 static FaceRegistry::FaceSpec parse_face(StringView facedesc)
 {
-    constexpr StringView invalid_face_error = "invalid face description, expected [<fg>][,<bg>][+<attr>][@base] or just [base]";
+    constexpr StringView invalid_face_error = "invalid face description, expected [<fg>][,<bg>[,<underline>]][+<attr>][@base] or just [base]";
     if (all_of(facedesc, [](char c){ return is_word(c); }) and not is_color_name(facedesc))
         return {Face{}, facedesc.str()};
 
     auto bg_it = find(facedesc, ',');
+    auto underline_it = bg_it == facedesc.end() ? bg_it : std::find(bg_it+1, facedesc.end(), ',');
     auto attr_it = find(facedesc, '+');
     auto base_it = find(facedesc, '@');
     if (bg_it != facedesc.end()
@@ -24,13 +25,23 @@ static FaceRegistry::FaceSpec parse_face(StringView facedesc)
         throw runtime_error(invalid_face_error.str());
 
     auto colors_end = std::min(attr_it, base_it);
+    if (underline_it != facedesc.end()
+        and underline_it > colors_end)
+        throw runtime_error(invalid_face_error.str());
+
+    auto parse_color = [](StringView spec) {
+        return spec.empty() ? Color::Default : str_to_color(spec);
+    };
 
     FaceRegistry::FaceSpec spec;
     auto& face = spec.face;
-    face.fg = colors_end != facedesc.begin() ?
-        str_to_color({facedesc.begin(), std::min(bg_it, colors_end)}) : Color::Default;
+    face.fg = parse_color({facedesc.begin(), std::min(bg_it, colors_end)});
     if (bg_it != facedesc.end())
-        face.bg = bg_it+1 != attr_it ? str_to_color({bg_it+1, colors_end}) : Color::Default;
+    {
+        face.bg = parse_color({bg_it+1, std::min(underline_it, colors_end)});
+        if (underline_it != facedesc.end())
+            face.underline = parse_color({underline_it+1, colors_end});
+    }
     if (attr_it != facedesc.end())
     {
         for (++attr_it; attr_it != base_it; ++attr_it)
@@ -38,11 +49,13 @@ static FaceRegistry::FaceSpec parse_face(StringView facedesc)
             switch (*attr_it)
             {
                 case 'u': face.attributes |= Attribute::Underline; break;
+                case 'c': face.attributes |= Attribute::CurlyUnderline; break;
                 case 'r': face.attributes |= Attribute::Reverse; break;
                 case 'b': face.attributes |= Attribute::Bold; break;
                 case 'B': face.attributes |= Attribute::Blink; break;
                 case 'd': face.attributes |= Attribute::Dim; break;
                 case 'i': face.attributes |= Attribute::Italic; break;
+                case 's': face.attributes |= Attribute::Strikethrough; break;
                 case 'f': face.attributes |= Attribute::FinalFg; break;
                 case 'g': face.attributes |= Attribute::FinalBg; break;
                 case 'a': face.attributes |= Attribute::FinalAttr; break;
@@ -64,11 +77,13 @@ String to_string(Attribute attributes)
     struct Attr { Attribute attr; StringView name; }
     attrs[] {
         { Attribute::Underline, "u" },
+        { Attribute::CurlyUnderline, "c" },
         { Attribute::Reverse, "r" },
         { Attribute::Blink, "B" },
         { Attribute::Bold, "b" },
         { Attribute::Dim, "d" },
         { Attribute::Italic, "i" },
+        { Attribute::Strikethrough, "s" },
         { Attribute::Final, "F" },
         { Attribute::FinalFg, "f" },
         { Attribute::FinalBg, "g" },
@@ -88,7 +103,7 @@ String to_string(Attribute attributes)
 
 String to_string(Face face)
 {
-    return format("{},{}{}", face.fg, face.bg, face.attributes);
+    return format("{},{},{}{}", face.fg, face.bg, face.underline, face.attributes);
 }
 
 Face FaceRegistry::operator[](StringView facedesc) const
@@ -172,6 +187,8 @@ FaceRegistry::FaceRegistry()
         { "MenuInfo", {Face{ Color::Cyan, Color::Default }} },
         { "Information", {Face{ Color::Black, Color::Yellow }} },
         { "Error", {Face{ Color::Black, Color::Red }} },
+        { "DiagnosticError", {Face{ Color::Red, Color::Default }} },
+        { "DiagnosticWarning", {Face{ Color::Yellow, Color::Default }} },
         { "StatusLine", {Face{ Color::Cyan, Color::Default }} },
         { "StatusLineMode", {Face{ Color::Yellow, Color::Default }} },
         { "StatusLineInfo", {Face{ Color::Blue, Color::Default }} },

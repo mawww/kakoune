@@ -114,7 +114,7 @@ are exclusively available to built-in options.
           is empty, but still valid.
 
         * _string_ is an arbitrary string which is associated with
-          the range.
+          the range. Any `|` or `\` characters must be escaped as `\|` or `\\`.
 
     All numeric fields are 1-based.
 
@@ -138,18 +138,31 @@ are exclusively available to built-in options.
     `set -add` appends the new specs to the list. +
     `set -remove` removes the given specs from the list. +
 
+    Any `|` or `\` characters that occur within `<flag text>` must be
+    escaped as `\|` or `\\`.
+
 *completions*::
     a list of `<text>|<select cmd>|<menu text>` candidates,
     except for the first element which follows the
     `<line>.<column>[+<length>]@<timestamp>` format to define where the
     completion apply in the buffer.
+    Any `|` or `\` characters that occur within the `<text>`,
+    `<select cmd>`, or `<menu text>` fields should be escaped as `\|`
+    or `\\`.
 
-    Select commands are arbitrary Kakoune commands that will be executed
-    each time the element is selected in the menu. The common use case is
-    to display element specific documentation.
+    Options of this type are are meant to be added to the `completers`
+    option to provide insert mode completion. Candidates are shown if the
+    text typed by the user (between `<line>.<column>` and the cursor) is a
+    subsequence of `<text>`.
 
-    Markup can be used in the menu text.
-    (see <<faces#markup-strings,`:doc faces markup-strings`>>)
+    For each remaining candidate, the completion menu displays
+    `<text>`, followed by `<menu text>`, which is a Markup string (see
+    <<faces#markup-strings,`:doc faces markup-strings`>>).
+
+    As the user selects items from the completion menu, the text they typed
+    will be replaced with `<text>`, and the Kakoune command in
+    `<select cmd>` is executed. The common use case is to display element
+    specific documentation.
 
     `set -add` adds given completions to the list. +
     `set -remove` removes given completions from the list. +
@@ -273,7 +286,11 @@ are exclusively available to built-in options.
 
 *extra_word_chars* `codepoint-list`::
     a list of all additional codepoints that should be considered
-    as word character. This must be set on the buffer, not the window,
+    part of a word, for the purposes of the `w`, `b`, and `e` commands
+    (See <<keys#movement,`:doc keys movement`>>).
+    If this option is empty, Kakoune pretends it contains an
+    underscore, otherwise the value is used as-is.
+    This must be set on the buffer, not the window,
     for word completion to offer words containing these codepoints.
 
 *matching_pairs* `codepoint-list`::
@@ -325,33 +342,40 @@ are exclusively available to built-in options.
 
 *ui_options* `str-to-str-map`::
     a list of `key=value` pairs that are forwarded to the user
-    interface implementation. The NCurses UI support the following options:
+    interface implementation. The NCurses UI supports the following options:
 
-        *ncurses_set_title*:::
+        *terminal_set_title*:::
             if *yes* or *true*, the terminal emulator title will
             be changed
 
-        *ncurses_status_on_top*:::
+        *terminal_status_on_top*:::
             if *yes*, or *true* the status line will be placed
             at the top of the terminal rather than at the bottom
 
-        *ncurses_assistant*:::
+        *terminal_assistant*:::
             specify the nice assistant displayed in info boxes,
             can be *clippy* (the default), *cat*, *dilbert* or *none*
 
-        *ncurses_enable_mouse*:::
+        *terminal_enable_mouse*:::
             boolean option that enables mouse support
 
-        *ncurses_change_colors*:::
-            boolean option that can disable color palette changing if the
-            terminfo enables it but the terminal does not support it.
-
-        *ncurses_wheel_down_button*, *ncurses_wheel_up_button*:::
-            specify which button send for wheel down/up events
-
-        *ncurses_shift_function_key*:::
+        *terminal_shift_function_key*:::
             Function key from which shifted function key start, if the
             terminal sends F13 for <s-F1>, this should be set to 12.
+
+        *terminal_padding_char*:::
+            character used to indicate the area out of the displayed buffer
+            (defaults to '~')
+
+        *terminal_padding_fill*:::
+            if *yes* or *true*, fill the padding area with the padding character
+            instead of displaying a single character at the beginning of the
+            padding line (defaults to *false*)
+
+        *terminal_synchronized*:::
+            if *yes* or *true*, emit synchronized output escape sequences and
+            reduce terminal output with sequences that could trigger flickering
+            if unsynchronized (defaults to *false*)
 
 [[startup-info]]
 *startup_info_version* `int`::

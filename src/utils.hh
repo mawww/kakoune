@@ -61,7 +61,7 @@ Singleton<T>* Singleton<T>::ms_instance = nullptr;
 // This permits to cleanup c-style resources without implementing
 // a wrapping class
 template<typename T>
-class OnScopeEnd
+class [[nodiscard]] OnScopeEnd
 {
 public:
     [[gnu::always_inline]]
@@ -162,6 +162,9 @@ auto to_underlying(E value)
 
 template<typename> class FunctionRef;
 
+template<typename From, typename To>
+concept ConvertibleTo = std::is_convertible_v<From, To>;
+
 template<typename Res, typename... Args>
 class FunctionRef<Res(Args...)>
 {
@@ -174,6 +177,10 @@ public:
     {}
 
     template<typename Target>
+        requires requires (Target t, Args... a) {
+            requires not std::is_same_v<FunctionRef, std::remove_cvref_t<Target>>;
+            { t(a...) } -> ConvertibleTo<Res>;
+        }
     FunctionRef(Target&& target)
       : m_target{&target},
         m_invoker{[](void* target, Args... args) {
@@ -201,7 +208,7 @@ struct Overload : Funcs...
 template<typename... Funcs>
 auto overload(Funcs&&... funcs)
 {
-    return Overload<std::decay_t<Funcs>...>{std::forward<Funcs>(funcs)...};
+    return Overload<std::remove_cvref_t<Funcs>...>{std::forward<Funcs>(funcs)...};
 }
 
 }

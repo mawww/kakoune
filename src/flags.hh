@@ -12,21 +12,18 @@ template<typename Flags>
 constexpr bool with_bit_ops(Meta::Type<Flags>) { return false; }
 
 template<typename Flags>
+concept WithBitOps = with_bit_ops(Meta::Type<Flags>{});
+
+template<typename Flags>
 using UnderlyingType = std::underlying_type_t<Flags>;
 
-template<typename Flags, typename T = void>
-using EnableIfWithBitOps = std::enable_if_t<with_bit_ops(Meta::Type<Flags>{}), T>;
-
-template<typename Flags, typename T = void>
-using EnableIfWithoutBitOps = std::enable_if_t<not with_bit_ops(Meta::Type<Flags>{}), T>;
-
-template<typename Flags, typename = EnableIfWithBitOps<Flags>>
+template<WithBitOps Flags>
 constexpr Flags operator|(Flags lhs, Flags rhs)
 {
     return (Flags)((UnderlyingType<Flags>) lhs | (UnderlyingType<Flags>) rhs);
 }
 
-template<typename Flags, typename = EnableIfWithBitOps<Flags>>
+template<WithBitOps Flags>
 constexpr Flags& operator|=(Flags& lhs, Flags rhs)
 {
     (UnderlyingType<Flags>&) lhs |= (UnderlyingType<Flags>) rhs;
@@ -45,32 +42,32 @@ struct TestableFlags
     constexpr bool operator!=(const TestableFlags<Flags>& other) const { return value != other.value; }
 };
 
-template<typename Flags, typename = EnableIfWithBitOps<Flags>>
+template<WithBitOps Flags>
 constexpr TestableFlags<Flags> operator&(Flags lhs, Flags rhs)
 {
     return { (Flags)((UnderlyingType<Flags>) lhs & (UnderlyingType<Flags>) rhs) };
 }
 
-template<typename Flags, typename = EnableIfWithBitOps<Flags>>
+template<WithBitOps Flags>
 constexpr Flags& operator&=(Flags& lhs, Flags rhs)
 {
     (UnderlyingType<Flags>&) lhs &= (UnderlyingType<Flags>) rhs;
     return lhs;
 }
 
-template<typename Flags, typename = EnableIfWithBitOps<Flags>>
+template<WithBitOps Flags>
 constexpr Flags operator~(Flags lhs)
 {
     return (Flags)(~(UnderlyingType<Flags>)lhs);
 }
 
-template<typename Flags, typename = EnableIfWithBitOps<Flags>>
+template<WithBitOps Flags>
 constexpr Flags operator^(Flags lhs, Flags rhs)
 {
     return (Flags)((UnderlyingType<Flags>) lhs ^ (UnderlyingType<Flags>) rhs);
 }
 
-template<typename Flags, typename = EnableIfWithBitOps<Flags>>
+template<WithBitOps Flags>
 constexpr Flags& operator^=(Flags& lhs, Flags rhs)
 {
     (UnderlyingType<Flags>&) lhs ^= (UnderlyingType<Flags>) rhs;

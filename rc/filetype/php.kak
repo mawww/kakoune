@@ -1,7 +1,7 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate .*[.](php) %{
+hook global BufCreate .*[.](phpt?) %{
     set-option buffer filetype php
 }
 
@@ -11,8 +11,9 @@ hook global BufCreate .*[.](php) %{
 hook global WinSetOption filetype=php %{
     require-module php
 
-    hook window ModeChange pop:insert:.* -group php-trim-indent  php-trim-indent
+    hook window ModeChange pop:insert:.* -group php-trim-indent php-trim-indent
     hook window InsertChar .* -group php-indent php-indent-on-char
+    hook window InsertChar \n -group php-insert php-insert-on-new-line
     hook window InsertChar \n -group php-indent php-indent-on-new-line
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window php-.+ }
@@ -38,7 +39,7 @@ add-highlighter shared/php/doc_comment2  region /\*\*  \*/             ref php/d
 add-highlighter shared/php/comment1      region //     '$'             fill comment
 add-highlighter shared/php/comment2      region /\*    \*/             fill comment
 add-highlighter shared/php/comment3      region '#'    '$'             fill comment
-
+add-highlighter shared/php/heredoc       region -match-capture '<<<(.*?)$' '^\h*(.*?);' fill string
 
 
 add-highlighter shared/php/code/ regex &?\$\w* 0:variable
@@ -71,7 +72,7 @@ add-highlighter shared/php-file/php  region '<\?(php)?'     '\?>'      ref php
 
 define-command -hidden php-trim-indent %{
     # remove trailing white spaces
-    try %{ execute-keys -draft -itersel <a-x> s \h+$ <ret> d }
+    try %{ execute-keys -draft -itersel x s \h+$ <ret> d }
 }
 
 define-command -hidden php-indent-on-char %<
@@ -81,20 +82,25 @@ define-command -hidden php-indent-on-char %<
     >
 >
 
-define-command -hidden php-indent-on-new-line %<
+define-command -hidden php-insert-on-new-line %<
     evaluate-commands -draft -itersel %<
         # copy // comments or docblock * prefix and following white spaces
-        try %{ execute-keys -draft s [^/] <ret> k <a-x> s ^\h*\K(?://|[*][^/])\h* <ret> y gh j P }
+        try %{ execute-keys -draft s [^/] <ret> k x s ^\h*\K(?://|[*][^/])\h* <ret> y gh j P }
+        # append " * " on lines starting a multiline /** or /* comment
+        try %{ execute-keys -draft k x s ^\h*/[*][* ]? <ret> j gi i <space>*<space> }
+    >
+>
+
+define-command -hidden php-indent-on-new-line %<
+    evaluate-commands -draft -itersel %<
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # filter previous line
         try %{ execute-keys -draft k : php-trim-indent <ret> }
         # indent after lines beginning / ending with opener token
-        try %_ execute-keys -draft k <a-x> <a-k> ^\h*[[{]|[[{]$ <ret> j <a-gt> _
-        # append " * " on lines starting a multiline /** or /* comment
-    	try %{ execute-keys -draft k <a-x> s ^\h*/[*][* ]? <ret> j gi i <space>*<space> }
-    	# deindent closer token(s) when after cursor
-    	try %_ execute-keys -draft <a-x> <a-k> ^\h*[})] <ret> gh / [})] <ret> m <a-S> 1<a-&> _
+        try %_ execute-keys -draft k x <a-k> ^\h*[[{]|[[{]$ <ret> j <a-gt> _
+        # deindent closer token(s) when after cursor
+        try %_ execute-keys -draft x <a-k> ^\h*[})] <ret> gh / [})] <ret> m <a-S> 1<a-&> _
     >
 >
 

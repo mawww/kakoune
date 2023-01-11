@@ -1,0 +1,3 @@
+source "%val{runtime}/colors/default.kak"
+source "%val{runtime}/rc/filetype/elixir.kak"
+set buffer filetype elixir

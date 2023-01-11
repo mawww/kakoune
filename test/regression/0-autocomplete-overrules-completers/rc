@@ -1,0 +1,8 @@
+set-option global autocomplete prompt
+declare-option -hidden completions line1_completions
+declare-option -hidden completions line2_completions
+declare-option -hidden completions line3_completions
+set-option global completers option=line1_completions option=line2_completions option=line3_completions
+set-option global line1_completions "1.1+0@%val(timestamp)" "a1||a1"
+set-option global line2_completions "2.1+0@%val(timestamp)" "a2||a2"
+set-option global line3_completions "3.1+0@%sh{echo $(($kak_timestamp+1))}" "a3||a3"

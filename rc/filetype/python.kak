@@ -19,7 +19,7 @@ hook global WinSetOption filetype=python %{
     hook window InsertChar \n -group python-insert python-insert-on-new-line
     hook window InsertChar \n -group python-indent python-indent-on-new-line
     # cleanup trailing whitespaces on current line insert end
-    hook window ModeChange pop:insert:.* -group python-trim-indent %{ try %{ execute-keys -draft <semicolon> <a-x> s ^\h+$ <ret> d } }
+    hook window ModeChange pop:insert:.* -group python-trim-indent %{ try %{ execute-keys -draft <semicolon> x s ^\h+$ <ret> d } }
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window python-.+ }
 }
 
@@ -35,11 +35,29 @@ provide-module python %§
 
 add-highlighter shared/python regions
 add-highlighter shared/python/code default-region group
-add-highlighter shared/python/docstring     region -match-capture ("""|''') (?<!\\)(?:\\\\)*("""|''') regions
-add-highlighter shared/python/double_string region '"'   (?<!\\)(\\\\)*"  fill string
-add-highlighter shared/python/single_string region "'"   (?<!\\)(\\\\)*'  fill string
+add-highlighter shared/python/docstring     region -match-capture ^\h*("""|''') (?<!\\)(?:\\\\)*("""|''') regions
+
 add-highlighter shared/python/documentation region '##'  '$'              fill documentation
 add-highlighter shared/python/comment       region '#'   '$'              fill comment
+
+# String interpolation
+add-highlighter shared/python/f_triple_string region -match-capture [fF]("""|''') (?<!\\)(?:\\\\)*("""|''') group
+add-highlighter shared/python/f_triple_string/ fill string
+add-highlighter shared/python/f_triple_string/ regex \{.*?\} 0:value
+
+add-highlighter shared/python/f_double_string region '[fF]"'   (?<!\\)(\\\\)*" group
+add-highlighter shared/python/f_double_string/ fill string
+add-highlighter shared/python/f_double_string/ regex \{.*?\} 0:value
+
+add-highlighter shared/python/f_single_string region "[fF]'"   (?<!\\)(\\\\)*' group
+add-highlighter shared/python/f_single_string/ fill string
+add-highlighter shared/python/f_single_string/ regex \{.*?\} 0:value
+
+
+# Regular string
+add-highlighter shared/python/triple_string region -match-capture ("""|''') (?<!\\)(?:\\\\)*("""|''') fill string
+add-highlighter shared/python/double_string region '"'   (?<!\\)(\\\\)*" fill string
+add-highlighter shared/python/single_string region "'"   (?<!\\)(\\\\)*' fill string
 
 # Integer formats
 add-highlighter shared/python/code/ regex '(?i)\b0b[01]+l?\b' 0:value
@@ -53,9 +71,8 @@ add-highlighter shared/python/code/ regex '\b\d+\.' 0:value
 # Imaginary formats
 add-highlighter shared/python/code/ regex '\b\d+\+\d+[jJ]\b' 0:value
 
-add-highlighter shared/python/docstring/ default-region fill string
-add-highlighter shared/python/docstring/ region '>>> \K'    '\z' ref python
-add-highlighter shared/python/docstring/ region '\.\.\. \K'    '\z' ref python
+add-highlighter shared/python/docstring/ default-region fill documentation
+add-highlighter shared/python/docstring/ region '(>>>|\.\.\.) \K'    (?=''')|(?=""") ref python
 
 evaluate-commands %sh{
     # Grammar
@@ -106,6 +123,9 @@ evaluate-commands %sh{
               finally for global if in is lambda nonlocal not or pass print
               raise return try while with yield"
 
+    # Collected from `keyword.softkwlist`
+    soft_keywords="_ case match"
+
     types="bool buffer bytearray bytes complex dict file float frozenset int
            list long memoryview object set str tuple unicode xrange"
 
@@ -129,7 +149,7 @@ evaluate-commands %sh{
         add-highlighter shared/python/code/ regex '\b($(join "${attributes}" '|'))\b' 0:attribute
         add-highlighter shared/python/code/ regex '\bdef\s+($(join "${methods}" '|'))\b' 1:function
         add-highlighter shared/python/code/ regex '\b($(join "${exceptions}" '|'))\b' 0:function
-        add-highlighter shared/python/code/ regex '\b($(join "${keywords}" '|'))\b' 0:keyword
+        add-highlighter shared/python/code/ regex '\b($(join "${keywords} ${soft_keywords}" '|'))\b' 0:keyword
         add-highlighter shared/python/code/ regex '\b($(join "${functions}" '|'))\b\(' 1:builtin
         add-highlighter shared/python/code/ regex '\b($(join "${types}" '|'))\b' 0:type
         add-highlighter shared/python/code/ regex '^\h*(@[\w_.]+))' 1:attribute
@@ -146,19 +166,20 @@ add-highlighter shared/python/code/ regex ^\h*(?:from|import)\h+(\S+) 1:module
 define-command -hidden python-insert-on-new-line %{
     evaluate-commands -draft -itersel %{
         # copy '#' comment prefix and following white spaces
-        try %{ execute-keys -draft k <a-x> s ^\h*#\h* <ret> y jgh P }
+        try %{ execute-keys -draft k x s ^\h*#\h* <ret> y jgh P }
     }
 }
+
 define-command -hidden python-indent-on-new-line %<
     evaluate-commands -draft -itersel %<
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # cleanup trailing whitespaces from previous line
-        try %{ execute-keys -draft k <a-x> s \h+$ <ret> d }
+        try %{ execute-keys -draft k x s \h+$ <ret> d }
         # indent after line ending with :
-        try %{ execute-keys -draft <space> k <a-x> <a-k> :$ <ret> <a-K> ^\h*# <ret> j <a-gt> }
+        try %{ execute-keys -draft , k x <a-k> :$ <ret> <a-K> ^\h*# <ret> j <a-gt> }
         # deindent closing brace/bracket when after cursor (for arrays and dictionaries)
-        try %< execute-keys -draft <a-x> <a-k> ^\h*[}\]] <ret> gh / [}\]] <ret> m <a-S> 1<a-&> >
+        try %< execute-keys -draft x <a-k> ^\h*[}\]] <ret> gh / [}\]] <ret> m <a-S> 1<a-&> >
     >
 >
 

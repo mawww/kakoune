@@ -11,7 +11,6 @@ define-command -docstring %{
     All optional parameters are forwarded to the new window
 } \
     -params .. \
-    -shell-completion \
     x11-repl %{ x11-terminal sh -c %{
         winid="${WINDOWID:-$(xdotool search --pid ${PPID} | tail -1)}"
         printf "evaluate-commands -try-client $1 \
@@ -20,12 +19,18 @@ define-command -docstring %{
         [ "$1" ] && "$@" || "$SHELL"
     } -- %val{client} %val{session} %arg{@}
 }
+complete-command x11-repl shell
 
-define-command x11-send-text -docstring "send the selected text to the repl window" %{
+define-command x11-send-text -params 0..1 -docstring %{
+        x11-send-text [text]: Send text to the REPL window.
+        If no text is passed, then the selection is used
+        } %{
     evaluate-commands %sh{
-        printf %s\\n "${kak_selection}" | xsel -i ||
+        ([ "$#" -gt 0 ] && printf "%s" "$1" || printf "%s" "${kak_selection}" ) | xsel -i ||
         echo 'fail x11-send-text: failed to run xsel, see *debug* buffer for details' &&
-        xdotool windowactivate "${kak_opt_x11_repl_id}" key --clearmodifiers Shift+Insert ||
+        kak_winid=$(xdotool getactivewindow) &&
+        xdotool windowactivate "${kak_opt_x11_repl_id}" key --clearmodifiers Shift+Insert &&
+        xdotool windowactivate "${kak_winid}" ||
         echo 'fail x11-send-text: failed to run xdotool, see *debug* buffer for details'
     }
 }

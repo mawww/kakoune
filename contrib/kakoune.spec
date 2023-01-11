@@ -6,7 +6,7 @@
 
 Name:           kakoune
 Version:        2020.09.01
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Code editor heavily inspired by Vim
 
 License:        Unlicense
@@ -80,9 +80,13 @@ popd
 %{_bindir}/kak
 %{_datadir}/kak/
 %{_mandir}/man1/*
+%{_libexecdir}/kak/
 
 
 %changelog
+* Fri Jan 1 2021 Jiri Konecny <jkonecny@redhat.com> - 2020.09.01-2
+- Add new libexec dir to the spec file
+
 * Wed Sep 2 2020 Jiri Konecny <jkonecny@redhat.com> - 2020.09.01-1
 - Update to 2020.09.01
 

@@ -24,7 +24,7 @@ struct StringData : UseMemoryDomain<MemoryDomain::SharedString>
 private:
     StringData(int len) : refcount(0), length(len) {}
 
-    static constexpr uint32_t interned_flag = 1 << 31;
+    static constexpr uint32_t interned_flag = 1u << 31;
     static constexpr uint32_t refcount_mask = ~interned_flag;
 
     struct PtrPolicy

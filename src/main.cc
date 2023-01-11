@@ -13,7 +13,7 @@
 #include "highlighters.hh"
 #include "insert_completer.hh"
 #include "json_ui.hh"
-#include "ncurses_ui.hh"
+#include "terminal_ui.hh"
 #include "option_types.hh"
 #include "parameters_parser.hh"
 #include "ranges.hh"
@@ -44,7 +44,23 @@ struct {
     unsigned int version;
     StringView notes;
 } constexpr version_notes[] = { {
-        0,
+        20221031,
+        "» {+b}<esc>{} does not end macro recording anymore, use {+b}Q{}\n"
+        "» pipe commands do not append final end-of-lines anymore\n"
+        "» {+u}complete-command{} to configure command completion\n"
+        "» {+b}p{}, {+b}P{}, {+b}!{} and {+b}<a-!>{} now select the inserted text\n"
+        "» {+b}x{} now uses {+b}<a-x>{} behaviour\n"
+        "» {+b}<space>{} and {+b},{} have been swapped\n"
+    }, {
+        20211107,
+        "» colored and curly underlines support (undocumented in 20210828)\n"
+    }, {
+        20211028,
+        "» {+b}g{} and {+b}v{} do not auto-convert to lowercase anymore\n"
+    }, {
+        20210828,
+        "» {+u}write <filename>{} will refuse to overwrite without {+u}-force{}\n"
+        "» {+u}$kak_command_fifo{} support\n"
         "» {+u}set-option -remove{} support\n"
         "» prompts auto select {+i}menu{} completions on space\n"
         "» explicit completion support ({+b}<c-x>...{}) in prompts\n"
@@ -335,6 +351,10 @@ static const EnvVarDesc builtin_env_vars[] = { {
                          return to_string(char_length(context.buffer(), s));
                      }) | gather<Vector<String>>(); }
     }, {
+        "selection_count", false,
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {to_string(context.selections().size())}; }
+    }, {
         "window_width", false,
         [](StringView name, const Context& context) -> Vector<String>
         { return {to_string(context.window().dimensions().column)}; }
@@ -351,8 +371,8 @@ static const EnvVarDesc builtin_env_vars[] = { {
         [](StringView name, const Context& context) -> Vector<String>
         {
             auto setup = context.window().compute_display_setup(context);
-            return {format("{} {} {} {}", setup.window_pos.line, setup.window_pos.column,
-                                          setup.window_range.line, setup.window_range.column)};
+            return {format("{} {} {} {}", setup.first_line, setup.first_column,
+                                          setup.line_count, 0)};
         }
     }, {
         "history", false,
@@ -549,17 +569,17 @@ void register_options()
                        "space separated list of <key>=<value> options that are "
                        "passed to and interpreted by the user interface\n"
                        "\n"
-                       "The ncurses ui supports the following options:\n"
+                       "The terminal ui supports the following options:\n"
                        "    <key>:                        <value>:\n"
-                       "    ncurses_assistant             clippy|cat|dilbert|none|off\n"
-                       "    ncurses_status_on_top         bool\n"
-                       "    ncurses_set_title             bool\n"
-                       "    ncurses_enable_mouse          bool\n"
-                       "    ncurses_change_colors         bool\n"
-                       "    ncurses_wheel_up_button       int\n"
-                       "    ncurses_wheel_down_button     int\n"
-                       "    ncurses_wheel_scroll_amount   int\n"
-                       "    ncurses_shift_function_key    int\n",
+                       "    terminal_assistant             clippy|cat|dilbert|none|off\n"
+                       "    terminal_status_on_top         bool\n"
+                       "    terminal_set_title             bool\n"
+                       "    terminal_enable_mouse          bool\n"
+                       "    terminal_synchronized          bool\n"
+                       "    terminal_wheel_scroll_amount   int\n"
+                       "    terminal_shift_function_key    int\n"
+                       "    terminal_padding_char          codepoint\n"
+                       "    terminal_padding_fill          bool\n",
                        UserInterface::Options{});
     reg.declare_option("modelinefmt", "format string used to generate the modeline",
                        "%val{bufname} %val{cursor_line}:%val{cursor_char_column} {{context_info}} {{mode_info}} - %val{client}@[%val{session}]"_str);
@@ -583,14 +603,14 @@ static bool convert_to_client_pending = false;
 
 enum class UIType
 {
-    NCurses,
+    Terminal,
     Json,
     Dummy,
 };
 
 UIType parse_ui_type(StringView ui_name)
 {
-    if (ui_name == "ncurses") return UIType::NCurses;
+    if (ui_name == "terminal") return UIType::Terminal;
     if (ui_name == "json") return UIType::Json;
     if (ui_name == "dummy") return UIType::Dummy;
 
@@ -622,7 +642,7 @@ std::unique_ptr<UserInterface> make_ui(UIType ui_type)
 
     switch (ui_type)
     {
-        case UIType::NCurses: return std::make_unique<NCursesUI>();
+        case UIType::Terminal: return std::make_unique<TerminalUI>();
         case UIType::Json: return std::make_unique<JsonUI>();
         case UIType::Dummy: return std::make_unique<DummyUI>();
     }
@@ -645,17 +665,17 @@ pid_t fork_server_to_background()
 
 std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
 {
-    if (ui_type != UIType::NCurses)
+    if (ui_type != UIType::Terminal)
         return make_ui(ui_type);
 
-    struct LocalUI : NCursesUI
+    struct LocalUI : TerminalUI
     {
         LocalUI()
         {
             set_signal_handler(SIGTSTP, [](int) {
                 if (ClientManager::instance().count() == 1 and
                     *ClientManager::instance().begin() == local_client)
-                    NCursesUI::instance().suspend();
+                    TerminalUI::instance().suspend();
                 else
                     convert_to_client_pending = true;
            });
@@ -670,7 +690,7 @@ std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
 
             if (fork_server_to_background())
             {
-                this->NCursesUI::~NCursesUI();
+                this->TerminalUI::~TerminalUI();
                 exit(local_client_exit);
             }
         }
@@ -696,7 +716,11 @@ int run_client(StringView session, StringView name, StringView client_init,
     try
     {
         Optional<int> stdin_fd;
-        if (not isatty(0))
+        // json-ui (or dummy) is not intended to be user interactive.
+        // So only worry about making the tty your stdin if:
+        // (a) ui_type is Terminal, *and*
+        // (b) fd 0 is not interactive.
+        if (ui_type == UIType::Terminal && not isatty(0))
         {
             // move stdin to another fd, and restore tty as stdin
             stdin_fd = dup(0);
@@ -742,12 +766,13 @@ enum class ServerFlags
 constexpr bool with_bit_ops(Meta::Type<ServerFlags>) { return true; }
 
 int run_server(StringView session, StringView server_init,
-               StringView client_init, Optional<BufferCoord> init_coord,
+               StringView client_init, StringView init_buffer, Optional<BufferCoord> init_coord,
                ServerFlags flags, UIType ui_type, DebugFlags debug_flags,
                ConstArrayView<StringView> files)
 {
     static bool terminate = false;
     set_signal_handler(SIGTERM, [](int) { terminate = true; });
+    set_signal_handler(SIGINT, [](int) { terminate = true; });
     if ((flags & ServerFlags::Daemon) and session.empty())
     {
         write_stderr("-d needs a session name to be specified with -s\n");
@@ -778,6 +803,7 @@ int run_server(StringView session, StringView server_init,
 
     write_to_debug_buffer("*** This is the debug buffer, where debug info will be written ***");
 
+#ifdef KAK_DEBUG
     const auto start_time = Clock::now();
     UnitTest::run_all_tests();
 
@@ -787,8 +813,7 @@ int run_server(StringView session, StringView server_init,
         write_to_debug_buffer(format("running the unit tests took {} ms",
                                      duration_cast<milliseconds>(Clock::now() - start_time).count()));
     }
-
-    GlobalScope::instance().options().get_local_option("readonly").set<bool>(flags & ServerFlags::ReadOnly);
+#endif
 
     bool startup_error = false;
     if (not (flags & ServerFlags::IgnoreKakrc)) try
@@ -823,15 +848,16 @@ int run_server(StringView session, StringView server_init,
 
     if (not files.empty()) try
     {
-        // create buffers in reverse order so that the first given buffer
-        // is the most recently created one.
-        for (auto& file : files | reverse())
+        for (auto& file : files)
         {
             try
             {
                 Buffer *buffer = open_or_create_file_buffer(file);
                 if (flags & ServerFlags::ReadOnly)
+                {
                     buffer->flags() |= Buffer::Flags::ReadOnly;
+                    buffer->options().get_local_option("readonly").set(true);
+                }
             }
             catch (runtime_error& error)
             {
@@ -851,12 +877,12 @@ int run_server(StringView session, StringView server_init,
         if (not server.is_daemon())
         {
             local_client = client_manager.create_client(
-                 create_local_ui(ui_type), getpid(), {}, get_env_vars(), client_init, std::move(init_coord),
+                 create_local_ui(ui_type), getpid(), {}, get_env_vars(), client_init, init_buffer, std::move(init_coord),
                  [](int status) { local_client_exit = status; });
 
             if (startup_error and local_client)
                 local_client->print_status({
-                    "error during startup, see *debug* buffer for details",
+                    "error during startup, see `:buffer *debug*` for details",
                     local_client->context().faces()["Error"]
                 });
 
@@ -874,7 +900,8 @@ int run_server(StringView session, StringView server_init,
             bool allow_blocking = not client_manager.has_pending_inputs();
             while (event_manager.handle_next_events(EventMode::Normal, nullptr, allow_blocking))
             {
-                client_manager.process_pending_inputs();
+                if (client_manager.process_pending_inputs())
+                    break;
                 allow_blocking = false;
             }
             client_manager.process_pending_inputs();
@@ -977,8 +1004,8 @@ int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet, 
         }
         if (not isatty(0))
         {
-            Buffer& buffer = *buffer_manager.create_buffer(
-                "*stdin*", Buffer::Flags::NoHooks, read_fd(0), InvalidTime);
+            Buffer& buffer = *create_buffer_from_string(
+                "*stdin*", Buffer::Flags::NoHooks, read_fd(0));
             apply_to_buffer(buffer);
             write_buffer_to_fd(buffer, 1);
             buffer_manager.delete_buffer(buffer);
@@ -1009,7 +1036,7 @@ int run_pipe(StringView session)
 
 void signal_handler(int signal)
 {
-    NCursesUI::abort();
+    TerminalUI::restore_terminal();
     const char* text = nullptr;
     switch (signal)
     {
@@ -1066,7 +1093,7 @@ int main(int argc, char* argv[])
                    { "f", { true,  "filter: for each file, select the entire buffer and execute the given keys" } },
                    { "i", { true, "backup the files on which a filter is applied using the given suffix" } },
                    { "q", { false, "in filter mode, be quiet about errors applying keys" } },
-                   { "ui", { true, "set the type of user interface to use (ncurses, dummy, or json)" } },
+                   { "ui", { true, "set the type of user interface to use (terminal, dummy, or json)" } },
                    { "l", { false, "list existing sessions" } },
                    { "clear", { false, "clear dead sessions" } },
                    { "debug", { true, "initial debug option value" } },
@@ -1138,7 +1165,7 @@ int main(int argc, char* argv[])
 
         auto client_init = parser.get_switch("e").value_or(StringView{});
         auto server_init = parser.get_switch("E").value_or(StringView{});
-        const UIType ui_type = parse_ui_type(parser.get_switch("ui").value_or("ncurses"));
+        const UIType ui_type = parse_ui_type(parser.get_switch("ui").value_or("terminal"));
 
         if (auto keys = parser.get_switch("f"))
         {
@@ -1217,7 +1244,7 @@ int main(int argc, char* argv[])
                              ((argc == 1 or (ignore_kakrc and argc == 2))
                               and isatty(0)                               ? ServerFlags::StartupInfo : ServerFlags::None);
                 auto debug_flags = option_from_string(Meta::Type<DebugFlags>{}, parser.get_switch("debug").value_or(""));
-                return run_server(session, server_init, client_init, init_coord, flags, ui_type, debug_flags, files);
+                return run_server(session, server_init, client_init, files.empty() ? StringView{} : files[0], init_coord, flags, ui_type, debug_flags, files);
             }
             catch (convert_to_client_mode& convert)
             {
@@ -1254,8 +1281,12 @@ int main(int argc, char* argv[])
 }
 
 #if defined(__ELF__)
-asm(R"(
-.pushsection ".debug_gdb_scripts", "MS",@progbits,1
+#ifdef __arm__
+# define PROGBITS "%progbits"
+#else
+# define PROGBITS "@progbits"
+#endif
+asm(".pushsection \".debug_gdb_scripts\", \"MS\"," PROGBITS ",1" R"(
 .byte 4
 .ascii "kakoune-inline-gdb.py\n"
 .ascii "import os.path\n"

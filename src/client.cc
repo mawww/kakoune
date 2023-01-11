@@ -47,7 +47,11 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
     m_ui->set_ui_options(m_window->options()["ui_options"].get<UserInterface::Options>());
     m_ui->set_on_key([this](Key key) {
         if (key == ctrl('c'))
+        {
+            auto prev_handler = set_signal_handler(SIGINT, SIG_IGN);
             killpg(getpgrp(), SIGINT);
+            set_signal_handler(SIGINT, prev_handler);
+        }
         else if (key.modifiers & Key::Modifiers::Resize)
         {
             m_window->set_dimensions(key.coord());
@@ -88,8 +92,7 @@ bool Client::process_pending_inputs()
         try
         {
             if (debug_keys)
-                write_to_debug_buffer(format("Client '{}' got key '{}'",
-                                             context().name(), key_to_str(key)));
+                write_to_debug_buffer(format("Client '{}' got key '{}'", context().name(), key));
 
             if (key == Key::FocusIn)
                 context().hooks().run_hook(Hook::FocusIn, context().name(), context());
@@ -98,13 +101,12 @@ bool Client::process_pending_inputs()
             else
                 m_input_handler.handle_key(key);
 
-            context().hooks().run_hook(Hook::RawKey, key_to_str(key), context());
+            context().hooks().run_hook(Hook::RawKey, to_string(key), context());
         }
         catch (Kakoune::runtime_error& error)
         {
             write_to_debug_buffer(format("Error: {}", error.what()));
-            context().print_status({ fix_atom_text(error.what().str()),
-                                     context().faces()["Error"] });
+            context().print_status({error.what().str(), context().faces()["Error"] });
             context().hooks().run_hook(Hook::RuntimeError, error.what(), context());
         }
     }
@@ -140,6 +142,8 @@ String generate_context_info(const Context& context)
         s += "[fifo]";
     if (context.buffer().flags() & Buffer::Flags::Debug)
         s += "[debug]";
+    if (context.buffer().flags() & Buffer::Flags::ReadOnly)
+        s += "[readonly]";
     return s;
 }
 
@@ -165,7 +169,7 @@ DisplayLine Client::generate_mode_line() const
     return modeline;
 }
 
-void Client::change_buffer(Buffer& buffer)
+void Client::change_buffer(Buffer& buffer, Optional<FunctionRef<void()>> set_selections)
 {
     if (m_buffer_reload_dialog_opened)
         close_buffer_reload_dialog();
@@ -176,12 +180,20 @@ void Client::change_buffer(Buffer& buffer)
     m_window->options().unregister_watcher(*this);
     m_window->set_client(nullptr);
     client_manager.add_free_window(std::move(m_window),
-                                   std::move(context().selections()));
+                                   context().selections());
 
     m_window = std::move(ws.window);
     m_window->set_client(this);
     m_window->options().register_watcher(*this);
-    context().selections_write_only() = std::move(ws.selections);
+
+    if (set_selections)
+        (*set_selections)();
+    else
+    {
+        ScopedSelectionEdition selection_edition{context()};
+        context().selections_write_only() = std::move(ws.selections);
+    }
+
     context().set_window(*m_window);
 
     m_window->set_dimensions(m_ui->dimensions());
@@ -322,7 +334,7 @@ void Client::on_buffer_reload_key(Key key)
     }
     else
     {
-        print_status({ format("'{}' is not a valid choice", key_to_str(key)),
+        print_status({ format("'{}' is not a valid choice", key),
                        context().faces()["Error"] });
         m_input_handler.on_next_key("buffer-reload", KeymapMode::None, [this](Key key, Context&){ on_buffer_reload_key(key); });
         return;

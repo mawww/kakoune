@@ -1,38 +1,41 @@
 = Command Parsing
 
-Kakoune commands, either loaded from a script, or written in the command
-prompt are parsed according to the following rules:
+Kakoune commands, either loaded from a script or written in the command
+prompt, are parsed according to the following rules:
 
 == Basic parsing
 
-- Commands are separated by `;` or end of lines
+- Commands are terminated by a `;` or an end of line.
 
-- Words (command names and parameters) are separated by whitespaces
+- Words (command names and parameters) are delimited by whitespaces.
 
 == Quoted Strings
 
-If a word starts with `'`, `"` or `%X` with `X` a non nestable
-punctuation character it is parsed as a quoted string whose delimiter is,
-respectively, `'`, `"` or `X`.
+If a word starts with `'`, `"`, or `%X` with `X` a _non-nestable_ punctuation
+character (see <<command-parsing#balanced-strings,Balanced Strings>> below for
+nestable characters), it is parsed as a quoted string whose delimiter is,
+respectively, `'`, `"`, or `X`.
 
-A quoted string contains every character (including whitespaces) until
-its closing delimiter. If its closing delimiter is doubled, then it is
-considered to be part of the string content as a single delimiter.
+A quoted string contains every character (including whitespaces).  Doubling
+a closing delimiter escapes it.  Thus, for example, entering two closing
+delimiters at the end of a quoted string will render one of the characters
+literally; that is, it will be considered as part of the quoted string's
+content.
 
 Inside double quotes, `%`-strings are processed unless the `%` is escaped by
-doubling it. Double quotes inside these nested strings must still be escaped.
+doubling it.  Double quotes inside these nested strings must also be escaped.
 
 No other escaping takes place in quoted strings.
 
 === Quoted Strings Examples
 
-- `'foo'` contains *foo*
+- `'foo'` contains *foo*.
 
-- `foo'bar'` is read verbatim, so it contains *foo'bar'*
+- `foo'bar'` is read verbatim, so it contains *foo'bar'*.
 
 - `foo%|bar|` is read verbatim, so it contains *foo%|bar|*.
 
-- `'foo''bar'` is a single word whose content is *foo'bar*
+- `'foo''bar'` is a single word whose content is *foo'bar*.
 
 - `"baz"""` is a single word whose content is *baz"*.
 
@@ -42,51 +45,51 @@ No other escaping takes place in quoted strings.
 
 == Balanced Strings
 
-If a word starts with `%X` with `X` a nestable punctuation character (one
+If a word starts with `%X` with `X` a _nestable_ punctuation character (one
 of `(`, `[`, `{` and `<`), it is parsed as a balanced string whose closing
-delimiter is the matching character of its opening delimiter (respectively
-`)`, `]`, `}` and `>`).
+delimiter matches that of its opening delimiter (respectively, `)`, `]`,
+`}`, and `>`).
 
-A balanced string contains every character (including whitespaces) until
-a closing delimiter is found, and opening and closing delimiters are
-balanced inside the string (each opening delimiter appearing inside the
-string have been closed by a matching closing delimiter).
-
-No other escaping takes place in balanced strings.
+There is no way to escape the opening and closing characters, even if they
+are nested inside some other kind of string.
 
 === Balanced Strings Examples
 
-- `%{foo}` contains *foo*
+- `%{foo}` contains *foo*.
 
-- `%{foo\{bar}}` contains *foo\{bar}*
+- `%{foo\{bar}}` contains *foo\{bar}*.
 
-- `foo%{bar}` contains *foo%{bar}*
+- `foo%{bar}` contains *foo%{bar}*.
 
-- `"foo %{bar}"` is a single word whose content is *foo bar*
+- `"foo %{bar}"` is a single word whose content is *foo bar*.
 
-== Non Quoted words
+- `%{foo\{}` is a parse error, since the `{}` delimiters are not balanced.
 
-Other words are non-quoted. Non-quoted words end either on a whitespaces
-or a `;`.
+- `%[foo\{]` contains *foo\{*, since it uses different delimiters.
 
-If they start with `\` followed by `%`, `'` or `"`, then that leading
-`\` is discarded.
+== Non-Quoted words
 
-If a whitespace or `;` is preceded by `\`, then the `\` is discarded
-and the whitespace or `;` becomes part of the word. Any other `\`
-is treated as a literal `\`.
+Other words are non-quoted.  Non-quoted words are terminated by either a
+whitespace or a `;`.
+
+If they start with a `\` followed by a `%`, `'`, or `"`, then that leading
+`\` escapes those characters and is discarded.
+
+If a whitespace or `;` is preceded by a `\`, then the `\` is discarded, and
+the whitespace or `;` becomes part of the word.  Any other `\` is treated
+as a literal `\`.
 
 == Typed Expansions
 
 Quoted and Balanced strings starting with `%` might have an optional
-alphabetic *expansion type* between the `%` and their delimiter (which
-is always a punctuation character). This *expansion type* defines how the
-string content is going to be expanded. Rules for expanding and escaping typed
-expansions are the same as for `%`-strings.
+alphabetic *expansion type* between the `%` and their delimiter (which is
+always a punctuation character).  This *expansion type* defines how the
+string's content is going to be expanded.  Rules for expanding and escaping
+expansion types are the same as for `%`-strings.
 
 - If the *expansion type* is empty, the string content is used verbatim.
 
 - If the *expansion type* is one of `sh`, `reg`, `opt`, `val` or `arg`,
-  The string is expanded as described in <<expansions#,`:doc expansions`>>
+  the string is expanded as described in <<expansions#,`:doc expansions`>>.
 
-- For any other *expansion type* a parsing error is raised.
+- For any other *expansion type*, a parsing error is raised.

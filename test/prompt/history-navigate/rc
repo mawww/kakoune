@@ -1,0 +1,1 @@
+define-command append -params 1 %{ set-register dquote %arg{1}; execute-keys A<c-r>"<esc> }

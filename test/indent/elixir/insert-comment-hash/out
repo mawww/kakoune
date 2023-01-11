@@ -1,0 +1,18 @@
+# Comment
+# comment2
+
+# comment3
+# comment4
+
+#    indented
+#    indented2
+
+def f() do
+    # comment
+    # comment2
+end
+
+def f() do
+    # comm
+    # ent
+end

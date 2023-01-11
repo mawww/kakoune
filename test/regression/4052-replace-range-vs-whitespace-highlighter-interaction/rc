@@ -1,0 +1,4 @@
+declare-option -hidden range-specs test_inlay_hints
+add-highlighter window/whitespaces show-whitespaces -tab '›' -tabpad '⋅' -spc ' ' -nbsp '⍽'
+add-highlighter window/test_inlay_hints replace-ranges test_inlay_hints
+set buffer test_inlay_hints %val{timestamp} '2.15+0|{Information}{\}: String'

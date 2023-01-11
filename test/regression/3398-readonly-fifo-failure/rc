@@ -1,2 +1,2 @@
-nop %sh{ mkfifo test-fifo; ( printf 'blah' > test-fifo ) </dev/null >/dev/null 2>&1 & }
+nop %sh{ mkfifo test-fifo; ( printf 'blah' > test-fifo & ) </dev/null >/dev/null 2>&1 }
 edit -readonly -fifo test-fifo out

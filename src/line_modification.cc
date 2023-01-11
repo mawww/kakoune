@@ -147,26 +147,27 @@ void LineRangeSet::update(ConstArrayView<LineModification> modifs)
 
 void LineRangeSet::add_range(LineRange range, FunctionRef<void (LineRange)> on_new_range)
 {
-    auto it = std::lower_bound(begin(), end(), range.begin,
-                               [](LineRange range, LineCount line) { return range.end < line; });
-    if (it == end() or it->begin > range.end)
+    auto insert_at = std::lower_bound(begin(), end(), range.begin,
+                                      [](LineRange range, LineCount line) { return range.end < line; });
+    if (insert_at == end() or insert_at->begin > range.end)
         on_new_range(range);
     else
     {
         auto pos = range.begin;
-        while (it != end() and it->begin <= range.end)
+        auto it = insert_at;
+        for (; it != end() and it->begin <= range.end; ++it)
         {
             if (pos < it->begin)
                 on_new_range({pos, it->begin});
 
             range = LineRange{std::min(range.begin, it->begin), std::max(range.end, it->end)};
             pos = it->end;
-            it = erase(it);
         }
+        insert_at = erase(insert_at, it);
         if (pos < range.end)
             on_new_range({pos, range.end});
     }
-    insert(it, range);
+    insert(insert_at, range);
 }
 
 void LineRangeSet::remove_range(LineRange range)
@@ -201,8 +202,10 @@ void LineRangeSet::remove_range(LineRange range)
 
 UnitTest test_line_modifications{[]()
 {
+    auto make_lines = [](auto&&... lines) { return BufferLines{StringData::create({lines})...}; };
+
     {
-        Buffer buffer("test", Buffer::Flags::None, "line 1\nline 2\n");
+        Buffer buffer("test", Buffer::Flags::None, make_lines("line 1\n", "line 2\n"));
         auto ts = buffer.timestamp();
         buffer.erase({1, 0}, {2, 0});
 
@@ -211,7 +214,7 @@ UnitTest test_line_modifications{[]()
     }
 
     {
-        Buffer buffer("test", Buffer::Flags::None, "line 1\nline 2\n");
+        Buffer buffer("test", Buffer::Flags::None, make_lines("line 1\n", "line 2\n"));
         auto ts = buffer.timestamp();
         buffer.insert({2, 0}, "line 3");
 
@@ -220,7 +223,7 @@ UnitTest test_line_modifications{[]()
     }
 
     {
-        Buffer buffer("test", Buffer::Flags::None, "line 1\nline 2\nline 3\n");
+        Buffer buffer("test", Buffer::Flags::None, make_lines("line 1\n", "line 2\n", "line 3\n"));
 
         auto ts = buffer.timestamp();
         buffer.insert({1, 4}, "hoho\nhehe");
@@ -231,7 +234,7 @@ UnitTest test_line_modifications{[]()
     }
 
     {
-        Buffer buffer("test", Buffer::Flags::None, "line 1\nline 2\nline 3\nline 4\n");
+        Buffer buffer("test", Buffer::Flags::None, make_lines("line 1\n", "line 2\n", "line 3\n", "line 4\n"));
 
         auto ts = buffer.timestamp();
         buffer.erase({0,0}, {3,0});
@@ -250,7 +253,7 @@ UnitTest test_line_modifications{[]()
     }
 
     {
-        Buffer buffer("test", Buffer::Flags::None, "line 1\n");
+        Buffer buffer("test", Buffer::Flags::None, make_lines("line 1\n"));
         auto ts = buffer.timestamp();
         buffer.insert({0,0}, "n");
         buffer.insert({0,1}, "e");

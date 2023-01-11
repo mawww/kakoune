@@ -24,8 +24,7 @@ BufferManager::~BufferManager()
         ClientManager::instance().clear(true);
 }
 
-Buffer* BufferManager::create_buffer(String name, Buffer::Flags flags,
-                                     StringView data, timespec fs_timestamp)
+Buffer* BufferManager::create_buffer(String name, Buffer::Flags flags, BufferLines lines, ByteOrderMark bom, EolFormat eolformat, FsStatus fs_status)
 {
     auto path = real_path(parse_filename(name));
     for (auto& buf : m_buffers)
@@ -35,7 +34,7 @@ Buffer* BufferManager::create_buffer(String name, Buffer::Flags flags,
             throw runtime_error{"buffer name is already in use"};
     }
 
-    m_buffers.push_back(std::make_unique<Buffer>(std::move(name), flags, data, fs_timestamp));
+    m_buffers.push_back(std::make_unique<Buffer>(std::move(name), flags, lines, bom, eolformat, fs_status));
     auto* buffer = m_buffers.back().get();
     buffer->on_registered();
 
@@ -84,8 +83,9 @@ Buffer& BufferManager::get_first_buffer()
 {
     if (all_of(m_buffers, [](auto& b) { return (b->flags() & Buffer::Flags::Debug); }))
         create_buffer("*scratch*", Buffer::Flags::None,
-                      "*** this is a *scratch* buffer which won't be automatically saved ***\n"
-                      "*** use it for notes or open a file buffer with the :edit command ***\n");
+                      {StringData::create({"*** this is a *scratch* buffer which won't be automatically saved ***\n"}),
+                       StringData::create({"*** use it for notes or open a file buffer with the :edit command ***\n"})},
+                      ByteOrderMark::None, EolFormat::Lf, {InvalidTime, {}, {}});
 
     return *m_buffers.back();
 }

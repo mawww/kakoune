@@ -5,6 +5,7 @@
 #include <utility>
 #include <iterator>
 #include <numeric>
+#include <tuple>
 
 #include "constexpr_utils.hh"
 
@@ -14,8 +15,7 @@ namespace Kakoune
 template<typename Func> struct ViewFactory { Func func; };
 
 template<typename Func>
-ViewFactory<std::decay_t<Func>>
-make_view_factory(Func&& func) { return {std::forward<Func>(func)}; }
+ViewFactory(Func&&) -> ViewFactory<std::remove_cvref_t<Func>>;
 
 template<typename Range, typename Func>
 decltype(auto) operator| (Range&& range, ViewFactory<Func> factory)
@@ -24,13 +24,33 @@ decltype(auto) operator| (Range&& range, ViewFactory<Func> factory)
 }
 
 template<typename Range>
-struct decay_range_impl { using type = std::decay_t<Range>; };
+struct DecayRangeImpl { using type = std::remove_cvref_t<Range>; };
 
 template<typename Range>
-struct decay_range_impl<Range&> { using type = Range&; };
+struct DecayRangeImpl<Range&> { using type = Range&; };
 
 template<typename Range>
-using decay_range = typename decay_range_impl<Range>::type;
+using DecayRange = typename DecayRangeImpl<Range>::type;
+
+template<typename Range>
+struct RangeHolderImpl { using type = std::remove_cvref_t<Range>; };
+
+template<typename Range>
+struct RangeHolderImpl<Range&> {
+    struct type
+    {
+        Range* range{};
+
+        decltype(auto) begin() { return std::begin(*range); }
+        decltype(auto) end() { return std::end(*range); }
+
+        type& operator=(Range& r) { range = &r; return *this; }
+        operator Range&() { return *range; }
+    };
+};
+
+template<typename Range>
+using RangeHolder = typename RangeHolderImpl<Range>::type;
 
 template<typename Range>
 struct ReverseView
@@ -47,12 +67,12 @@ struct ReverseView
     Range m_range;
 };
 
-inline auto reverse()
+constexpr auto reverse()
 {
-    return make_view_factory([](auto&& range) {
+    return ViewFactory{[](auto&& range) {
         using Range = decltype(range);
-        return ReverseView<decay_range<Range>>{std::forward<Range>(range)};
-    });
+        return ReverseView<DecayRange<Range>>{std::forward<Range>(range)};
+    }};
 }
 
 template<typename Range>
@@ -71,12 +91,12 @@ struct SkipView
     size_t m_skip_count;
 };
 
-inline auto skip(size_t count)
+constexpr auto skip(size_t count)
 {
-    return make_view_factory([count](auto&& range) {
+    return ViewFactory{[count](auto&& range) {
         using Range = decltype(range);
-        return SkipView<decay_range<Range>>{std::forward<Range>(range), count};
-    });
+        return SkipView<DecayRange<Range>>{std::forward<Range>(range), count};
+    }};
 }
 
 template<typename Range>
@@ -89,12 +109,12 @@ struct DropView
     size_t m_drop_count;
 };
 
-inline auto drop(size_t count)
+constexpr auto drop(size_t count)
 {
-    return make_view_factory([count](auto&& range) {
+    return ViewFactory{[count](auto&& range) {
         using Range = decltype(range);
-        return DropView<decay_range<Range>>{std::forward<Range>(range), count};
-    });
+        return DropView<DecayRange<Range>>{std::forward<Range>(range), count};
+    }};
 }
 
 template<typename Range, typename Filter>
@@ -102,9 +122,14 @@ struct FilterView
 {
     using RangeIt = IteratorOf<Range>;
 
-    struct Iterator : std::iterator<std::forward_iterator_tag,
-                                    typename std::iterator_traits<RangeIt>::value_type>
+    struct Iterator
     {
+        using difference_type = ptrdiff_t;
+        using value_type = typename std::iterator_traits<RangeIt>::value_type;
+        using pointer = value_type*;
+        using reference = value_type&;
+        using iterator_category = std::forward_iterator_tag;
+
         Iterator(Filter& filter, RangeIt it, RangeIt end)
             : m_it{std::move(it)}, m_end{std::move(end)}, m_filter{&filter}
         {
@@ -147,12 +172,63 @@ struct FilterView
 };
 
 template<typename Filter>
-inline auto filter(Filter f)
+constexpr auto filter(Filter f)
 {
-    return make_view_factory([f = std::move(f)](auto&& range) {
+    return ViewFactory{[f = std::move(f)](auto&& range) {
         using Range = decltype(range);
-        return FilterView<decay_range<Range>, Filter>{std::forward<Range>(range), std::move(f)};
-    });
+        return FilterView<DecayRange<Range>, Filter>{std::forward<Range>(range), std::move(f)};
+    }};
+}
+
+template<typename Range>
+struct EnumerateView
+{
+    using RangeIt = IteratorOf<Range>;
+
+    struct Iterator
+    {
+        using difference_type = ptrdiff_t;
+        using value_type = typename std::iterator_traits<RangeIt>::value_type;
+        using pointer = value_type*;
+        using reference = value_type&;
+        using iterator_category = std::forward_iterator_tag;
+
+        Iterator(size_t index, RangeIt it)
+            : m_index{index}, m_it{std::move(it)} {}
+
+        decltype(auto) operator*() { return std::tuple<size_t, decltype(*m_it)>(m_index, *m_it); }
+        Iterator& operator++() { ++m_index; ++m_it; return *this; }
+        Iterator operator++(int) { auto copy = *this; ++(*this); return copy; }
+
+        friend bool operator==(const Iterator& lhs, const Iterator& rhs)
+        {
+            return lhs.m_it == rhs.m_it;
+        }
+
+        friend bool operator!=(const Iterator& lhs, const Iterator& rhs)
+        {
+            return not (lhs == rhs);
+        }
+
+        const RangeIt& base() const { return m_it; }
+
+    private:
+        size_t m_index;
+        RangeIt m_it;
+    };
+
+    Iterator begin() const { return {0, std::begin(m_range)}; }
+    Iterator end()   const { return {(size_t)-1, std::end(m_range)}; }
+
+    Range m_range;
+};
+
+constexpr auto enumerate()
+{
+    return ViewFactory{[](auto&& range) {
+        using Range = decltype(range);
+        return EnumerateView<DecayRange<Range>>{std::forward<Range>(range)};
+    }};
 }
 
 template<typename Range, typename Transform>
@@ -206,22 +282,22 @@ struct TransformView
 };
 
 template<typename Transform>
-inline auto transform(Transform t)
+constexpr auto transform(Transform t)
 {
-    return make_view_factory([t = std::move(t)](auto&& range) {
+    return ViewFactory{[t = std::move(t)](auto&& range) {
         using Range = decltype(range);
-        return TransformView<decay_range<Range>, Transform>{std::forward<Range>(range), std::move(t)};
-    });
+        return TransformView<DecayRange<Range>, Transform>{std::forward<Range>(range), std::move(t)};
+    }};
 }
 
-template<typename T, typename U, typename = void>
+template<typename T, typename U>
 struct is_pointer_like : std::false_type {};
 
-template<typename T, typename U>
-struct is_pointer_like<T, U, std::enable_if_t<std::is_same_v<std::decay_t<decltype(*std::declval<U>())>, std::decay_t<T>>>> : std::true_type {};
+template<typename T, typename U> requires std::is_same_v<std::remove_cvref_t<decltype(*std::declval<U>())>, std::remove_cvref_t<T>>
+struct is_pointer_like<T, U> : std::true_type {};
 
 template<typename M, typename T>
-inline auto transform(M T::*member)
+constexpr auto transform(M T::*member)
 {
     return transform([member](auto&& arg) -> decltype(auto) {
         using Arg = decltype(arg);
@@ -251,8 +327,14 @@ struct SplitView
                                          std::pair<IteratorOf<Range>, IteratorOf<Range>>,
                                          ValueTypeParam>;
 
-    struct Iterator : std::iterator<std::forward_iterator_tag, ValueType>
+    struct Iterator
     {
+        using difference_type = ptrdiff_t;
+        using value_type = ValueType;
+        using pointer = ValueType*;
+        using reference = ValueType&;
+        using iterator_category = std::forward_iterator_tag;
+
         Iterator(RangeIt pos, const RangeIt& end, Element separator, Element escaper)
          : done{pos == end}, pos{pos}, sep{pos}, end(end), separator{std::move(separator)}, escaper{std::move(escaper)}
         {
@@ -316,28 +398,101 @@ struct SplitView
 template<typename ValueType = void, typename Element>
 auto split(Element separator)
 {
-    return make_view_factory([s = std::move(separator)](auto&& range) {
+    return ViewFactory{[s = std::move(separator)](auto&& range) {
         using Range = decltype(range);
-        return SplitView<decay_range<Range>, false, false, Element, ValueType>{std::forward<Range>(range), std::move(s), {}};
-    });
+        return SplitView<DecayRange<Range>, false, false, Element, ValueType>{std::forward<Range>(range), std::move(s), {}};
+    }};
 }
 
 template<typename ValueType = void, typename Element>
 auto split_after(Element separator)
 {
-    return make_view_factory([s = std::move(separator)](auto&& range) {
+    return ViewFactory{[s = std::move(separator)](auto&& range) {
         using Range = decltype(range);
-        return SplitView<decay_range<Range>, false, true, Element, ValueType>{std::forward<Range>(range), std::move(s), {}};
-    });
+        return SplitView<DecayRange<Range>, false, true, Element, ValueType>{std::forward<Range>(range), std::move(s), {}};
+    }};
 }
 
 template<typename ValueType = void, typename Element>
 auto split(Element separator, Element escaper)
 {
-    return make_view_factory([s = std::move(separator), e = std::move(escaper)](auto&& range) {
+    return ViewFactory{[s = std::move(separator), e = std::move(escaper)](auto&& range) {
         using Range = decltype(range);
-        return SplitView<decay_range<Range>, true, false, Element, ValueType>{std::forward<Range>(range), std::move(s), std::move(e)};
-    });
+        return SplitView<DecayRange<Range>, true, false, Element, ValueType>{std::forward<Range>(range), std::move(s), std::move(e)};
+    }};
+}
+
+template<typename Range>
+struct FlattenedView
+{
+    using OuterIt = IteratorOf<Range>;
+    using InnerRange = ValueOf<Range>;
+    using InnerIt = IteratorOf<InnerRange>;
+
+    struct Iterator
+    {
+        using value_type = typename std::iterator_traits<InnerIt>::value_type;
+        using iterator_category = std::forward_iterator_tag;
+        using difference_type = std::size_t;
+        using reference = value_type&;
+        using pointer = value_type*;
+
+        Iterator() = default;
+        Iterator(OuterIt begin, OuterIt end) : m_outer_it{begin}, m_outer_end{end}
+        {
+            find_next_inner();
+        }
+
+        decltype(auto) operator*() {  return *m_inner_it; }
+
+        Iterator& operator++()
+        {
+            if (++m_inner_it == std::end(m_inner_range))
+            {
+                ++m_outer_it;
+                find_next_inner();
+            }
+            return *this;
+        }
+        Iterator operator++(int) { auto copy = *this; ++*this; return copy; }
+
+        friend bool operator==(const Iterator& lhs, const Iterator& rhs)
+        {
+            return lhs.m_outer_it == rhs.m_outer_it and lhs.m_inner_it == rhs.m_inner_it;
+        }
+
+        void find_next_inner()
+        {
+            m_inner_it = InnerIt{};
+            for (; m_outer_it != m_outer_end; ++m_outer_it)
+            {
+                m_inner_range = *m_outer_it;
+                if (std::begin(m_inner_range) != std::end(m_inner_range))
+                {
+                    m_inner_it = std::begin(m_inner_range);
+                    return;
+                }
+            }
+        }
+
+        OuterIt m_outer_it{};
+        OuterIt m_outer_end{};
+        InnerIt m_inner_it{};
+        RangeHolder<InnerRange> m_inner_range;
+    };
+
+    Iterator begin() const { return {std::begin(m_range), std::end(m_range)}; }
+    Iterator end()   const { return {std::end(m_range), std::end(m_range)}; }
+
+    Range m_range;
+};
+
+constexpr auto flatten()
+{
+    return ViewFactory{[](auto&& range){
+        using Range = decltype(range);
+        return FlattenedView<DecayRange<Range>>{std::forward<Range>(range)};
+    }};
 }
 
 template<typename Range1, typename Range2>
@@ -348,8 +503,14 @@ struct ConcatView
     using ValueType = typename std::common_type_t<typename std::iterator_traits<RangeIt1>::value_type,
                                                   typename std::iterator_traits<RangeIt2>::value_type>;
 
-    struct Iterator : std::iterator<std::forward_iterator_tag, ValueType>
+    struct Iterator
     {
+        using difference_type = ptrdiff_t;
+        using value_type = ValueType;
+        using pointer = ValueType*;
+        using reference = ValueType&;
+        using iterator_category = std::forward_iterator_tag;
+
         static_assert(std::is_convertible<typename std::iterator_traits<RangeIt1>::value_type, ValueType>::value, "");
         static_assert(std::is_convertible<typename std::iterator_traits<RangeIt2>::value_type, ValueType>::value, "");
 
@@ -388,7 +549,7 @@ struct ConcatView
 };
 
 template<typename Range1, typename Range2>
-ConcatView<decay_range<Range1>, decay_range<Range2>> concatenated(Range1&& range1, Range2&& range2)
+ConcatView<DecayRange<Range1>, DecayRange<Range2>> concatenated(Range1&& range1, Range2&& range2)
 {
     return {range1, range2};
 }
@@ -471,26 +632,26 @@ void for_n_best(Range&& c, size_t count, Compare&& compare, Func&& func)
 template<typename Container>
 auto gather()
 {
-    return make_view_factory([](auto&& range) {
+    return ViewFactory{[](auto&& range) {
         using std::begin; using std::end;
         return Container(begin(range), end(range));
-    });
+    }};
 }
 
 template<template <typename Element> class Container>
 auto gather()
 {
-    return make_view_factory([](auto&& range) {
+    return ViewFactory{[](auto&& range) {
         using std::begin; using std::end;
         using ValueType = std::remove_cv_t<std::remove_reference_t<decltype(*begin(range))>>;
         return Container<ValueType>(begin(range), end(range));
-    });
+    }};
 }
 
 template<typename ExceptionType, bool exact_size, size_t... Indexes>
 auto elements()
 {
-    return make_view_factory([=] (auto&& range) {
+    return ViewFactory{[=] (auto&& range) {
         using std::begin; using std::end;
         auto it = begin(range), end_it = end(range);
         size_t i = 0;
@@ -500,11 +661,11 @@ auto elements()
             return *it;
         };
         // Note that initializer lists elements are guaranteed to be sequenced
-        Array<std::decay_t<decltype(*begin(range))>, sizeof...(Indexes)> res{{elem(Indexes)...}};
+        Array<std::remove_cvref_t<decltype(*begin(range))>, sizeof...(Indexes)> res{{elem(Indexes)...}};
         if (exact_size and ++it != end_it)
             throw ExceptionType{++i};
         return res;
-    });
+    }};
 }
 
 template<typename ExceptionType, bool exact_size, size_t... Indexes>

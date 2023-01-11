@@ -178,7 +178,7 @@ UnitTest test_json_parser{[]()
     }
 
     {
-        String big_nested_array{' ', CharCount{max_parsing_depth*2+2}};
+        char big_nested_array[max_parsing_depth*2+2+1] = {};
         for (size_t i = 0; i < max_parsing_depth+1; i++)
         {
             big_nested_array[i] = '[';

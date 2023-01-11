@@ -69,6 +69,8 @@ evaluate-commands %sh{
         face global MenuInfo rgb:cc9393
         face global Information ${zeninfo}
         face global Error default,red
+        face global DiagnosticError red
+        face global DiagnosticWarning yellow
         face global StatusLine ${zenstatus}
         face global StatusLineMode ${zencomment}
         face global StatusLineInfo ${zenspecial}

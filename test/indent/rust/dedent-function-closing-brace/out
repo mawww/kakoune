@@ -1,0 +1,26 @@
+fn foo() -> i32 {
+}
+
+fn foo() -> i32 {
+    
+}
+
+fn foo() -> i32 {
+    bar()}
+
+fn foo() -> i32 {
+    bar()
+}
+
+fn foo() -> i32 {
+    bar()
+}
+
+    fn foo() -> i32 {
+        bar()
+    }
+
+    fn foo() -> i32 {
+        bar()?
+    }
+

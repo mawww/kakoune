@@ -33,7 +33,6 @@ enum class MemoryDomain
     Client,
     WordDB,
     Selections,
-    History,
     Remote,
     Events,
     Completion,
@@ -65,7 +64,6 @@ inline const char* domain_name(MemoryDomain domain)
         case MemoryDomain::Registers: return "Registers";
         case MemoryDomain::Client: return "Client";
         case MemoryDomain::Selections: return "Selections";
-        case MemoryDomain::History: return "History";
         case MemoryDomain::Remote: return "Remote";
         case MemoryDomain::Events: return "Events";
         case MemoryDomain::Completion: return "Completion";
@@ -150,21 +148,39 @@ template<MemoryDomain d>
 struct UseMemoryDomain
 {
     static constexpr MemoryDomain Domain = d;
+
+    [[gnu::always_inline]]
     static void* operator new(size_t size)
     {
         on_alloc(Domain, size);
         return ::operator new(size);
     }
 
+    [[gnu::always_inline]]
+    static void* operator new[](size_t size)
+    {
+        on_alloc(Domain, size);
+        return ::operator new[](size);
+    }
+
+    [[gnu::always_inline]]
     static void* operator new(size_t size, void* ptr)
     {
         return ::operator new(size, ptr);
     }
 
+    [[gnu::always_inline]]
     static void operator delete(void* ptr, size_t size)
     {
         on_dealloc(Domain, size);
         ::operator delete(ptr);
+    }
+
+    [[gnu::always_inline]]
+    static void operator delete[](void* ptr, size_t size)
+    {
+        on_dealloc(Domain, size);
+        ::operator delete[](ptr);
     }
 };
 

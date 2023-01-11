@@ -18,7 +18,11 @@ hook global WinSetOption filetype=ocaml %{
 
 hook -group ocaml-highlight global WinSetOption filetype=ocaml %{
     add-highlighter window/ocaml ref ocaml
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/ocaml }
+    alias window alt ocaml-alternative-file
+    hook -once -always window WinSetOption filetype=.* %{
+        unalias window alt ocaml-alternative-file
+        remove-highlighter window/ocaml
+    }
 }
 
 provide-module ocaml %{
@@ -28,7 +32,7 @@ provide-module ocaml %{
 
 add-highlighter shared/ocaml regions
 add-highlighter shared/ocaml/code default-region group
-add-highlighter shared/ocaml/string region (?<!')" (?<!\\)(\\\\)*" fill string
+add-highlighter shared/ocaml/string region (?<!['\\])" (?<!\\)(\\\\)*" fill string
 add-highlighter shared/ocaml/quotedstring region -match-capture %"\{(\w*)\|" %"\|(\w*)\}" fill string
 add-highlighter shared/ocaml/comment region -recurse \Q(* \Q(* \Q*) fill comment
 
@@ -74,4 +78,35 @@ evaluate-commands %sh{
   "
 }
 
+# Conveniences
+# ‾‾‾‾‾‾‾‾‾‾‾‾
+
+# C has header and source files and you need to often switch between them.
+# Similarly OCaml has .ml (implementation) and .mli (interface files) and
+# one often needs to switch between them.
+#
+# This command provides a simple functionality that allows you to accomplish this.
+define-command ocaml-alternative-file -docstring 'Switch between .ml and .mli file or vice versa' %{
+    evaluate-commands %sh{
+        if [ "${kak_buffile##*.}" = 'ml' ]; then
+            printf "edit -- '%s'" "$(printf %s "${kak_buffile}i" | sed "s/'/''/g")"
+        elif [ "${kak_buffile##*.}" = 'mli' ]; then
+            printf "edit -- '%s'" "$(printf %s "${kak_buffile%i}" | sed "s/'/''/g")"
+        fi
+    }
+}
+
+}
+
+# The OCaml comment is `(* Some comment *)`. Like the C-family this can be a multiline comment.
+#
+# Recognize when the user is trying to commence a comment when they type `(*` and
+# then automatically insert `*)` on behalf of the user. A small convenience.
+hook global WinSetOption filetype=ocaml %{
+    hook window InsertChar '\*' %{
+        try %{
+            execute-keys -draft 'HH<a-k>\(\*<ret>'
+            execute-keys '  *)<left><left><left>'
+        }
+    }
 }

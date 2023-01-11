@@ -4,7 +4,7 @@ hook global ModuleLoaded kitty %{
 
 provide-module kitty-repl %{
 
-define-command -params .. -shell-completion \
+define-command -params .. \
     -docstring %{
         kitty-repl [<arguments>]: Create a new window for repl interaction.
 
@@ -17,9 +17,21 @@ define-command -params .. -shell-completion \
         else
             cmd="$*"
         fi
-        kitty @ new-window --no-response --window-type $kak_opt_kitty_window_type --title kak_repl_window --cwd "$PWD" $cmd < /dev/null > /dev/null 2>&1 &
+
+       match=""
+        if [ -n "$kak_client_env_KITTY_WINDOW_ID" ]; then
+            match="--match=id:$kak_client_env_KITTY_WINDOW_ID"
+        fi
+
+        listen=""
+        if [ -n "$kak_client_env_KITTY_LISTEN_ON" ]; then
+            listen="--to=$kak_client_env_KITTY_LISTEN_ON"
+        fi
+
+        kitty @ $listen launch --no-response --keep-focus --type="$kak_opt_kitty_window_type" --title=kak_repl_window --cwd="$PWD" $match $cmd
     }
 }
+complete-command kitty-repl shell
 
 define-command -hidden -params 0..1 \
     -docstring %{
@@ -34,7 +46,7 @@ define-command -hidden -params 0..1 \
         else
             text="$1"
         fi
-        kitty @ send-text -m=title:kak_repl_window "$text"
+        kitty @ send-text --match=title:kak_repl_window "$text"
     }
 }
 

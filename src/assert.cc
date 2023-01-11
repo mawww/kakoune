@@ -31,7 +31,7 @@ bool notify_fatal_error(StringView msg)
     return MessageBox(NULL, msg.zstr(), "Kakoune: fatal error",
                       MB_OKCANCEL | MB_ICONERROR) == IDOK;
 #elif defined(__linux__)
-    auto cmd = format("xmessage -buttons 'quit:0,ignore:1' '{}'", msg);
+    auto cmd = format("xmessage -buttons 'quit:0,ignore:1' '{}'", replace(msg, "'", "'\\''"));
     int status = system(cmd.c_str());
     return (WIFEXITED(status)) ? (WEXITSTATUS(status)) == 1 : false;
 #else

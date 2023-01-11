@@ -6,13 +6,6 @@
 namespace Kakoune
 {
 
-String::Data::Data(String::NoCopy, const char* data, size_t size)
-{
-    l.ptr = const_cast<char*>(data);
-    l.size = size;
-    l.capacity = 0;
-}
-
 String::Data::Data(const char* data, size_t size, size_t capacity)
 {
     if (capacity > Short::capacity)
@@ -21,27 +14,16 @@ String::Data::Data(const char* data, size_t size, size_t capacity)
             ++capacity;
 
         kak_assert(capacity < Long::max_capacity);
-        l.ptr = Alloc{}.allocate(capacity+1);
-        l.size = size;
-        l.capacity = capacity;
+        u.l.ptr = Alloc{}.allocate(capacity+1);
+        u.l.size = size;
+        u.l.capacity = capacity;
 
         if (data != nullptr)
-            memcpy(l.ptr, data, size);
-        l.ptr[size] = 0;
+            memcpy(u.l.ptr, data, size);
+        u.l.ptr[size] = 0;
     }
     else
         set_short(data, size);
-}
-
-String::Data::Data(Data&& other) noexcept
-{
-    if (other.is_long())
-    {
-        l = other.l;
-        other.set_empty();
-    }
-    else
-        s = other.s;
 }
 
 String::Data& String::Data::operator=(const Data& other)
@@ -66,11 +48,11 @@ String::Data& String::Data::operator=(Data&& other) noexcept
 
     if (other.is_long())
     {
-        l = other.l;
+        u.l = other.u.l;
         other.set_empty();
     }
     else
-        s = other.s;
+        u.s = other.u.s;
 
     return *this;
 }
@@ -82,7 +64,7 @@ void String::Data::reserve(size_t new_capacity)
         return;
 
     if (is_long())
-        new_capacity = std::max(l.capacity * 2, new_capacity);
+        new_capacity = std::max(u.l.capacity * 2, new_capacity);
 
     if (new_capacity & 1)
         ++new_capacity;
@@ -92,12 +74,12 @@ void String::Data::reserve(size_t new_capacity)
     if (copy)
     {
         memcpy(new_ptr, data(), size()+1);
-        l.size = size();
+        u.l.size = size();
     }
     release();
 
-    l.ptr = new_ptr;
-    l.capacity = new_capacity;
+    u.l.ptr = new_ptr;
+    u.l.capacity = new_capacity;
 }
 
 template void String::Data::reserve<true>(size_t);
@@ -128,12 +110,6 @@ void String::Data::clear()
     set_empty();
 }
 
-void String::Data::release()
-{
-    if (is_long() and l.capacity != 0)
-        Alloc{}.deallocate(l.ptr, l.capacity+1);
-}
-
 void String::resize(ByteCount size, char c)
 {
     const size_t target_size = (size_t)size;
@@ -153,17 +129,17 @@ void String::resize(ByteCount size, char c)
 void String::Data::set_size(size_t size)
 {
     if (is_long())
-        l.size = size;
+        u.l.size = size;
     else
-        s.size = (size << 1) | 1;
+        u.s.size = (size << 1) | 1;
 }
 
 void String::Data::set_short(const char* data, size_t size)
 {
-    s.size = (size << 1) | 1;
+    u.s.size = (size << 1) | 1;
     if (data != nullptr)
-        memcpy(s.string, data, size);
-    s.string[size] = 0;
+        memcpy(u.s.string, data, size);
+    u.s.string[size] = 0;
 }
 
 const String String::ms_empty;

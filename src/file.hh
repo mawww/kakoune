@@ -10,6 +10,7 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <cstring>
 
 namespace Kakoune
 {
@@ -48,7 +49,6 @@ struct MappedFile
 
     operator StringView() const;
 
-    int fd;
     const char* data;
     struct stat st {};
 };
@@ -81,6 +81,7 @@ void write_buffer_to_backup_file(Buffer& buffer);
 
 String find_file(StringView filename, StringView buf_dir, ConstArrayView<String> paths);
 bool file_exists(StringView filename);
+bool regular_file_exists(StringView filename);
 
 Vector<String> list_files(StringView directory);
 
@@ -119,6 +120,46 @@ CandidateList complete_filename(StringView prefix, const Regex& ignore_regex,
                                 FilenameFlags flags = FilenameFlags::None);
 
 CandidateList complete_command(StringView prefix, ByteCount cursor_pos = -1);
+
+template<int buffer_size = 4096>
+struct BufferedWriter
+{
+    BufferedWriter(int fd)
+      : m_fd{fd}, m_exception_count{std::uncaught_exceptions()} {}
+
+    ~BufferedWriter() noexcept(false)
+    {
+        if (m_pos != 0 and m_exception_count == std::uncaught_exceptions())
+            flush();
+    }
+
+    void write(StringView data)
+    {
+        while (not data.empty())
+        {
+            const ByteCount length = data.length();
+            const ByteCount write_len = std::min(length, size - m_pos);
+            memcpy(m_buffer + m_pos, data.data(), (int)write_len);
+            m_pos += write_len;
+            if (m_pos == size)
+                flush();
+            data = data.substr(write_len);
+        }
+    }
+
+    void flush()
+    {
+        Kakoune::write(m_fd, {m_buffer, m_pos});
+        m_pos = 0;
+    }
+
+private:
+    static constexpr ByteCount size = buffer_size;
+    int m_fd;
+    int m_exception_count;
+    ByteCount m_pos = 0;
+    char m_buffer[(int)size];
+};
 
 }
 

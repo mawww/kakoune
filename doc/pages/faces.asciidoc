@@ -2,34 +2,37 @@
 
 == Declaration
 
-A 'face' determines how text is displayed, it has a foreground
-color, a background color, and some attributes. The value of a face has the
+A *face* determines how text is displayed. It has a foreground color,
+a background color, and some attributes. The value of a face has the
 following format:
 
------------------------------------------
-[fg_color][,bg_color][+attributes][@base]
------------------------------------------
+-----------------------------------------------------------
+[fg_color][,bg_color[,underline_color]][+attributes][@base]
+-----------------------------------------------------------
 
-'fg_color', 'bg_color'::
-    a color whose value can be expressed in the following formats:
-        *black*, *red*, *green*, *yellow*, *blue*, *magenta*, *cyan*, *white*:::
-        *bright-black*, *bright-red*, *bright-green*, *bright-yellow*:::
-        *bright-blue*, *bright-magenta*, *bright-cyan*, *bright-white*:::
-            a named color
-        *default*:::
-            keep the existing color
-        *rgb:RRGGBB*:::
-            hexadecimal value
-        *rgba:RRGGBBAA*:::
-            hexadecimal value
-    if unspecified, *default* is used.
-    Alpha values are used to blend the face onto either its base or the existing
-    color. For technical reasons alpha values must be >16 if specified.
+fg_color, bg_color, underline_color::
+    A color whose value can be:
+        A named color:::
+            *black*, *red*, *green*, *yellow*, *blue*, *magenta*, *cyan*,
+            *white* *bright-black*, *bright-red*, *bright-green*,
+            *bright-yellow* *bright-blue*, *bright-magenta*, *bright-cyan*,
+            *bright-white*
+        The color of the base face (see below):::
+            *default*
+        A hexadecimal value:::
+            *rgb:RRGGBB*, *rgba:RRGGBBAA*
+    If left unspecified, the value of *default* is used.
+    Alpha values are used to blend the face onto either its base or else onto
+    whatever color happens to be used at the moment. For technical reasons,
+    alpha values must be >16.
 
-'attributes'::
-    string whose individual letters set an attribute:
+attributes::
+    A string whose individual letters each set an attribute:
         *u*:::
             underline
+        *c*:::
+            curly underline
+            Note: This takes precedence over underline if both are specified.
         *r*:::
             reverse
         *b*:::
@@ -40,134 +43,146 @@ following format:
             dim
         *i*:::
             italic
+        *s*:::
+            strikethrough
         *F*:::
-            final, override the previous face instead of merging with it,
-            and this face will only be replaced if another face with
-            the final attribute is applied
+            final::::
+                Override the previous face instead of merging with it. Can
+                only be replaced if another face with the final attribute
+                is applied.
         *f*:::
-            final foreground, as final but only applies to face's
-            foreground color
+            final foreground::::
+                Same as final, but only applies to a face's foreground color.
         *g*:::
-            final background, as final but only applies to face's
-            background color
+            final background::::
+                Same as final, but only applies to a face's background color.
         *a*:::
-            final attributes, as final but only applies to face's
-            attributes
+            final attributes::::
+                Same as final, but only applies to a face's attributes.
 
-'base'::
-    The base face on which this face applies, which can be any face name,
-    as long as no cycle is introduced. A face can reference itself, in
-    which case it will apply on top of the parent scope version.
+base::
+    The face onto which other faces apply. Its value can be any face name,
+    as long as no cycle is introduced. A face can reference itself, in which
+    case it'll apply on top of the version of the parent scope.
 
-== Builtin faces
+== Built-in faces
 
-The following default faces are used by color schemes to highlight certain
-areas of the user interface:
+The following faces are used by color schemes to highlight certain areas of
+the user interface:
 
 *Default*::
-    default colors
+    default colors:::
+        The default foreground and background colors. If the value of *default*
+        is used here, then the colors used will be your terminal's defaults.
 
 *PrimarySelection*::
-    main selection face for every selected character except the cursor
+    Main selection face for every selected character except the cursor.
 
 *SecondarySelection*::
-    secondary selection face for every selected character except the cursor
+    Secondary selection face for every selected character except the cursor.
 
 *PrimaryCursor*::
-    cursor of the primary selection
+    Cursor of the primary selection.
 
 *SecondaryCursor*::
-    cursor of the secondary selection
+    Cursor of the secondary selection.
 
 *PrimaryCursorEol*::
-    cursor of the primary selection when it lies on an end of line character
+    Cursor of the primary selection when it lies on an EOL (end of line)
+    character.
 
 *SecondaryCursorEol*::
-    cursor of the secondary selection when it lies on an end of line character
+    Cursor of the secondary selection when it lies on an EOL (end of line)
+    character.
 
 *MenuForeground*::
-    face for the selected element in menus
+    Face for items selected in menus.
 
 *MenuBackground*::
-    face for the not selected elements in menus
+    Face for items not selected in menus.
 
 *MenuInfo*::
-    face for additional information for elements in menus
+    Face for the additional information displayed when selecting items in menus.
 
 *Information*::
-    face for the informations windows and information messages
+    Face for windows and messages displaying other information.
 
 *Error*::
-    face of error messages
+    Face for errors reported by Kakoune in the status line.
+
+*DiagnosticError*::
+    Face for errors reported by external tools in the buffer.
+
+*DiagnosticWarning*::
+    Face for warnings reported by external tools in the buffer.
 
 *StatusLine*::
-    face used for the status line
+    Face for the status line.
 
 *StatusLineMode*::
-    face used for the current mode except the normal mode
+    Face for the current mode, except normal mode.
 
 *StatusLineInfo*::
-    face used for special information
+    Face for special information.
 
 *StatusLineValue*::
-    face used for special values (numeric prefixes, registers, etc.)
+    Face for special values (numeric prefixes, registers, etc.).
 
 *StatusCursor*::
-    face used for the status line cursor
+    Face for the status line cursor.
 
 *Prompt*::
-    face used prompt displayed on the status line
+    Face for the prompt displayed on the status line.
 
 *BufferPadding*::
-    face applied on the `~` characters that follow the last line of a buffer
+    Face applied on the *~* characters that follow the last line of a buffer.
 
-=== Builtin highlighters faces
+=== Built-in highlighter faces
 
-The following faces are used by builtin highlighters if enabled.
+The following faces are used by built-in highlighters if enabled.
 (See <<highlighters#,`:doc highlighters`>>).
 
 *LineNumbers*::
-    face used by the `number-lines` highlighter
+    Face used by the *number-lines* highlighter.
 
 *LineNumberCursor*::
-    face used to highlight the line number of the main selection
+    Face used to highlight the line number of the main selection.
 
 *LineNumbersWrapped*::
-    face used to highlight the line number of wrapped lines
+    Face used to highlight the line number of wrapped lines.
 
 *MatchingChar*::
-    face used by the `show-matching` highlighter
+    Face used by the *show-matching* highlighter.
 
 *Whitespace*::
-    face used by the `show-whitespaces` highlighter
+    Face used by the *show-whitespaces* highlighter.
 
 *WrapMarker*::
-    face used by the `wrap -marker` highlighter
+    Face used by the *wrap-marker* highlighter.
 
 == Markup strings
 
-In certain contexts, Kakoune can take a markup string, which is a string
-containing formatting information. In these strings, the {facename}
-syntax will enable the face facename until another face gets activated,
-or the end of the string is reached.
+In certain contexts, Kakoune can understand markup strings, which are strings
+containing formatting information. In these strings, the {facename} syntax
+will enable the face facename until another face gets activated, or the end
+of the string is reached.
 
 For example, the following command displays the text "default" in the
-Default face, and "error" in the Error face:
+*Default* face, and "error" in the *Error* face:
 
 ----
 echo -markup 'default {Error}error{Default} default'
 ----
 
-Inside a markup string, a literal `{` character is written `\{`, and a
-literal backslash (`\`) that precedes a '{' character is escaped as well
-(`\\`).
+Inside a markup string, a literal `{` character is written as `\{`, and a
+literal backslash (`\`) character is written as `\\`.
 
-The `{\}` string disables markup processing for the rest of the line,
-and can be used to avoid having to escape text that might be mistaken
-for markup instructions.
+The `{\}` string disables markup processing for the rest of the line. It
+can be used to avoid having to escape text that might be mistaken for markup
+instructions.
 
-For example this will prevent any '{' in the current buffer name from
-being incorrectly interpreted as markup instruction.
+For example, this will prevent any `{` in the current buffer name from being
+incorrectly interpreted as markup.
 
 ----
 echo -markup "{Information}name:{\} %val{bufname}"

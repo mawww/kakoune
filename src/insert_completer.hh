@@ -84,6 +84,7 @@ public:
 
     void select(int index, bool relative, Vector<Key>& keystrokes);
     void update(bool allow_implicit);
+    void try_accept();
     void reset();
 
     void explicit_file_complete();
@@ -100,6 +101,7 @@ private:
     void on_option_changed(const Option& opt) override;
 
     void menu_show();
+    bool has_candidate_selected() const;
 
     Context&            m_context;
     OptionManager&      m_options;
@@ -107,6 +109,7 @@ private:
     InsertCompletion    m_completions;
     Vector<BufferRange> m_inserted_ranges;
     int                 m_current_candidate = -1;
+    bool                m_enabled = true;
 
     using CompleteFunc = InsertCompletion (const SelectionList& sels,
                                            const OptionManager& options,

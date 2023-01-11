@@ -49,6 +49,8 @@ Optional<Codepoint> Key::codepoint() const
         return '\n';
     if (*this == Key::Tab)
         return '\t';
+    if (*this == Key::Space or *this == shift(Key::Space))
+        return ' ';
     if (*this == Key::Escape)
         return 0x1B;
     if (modifiers == Modifiers::None and key > 27 and
@@ -60,7 +62,7 @@ Optional<Codepoint> Key::codepoint() const
 struct KeyAndName { const char* name; Codepoint key; };
 static constexpr KeyAndName keynamemap[] = {
     { "ret", Key::Return },
-    { "space", ' ' },
+    { "space", Key::Space },
     { "tab", Key::Tab },
     { "lt", '<' },
     { "gt", '>' },
@@ -80,6 +82,8 @@ static constexpr KeyAndName keynamemap[] = {
     { "minus", '-' },
     { "semicolon", ';' },
     { "percent", '%' },
+    { "focus_in", Key::FocusIn },
+    { "focus_out", Key::FocusOut },
 };
 
 KeyList parse_keys(StringView str)
@@ -97,6 +101,7 @@ KeyList parse_keys(StringView str)
                     case '\r':   return Key::Return;
                     case '\b':   return Key::Backspace;
                     case '\t':   return Key::Tab;
+                    case ' ':    return Key::Space;
                     case '\033': return Key::Escape;
                     default:     return cp;
                 }
@@ -157,7 +162,7 @@ KeyList parse_keys(StringView str)
     return result;
 }
 
-StringView button_to_str(Key::MouseButton button)
+StringView to_string(Key::MouseButton button)
 {
     switch (button)
     {
@@ -176,7 +181,7 @@ Key::MouseButton str_to_button(StringView str)
     throw runtime_error(format("invalid mouse button name {}", str));
 }
 
-String key_to_str(Key key)
+String to_string(Key key)
 {
     const auto coord = key.coord() + DisplayCoord{1,1};
     switch (Key::Modifiers(key.modifiers & ~Key::Modifiers::MouseButtonMask))
@@ -184,9 +189,9 @@ String key_to_str(Key key)
         case Key::Modifiers::MousePos:
             return format("<mouse:move:{}.{}>", coord.line, coord.column);
         case Key::Modifiers::MousePress:
-            return format("<mouse:press:{}:{}.{}>", button_to_str(key.mouse_button()), coord.line, coord.column);
+            return format("<mouse:press:{}:{}.{}>", key.mouse_button(), coord.line, coord.column);
         case Key::Modifiers::MouseRelease:
-            return format("<mouse:release:{}:{}.{}>", button_to_str(key.mouse_button()), coord.line, coord.column);
+            return format("<mouse:release:{}:{}.{}>", key.mouse_button(), coord.line, coord.column);
         case Key::Modifiers::Scroll:
             return format("<scroll:{}>", static_cast<int>(key.key));
         case Key::Modifiers::Resize:
@@ -223,9 +228,9 @@ String key_to_str(Key key)
 UnitTest test_keys{[]()
 {
     KeyList keys{
-         { ' ' },
+         {Key::Space},
          { 'c' },
-         { Key::Up },
+         {Key::Up},
          alt('j'),
          ctrl('r'),
          shift(Key::Up),
@@ -236,7 +241,7 @@ UnitTest test_keys{[]()
     };
     String keys_as_str;
     for (auto& key : keys)
-        keys_as_str += key_to_str(key);
+        keys_as_str += to_string(key);
     auto parsed_keys = parse_keys(keys_as_str);
     kak_assert(keys == parsed_keys);
     kak_assert(ConstArrayView<Key>{parse_keys("a<c-a-b>c")} ==
@@ -252,7 +257,7 @@ UnitTest test_keys{[]()
     kak_assert(parse_keys("<s-tab>") == KeyList{ shift({Key::Tab}) });
     kak_assert(parse_keys("\n") == KeyList{ Key::Return });
 
-    kak_assert(key_to_str(shift({Key::Tab})) == "<s-tab>");
+    kak_assert(to_string(shift({Key::Tab})) == "<s-tab>");
 
     kak_expect_throw(key_parse_error, parse_keys("<-x>"));
     kak_expect_throw(key_parse_error, parse_keys("<xy-z>"));

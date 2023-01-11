@@ -9,7 +9,8 @@ hook global WinSetOption filetype=i3 %[
     require-module i3
 
     # cleanup trailing whitespaces when exiting insert mode
-    hook window ModeChange pop:insert:.* -group i3-trim-indent %{ try %{ execute-keys -draft <a-x>s^\h+$<ret>d } }
+    hook window ModeChange pop:insert:.* -group i3-trim-indent %{ try %{ execute-keys -draft xs^\h+$<ret>d } }
+    hook window InsertChar \n -group i3-insert i3-insert-on-new-line
     hook window InsertChar \n -group i3-indent i3-indent-on-new-line
     hook window InsertChar \} -group i3-indent i3-indent-on-closing-curly-brace
 
@@ -62,21 +63,26 @@ add-highlighter shared/i3/single_string/ regex "#[0-9a-fA-F]{6}" 0:value
 
 # attributes
 add-highlighter shared/i3/code/ regex "client\.(background|statusline|background|separator|statusline)" 1:attribute
-add-highlighter shared/i3/code/ regex "client\.(focused_inactive|focused|unfocused|urgent|inactive_workspace|urgent_workspace|focused_workspace|active_workspace|placeholder)" 1:attribute
+add-highlighter shared/i3/code/ regex "client\.(focused_inactive|focused_tab_title|focused|unfocused|urgent|inactive_workspace|urgent_workspace|focused_workspace|active_workspace|placeholder)" 1:attribute
 
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command -hidden i3-indent-on-new-line %~
+define-command -hidden i3-insert-on-new-line %~
     evaluate-commands -draft -itersel %=
         # copy # comments prefix
-        try %{ execute-keys -draft k<a-x> s ^\h*#\h* <ret> y jgh P }
+        try %{ execute-keys -draft kx s ^\h*#\h* <ret> y jgh P }
+    =
+~
+
+define-command -hidden i3-indent-on-new-line %~
+    evaluate-commands -draft -itersel %=
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon>K<a-&> }
         # indent after lines ending with {
-        try %[ execute-keys -draft k<a-x> <a-k> \{\h*$ <ret> j<a-gt> ]
+        try %[ execute-keys -draft kx <a-k> \{\h*$ <ret> j<a-gt> ]
         # cleanup trailing white spaces on the previous line
-        try %{ execute-keys -draft k<a-x> s \h+$ <ret>d }
+        try %{ execute-keys -draft kx s \h+$ <ret>d }
     =
 ~
 

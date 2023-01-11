@@ -1,1 +1,1 @@
-set-register a %{grep 'foo\|bar'}
+set-register a %{grep -E 'foo|bar'}

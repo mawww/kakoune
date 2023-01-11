@@ -5,6 +5,7 @@
 #include "hash.hh"
 
 #include <type_traits>
+#include <compare>
 
 namespace Kakoune
 {
@@ -87,24 +88,8 @@ public:
     { return lhs.m_value == rhs.m_value; }
 
     [[gnu::always_inline]]
-    constexpr friend bool operator!=(RealType lhs, RealType rhs)
-    { return lhs.m_value != rhs.m_value; }
-
-    [[gnu::always_inline]]
-    constexpr friend bool operator<(RealType lhs, RealType rhs)
-    { return lhs.m_value < rhs.m_value; }
-
-    [[gnu::always_inline]]
-    constexpr friend bool operator<=(RealType lhs, RealType rhs)
-    { return lhs.m_value <= rhs.m_value; }
-
-    [[gnu::always_inline]]
-    constexpr friend bool operator>(RealType lhs, RealType rhs)
-    { return lhs.m_value > rhs.m_value; }
-
-    [[gnu::always_inline]]
-    constexpr friend bool operator>=(RealType lhs, RealType rhs)
-    { return lhs.m_value >= rhs.m_value; }
+    constexpr friend auto operator<=>(RealType lhs, RealType rhs)
+    { return lhs.m_value <=> rhs.m_value; }
 
     [[gnu::always_inline]]
     constexpr bool operator!() const
@@ -151,6 +136,10 @@ inline constexpr ByteCount operator"" _byte(unsigned long long int value)
 {
     return ByteCount(value);
 }
+
+template<typename Byte>
+    requires (std::is_same_v<std::remove_cv_t<Byte>, char> or std::is_same_v<std::remove_cv_t<Byte>, void>)
+Byte* operator+(Byte* ptr, ByteCount count) { return ptr + (int)count; }
 
 struct CharCount : public StronglyTypedNumber<CharCount, int>
 {

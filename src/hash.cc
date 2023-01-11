@@ -3,6 +3,9 @@
 #include <cstdint>
 #include <cstring>
 
+#include "unit_tests.hh"
+#include "assert.hh"
+
 namespace Kakoune
 {
 
@@ -32,13 +35,13 @@ size_t hash_data(const char* input, size_t len)
     constexpr uint32_t c1 = 0xcc9e2d51;
     constexpr uint32_t c2 = 0x1b873593;
 
-    const int nblocks = len / 4;
+    const ptrdiff_t nblocks = len / 4;
     const uint8_t* blocks = data + nblocks*4;
 
-    for (int i = -nblocks; i; ++i)
+    for (ptrdiff_t i = -nblocks; i; ++i)
     {
         uint32_t key;
-        memcpy(&key, blocks + 4*i, 4);
+        key = (blocks[4*i + 3] << 24) | (blocks[4*i + 2] << 16) | (blocks[4*i + 1] << 8) | blocks[4*i];
         key *= c1;
         key = rotl(key, 15);
         key *= c2;
@@ -50,10 +53,10 @@ size_t hash_data(const char* input, size_t len)
 
     const uint8_t* tail = data + nblocks * 4;
     uint32_t key = 0;
-    switch (len & 3)
+    switch (len & 0b11)
     {
-        case 3: key ^= tail[2] << 16; /* fallthrough */
-        case 2: key ^= tail[1] << 8;  /* fallthrough */
+        case 3: key ^= tail[2] << 16; [[fallthrough]];
+        case 2: key ^= tail[1] << 8;  [[fallthrough]];
         case 1: key ^= tail[0];
                 key *= c1;
                 key = rotl(key,15);
@@ -66,5 +69,17 @@ size_t hash_data(const char* input, size_t len)
 
     return hash;
 }
+
+UnitTest test_murmur_hash{[] {
+    {
+        constexpr char data[] = "Hello, World!";
+        kak_assert(hash_data(data, strlen(data)) == 0xf816f95b);
+    }
+    {
+        constexpr char data[] = "xxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+        kak_assert(hash_data(data, strlen(data)) == 3551113186);
+    }
+    kak_assert(hash_data("", 0) == 2572747774);
+}};
 
 }

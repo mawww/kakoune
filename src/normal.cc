@@ -1,7 +1,5 @@
 #include "normal.hh"
 
-#include <functional>
-
 #include "buffer.hh"
 #include "buffer_manager.hh"
 #include "buffer_utils.hh"
@@ -30,8 +28,6 @@
 
 namespace Kakoune
 {
-
-using namespace std::placeholders;
 
 enum class SelectMode
 {
@@ -78,6 +74,7 @@ UnitTest test_merge_selection{[] {
 template<SelectMode mode, typename T>
 void select(Context& context, T func)
 {
+    ScopedSelectionEdition selection_edition{context};
     auto& selections = context.selections();
     if (mode == SelectMode::Append)
     {
@@ -144,8 +141,11 @@ void select_and_set_last(Context& context, Func&& func)
 }
 
 template<SelectMode mode = SelectMode::Replace>
-void select_coord(Buffer& buffer, BufferCoord coord, SelectionList& selections)
+void select_coord(Context& context, BufferCoord coord)
 {
+    Buffer& buffer = context.buffer();
+    ScopedSelectionEdition selection_edition{context};
+    SelectionList& selections = context.selections();
     coord = buffer.clamp(coord);
     if (mode == SelectMode::Replace)
         selections = SelectionList{ buffer, coord };
@@ -183,14 +183,14 @@ String build_autoinfo_for_mapping(const Context& context, KeymapMode mode,
     {
         String keys = join(built_in.keys |
                            filter([&](Key k){ return not keymaps.is_mapped(k, mode); }) |
-                           transform(key_to_str),
+                           transform((String(*)(Key))to_string),
                            ',', false);
         if (not keys.empty())
             descs.emplace_back(std::move(keys), built_in.docstring);
     }
 
     for (auto& key : keymaps.get_mapped_keys(mode))
-        descs.emplace_back(key_to_str(key),
+        descs.emplace_back(to_string(key),
                            keymaps.get_mapping(key, mode).docstring);
 
     auto max_len = 0_col;
@@ -216,7 +216,7 @@ void goto_commands(Context& context, NormalParams params)
     if (params.count != 0)
     {
         context.push_jump();
-        select_coord<mode>(context.buffer(), LineCount{params.count - 1}, context.selections());
+        select_coord<mode>(context, LineCount{params.count - 1});
         if (context.has_window())
             context.window().center_line(LineCount{params.count-1});
     }
@@ -233,7 +233,7 @@ void goto_commands(Context& context, NormalParams params)
             case 'g':
             case 'k':
                 context.push_jump();
-                select_coord<mode>(buffer, BufferCoord{0,0}, context.selections());
+                select_coord<mode>(context, BufferCoord{0,0});
                 break;
             case 'l':
                 select<mode, select_to_line_end<true>>(context, {});
@@ -246,17 +246,17 @@ void goto_commands(Context& context, NormalParams params)
                 break;
             case 'j':
                 context.push_jump();
-                select_coord<mode>(buffer, buffer.line_count() - 1, context.selections());
+                select_coord<mode>(context, buffer.line_count() - 1);
                 break;
             case 'e':
                 context.push_jump();
-                select_coord<mode>(buffer, buffer.back_coord(), context.selections());
+                select_coord<mode>(context, buffer.back_coord());
                 break;
             case 't':
                 if (context.has_window())
                 {
                     auto line = context.window().position().line;
-                    select_coord<mode>(buffer, line, context.selections());
+                    select_coord<mode>(context, line);
                 }
                 break;
             case 'b':
@@ -264,7 +264,7 @@ void goto_commands(Context& context, NormalParams params)
                 {
                     auto& window = context.window();
                     auto line = window.position().line + window.dimensions().line - 1;
-                    select_coord<mode>(buffer, line, context.selections());
+                    select_coord<mode>(context, line);
                 }
                 break;
             case 'c':
@@ -272,7 +272,7 @@ void goto_commands(Context& context, NormalParams params)
                 {
                     auto& window = context.window();
                     auto line = window.position().line + window.dimensions().line / 2;
-                    select_coord<mode>(buffer, line, context.selections());
+                    select_coord<mode>(context, line);
                 }
                 break;
             case 'a':
@@ -281,7 +281,6 @@ void goto_commands(Context& context, NormalParams params)
                 if (not target)
                 {
                     throw runtime_error("no last buffer");
-                    break;
                 }
                 context.push_jump();
                 context.change_buffer(*target);
@@ -289,30 +288,39 @@ void goto_commands(Context& context, NormalParams params)
             }
             case 'f':
             {
-                auto filename = content(buffer, context.selections().main());
                 static constexpr char forbidden[] = { '\'', '\\', '\0' };
-                if (any_of(filename, [](char c){ return contains(forbidden, c); }))
-                    return;
+                const auto& paths_opt = context.options()["path"].get<Vector<String, MemoryDomain::Options>>();
+                const auto paths = context.selections() | transform([&](const auto& sel) {
+                    auto filename = content(buffer, sel);
+                    if (any_of(filename, [](char c){ return contains(forbidden, c); }))
+                        throw runtime_error(format("filename contains invalid characters: '{}'", filename));
 
-                auto paths = context.options()["path"].get<Vector<String, MemoryDomain::Options>>();
-                const StringView buffer_dir = split_path(buffer.name()).first;
-                String path = find_file(filename, buffer_dir, paths);
-                if (path.empty())
-                    throw runtime_error(format("unable to find file '{}'", filename));
+                    const StringView buffer_dir = split_path(buffer.name()).first;
+                    String path = find_file(filename, buffer_dir, paths_opt);
+                    if (path.empty())
+                        throw runtime_error(format("unable to find file '{}'", filename));
 
-                Buffer* buffer = BufferManager::instance().get_buffer_ifp(path);
-                if (not buffer)
-                {
-                    buffer = open_file_buffer(path, context.hooks_disabled() ?
-                                                      Buffer::Flags::NoHooks
-                                                    : Buffer::Flags::None);
-                    buffer->flags() &= ~Buffer::Flags::NoHooks;
+                    return path;
+                });
+
+                Buffer* buffer_main = nullptr;
+                for (auto&& [i, path] : paths | enumerate()) {
+                    Buffer* buffer = BufferManager::instance().get_buffer_ifp(path);
+                    if (not buffer)
+                    {
+                        buffer = open_file_buffer(path, context.hooks_disabled() ?
+                                                          Buffer::Flags::NoHooks
+                                                        : Buffer::Flags::None);
+                        buffer->flags() &= ~Buffer::Flags::NoHooks;
+                    }
+
+                    if (i == context.selections().main_index())
+                        buffer_main = buffer;
                 }
-
-                if (buffer != &context.buffer())
+                if (buffer_main and buffer_main != &context.buffer())
                 {
                     context.push_jump();
-                    context.change_buffer(*buffer);
+                    context.change_buffer(*buffer_main);
                 }
                 break;
             }
@@ -324,9 +332,11 @@ void goto_commands(Context& context, NormalParams params)
                     throw runtime_error("no last modification position");
                 if (*pos >= buffer.back_coord())
                     pos = buffer.back_coord();
-                select_coord<mode>(buffer, *pos, context.selections());
+                select_coord<mode>(context, *pos);
                 break;
             }
+            default:
+                throw runtime_error("key not mapped");
             }
         }, (mode == SelectMode::Extend ? "goto (extend to)" : "goto"),
         build_autoinfo_for_mapping(context, KeymapMode::Goto,
@@ -363,7 +373,7 @@ void view_commands(Context& context, NormalParams params)
 
         const BufferCoord cursor = context.selections().main().cursor();
         Window& window = context.window();
-        switch (to_lower(*cp))
+        switch (*cp)
         {
         case 'v':
         case 'c':
@@ -391,6 +401,8 @@ void view_commands(Context& context, NormalParams params)
         case 'l':
             window.scroll( std::max<ColumnCount>(1, count));
             break;
+        default:
+            throw runtime_error("key not mapped");
         }
     }, lock ? "view (lock)" : "view",
     build_autoinfo_for_mapping(context, KeymapMode::View,
@@ -412,15 +424,12 @@ void replace_with_char(Context& context, NormalParams)
         if (not cp or key == Key::Escape)
             return;
         ScopedEdition edition(context);
+        ScopedSelectionEdition selection_edition{context};
         Buffer& buffer = context.buffer();
-        SelectionList& selections = context.selections();
-        Vector<String> strings;
-        for (auto& sel : selections)
-        {
+        context.selections().for_each([&](size_t index, Selection& sel) {
             CharCount count = char_length(buffer, sel);
-            strings.emplace_back(*cp, count);
-        }
-        selections.insert(strings, InsertMode::Replace);
+            replace(buffer, sel, String{*cp, count});
+        }, false);
     }, "replace with char", "enter char to replace with\n");
 }
 
@@ -436,20 +445,17 @@ void for_each_codepoint(Context& context, NormalParams)
     using Utf8It = utf8::iterator<BufferIterator>;
 
     ScopedEdition edition(context);
+    ScopedSelectionEdition selection_edition{context};
     Buffer& buffer = context.buffer();
-    SelectionList& selections = context.selections();
-    Vector<String> strings;
-    for (auto& sel : selections)
-    {
+
+    context.selections().for_each([&](size_t index, Selection& sel) {
         String str;
         for (auto begin = Utf8It{buffer.iterator_at(sel.min()), buffer},
                   end = Utf8It{buffer.iterator_at(sel.max()), buffer}+1;
              begin != end; ++begin)
             utf8::dump(std::back_inserter(str), func(*begin));
-
-        strings.push_back(std::move(str));
-    }
-    selections.insert(strings, InsertMode::Replace);
+        replace(buffer, sel, str);
+    }, false);
 }
 
 void command(const Context& context, EnvVarMap env_vars, char reg = 0)
@@ -553,7 +559,8 @@ void pipe(Context& context, NormalParams params)
         prompt, {}, default_command, context.faces()["Prompt"],
         PromptFlags::DropHistoryEntriesWithBlankPrefix, '|',
         shell_complete,
-        [default_command](StringView cmdline, PromptEvent event, Context& context)
+        [default_command, selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
+        (StringView cmdline, PromptEvent event, Context& context)
         {
             if (event != PromptEvent::Validate)
                 return;
@@ -578,10 +585,6 @@ void pipe(Context& context, NormalParams params)
                     const auto end = changes_tracker.get_new_coord_tolerant(sel.max());
 
                     String in = buffer.string(beg, buffer.char_next(end));
-                    const bool insert_eol = in.back() != '\n';
-                    if (insert_eol)
-                        in += '\n';
-
                     // Needed in case we read selections inside the cmdline
                     context.selections_write_only().set({keep_direction(Selection{beg, end}, sel)}, 0);
 
@@ -589,12 +592,9 @@ void pipe(Context& context, NormalParams params)
                         cmdline, context, in,
                         ShellManager::Flags::WaitForStdout).first;
 
-                    if (insert_eol)
-                    {
-                        in.resize(in.length()-1, 0);
-                        if (not out.empty() and out.back() == '\n')
-                            out.resize(out.length()-1, 0);
-                    }
+                    if (in.back() != '\n' and not out.empty() and out.back() == '\n')
+                        out.resize(out.length()-1, 0);
+
                     auto new_end = apply_diff(buffer, beg, in, out);
                     if (new_end != beg)
                         new_sels.push_back(keep_direction({beg, buffer.char_prev(new_end), std::move(sel.captures())}, sel));
@@ -624,43 +624,6 @@ void pipe(Context& context, NormalParams params)
         });
 }
 
-template<InsertMode mode>
-void insert_output(Context& context, NormalParams params)
-{
-    const char* prompt = mode == InsertMode::Insert ? "insert-output:" : "append-output:";
-    String default_command = context.main_sel_register_value(params.reg ? params.reg : '|').str();
-
-    context.input_handler().prompt(
-        prompt, {}, default_command, context.faces()["Prompt"],
-        PromptFlags::DropHistoryEntriesWithBlankPrefix, '|',
-        shell_complete,
-        [default_command](StringView cmdline, PromptEvent event, Context& context)
-        {
-            if (event != PromptEvent::Validate)
-                return;
-
-            if (cmdline.empty())
-                cmdline = default_command;
-
-            if (cmdline.empty())
-                return;
-
-            ScopedEdition edition(context);
-            auto& selections = context.selections();
-            const size_t old_main = selections.main_index();
-
-            auto ins = selections | transform([&, i=0](auto& sel) mutable {
-                selections.set_main_index(i++);
-                return ShellManager::instance().eval(
-                    cmdline, context, content(context.buffer(), sel),
-                    ShellManager::Flags::WaitForStdout).first;
-            }) | gather<Vector>();
-
-            selections.set_main_index(old_main);
-            selections.insert(ins, mode);
-        });
-}
-
 void yank(Context& context, NormalParams params)
 {
     const char reg = params.reg ? params.reg : '"';
@@ -679,6 +642,7 @@ void erase_selections(Context& context, NormalParams params)
         RegisterManager::instance()[reg].set(context, context.selections_content());
     }
     ScopedEdition edition(context);
+    ScopedSelectionEdition selection_edition{context};
     context.selections().erase();
 }
 
@@ -693,18 +657,28 @@ void change(Context& context, NormalParams params)
     enter_insert_mode<InsertMode::Replace>(context, params);
 }
 
-InsertMode adapt_for_linewise(InsertMode mode)
+enum class PasteMode
+{
+    Append,
+    Insert,
+    Replace
+};
+
+BufferCoord paste_pos(Buffer& buffer, BufferCoord min, BufferCoord max, PasteMode mode, bool linewise)
 {
     switch (mode)
     {
-        case InsertMode::Append: return InsertMode::InsertAtNextLineBegin;
-        case InsertMode::Insert: return InsertMode::InsertAtLineBegin;
-        case InsertMode::Replace: return InsertMode::Replace;
-        default: return InsertMode::Insert;
+        case PasteMode::Append:
+            return linewise ? std::min(buffer.line_count(), max.line+1) : buffer.char_next(max);
+        case PasteMode::Insert:
+            return linewise ? min.line : min;
+        default:
+            kak_assert(false);
+            return {};
     }
 }
 
-template<InsertMode mode>
+template<PasteMode mode>
 void paste(Context& context, NormalParams params)
 {
     const char reg = params.reg ? params.reg : '"';
@@ -712,18 +686,29 @@ void paste(Context& context, NormalParams params)
     const bool linewise = any_of(strings, [](StringView str) {
         return not str.empty() and str.back() == '\n';
     });
-    const auto effective_mode = linewise ? adapt_for_linewise(mode) : mode;
 
+    auto& buffer = context.buffer();
     ScopedEdition edition(context);
-    context.selections().insert(strings, effective_mode);
+    ScopedSelectionEdition selection_edition{context};
+    context.selections().for_each([&, last=BufferCoord{}](size_t index, Selection& sel) mutable {
+        auto& str = strings[std::min(strings.size()-1, index)];
+        auto& min = sel.min();
+        auto& max = sel.max();
+        BufferRange range = (mode == PasteMode::Replace) ?
+            buffer.replace(min, buffer.char_next(max), str)
+          : buffer.insert(paste_pos(buffer, min, std::max(max, last), mode, linewise), str);
+        min = range.begin;
+        max = range.end > range.begin ? buffer.char_prev(range.end) : range.begin;
+        last = max;
+    }, mode == PasteMode::Append);
 }
 
-template<InsertMode mode>
+template<PasteMode mode>
 void paste_all(Context& context, NormalParams params)
 {
     const char reg = params.reg ? params.reg : '"';
     auto strings = RegisterManager::instance()[reg].get(context);
-    InsertMode effective_mode = mode;
+    bool linewise = false;
     String all;
     Vector<ByteCount> offsets;
     for (auto& str : strings)
@@ -732,34 +717,80 @@ void paste_all(Context& context, NormalParams params)
             continue;
 
         if (str.back() == '\n')
-            effective_mode = adapt_for_linewise(mode);
+            linewise = true;
         all += str;
         offsets.push_back(all.length());
     }
 
-    Vector<BufferCoord> insert_pos;
+    if (offsets.empty())
+        throw runtime_error("nothing to paste");
+
+    Buffer& buffer = context.buffer();
+    Vector<Selection> result;
+    ScopedSelectionEdition selection_edition{context};
     auto& selections = context.selections();
     {
         ScopedEdition edition(context);
-        selections.insert(all, effective_mode, &insert_pos);
-    }
+        selections.for_each([&](size_t, const Selection& sel) {
+            auto range = (mode == PasteMode::Replace) ?
+                buffer.replace(sel.min(), buffer.char_next(sel.max()), all)
+              : buffer.insert(paste_pos(buffer, sel.min(), sel.max(), mode, linewise), all);
 
-    const Buffer& buffer = context.buffer();
-    Vector<Selection> result;
-    for (auto& ins_pos : insert_pos)
-    {
-        ByteCount pos_offset = 0;
-        BufferCoord pos = ins_pos;
-        for (auto offset : offsets)
-        {
-            BufferCoord end = buffer.advance(pos, offset - pos_offset - 1);
-            result.emplace_back(pos, end);
-            pos = buffer.next(end);
-            pos_offset = offset;
-        }
+            ByteCount pos_offset = 0;
+            BufferCoord pos = range.begin;
+            for (auto offset : offsets)
+            {
+                BufferCoord end = buffer.advance(pos, offset - pos_offset - 1);
+                result.emplace_back(pos, end);
+                pos = buffer.next(end);
+                pos_offset = offset;
+            }
+        }, mode == PasteMode::Append);
     }
-    if (not result.empty())
-        selections = std::move(result);
+    selections = std::move(result);
+}
+
+template<PasteMode mode>
+void insert_output(Context& context, NormalParams params)
+{
+    const char* prompt = mode == PasteMode::Insert ? "insert-output:" : "append-output:";
+    String default_command = context.main_sel_register_value(params.reg ? params.reg : '|').str();
+
+    context.input_handler().prompt(
+        prompt, {}, default_command, context.faces()["Prompt"],
+        PromptFlags::DropHistoryEntriesWithBlankPrefix, '|',
+        shell_complete,
+        [default_command, selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
+        (StringView cmdline, PromptEvent event, Context& context)
+        {
+            if (event != PromptEvent::Validate)
+                return;
+
+            if (cmdline.empty())
+                cmdline = default_command;
+
+            if (cmdline.empty())
+                return;
+
+            ScopedEdition edition(context);
+            auto& selections = context.selections();
+            auto& buffer = context.buffer();
+            const size_t old_main = selections.main_index();
+
+            selections.for_each([&](size_t index, Selection& sel) {
+                selections.set_main_index(index);
+                auto [out, status] = ShellManager::instance().eval(
+                    cmdline, context, content(context.buffer(), sel),
+                    ShellManager::Flags::WaitForStdout);
+
+                auto& min = sel.min();
+                auto& max = sel.max();
+                auto range = insert(buffer, sel, paste_pos(buffer, min, max, mode, false), out);
+                min = range.begin;
+                max = range.end > range.begin ? buffer.char_prev(range.end) : range.begin;
+            }, mode == PasteMode::Append);
+            selections.set_main_index(old_main);
+        });
 }
 
 constexpr RegexCompileFlags direction_flags(RegexMode mode)
@@ -802,7 +833,8 @@ void regex_prompt(Context& context, String prompt, char reg, T func)
                        [&](auto&& m) { candidates.push_back(m.candidate().str()); return true; });
             return {(int)(word.begin() - regex.begin()), pos,  std::move(candidates) };
         },
-        [=, func=T(std::move(func))](StringView str, PromptEvent event, Context& context) mutable {
+        [=, func=T(std::move(func)), selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
+        (StringView str, PromptEvent event, Context& context) mutable {
             try
             {
                 if (event != PromptEvent::Change and context.has_client())
@@ -918,10 +950,11 @@ template<SelectMode mode, RegexMode regex_mode>
 void search_next(Context& context, NormalParams params)
 {
     const char reg = to_lower(params.reg ? params.reg : '/');
-    StringView str = RegisterManager::instance()[reg].get(context).back();
+    StringView str = RegisterManager::instance()[reg].get(context).front();
     if (not str.empty())
     {
         Regex regex{str, direction_flags(regex_mode)};
+        ScopedSelectionEdition selection_edition{context};
         auto& selections = context.selections();
         bool main_wrapped = false;
         do {
@@ -960,13 +993,13 @@ void use_selection_as_search_pattern(Context& context, NormalParams params)
                       smart and is_bow(buffer, beg) ? "\\b" : "",
                       escape(buffer.string(beg, end), "^$\\.*+?()[]{}|", '\\'),
                       smart and is_eow(buffer, end) ? "\\b" : "");
-    });
+    }) | gather<HashSet>();
     String pattern = join(patterns, '|', false);
 
     const char reg = to_lower(params.reg ? params.reg : '/');
 
     context.print_status({
-        format("register '{}' set to '{}'", reg, fix_atom_text(pattern)),
+        format("register '{}' set to '{}'", reg, pattern),
         context.faces()["Information"] });
 
     RegisterManager::instance()[reg].set(context, {pattern});
@@ -1023,6 +1056,7 @@ void split_regex(Context& context, NormalParams params)
 void split_lines(Context& context, NormalParams params)
 {
     const LineCount count{params.count == 0 ? 1 : params.count};
+    ScopedSelectionEdition selection_edition{context};
     auto& selections = context.selections();
     auto& buffer = context.buffer();
     Vector<Selection> res;
@@ -1049,6 +1083,7 @@ void split_lines(Context& context, NormalParams params)
 
 void select_boundaries(Context& context, NormalParams)
 {
+    ScopedSelectionEdition selection_edition{context};
     auto& selections = context.selections();
     Vector<Selection> res;
     for (auto& sel : selections)
@@ -1064,6 +1099,7 @@ void join_lines_select_spaces(Context& context, NormalParams)
 {
     auto& buffer = context.buffer();
     Vector<Selection> selections;
+    ScopedSelectionEdition selection_edition{context};
     for (auto& sel : context.selections())
     {
         const LineCount min_line = sel.min().line;
@@ -1080,12 +1116,14 @@ void join_lines_select_spaces(Context& context, NormalParams)
     if (selections.empty())
         return;
     context.selections_write_only() = std::move(selections);
+    context.selections().merge_consecutive();
     ScopedEdition edition(context);
-    context.selections().insert(" "_str, InsertMode::Replace);
+    context.selections().replace({" "_str});
 }
 
 void join_lines(Context& context, NormalParams params)
 {
+    ScopedSelectionEdition selection_edition{context};
     SelectionList sels{context.selections()};
     auto restore_sels = on_scope_end([&]{
         sels.update();
@@ -1103,7 +1141,8 @@ void keep(Context& context, NormalParams params)
     const char reg = to_lower(params.reg ? params.reg : '/');
 
     regex_prompt(context, prompt.str(), reg,
-                 [reg, saved_reg = RegisterManager::instance()[reg].save(context)]
+                 [reg, saved_reg = RegisterManager::instance()[reg].save(context),
+                  selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
                  (const Regex& regex, PromptEvent event, Context& context) {
         RegisterManager::instance()[reg].restore(context, saved_reg);
         if (event == PromptEvent::Abort)
@@ -1140,7 +1179,8 @@ void keep_pipe(Context& context, NormalParams params)
     context.input_handler().prompt(
         "keep pipe:", {}, default_command, context.faces()["Prompt"],
         PromptFlags::DropHistoryEntriesWithBlankPrefix, '|', shell_complete,
-        [default_command](StringView cmdline, PromptEvent event, Context& context) {
+        [default_command, selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
+        (StringView cmdline, PromptEvent event, Context& context) {
             if (event != PromptEvent::Validate)
                 return;
 
@@ -1183,24 +1223,19 @@ void indent(Context& context, NormalParams params)
     CharCount indent_width = context.options()["indentwidth"].get<int>();
     String indent = indent_width == 0 ? String{'\t', count} : String{' ', indent_width * count};
 
+    ScopedEdition edition(context);
     auto& buffer = context.buffer();
-    Vector<Selection> sels;
     LineCount last_line = 0;
+    ScopedSelectionEdition selection_edition{context};
     for (auto& sel : context.selections())
     {
         for (auto line = std::max(last_line, sel.min().line); line < sel.max().line+1; ++line)
         {
             if (indent_empty or buffer[line].length() > 1)
-                sels.emplace_back(line, line);
+                buffer.insert(line, indent);
         }
         // avoid reindenting the same line if multiple selections are on it
         last_line = sel.max().line+1;
-    }
-    if (not sels.empty())
-    {
-        ScopedEdition edition(context);
-        SelectionList selections{buffer, std::move(sels)};
-        selections.insert(indent, InsertMode::Insert);
     }
 }
 
@@ -1214,9 +1249,9 @@ void deindent(Context& context, NormalParams params)
         indent_width = tabstop;
     indent_width = indent_width * count;
 
-    const auto& buffer = context.buffer();
-    Vector<Selection> sels;
+    auto& buffer = context.buffer();
     LineCount last_line = 0;
+    ScopedSelectionEdition selection_edition{context};
     for (auto& sel : context.selections())
     {
         for (auto line = std::max(sel.min().line, last_line);
@@ -1234,24 +1269,18 @@ void deindent(Context& context, NormalParams params)
                 else
                 {
                     if (deindent_incomplete and width != 0)
-                        sels.emplace_back(line, BufferCoord{line, column-1});
+                        buffer.erase(line, BufferCoord{line, column});
                     break;
                 }
                 if (width >= indent_width)
                 {
-                    sels.emplace_back(line, BufferCoord{line, column});
+                    buffer.erase(line, BufferCoord{line, column+1});
                     break;
                 }
             }
         }
         // avoid reindenting the same line if multiple selections are on it
         last_line = sel.max().line + 1;
-    }
-    if (not sels.empty())
-    {
-        ScopedEdition edition(context);
-        SelectionList selections{context.buffer(), std::move(sels)};
-        selections.erase();
     }
 }
 
@@ -1283,7 +1312,7 @@ void select_object(Context& context, NormalParams params)
             { alt('w'), select_word<WORD> },
             { 's', select_sentence },
             { 'p', select_paragraph },
-            { ' ', select_whitespaces },
+            { Key::Space, select_whitespaces },
             { 'i', select_indent },
             { 'n', select_number },
             { 'u', select_argument },
@@ -1291,7 +1320,15 @@ void select_object(Context& context, NormalParams params)
         auto obj_it = find(selectors | transform(&ObjectType::key), key).base();
         if (obj_it != std::end(selectors))
             return select_and_set_last<mode>(
-                context, std::bind(obj_it->func, _1, _2, count, flags));
+                context, [=](Context& context, Selection& sel) { return obj_it->func(context, sel, count, flags); });
+
+        static constexpr auto regex_selector = [=](StringView open, StringView close, int count) {
+            return [open=Regex{open, RegexCompileFlags::Backward},
+                    close=Regex{close, RegexCompileFlags::Backward},
+                    count](Context& context, Selection& sel) {
+                return select_surrounding(context, sel, open, close, count, flags);
+            };
+        };
 
         if (key == 'c')
         {
@@ -1312,17 +1349,13 @@ void select_object(Context& context, NormalParams params)
 
                     struct error : runtime_error { error(size_t) : runtime_error{"desc parsing failed, expected <open>,<close>"} {} };
 
-                    auto params = cmdline | split<StringView>(',', '\\') |
-                        transform(unescape<',', '\\'>) | static_gather<error, 2>();
-
+                    auto params = cmdline | split<StringView>(',', '\\')
+                                          | transform(unescape<',', '\\'>)
+                                          | static_gather<error, 2>();
                     if (params[0].empty() or params[1].empty())
                         throw error{0};
 
-                    select_and_set_last<mode>(
-                        context, std::bind(select_surrounding, _1, _2,
-                                           Regex{params[0], RegexCompileFlags::Backward},
-                                           Regex{params[1], RegexCompileFlags::Backward},
-                                           count, flags));
+                    select_and_set_last<mode>(context, regex_selector(params[0], params[1], count));
                 });
             return;
         }
@@ -1339,10 +1372,10 @@ void select_object(Context& context, NormalParams params)
             return;
         }
 
-        static constexpr struct SurroundingPair
+        static constexpr struct
         {
-            char opening;
-            char closing;
+            char open;
+            char close;
             char name;
         } surrounding_pairs[] = {
             { '(', ')', 'b' },
@@ -1353,34 +1386,21 @@ void select_object(Context& context, NormalParams params)
             { '\'', '\'', 'q' },
             { '`', '`', 'g' },
         };
-        auto pair_it = find_if(surrounding_pairs,
-                               [key](const SurroundingPair& s) {
-                                   return key == s.opening or key == s.closing or
-                                          (s.name != 0 and key == s.name);
-                               });
-        if (pair_it != std::end(surrounding_pairs))
+        if (auto it = find_if(surrounding_pairs, [key](auto s) { return key == s.open or key == s.close or key == s.name; });
+            it != std::end(surrounding_pairs))
             return select_and_set_last<mode>(
-                context, std::bind(select_surrounding, _1, _2,
-                                   Regex{format("\\Q{}", pair_it->opening), RegexCompileFlags::Backward},
-                                   Regex{format("\\Q{}", pair_it->closing), RegexCompileFlags::Backward},
-                                   count, flags));
+                context, regex_selector(format("\\Q{}", it->open), format("\\Q{}", it->close), count));
 
-        if (not key.codepoint())
-            return;
-
-        const Codepoint cp = *key.codepoint();
-        if (is_punctuation(cp, {}))
+        if (auto cp = key.codepoint(); cp and is_punctuation(*cp, {}))
         {
-            auto re = Regex{"\\Q" + to_string(cp), RegexCompileFlags::Backward};
-            return select_and_set_last<mode>(
-                context, std::bind(select_surrounding, _1, _2,
-                                   re, re, count, flags));
+            auto re = "\\Q" + to_string(*cp);
+            return select_and_set_last<mode>(context, regex_selector(re, re, count));
         }
     }, get_title(),
     build_autoinfo_for_mapping(context, KeymapMode::Object,
         {{{'b','(',')'}, "parenthesis block"},
-         {{'B','{','}'}, "braces block"},
-         {{'r','[',']'}, "brackets block"},
+         {{'B','{','}'}, "brace block"},
+         {{'r','[',']'}, "bracket block"},
          {{'a','<','>'}, "angle block"},
          {{'"','Q'},     "double quote string"},
          {{'\'','q'},    "single quote string"},
@@ -1389,7 +1409,7 @@ void select_object(Context& context, NormalParams params)
          {{alt('w')},    "WORD"},
          {{'s'},         "sentence"},
          {{'p'},         "paragraph"},
-         {{' '},         "whitespaces"},
+         {{Key::Space},  "whitespaces"},
          {{'i'},         "indent"},
          {{'u'},         "argument"},
          {{'n'},         "number"},
@@ -1412,6 +1432,7 @@ void scroll(Context& context, NormalParams params)
 template<Direction direction>
 void copy_selections_on_next_lines(Context& context, NormalParams params)
 {
+    ScopedSelectionEdition selection_edition{context};
     auto& selections = context.selections();
     auto& buffer = context.buffer();
     const ColumnCount tabstop = context.options()["tabstop"].get<int>();
@@ -1465,6 +1486,7 @@ template<Direction direction>
 void rotate_selections(Context& context, NormalParams params)
 {
     const int count = params.count ? params.count : 1;
+    ScopedSelectionEdition selection_edition{context};
     auto& selections = context.selections();
     const int index = selections.main_index();
     const int num = selections.size();
@@ -1482,6 +1504,7 @@ void rotate_selections_content(Context& context, NormalParams params)
     if (group == 0 or group > (int)strings.size())
         group = (int)strings.size();
     count = count % group;
+    ScopedSelectionEdition selection_edition{context};
     auto& selections = context.selections();
     auto main = strings.begin() + selections.main_index();
     for (auto it = strings.begin(); it != strings.end(); )
@@ -1494,7 +1517,7 @@ void rotate_selections_content(Context& context, NormalParams params)
             main = main < new_beg ? end - (new_beg - main) : it + (main - new_beg);
         it = end;
     }
-    selections.insert(strings, InsertMode::Replace);
+    selections.replace(strings);
     selections.set_main_index(main - strings.begin());
 }
 
@@ -1526,11 +1549,10 @@ void select_to_next_char(Context& context, NormalParams params)
         constexpr auto new_flags = flags & SelectFlags::Extend ? SelectMode::Extend
                                                                : SelectMode::Replace;
         select_and_set_last<new_flags>(
-            context,
-            std::bind(flags & SelectFlags::Reverse ? select_to_reverse
-                                                   : select_to,
-                      _1, _2, *cp, params.count,
-                      flags & SelectFlags::Inclusive));
+            context, [cp=*cp, count=params.count] (auto& context, auto& sel) {
+                auto& func = flags & SelectFlags::Reverse ? select_to_reverse : select_to;
+                return func(context, sel, cp, count, flags & SelectFlags::Inclusive);
+            });
     }, get_title(), "enter char to select to");
 }
 
@@ -1545,12 +1567,6 @@ void start_or_end_macro_recording(Context& context, NormalParams params)
             throw runtime_error("macros can only use the '@' and alphabetic registers");
         context.input_handler().start_recording(reg);
     }
-}
-
-void end_macro_recording(Context& context, NormalParams)
-{
-    if (context.input_handler().is_recording())
-        context.input_handler().stop_recording();
 }
 
 void replay_macro(Context& context, NormalParams params)
@@ -1573,6 +1589,7 @@ void replay_macro(Context& context, NormalParams params)
 
     auto keys = parse_keys(reg_val[0]);
     ScopedEdition edition(context);
+    ScopedSelectionEdition selection_edition{context};
     do
     {
         for (auto& key : keys)
@@ -1590,6 +1607,7 @@ void jump(Context& context, NormalParams params)
 
     Buffer* oldbuf = &context.buffer();
     Buffer& buffer = const_cast<Buffer&>(jump.buffer());
+    ScopedSelectionEdition selection_edition{context};
     if (&buffer != oldbuf)
         context.change_buffer(buffer);
     context.selections_write_only() = jump;
@@ -1604,6 +1622,7 @@ void push_selections(Context& context, NormalParams)
 
 void align(Context& context, NormalParams)
 {
+    ScopedSelectionEdition selection_edition{context};
     auto& selections = context.selections();
     auto& buffer = context.buffer();
     const ColumnCount tabstop = context.options()["tabstop"].get<int>();
@@ -1657,6 +1676,7 @@ void copy_indent(Context& context, NormalParams params)
 {
     int selection = params.count;
     auto& buffer = context.buffer();
+    ScopedSelectionEdition selection_edition{context};
     auto& selections = context.selections();
     Vector<LineCount> lines;
     for (auto sel : selections)
@@ -1697,6 +1717,7 @@ void tabs_to_spaces(Context& context, NormalParams params)
     const ColumnCount tabstop = params.count == 0 ? opt_tabstop : params.count;
     Vector<Selection> tabs;
     Vector<String> spaces;
+    ScopedSelectionEdition selection_edition{context};
     for (auto& sel : context.selections())
     {
         for (auto it = buffer.iterator_at(sel.min()),
@@ -1712,7 +1733,7 @@ void tabs_to_spaces(Context& context, NormalParams params)
         }
     }
     if (not tabs.empty())
-        SelectionList{ buffer, std::move(tabs) }.insert(spaces, InsertMode::Replace);
+        SelectionList{ buffer, std::move(tabs) }.replace(spaces);
 }
 
 void spaces_to_tabs(Context& context, NormalParams params)
@@ -1721,6 +1742,7 @@ void spaces_to_tabs(Context& context, NormalParams params)
     const ColumnCount opt_tabstop = context.options()["tabstop"].get<int>();
     const ColumnCount tabstop = params.count == 0 ? opt_tabstop : params.count;
     Vector<Selection> spaces;
+    ScopedSelectionEdition selection_edition{context};
     for (auto& sel : context.selections())
     {
         for (auto it = buffer.iterator_at(sel.min()),
@@ -1748,12 +1770,13 @@ void spaces_to_tabs(Context& context, NormalParams params)
         }
     }
     if (not spaces.empty())
-        SelectionList{ buffer, std::move(spaces) }.insert("\t"_str, InsertMode::Replace);
+        SelectionList{ buffer, std::move(spaces) }.replace("\t"_str);
 }
 
 void trim_selections(Context& context, NormalParams)
 {
     auto& buffer = context.buffer();
+    ScopedSelectionEdition selection_edition{context};
     auto& selections = context.selections();
     Vector<int> to_remove;
 
@@ -1782,7 +1805,7 @@ void trim_selections(Context& context, NormalParams)
         selections.remove(i);
 }
 
-SelectionList read_selections_from_register(char reg, Context& context)
+SelectionList read_selections_from_register(char reg, const Context& context)
 {
     if (not is_basic_alpha(reg) and reg != '^')
         throw runtime_error("selections can only be saved to the '^' and alphabetic registers");
@@ -1877,6 +1900,7 @@ void combine_selections(Context& context, SelectionList list, Func func, StringV
                                      return;
 
                                  const auto op = key_to_combine_op(key);
+                                 ScopedSelectionEdition selection_edition{context};
                                  auto& sels = context.selections();
                                  list.update();
                                  if (op == CombineOp::Append)
@@ -1930,7 +1954,10 @@ void save_selections(Context& context, NormalParams params)
     };
 
     if (combine and not empty)
+    {
+        ScopedSelectionEdition selection_edition{context};
         combine_selections(context, read_selections_from_register(reg, context), save_to_reg, "combine selections to register");
+    }
     else
         save_to_reg(context, context.selections());
 }
@@ -1940,6 +1967,8 @@ void restore_selections(Context& context, NormalParams params)
 {
     const char reg = to_lower(params.reg ? params.reg : '^');
     auto selections = read_selections_from_register(reg, context);
+
+    ScopedSelectionEdition selection_edition{context};
 
     auto set_selections = [reg](Context& context, SelectionList sels) {
         auto size = sels.size();
@@ -2010,6 +2039,20 @@ void move_in_history(Context& context, NormalParams params)
                             history_id, max_history_id));
 }
 
+void undo_selection_change(Context& context, NormalParams params)
+{
+    int count = std::max(1, params.count);
+    while (count--)
+        context.undo_selection_change();
+}
+
+void redo_selection_change(Context& context, NormalParams params)
+{
+    int count = std::max(1, params.count);
+    while (count--)
+        context.redo_selection_change();
+}
+
 void exec_user_mappings(Context& context, NormalParams params)
 {
     on_next_key_with_autoinfo(context, "user-mapping", KeymapMode::None,
@@ -2019,10 +2062,12 @@ void exec_user_mappings(Context& context, NormalParams params)
 
         auto& mapping = context.keymaps().get_mapping(key, KeymapMode::User);
         ScopedSetBool disable_keymaps(context.keymaps_disabled());
+        ScopedSetBool disable_history(context.history_disabled());
 
         InputHandler::ScopedForceNormal force_normal{context.input_handler(), params};
 
         ScopedEdition edition(context);
+        ScopedSelectionEdition selection_edition{context};
         for (auto& key : mapping.keys)
             context.input_handler().handle_key(key);
     }, "user mapping",
@@ -2035,6 +2080,7 @@ void add_empty_line(Context& context, NormalParams params)
     int count = std::max(params.count, 1);
     String new_lines{'\n', CharCount{count}};
     auto& buffer = context.buffer();
+    ScopedSelectionEdition selection_edition{context};
     auto& sels = context.selections();
     ScopedEdition edition{context};
     for (int i = 0; i < sels.size(); ++i)
@@ -2053,6 +2099,7 @@ public:
     void operator() (Context& context, NormalParams params)
     {
         ScopedEdition edition(context);
+        ScopedSelectionEdition selection_edition{context};
         do { m_func(context, {0, params.reg}); } while(--params.count > 0);
     }
 private:
@@ -2063,6 +2110,7 @@ template<void (*func)(Context&, NormalParams)>
 void repeated(Context& context, NormalParams params)
 {
     ScopedEdition edition(context);
+    ScopedSelectionEdition selection_edition{context};
     do { func(context, {0, params.reg}); } while(--params.count > 0);
 }
 
@@ -2072,10 +2120,11 @@ void move_cursor(Context& context, NormalParams params)
     kak_assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
     const Type offset{direction * std::max(params.count,1)};
     const ColumnCount tabstop = context.options()["tabstop"].get<int>();
+    ScopedSelectionEdition selection_edition{context};
     auto& selections = context.selections();
     for (auto& sel : selections)
     {
-        auto cursor = context.buffer().offset_coord(sel.cursor(), offset, tabstop, true);
+        auto cursor = context.buffer().offset_coord(sel.cursor(), offset, tabstop);
         sel.anchor() = mode == SelectMode::Extend ? sel.anchor() : cursor;
         sel.cursor() = cursor;
     }
@@ -2085,11 +2134,13 @@ void move_cursor(Context& context, NormalParams params)
 void select_whole_buffer(Context& context, NormalParams)
 {
     auto& buffer = context.buffer();
+    ScopedSelectionEdition selection_edition{context};
     context.selections_write_only() = SelectionList{buffer, {{0,0}, {buffer.back_coord(), max_column}}};
 }
 
 void keep_selection(Context& context, NormalParams p)
 {
+    ScopedSelectionEdition selection_edition{context};
     auto& selections = context.selections();
     const int index = p.count ? p.count-1 : selections.main_index();
     if (index >= selections.size())
@@ -2101,12 +2152,13 @@ void keep_selection(Context& context, NormalParams p)
 
 void remove_selection(Context& context, NormalParams p)
 {
+    ScopedSelectionEdition selection_edition{context};
     auto& selections = context.selections();
     const int index = p.count ? p.count-1 : selections.main_index();
     if (index >= selections.size())
         throw runtime_error{format("invalid selection index: {}", index)};
     if (selections.size() == 1)
-        throw runtime_error{"cannot remove the last selection"};
+        throw no_selections_remaining{};
 
     selections.remove(index);
     selections.check_invariant();
@@ -2114,12 +2166,14 @@ void remove_selection(Context& context, NormalParams p)
 
 void clear_selections(Context& context, NormalParams)
 {
+    ScopedSelectionEdition selection_edition{context};
     for (auto& sel : context.selections())
         sel.anchor() = sel.cursor();
 }
 
 void flip_selections(Context& context, NormalParams)
 {
+    ScopedSelectionEdition selection_edition{context};
     for (auto& sel : context.selections())
     {
         const BufferCoord tmp = sel.anchor();
@@ -2131,6 +2185,7 @@ void flip_selections(Context& context, NormalParams)
 
 void ensure_forward(Context& context, NormalParams)
 {
+    ScopedSelectionEdition selection_edition{context};
     for (auto& sel : context.selections())
     {
         const BufferCoord min = sel.min(), max = sel.max();
@@ -2142,8 +2197,27 @@ void ensure_forward(Context& context, NormalParams)
 
 void merge_consecutive(Context& context, NormalParams params)
 {
+    ScopedSelectionEdition selection_edition{context};
     ensure_forward(context, params);
     context.selections().merge_consecutive();
+}
+
+void merge_overlapping(Context& context, NormalParams params)
+{
+    ScopedSelectionEdition selection_edition{context};
+    ensure_forward(context, params);
+    context.selections().merge_overlapping();
+}
+
+void duplicate_selections(Context& context, NormalParams params)
+{
+    ScopedSelectionEdition selection_edition{context};
+    SelectionList& sels = context.selections();
+    Vector<Selection> new_sels;
+    const int count = params.count ? params.count : 2;
+    for (const auto& sel : sels)
+        new_sels.insert(new_sels.end(), count, sel);
+    context.selections().set(std::move(new_sels), sels.main_index() * count);
 }
 
 void force_redraw(Context& context, NormalParams)
@@ -2229,12 +2303,12 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
     { {'V'}, {"move view (locked)", view_commands<true>} },
 
     { {'y'}, {"yank selected text", yank} },
-    { {'p'}, {"paste after selected text", repeated<paste<InsertMode::Append>>} },
-    { {'P'}, {"paste before selected text", repeated<paste<InsertMode::Insert>>} },
-    { {alt('p')}, {"paste every yanked selection after selected text", paste_all<InsertMode::Append>} },
-    { {alt('P')}, {"paste every yanked selection before selected text", paste_all<InsertMode::Insert>} },
-    { {'R'}, {"replace selected text with yanked text", paste<InsertMode::Replace>} },
-    { {alt('R')}, {"replace selected text with every yanked text", paste_all<InsertMode::Replace>} },
+    { {'p'}, {"paste after selected text", repeated<paste<PasteMode::Append>>} },
+    { {'P'}, {"paste before selected text", repeated<paste<PasteMode::Insert>>} },
+    { {alt('p')}, {"paste every yanked selection after selected text", paste_all<PasteMode::Append>} },
+    { {alt('P')}, {"paste every yanked selection before selected text", paste_all<PasteMode::Insert>} },
+    { {'R'}, {"replace selected text with yanked text", paste<PasteMode::Replace>} },
+    { {alt('R')}, {"replace selected text with every yanked text", paste_all<PasteMode::Replace>} },
 
     { {'s'}, {"select regex matches in selected text", select_regex} },
     { {'S'}, {"split selected text on regex matches", split_regex} },
@@ -2249,15 +2323,17 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
     { {':'}, {"enter command prompt", command} },
     { {'|'}, {"pipe each selection through filter and replace with output", pipe<true>} },
     { {alt('|')}, {"pipe each selection through command and ignore output", pipe<false>} },
-    { {'!'}, {"insert command output", insert_output<InsertMode::Insert>} },
-    { {alt('!')}, {"append command output", insert_output<InsertMode::Append>} },
+    { {'!'}, {"insert command output", insert_output<PasteMode::Insert>} },
+    { {alt('!')}, {"append command output", insert_output<PasteMode::Append>} },
 
-    { {' '}, {"remove all selections except main", keep_selection} },
-    { {alt(' ')}, {"remove main selection", remove_selection} },
+    { {','}, {"remove all selections except main", keep_selection} },
+    { {alt(',')}, {"remove main selection", remove_selection} },
     { {';'}, {"reduce selections to their cursor", clear_selections} },
     { {alt(';')}, {"swap selections cursor and anchor", flip_selections} },
     { {alt(':')}, {"ensure selection cursor is after anchor", ensure_forward} },
     { {alt('_')}, {"merge consecutive selections", merge_consecutive} },
+    { {'+'}, {"duplicate each selection", duplicate_selections} },
+    { {alt('+')}, {"merge overlapping selections", merge_overlapping} },
 
     { {'w'}, {"select to next word start", repeated<&select<SelectMode::Replace, select_to_next_word<Word>>>} },
     { {'e'}, {"select to next word end", repeated<select<SelectMode::Replace, select_to_next_word_end<Word>>>} },
@@ -2278,10 +2354,8 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
     { {alt('h')}, {"select to line begin", repeated<select<SelectMode::Replace, select_to_line_begin<false>>>} },
     { {alt('H')}, {"extend to line begin", repeated<select<SelectMode::Extend, select_to_line_begin<false>>>} },
 
-    { {'x'}, {"select line", repeated<select<SelectMode::Replace, select_line>>} },
-    { {'X'}, {"extend line", repeated<select<SelectMode::Extend, select_line>>} },
-    { {alt('x')}, {"extend selections to whole lines", select<SelectMode::Replace, select_lines>} },
-    { {alt('X')}, {"crop selections to whole lines", select<SelectMode::Replace, trim_partial_lines>} },
+    { {'x'}, {"extend selections to whole lines", select<SelectMode::Replace, select_lines>} },
+    { {alt('x')}, {"crop selections to whole lines", select<SelectMode::Replace, trim_partial_lines>} },
 
     { {'m'}, {"select to matching character", select<SelectMode::Replace, select_matching<true>>} },
     { {alt('m')}, {"backward select to matching character", select<SelectMode::Replace, select_matching<false>>} },
@@ -2303,6 +2377,9 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
     { {'U'}, {"redo", redo} },
     { {alt('u')}, {"move backward in history", move_in_history<Direction::Backward>} },
     { {alt('U')}, {"move forward in history", move_in_history<Direction::Forward>} },
+
+    { {ctrl('h')}, {"undo selection change", undo_selection_change} },
+    { {ctrl('k')}, {"redo selection change", redo_selection_change} },
 
     { {alt('i')}, {"select inner object", select_object<ObjectFlags::ToBegin | ObjectFlags::ToEnd | ObjectFlags::Inner>} },
     { {alt('a')}, {"select whole object", select_object<ObjectFlags::ToBegin | ObjectFlags::ToEnd>} },
@@ -2327,7 +2404,8 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
     { {alt('>')}, {"indent, including empty lines", indent<true>} },
     { {alt('<')}, {"deindent, not including incomplete indent", deindent<false>} },
 
-    { {/*ctrl('i')*/Key::Tab}, {"jump forward in jump list",jump<Forward>} }, // until we can distinguish tab a ctrl('i')
+    { {ctrl('i')}, {"jump forward in jump list",jump<Forward>} },
+    { {Key::Tab}, {"jump forward in jump list",jump<Forward>} }, // legacy terminals encode <tab> / <c-i> the same way
     { {ctrl('o')}, {"jump backward in jump list", jump<Backward>} },
     { {ctrl('s')}, {"push current selections in jump list", push_selections} },
 
@@ -2338,8 +2416,6 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
 
     { {'q'}, {"replay recorded macro", replay_macro} },
     { {'Q'}, {"start or end macro recording", start_or_end_macro_recording} },
-
-    { {Key::Escape}, {"end macro recording", end_macro_recording} },
 
     { {'`'}, {"convert to lower case in selections", for_each_codepoint<to_lower>} },
     { {'~'}, {"convert to upper case in selections", for_each_codepoint<to_upper>} },
@@ -2353,10 +2429,10 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
 
     { {'_'}, {"trim selections", trim_selections} },
 
-    { {'C'}, {"copy selection on next lines", copy_selections_on_next_lines<Forward>} },
-    { {alt('C')}, {"copy selection on previous lines", copy_selections_on_next_lines<Backward>} },
+    { {'C'}, {"duplicate selections on the lines that follow them.", copy_selections_on_next_lines<Forward>} },
+    { {alt('C')}, {"duplicate selections on the lines that precede them.", copy_selections_on_next_lines<Backward>} },
 
-    { {','}, {"user mappings", exec_user_mappings} },
+    { {Key::Space}, {"user mappings", exec_user_mappings} },
 
     { {Key::PageUp}, {  "scroll one page up", scroll<Backward>} },
     { {Key::PageDown}, {"scroll one page down", scroll<Forward>} },

@@ -5,11 +5,13 @@
 #include "exception.hh"
 #include "flags.hh"
 #include "option_types.hh"
+#include "event_manager.hh"
 #include "ranked_match.hh"
 #include "regex.hh"
 #include "string.hh"
 #include "unicode.hh"
 
+#include <limits>
 #include <cerrno>
 #include <cstdlib>
 #include <cstdio>
@@ -207,9 +209,10 @@ String read_file(StringView filename, bool text)
 MappedFile::MappedFile(StringView filename)
     : data{nullptr}
 {
-    fd = open(filename.zstr(), O_RDONLY | O_NONBLOCK);
+    int fd = open(filename.zstr(), O_RDONLY | O_NONBLOCK);
     if (fd == -1)
         throw file_access_error(filename, strerror(errno));
+    auto close_fd = on_scope_end([&] { close(fd); });
 
     fstat(fd, &st);
     if (S_ISDIR(st.st_mode))
@@ -217,8 +220,6 @@ MappedFile::MappedFile(StringView filename)
 
     if (st.st_size == 0)
         return;
-    else if (st.st_size > std::numeric_limits<int>::max())
-        throw runtime_error("file is too big");
 
     data = (const char*)mmap(nullptr, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     if (data == MAP_FAILED)
@@ -227,16 +228,14 @@ MappedFile::MappedFile(StringView filename)
 
 MappedFile::~MappedFile()
 {
-    if (fd != -1)
-    {
-        if (data != nullptr)
-            munmap((void*)data, st.st_size);
-        close(fd);
-    }
+    if (data != nullptr)
+        munmap((void*)data, st.st_size);
 }
 
 MappedFile::operator StringView() const
 {
+    if (st.st_size > std::numeric_limits<int>::max())
+        throw runtime_error("file is too big");
     return { data, (int)st.st_size };
 }
 
@@ -246,18 +245,33 @@ bool file_exists(StringView filename)
     return stat(filename.zstr(), &st) == 0;
 }
 
+bool regular_file_exists(StringView filename)
+{
+    struct stat st;
+    return stat(filename.zstr(), &st) == 0 and
+           (st.st_mode & S_IFMT) == S_IFREG;
+}
+
 void write(int fd, StringView data)
 {
     const char* ptr = data.data();
     ssize_t count   = (int)data.length();
 
+    int flags = fcntl(fd, F_GETFL, 0);
+    if (EventManager::has_instance())
+        fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+    auto restore_flags = on_scope_end([&] { fcntl(fd, F_SETFL, flags); });
+
     while (count)
     {
-        ssize_t written = ::write(fd, ptr, count);
-        ptr += written;
-        count -= written;
-
-        if (written == -1)
+        if (ssize_t written = ::write(fd, ptr, count); written != -1)
+        {
+            ptr += written;
+            count -= written;
+        }
+        else if (errno == EAGAIN and EventManager::has_instance())
+            EventManager::instance().handle_next_events(EventMode::Urgent, nullptr, false);
+        else
             throw file_access_error(format("fd: {}", fd), strerror(errno));
     }
 }
@@ -270,43 +284,6 @@ void write_to_file(StringView filename, StringView data)
     auto close_fd = on_scope_end([fd]{ close(fd); });
     write(fd, data);
 }
-
-struct BufferedWriter
-{
-    BufferedWriter(int fd)
-      : m_fd{fd}, m_exception_count{std::uncaught_exceptions()} {}
-
-    ~BufferedWriter() noexcept(false)
-    {
-        if (m_pos != 0 and m_exception_count == std::uncaught_exceptions())
-            Kakoune::write(m_fd, {m_buffer, m_pos});
-    }
-
-    void write(StringView data)
-    {
-        while (not data.empty())
-        {
-            const ByteCount length = data.length();
-            const ByteCount write_len = std::min(length, size - m_pos);
-            memcpy(m_buffer + (int)m_pos, data.data(), (int)write_len);
-            m_pos += write_len;
-            if (m_pos == size)
-            {
-                Kakoune::write(m_fd, {m_buffer, size});
-                m_pos = 0;
-            }
-            data = data.substr(write_len);
-        }
-    }
-
-private:
-    static constexpr ByteCount size = 4096;
-    int m_fd;
-    int m_exception_count;
-    ByteCount m_pos = 0;
-    char m_buffer[(int)size];
-};
-
 
 void write_buffer_to_fd(Buffer& buffer, int fd)
 {
@@ -360,7 +337,8 @@ void write_buffer_to_file(Buffer& buffer, StringView filename,
     bool replace = method == WriteMethod::Replace;
     bool force = flags & WriteFlags::Force;
 
-    if ((replace or force) and ::stat(zfilename, &st) != 0)
+    if ((replace or force) and (::stat(zfilename, &st) != 0 or
+                                (st.st_mode & S_IFMT) != S_IFREG))
     {
         force = false;
         replace = false;
@@ -457,8 +435,8 @@ void make_directory(StringView dir, mode_t mode)
     }
 }
 
-template<typename Filter>
-Vector<String> list_files(StringView dirname, Filter filter)
+template<MemoryDomain domain = MemoryDomain::Undefined, typename Filter>
+Vector<String, domain> list_files(StringView dirname, Filter filter)
 {
     char buffer[PATH_MAX+1];
     format_to(buffer, "{}", dirname);
@@ -468,7 +446,7 @@ Vector<String> list_files(StringView dirname, Filter filter)
 
     auto close_dir = on_scope_end([dir]{ closedir(dir); });
 
-    Vector<String> result;
+    Vector<String, domain> result;
     while (dirent* entry = readdir(dir))
     {
         StringView filename = entry->d_name;
@@ -488,11 +466,17 @@ Vector<String> list_files(StringView dirname, Filter filter)
     return result;
 }
 
-Vector<String> list_files(StringView directory)
+template<MemoryDomain domain = MemoryDomain::Undefined>
+Vector<String, domain> list_files(StringView directory)
 {
     return list_files(directory, [](const dirent& entry, const struct stat&) {
                           return StringView{entry.d_name}.substr(0_byte, 1_byte) != ".";
                       });
+}
+
+Vector<String> list_files(StringView directory)
+{
+    return list_files<>(directory);
 }
 
 static CandidateList candidates(ConstArrayView<RankedMatch> matches, StringView dirname)
@@ -511,14 +495,20 @@ CandidateList complete_filename(StringView prefix, const Regex& ignored_regex,
     auto [dirname, fileprefix] = split_path(prefix);
     auto parsed_dirname = parse_filename(dirname);
 
-    const bool check_ignored_regex = not ignored_regex.empty() and
-        not regex_match(fileprefix.begin(), fileprefix.end(), ignored_regex);
+    Optional<ThreadedRegexVM<const char*, RegexMode::Forward | RegexMode::AnyMatch | RegexMode::NoSaves>> vm;
+    if (not ignored_regex.empty())
+    {
+        vm.emplace(*ignored_regex.impl());
+        if (vm->exec(fileprefix.begin(), fileprefix.end(), fileprefix.begin(), fileprefix.end(), RegexExecFlags::None))
+            vm.reset();
+    }
+
     const bool only_dirs = (flags & FilenameFlags::OnlyDirectories);
 
-    auto filter = [&ignored_regex, check_ignored_regex, only_dirs](const dirent& entry, struct stat& st)
+    auto filter = [&vm, only_dirs](const dirent& entry, struct stat& st)
     {
         StringView name{entry.d_name};
-        return (not check_ignored_regex or not regex_match(name.begin(), name.end(), ignored_regex)) and
+        return (not vm or not vm->exec(name.begin(), name.end(), name.begin(), name.end(), RegexExecFlags::None)) and
                (not only_dirs or S_ISDIR(st.st_mode));
     };
     auto files = list_files(parsed_dirname, filter);
@@ -563,7 +553,7 @@ CandidateList complete_command(StringView prefix, ByteCount cursor_pos)
     struct CommandCache
     {
         TimeSpec mtim = {};
-        Vector<String> commands;
+        Vector<String, MemoryDomain::Completion> commands;
     };
     static HashMap<String, CommandCache, MemoryDomain::Commands> command_cache;
 
@@ -586,7 +576,7 @@ CandidateList complete_command(StringView prefix, ByteCount cursor_pos)
                 return S_ISREG(st.st_mode) and executable;
             };
 
-            cache.commands = list_files(dirname, filter);
+            cache.commands = list_files<MemoryDomain::Completion>(dirname, filter);
             memcpy(&cache.mtim, &st.st_mtim, sizeof(TimeSpec));
         }
         for (auto& cmd : cache.commands)
@@ -619,7 +609,7 @@ FsStatus get_fs_status(StringView filename)
 String get_kak_binary_path()
 {
     char buffer[2048];
-#if defined(__linux__) or defined(__CYGWIN__)
+#if defined(__linux__) or defined(__CYGWIN__) or defined(__gnu_hurd__)
     ssize_t res = readlink("/proc/self/exe", buffer, 2048);
     kak_assert(res != -1);
     buffer[res] = '\0';

@@ -174,7 +174,7 @@ RankedMatch::RankedMatch(StringView candidate, StringView query)
 static bool is_word_boundary(Codepoint prev, Codepoint c)
 {
     return (iswalnum((wchar_t)prev)) != iswalnum((wchar_t)c) or
-           (iswlower((wchar_t)prev) != islower((wchar_t)c));
+           (iswlower((wchar_t)prev) != iswlower((wchar_t)c));
 }
 
 bool RankedMatch::operator<(const RankedMatch& other) const

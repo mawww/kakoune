@@ -2,6 +2,7 @@ declare-option -docstring "name of the client in which documentation is to be di
     str docsclient
 
 hook -group git-log-highlight global WinSetOption filetype=git-log %{
+    require-module diff
     add-highlighter window/git-log group
     add-highlighter window/git-log/ regex '^([*|\\ /_.-])*' 0:keyword
     add-highlighter window/git-log/ regex '^( ?[*|\\ /_.-])*\h{,3}(commit )?(\b[0-9a-f]{4,40}\b)' 2:keyword 3:comment
@@ -12,6 +13,7 @@ hook -group git-log-highlight global WinSetOption filetype=git-log %{
 }
 
 hook -group git-status-highlight global WinSetOption filetype=git-status %{
+    require-module diff
     add-highlighter window/git-status group
     add-highlighter window/git-status/ regex '^## ' 0:comment
     add-highlighter window/git-status/ regex '^## (\S*[^\s\.@])' 1:green
@@ -25,6 +27,16 @@ hook -group git-status-highlight global WinSetOption filetype=git-status %{
     add-highlighter window/git-status/ regex '^\h+(?:((?:both )?modified:)|(added:|new file:)|(deleted(?: by \w+)?:)|(renamed:)|(copied:))(?:.*?)$' 1:yellow 2:green 3:red 4:cyan 5:blue 6:magenta
 
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/git-status }
+}
+
+hook -group git-show-branch-highlight global WinSetOption filetype=git-show-branch %{
+    require-module diff
+    add-highlighter window/git-show-branch group
+    add-highlighter window/git-show-branch/ regex '(\*)|(\+)|(!)' 1:red 2:green 3:green
+    add-highlighter window/git-show-branch/ regex '(!\D+\{0\}\])|(!\D+\{1\}\])|(!\D+\{2\}\])|(!\D+\{3\}\])' 1:red 2:green 3:yellow 4:blue
+    add-highlighter window/git-show-branch/ regex '(\B\+\D+\{0\}\])|(\B\+\D+\{1\}\])|(\B\+\D+\{2\}\])|(\B\+\D+\{3\}\])|(\B\+\D+\{1\}\^\])' 1:red 2:green 3:yellow 4:blue 5:magenta
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/git-show-branch}
 }
 
 declare-option -hidden line-specs git_blame_flags
@@ -49,12 +61,13 @@ define-command -params 1.. \
             next-hunk
             previous-hunk
             show
+            show-branch
             show-diff
             status
             update-diff
     } -shell-script-candidates %{
     if [ $kak_token_to_complete -eq 0 ]; then
-        printf "add\nrm\nblame\ncommit\ncheckout\ndiff\nhide-blame\nhide-diff\nlog\nnext-hunk\nprev-hunk\nshow\nshow-diff\ninit\nstatus\nupdate-diff\n"
+        printf "add\nrm\nblame\ncommit\ncheckout\ndiff\nhide-blame\nhide-diff\nlog\nnext-hunk\nprev-hunk\nshow\nshow-branch\nshow-diff\ninit\nstatus\nupdate-diff\n"
     else
         case "$1" in
             commit) printf -- "--amend\n--no-edit\n--all\n--reset-author\n--fixup\n--squash\n"; git ls-files -m ;;
@@ -74,9 +87,13 @@ define-command -params 1.. \
 
     show_git_cmd_output() {
         local filetype
+        local map_diff_goto_source
+
         case "$1" in
-           diff) filetype=diff ;;
-           log|show)  filetype=git-log ;;
+           diff) map_diff_goto_source=true; filetype=diff ;;
+           show) map_diff_goto_source=true; filetype=git-log ;;
+           show-branch) filetype=git-show-branch ;;
+           log)  filetype=git-log ;;
            status)  filetype=git-status ;;
            *) return 1 ;;
         esac
@@ -84,10 +101,17 @@ define-command -params 1.. \
         mkfifo ${output}
         ( git "$@" > ${output} 2>&1 & ) > /dev/null 2>&1 < /dev/null
 
+        # We need to unmap in case an existing buffer changes type,
+        # for example if the user runs "git show" and "git status".
+        map_diff_goto_source=$([ -n "${map_diff_goto_source}" ] \
+          && printf %s "map buffer normal <ret> :git-diff-goto-source<ret> -docstring 'Jump to source from git diff'" \
+          || printf %s "unmap buffer normal <ret> :git-diff-goto-source<ret>")
+
         printf %s "evaluate-commands -try-client '$kak_opt_docsclient' %{
                   edit! -fifo ${output} *git*
                   set-option buffer filetype '${filetype}'
                   hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname ${output}) } }
+                  ${map_diff_goto_source}
               }"
     }
 
@@ -99,21 +123,27 @@ define-command -params 1.. \
                       set-option buffer=$kak_bufname git_blame_flags '$kak_timestamp'
                   }" | kak -p ${kak_session}
                   git blame "$@" --incremental ${kak_buffile} | awk '
-                  function send_flags(text, flag, i) {
+                  function send_flags(flush,    text, i) {
                       if (line == "") { return; }
                       text=substr(sha,1,8) " " dates[sha] " " authors[sha]
                       # gsub("|", "\\|", text)
                       gsub("~", "~~", text)
-                      flag="%~" line "|" text "~"
-                      for ( i=1; i < count; i++ ) {
-                          flag=flag " %~" line+i "|" text "~"
+                      for ( i=0; i < count; i++ ) {
+                          flags = flags " %~" line+i "|" text "~"
+                      }
+                      now = systime()
+                      # Send roughly one update per second, to avoid creating too many kak processes.
+                      if (!flush && now - last_sent < 1) {
+                          return
                       }
                       cmd = "kak -p " ENVIRON["kak_session"]
-                      print "set-option -add buffer=" ENVIRON["kak_bufname"] " git_blame_flags " flag | cmd
+                      print "set-option -add buffer=" ENVIRON["kak_bufname"] " git_blame_flags " flags | cmd
                       close(cmd)
+                      flags = ""
+                      last_sent = now
                   }
                   /^([0-9a-f]+) ([0-9]+) ([0-9]+) ([0-9]+)/ {
-                      send_flags()
+                      send_flags(0)
                       sha=$1
                       line=$3
                       count=$4
@@ -124,7 +154,7 @@ define-command -params 1.. \
                        cmd | getline dates[sha]
                        close(cmd)
                   }
-                  END { send_flags(); }'
+                  END { send_flags(1); }'
         ) > /dev/null 2>&1 < /dev/null &
     }
 
@@ -139,7 +169,7 @@ define-command -params 1.. \
     update_diff() {
         (
             cd_bufdir
-            git --no-pager diff -U0 "$kak_buffile" | perl -e '
+            git --no-pager diff --no-ext-diff -U0 "$kak_buffile" | perl -e '
             $flags = $ENV{"kak_timestamp"};
             foreach $line (<STDIN>) {
                 if ($line =~ /@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))?/) {
@@ -281,7 +311,7 @@ define-command -params 1.. \
     }
 
     case "$1" in
-        show|log|diff|status)
+        show|show-branch|log|diff|status)
             show_git_cmd_output "$@"
             ;;
         blame)
@@ -326,3 +356,10 @@ define-command -params 1.. \
             ;;
     esac
 }}
+
+# Works within :git diff and :git show
+define-command git-diff-goto-source \
+    -docstring 'Navigate to source by pressing the enter key in hunks when git diff is displayed. Works within :git diff and :git show' %{
+    require-module diff
+    diff-jump %sh{ git rev-parse --show-toplevel }
+}

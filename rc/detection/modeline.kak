@@ -16,9 +16,8 @@ define-command -hidden modeline-parse-impl %{
 
         # Translate a vim option into the corresponding kakoune one
         translate_opt_vim() {
-            key="$1"
-            value="$2"
-            tr=""
+            local key="$1"
+            local value="$2"
 
             case "${key}" in
                 so|scrolloff)
@@ -36,8 +35,7 @@ define-command -hidden modeline-parse-impl %{
                         unix) value="lf";;
                         dos) value="crlf";;
                         *)
-                            printf 'echo -debug %s' "$(kakquote "Unsupported file format: ${value}")" \
-                               | kak -p "${kak_session}";
+                            printf '%s\n' "Unsupported file format: ${value}" >&2
                             return;;
                     esac
                 ;;
@@ -52,8 +50,7 @@ define-command -hidden modeline-parse-impl %{
                     key="spell_lang";
                     value="${value%%,*}";;
                 *)
-                    printf 'echo -debug %s' "$(kakquote "Unsupported vim variable: ${key}")" \
-                       | kak -p "${kak_session}";
+                    printf '%s\n' "Unsupported vim variable: ${key}" >&2
                     return;;
             esac
 
@@ -62,8 +59,8 @@ define-command -hidden modeline-parse-impl %{
 
         # Pass a few whitelisted options to kakoune directly
         translate_opt_kakoune() {
-            readonly key="$1"
-            readonly value="$2"
+            local readonly key="$1"
+            local readonly value="$2"
 
             case "${key}" in
                 scrolloff|tabstop|indentwidth|autowrap_column|eolformat|filetype|BOM|spell_lang);;
@@ -78,8 +75,9 @@ define-command -hidden modeline-parse-impl %{
         case "${kak_selection}" in
             *vi:*|*vim:*) type_selection="vim";;
             *kak:*|*kakoune:*) type_selection="kakoune";;
-            *) printf 'echo -debug %s' "$(kakquote "Unsupported modeline format: ${kak_selection}")" \
-                   | kak -p "${kak_session}"; exit 1 ;;
+            *)
+                printf 'fail %s\n' "$(kakquote "Unsupported modeline format: ${kak_selection}")"
+                exit 1 ;;
         esac
 
         # The following subshell will keep the actual options of the modeline, and strip:
@@ -87,12 +85,12 @@ define-command -hidden modeline-parse-impl %{
         # - the trailing text after the last option, and an optional ':' sign before it
         # It will also convert the ':' seperators beween the option=value pairs
         # More info: http://vimdoc.sourceforge.net/htmldoc/options.html#modeline
-        printf %s "${kak_selection}" | sed          \
-                -e 's/^[^:]\{1,\}://'               \
-                -e 's/[ \t]*set\{0,1\}[ \t]//'      \
-                -e 's/:[^a-zA-Z0-9_=-]*$//'         \
-                -e 's/:/ /g'                        \
-                | tr ' ' '\n'                       \
+        printf %s "${kak_selection}" | sed                      \
+                -e 's/^[^:]\{1,\}://'                           \
+                -e 's/[ \t]*set\{0,1\}[ \t]\([^:]*\).*$/\1/'    \
+                -e 's/:[^a-zA-Z0-9_=-]*$//'                     \
+                -e 's/:/ /g'                                    \
+                | tr ' ' '\n'                                   \
                 | while read -r option; do
             name_option="${option%%=*}"
             value_option="${option#*=}"
@@ -118,7 +116,7 @@ define-command -hidden modeline-parse-impl %{
 define-command modeline-parse -docstring "Read and interpret vi-format modelines at the beginning/end of the buffer" %{
     try %{ evaluate-commands -draft %{
         execute-keys <percent> "s(?S)\A(.+\n){,%opt{modelines}}|(.+\n){,%opt{modelines}}\z<ret>" \
-             s^\S*?\s+?\w+:\s?[^\n]+<ret> <a-x>
+             s^\S*?\s+?\w+:\s?[^\n]+<ret> x
         evaluate-commands -draft -itersel modeline-parse-impl
     } }
 }

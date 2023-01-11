@@ -59,12 +59,8 @@ It's common to use a normal-mode or user-mode mapping to trigger a command,
 like this:
 
 ----
-map global user n ': make-next-error<ret>'
+map global user n :make-next-error<ret>
 ----
-
-Note the space between the `:` and the command. This prevents Kakoune from
-adding this command to the prompt history, so the user won't have to scroll
-past it to review commands they actually typed.
 
 If you make a normal-mode mapping, you can prefix it with a count or a register
 name like any other normal-mode key. You can forward this information to the
@@ -72,7 +68,7 @@ command you invoke with the `%val{count}` and `%val{register}` expansions
 (See <<expansions#`:doc expansions`>>). For example:
 
 ----
-map global normal = ': echo Got count %val{count} and reg %val{register}<ret>'
+map global normal = ':echo Got count %val{count} and reg %val{register}<ret>'
 ----
 
 == Mappable keys
@@ -137,6 +133,11 @@ be used:
 
 *<F1>*, *<F2>*, ...*<F12>*::
     Function keys.
+
+*<semicolon>*, *<percent>*::
+    The *;* and *%* characters, these keys allow reducing the amount of
+    backslash escaping in scripts (for example, `exec \%` becomes `exec
+    <percent>`)
 
 NOTE: Although Kakoune allows many key combinations to be mapped, not every
 possible combination can be triggered. For example, due to limitations in
