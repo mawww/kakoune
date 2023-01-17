@@ -50,10 +50,13 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui, int pi
                                      StringView init_buffer, Optional<BufferCoord> init_coord,
                                      Client::OnExitCallback on_exit)
 {
-    Buffer& buffer = init_buffer.empty() ? BufferManager::instance().get_first_buffer()
-                                         : BufferManager::instance().get_buffer(init_buffer);
+    Buffer* buffer = nullptr;
+    if (not init_buffer.empty())
+        buffer = BufferManager::instance().get_buffer_ifp(init_buffer);
+    if (buffer == nullptr)
+        buffer = &BufferManager::instance().get_first_buffer();
 
-    WindowAndSelections ws = get_free_window(buffer);
+    WindowAndSelections ws = get_free_window(*buffer);
     Client* client = new Client{std::move(ui), std::move(ws.window),
                                 std::move(ws.selections), pid,
                                 std::move(env_vars),
@@ -64,7 +67,7 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui, int pi
     if (init_coord)
     {
         auto& selections = client->context().selections_write_only();
-        selections = SelectionList(buffer, buffer.clamp(*init_coord));
+        selections = SelectionList(*buffer, buffer->clamp(*init_coord));
         client->context().window().center_line(init_coord->line);
     }
 
