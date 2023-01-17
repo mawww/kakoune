@@ -117,7 +117,6 @@ public:
 
     bool is_editing() const { return m_edition_level!= 0; }
     void disable_undo_handling() { m_edition_level = -1; }
-    bool is_editing_selection() const { return m_selection_history.in_edition(); }
 
     NestedBool& hooks_disabled() { return m_hooks_disabled; }
     const NestedBool& hooks_disabled() const { return m_hooks_disabled; }
