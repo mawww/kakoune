@@ -108,7 +108,7 @@ inline bool BufferIterator::operator==(const BufferIterator& iterator) const noe
     return m_coord == iterator.m_coord;
 }
 
-inline std::strong_ordering BufferIterator::operator<=>(const BufferIterator& iterator) const noexcept
+inline auto BufferIterator::operator<=>(const BufferIterator& iterator) const noexcept
 {
     kak_assert(m_buffer == iterator.m_buffer);
     return (m_coord <=> iterator.m_coord);

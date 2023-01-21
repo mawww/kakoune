@@ -68,7 +68,7 @@ public:
     BufferIterator(const Buffer& buffer, BufferCoord coord) noexcept;
 
     bool operator== (const BufferIterator& iterator) const noexcept;
-    std::strong_ordering operator<=>(const BufferIterator& iterator) const noexcept;
+    auto operator<=>(const BufferIterator& iterator) const noexcept;
     bool operator== (const BufferCoord& coord) const noexcept;
 
     const char& operator* () const noexcept;

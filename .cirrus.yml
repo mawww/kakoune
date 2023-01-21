@@ -34,7 +34,7 @@ linux_task:
 
 macos_task:
     macos_instance:
-        image: ventura-base
+        image: ghcr.io/cirruslabs/macos-ventura-base:latest
     matrix:
         - name: macos_clang
           clang_script: brew install llvm@11

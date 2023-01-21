@@ -85,7 +85,7 @@ struct Key
     constexpr uint64_t val() const { return (uint64_t)modifiers << 32 | key; }
 
     constexpr bool operator==(Key other) const { return val() == other.val(); }
-    constexpr std::strong_ordering operator<=>(Key other) const { return val() <=> other.val(); }
+    constexpr auto operator<=>(Key other) const { return val() <=> other.val(); }
 
     constexpr DisplayCoord coord() const { return {(int)((key & 0xFFFF0000) >> 16), (int)(key & 0x0000FFFF)}; }
     constexpr MouseButton mouse_button() { return MouseButton{((int)modifiers & (int)Modifiers::MouseButtonMask) >> 6}; }
