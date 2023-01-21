@@ -33,8 +33,8 @@ linux_task:
         LC_ALL: en_US.UTF-8
 
 macos_task:
-    osx_instance:
-        image: big-sur-base
+    macos_instance:
+        image: ventura-base
     matrix:
         - name: macos_clang
           clang_script: brew install llvm@11
