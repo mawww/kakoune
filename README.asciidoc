@@ -604,7 +604,7 @@ One way to get a multiselection is via the `s` key.
 For example, to change all occurrences of word 'roger' to word 'marcel'
 in a paragraph, here is what can be done:
 
- * select the paragraph with enough `X`
+ * select the paragraph with `x` then enough `J`
  * press `s` and enter roger, then enter
  * now paragraph selection was replaced with multiselection of each roger in
 the paragraph
