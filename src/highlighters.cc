@@ -1017,6 +1017,9 @@ struct TabulationHighlighter : Highlighter
                         ++atom_it;
                     }
                 }
+
+                if (atom_it == line.end())
+                    break;
             }
         }
     }
