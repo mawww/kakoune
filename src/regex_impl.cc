@@ -1204,6 +1204,8 @@ struct TestVM : CompiledRegex, ThreadedRegexVM<const char*, mode>
     {
         return TestVM::ThreadedRegexVM::exec(re.begin(), re.end(), re.begin(), re.end(), flags);
     }
+
+    using TestVM::ThreadedRegexVM::exec;
 };
 }
 
@@ -1562,6 +1564,12 @@ auto test_regex = UnitTest{[]{
     {
         TestVM<RegexMode::Forward | RegexMode::Search> vm{R"(д)"};
         kak_assert(vm.exec("д", RegexExecFlags::None));
+    }
+
+    {
+        TestVM<RegexMode::Forward | RegexMode::Search> vm{"ab"};
+        const char str[] = "fa😄ab";
+        kak_assert(not vm.exec(str, str+4, str, str + sizeof(str)-1, RegexExecFlags::None));
     }
 
     {

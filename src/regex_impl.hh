@@ -492,8 +492,8 @@ private:
                 return m_found_match;
             }
 
-            forward ? utf8::to_next(pos, config.subject_end)
-                    : utf8::to_previous(pos, config.subject_begin);
+            forward ? utf8::to_next(pos, config.end)
+                    : utf8::to_previous(pos, config.end);
 
             if (search and not m_found_match)
             {

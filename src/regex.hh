@@ -220,6 +220,7 @@ private:
         m_results.values().clear();
         std::move(m_vm.captures().begin(), m_vm.captures().end(), std::back_inserter(m_results.values()));
         m_next_pos = forward ? m_results[0].second : m_results[0].first;
+        kak_assert(forward ? (m_next_pos <= m_end) : (m_next_pos >= m_begin));
         return true;
     }
 
