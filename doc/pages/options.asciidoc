@@ -26,7 +26,7 @@ to or *removed* from the current one instead of replacing it (the exact
 outcome depends on the type, see below).
 
 [[unset-option]]
-Options values can be unset in a specific scope with the `unset-option`
+Option values can be unset in a specific scope with the `unset-option`
 command:
 
 ---------------------------
