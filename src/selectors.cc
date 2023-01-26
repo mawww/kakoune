@@ -965,7 +965,8 @@ Vector<Selection> split_on_matches(const Buffer& buffer, ConstArrayView<Selectio
     ThreadedRegexVM<BufferIterator, RegexMode::Forward | RegexMode::Search> vm{*regex.impl()};
     for (auto& sel : selections)
     {
-        auto begin = buffer.iterator_at(sel.min());
+        auto sel_begin = buffer.iterator_at(sel.min());
+        auto begin = sel_begin;
         auto sel_end = utf8::next(buffer.iterator_at(sel.max()), buf_end);
 
         for (auto&& match : RegexIterator{begin, sel_end, vm, match_flags(buffer, begin, sel_end)})
@@ -975,7 +976,7 @@ Vector<Selection> split_on_matches(const Buffer& buffer, ConstArrayView<Selectio
             if (end == buf_end)
                 continue;
 
-            if (end != buf_begin)
+            if (end != sel_begin)
             {
                 auto sel_end = (begin == end) ? end : utf8::previous(end, begin);
                 result.push_back(keep_direction({ begin.coord(), sel_end.coord() }, sel));
