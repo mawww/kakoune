@@ -51,7 +51,7 @@ provide-module hare %§
     add-highlighter shared/hare/code/ regex "\b([0-9a-zA-Z_]*)\h*\(" 1:function
 
     # attributes
-    add-highlighter shared/hare/code/ regex "@(offset|init|fini|test|noreturn|symbol)\b" 0:attribute
+    add-highlighter shared/hare/code/ regex "@(packed|offset|init|fini|test|noreturn|symbol)\b" 0:attribute
 
     # declarations
     add-highlighter shared/hare/code/ regex "\b(let|export|const)\b" 0:meta
