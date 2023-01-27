@@ -26,16 +26,25 @@ copy a line:
 
 global replace:
  * vim: :%s/word/replacement<ret>
- * kak: %sword<ret>creplacement<esc>
+ * kak: %sword<ret>creplacement<esc>,
 
 Explanation: '%' selects the entire buffer, 's' opens a prompt for a
 regex, <ret> validates the regex and replaces the selection with one
 per match (hence all occurences of "word" are selected). 'c' deletes
-the selection contents and enters insert mode where "replacement" is typed,
-and <esc> goes back to normal mode.
+the selection contents and enters insert mode where "replacement" is
+typed, and <esc> goes back to normal mode. The final ',' gets rid of
+multiple cursors.
 
 Note that the Kakoune version is one key less, and is not a special
 feature per se, but just a nice way Kakoune features work together.
+
+global interactive replace:
+ * vim: :%s/word/replacement/gc<ret>
+   and then keep pressing 'y' to accept the change or 'n' to reject.
+ * kak: /word<ret>creplacement<esc>
+   and then press 'n' to search for the next occurence and either '.'
+   to redo the last insert operation (that is replace 'word' with
+   'replacement') or 'n' to go to the next match.
 
 replace in current curly brace block:
  * vim: viB:s/word/replacement<ret>
