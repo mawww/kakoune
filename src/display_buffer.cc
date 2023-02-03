@@ -252,12 +252,15 @@ bool DisplayLine::trim_from(ColumnCount first_col, ColumnCount front, ColumnCoun
         }
     }
 
+    auto front_it = it;
     while (front > 0 and it != end())
     {
         front -= it->trim_begin(front);
+        kak_assert(it->empty() or front == 0);
         if (it->empty())
-            it = m_atoms.erase(it);
+            ++it;
     }
+    m_atoms.erase(front_it, it);
 
     it = begin();
     for (; it != end() and col_count > 0; ++it)
