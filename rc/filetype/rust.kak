@@ -166,8 +166,6 @@ define-command -hidden rust-indent-on-new-line %~
             try %% execute-keys -draft k x <a-k> ^\h*where\b <ret> hh <a-?> ^\h*\b(impl|((|pub\ |pub\((crate|self|super|in\ (::)?([a-zA-Z][a-zA-Z0-9_]*|_[a-zA-Z0-9_]+)(::[a-zA-Z][a-zA-Z0-9_]*|_[a-zA-Z0-9_]+)*)\)\ )((async\ |const\ )?(unsafe\ )?(extern\ ("[^"]*"\ )?)?fn|struct|enum|union)))\b <ret> <a-S> 1<a-&> %
             # preserve previous line indent
             try %{ execute-keys -draft <semicolon> K <a-&> }
-            # indent after lines ending with [{([].+ and move first parameter to own line
-            try %< execute-keys -draft [c[({[],[)}\]] <ret> <a-k> \A[({[][^\n]+\n[^\n]*\n?\z <ret> L i<ret><esc> <gt> <a-S> <a-&> >
             # indent after non-empty lines not starting with operator and not ending with , or ; or {
             # XXX simplify this into a single <a-k> without s
             try %< execute-keys -draft k x s [^\h].+ <ret> <a-K> \A[-+*/&|^})<gt><lt>#] <ret> <a-K> [,<semicolon>{](\h*/[/*].*|)$ <ret> j <a-gt> >
