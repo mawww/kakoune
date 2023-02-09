@@ -72,11 +72,9 @@ try %{
     add-highlighter shared/markdown/inline/tag region (?i)</?[a-z][a-z0-9-]*\s*([a-z_:]|(?=>)) > ref html/tag
 
     # HTML Comments
-    add-highlighter shared/markdown/inline/comment region <!-- --> ref html/comment
+    add-highlighter shared/markdown/inline/comment_block region <!-- --> ref html/comment
+    add-highlighter shared/markdown/inline/comment_line region "\[//\]: #" "$" ref html/comment
 }
-
-# One lin comment "hack"
-add-highlighter shared/markdown/inline/text/ regex \[//\]:\h*#\h*[^\n]*$ 0:comment
 
 add-highlighter shared/markdown/inline/code region -match-capture (`+) (`+) fill mono
 
