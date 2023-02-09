@@ -76,8 +76,7 @@ try %{
 }
 
 # One lin comment "hack"
-# add-highlighter shared/markdown/inline/comment region <!-- --> fill comment
-add-highlighter shared/markdown/inline/text/ regex ^\[//\]:\s*#\s*".*?" 0:comment
+add-highlighter shared/markdown/inline/text/ regex \[//\]:\h*#\h*[^\n]*$ 0:comment
 
 add-highlighter shared/markdown/inline/code region -match-capture (`+) (`+) fill mono
 
