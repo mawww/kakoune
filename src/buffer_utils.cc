@@ -264,7 +264,7 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
         bool m_scroll;
     };
 
-    buffer->values()[fifo_watcher_id] = Value(std::make_unique<FifoWatcher>(fd, *buffer, scroll));
+    buffer->values()[fifo_watcher_id] = Value(Meta::Type<FifoWatcher>{}, fd, *buffer, scroll);
     buffer->flags() = flags | Buffer::Flags::Fifo | Buffer::Flags::NoUndo;
     buffer->run_hook_in_own_context(Hook::BufOpenFifo, buffer->name());
 

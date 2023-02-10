@@ -3,6 +3,7 @@
 
 #include "hash_map.hh"
 #include "units.hh"
+#include "meta.hh"
 
 #include <type_traits>
 #include <memory>
@@ -19,6 +20,10 @@ struct Value
     template<typename T> requires (not std::is_same_v<Value, T>)
     Value(T&& val)
         : m_value{new Model<std::remove_cvref_t<T>>{std::forward<T>(val)}} {}
+
+    template<typename T>
+    Value(Meta::Type<T>, auto&&... args) :
+        m_value(new Model<T>(std::forward<decltype(args)>(args)...)) {}
 
     Value(const Value& val) = delete;
     Value(Value&&) = default;
@@ -58,7 +63,7 @@ private:
     template<typename T>
     struct Model : public Concept, public UseMemoryDomain<MemoryDomain::Values>
     {
-        Model(T&& val) : m_content(std::move(val)) {}
+        Model(auto&&... args) : m_content(std::forward<decltype(args)>(args)...) {}
         const std::type_info& type() const override { return typeid(T); }
 
         T m_content;
