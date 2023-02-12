@@ -74,7 +74,13 @@ struct ParametersParser
     // the options defines named options, if they map to true, then
     // they are understood as string options, else they are understood as
     // boolean option.
-    ParametersParser(ParameterList params, const ParameterDesc& desc);
+    ParametersParser(ParameterList params, const ParameterDesc& desc, bool ignore_errors = false);
+
+    enum class State {
+        Switch,
+        SwitchArgument,
+        Positional,
+    };
 
     // Return a valid optional if the switch was given, with
     // a non empty StringView value if the switch took an argument.
@@ -132,10 +138,13 @@ struct ParametersParser
     iterator begin() const { return iterator(*this, 0); }
     iterator end() const { return iterator(*this, m_positional_indices.size()); }
 
+    State state() const { return *m_state; }
+
 private:
     ParameterList m_params;
     Vector<size_t, MemoryDomain::Commands> m_positional_indices;
     HashMap<String, StringView> m_switches;
+    Optional<State> m_state;
 };
 
 }

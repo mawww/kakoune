@@ -812,24 +812,31 @@ Completions CommandManager::complete(const Context& context,
 
         auto& command = command_it->value;
 
-        const bool has_switches = not command.param_desc.switches.empty();
-        auto is_switch = [=](StringView s) { return has_switches and s.substr(0_byte, 1_byte) == "-"; };
+        auto raw_params = tokens | skip(1) | transform(&Token::content) | gather<Vector<String>>();
+        ParametersParser parser{raw_params, command.param_desc, true};
 
-        if (is_switch(token.content)
-            and not contains(tokens | drop(1) | transform(&Token::content), "--"))
+        switch (parser.state())
         {
-            auto switches = Kakoune::complete(token.content.substr(1_byte), pos_in_token,
-                                              concatenated(command.param_desc.switches
-                                                               | transform(&SwitchMap::Item::key),
-                                                           ConstArrayView<String>{"-"}));
-            return switches.empty()
-                    ? Completions{}
-                    : Completions{start+1, cursor_pos, std::move(switches), Completions::Flags::Menu};
+            case ParametersParser::State::Switch:
+            {
+                auto switches = Kakoune::complete(token.content.substr(1_byte), pos_in_token,
+                                                  concatenated(command.param_desc.switches
+                                                                   | transform(&SwitchMap::Item::key),
+                                                               ConstArrayView<String>{"-"}));
+                return switches.empty()
+                        ? Completions{}
+                        : Completions{start+1, cursor_pos, std::move(switches), Completions::Flags::Menu};
+            }
+            case ParametersParser::State::SwitchArgument:
+                return Completions{};
+            case ParametersParser::State::Positional:
+                break;
         }
+
         if (not command.completer)
             return Completions{};
 
-        auto params = tokens | skip(1) | transform(&Token::content) | filter(std::not_fn(is_switch)) | gather<Vector>();
+        Vector<String> params{parser.begin(), parser.end()};
         auto index = params.size() - 1;
 
         return offset_pos(requote(command.completer(context, flags, params, index, pos_in_token), token.type), start);
