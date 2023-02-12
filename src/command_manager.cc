@@ -821,7 +821,10 @@ Completions CommandManager::complete(const Context& context,
             {
                 auto switches = Kakoune::complete(token.content.substr(1_byte), pos_in_token,
                                                   concatenated(command.param_desc.switches
-                                                                   | transform(&SwitchMap::Item::key),
+                                                                   | transform(&SwitchMap::Item::key)
+                                                                   | filter([&](const auto& key) {
+                                                                       return not parser.get_switch(key);
+                                                                   }),
                                                                ConstArrayView<String>{"-"}));
                 return switches.empty()
                         ? Completions{}
