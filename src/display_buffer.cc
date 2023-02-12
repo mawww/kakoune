@@ -256,7 +256,7 @@ bool DisplayLine::trim_from(ColumnCount first_col, ColumnCount front, ColumnCoun
     while (front > 0 and it != end())
     {
         front -= it->trim_begin(front);
-        kak_assert(it->empty() or front == 0);
+        kak_assert(it->empty() or front <= 0);
         if (it->empty())
             ++it;
     }
