@@ -831,7 +831,12 @@ Completions CommandManager::complete(const Context& context,
                         : Completions{start+1, cursor_pos, std::move(switches), Completions::Flags::Menu};
             }
             case ParametersParser::State::SwitchArgument:
-                return Completions{};
+            {
+                const auto& switch_desc = command.param_desc.switches.get(raw_params.at(raw_params.size() - 2).substr(1_byte));
+                if (not *switch_desc.arg_completer)
+                    return Completions{};
+                return offset_pos(requote((*switch_desc.arg_completer)(context, flags, raw_params.back(), pos_in_token), token.type), start);
+            }
             case ParametersParser::State::Positional:
                 break;
         }

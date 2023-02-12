@@ -11,14 +11,14 @@ String generate_switches_doc(const SwitchMap& switches)
     if (switches.empty())
         return res;
 
-    auto switch_len = [](auto& sw) { return sw.key.column_length() + (sw.value.takes_arg ? 5 : 0); };
+    auto switch_len = [](auto& sw) { return sw.key.column_length() + (sw.value.arg_completer ? 5 : 0); };
     auto switches_len = switches | transform(switch_len);
     const ColumnCount maxlen = *std::max_element(switches_len.begin(), switches_len.end());
 
     for (auto& sw : switches) {
         res += format("-{} {}{}{}\n",
                       sw.key,
-                      sw.value.takes_arg ? "<arg>" : "",
+                      sw.value.arg_completer ? "<arg>" : "",
                       String{' ', maxlen - switch_len(sw) + 1},
                       sw.value.description);
     }
@@ -69,7 +69,7 @@ ParametersParser::ParametersParser(ParameterList params, const ParameterDesc& de
             }
             switch_seen[switch_index] = true;
 
-            if (it->value.takes_arg)
+            if (it->value.arg_completer)
             {
                if (++i == params.size())
                {
@@ -80,7 +80,7 @@ ParametersParser::ParametersParser(ParameterList params, const ParameterDesc& de
                m_state = State::SwitchArgument;
             }
 
-            m_switches[switch_name.str()] = it->value.takes_arg ? params[i] : StringView{};
+            m_switches[switch_name.str()] = it->value.arg_completer ? params[i] : StringView{};
         }
         else // positional
         {

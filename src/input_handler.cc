@@ -941,7 +941,7 @@ public:
         {
             on_next_key_with_autoinfo(context(), "explicit-completion", KeymapMode::None,
                 [this](Key key, Context&) {
-                    m_explicit_completer = PromptCompleter{};
+                    m_explicit_completer = ArgCompleter{};
 
                     if (key.key == 'f')
                         use_explicit_completer([](const Context& context, StringView token) {
@@ -968,7 +968,7 @@ public:
         }
         else if (key == ctrl('o'))
         {
-            m_explicit_completer = PromptCompleter{};
+            m_explicit_completer = ArgCompleter{};
             m_auto_complete = not m_auto_complete;
 
             if (m_auto_complete)

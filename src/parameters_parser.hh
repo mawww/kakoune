@@ -10,6 +10,8 @@
 #include "string.hh"
 #include "string_utils.hh"
 
+#include <functional>
+
 namespace Kakoune
 {
 
@@ -37,9 +39,15 @@ struct wrong_argument_count : public parameter_error
     wrong_argument_count() : parameter_error("wrong argument count") {}
 };
 
+class Context;
+struct Completions;
+enum class CompletionFlags;
+using ArgCompleter = std::function<Completions (const Context&, CompletionFlags,
+                                                StringView, ByteCount)>;
+
 struct SwitchDesc
 {
-    bool takes_arg;
+    Optional<ArgCompleter> arg_completer;
     String description;
 };
 
