@@ -112,9 +112,7 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
     struct Instruction
     {
         Op op;
-        // Those mutables are used during execution
-        mutable bool scheduled;
-        mutable uint16_t last_step;
+        mutable uint16_t last_step; // mutable as used during execution
         Param param;
     };
     static_assert(sizeof(Instruction) == 8);
@@ -349,9 +347,6 @@ private:
             release_saves(thread.saves);
         };
         auto consumed = [this, &thread]() {
-            if (m_program.instructions[thread.inst].scheduled)
-                return release_saves(thread.saves);
-            m_program.instructions[thread.inst].scheduled = true;
             m_threads.push_next(thread);
         };
 
@@ -478,9 +473,6 @@ private:
 
             while (not m_threads.current_is_empty())
                 step_thread(pos, current_step, m_threads.pop_current(), config);
-
-            for (auto& thread : m_threads.next_threads())
-                m_program.instructions[thread.inst].scheduled = false;
 
             if (pos == config.end or
                 (m_threads.next_is_empty() and (not search or m_found_match)) or
