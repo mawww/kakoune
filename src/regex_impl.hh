@@ -197,6 +197,7 @@ template<typename It>
 struct SentinelType<It, void_t<typename It::Sentinel>> { using Type = typename It::Sentinel; };
 
 template<typename Iterator, RegexMode mode>
+    requires (has_direction(mode))
 class ThreadedRegexVM
 {
 public:
@@ -450,7 +451,7 @@ private:
         kak_assert(m_threads.current_is_empty() and m_threads.next_is_empty());
         release_saves(m_captures);
         m_captures = -1;
-        m_threads.grow_ifn();
+        m_threads.ensure_initial_capacity();
 
         const int16_t first_inst = forward ? 0 : m_program.first_backward_inst;
         m_threads.push_current({first_inst, -1});
@@ -478,9 +479,8 @@ private:
                 (m_threads.next_is_empty() and (not search or m_found_match)) or
                 (m_found_match and any_match))
             {
-                for (auto& t : m_threads.next_threads())
-                    release_saves(t.saves);
-                m_threads.clear_next();
+                while (not m_threads.next_is_empty())
+                    release_saves(m_threads.pop_next().saves);
                 return m_found_match;
             }
 
@@ -491,7 +491,6 @@ private:
             {
                 if (start_desc and m_threads.next_is_empty())
                     to_next_start(pos, config, *start_desc);
-                m_threads.grow_ifn();
                 m_threads.push_next({first_inst, -1});
             }
             m_threads.swap_next();
@@ -607,62 +606,68 @@ private:
 
     struct DualThreadStack
     {
-        DualThreadStack() = default;
-        DualThreadStack(const DualThreadStack&) = delete;
-        DualThreadStack(DualThreadStack&& other)
-          : m_data{other.m_data}, m_capacity{other.m_capacity}, m_current{other.m_current}, m_next{other.m_next}
-        {
-            other.m_data = nullptr;
-        }
-        ~DualThreadStack() { delete[] m_data; }
+        bool current_is_empty() const { return m_current == m_next_begin; }
+        bool next_is_empty() const { return m_next_end == m_next_begin; }
 
-        bool current_is_empty() const { return m_current == 0; }
-        bool next_is_empty() const { return m_next == m_capacity; }
+        void push_current(Thread thread) { m_data[decrement(m_current)] = thread; grow_ifn(); }
+        Thread pop_current() { auto res = m_data[m_current]; increment(m_current); return res; }
 
-        void push_current(Thread thread) { kak_assert(m_current < m_next); m_data[m_current++] = thread; grow_ifn(); }
-        Thread pop_current() { kak_assert(m_current > 0); return m_data[--m_current]; }
-
-        void push_next(Thread thread) { kak_assert(m_current < m_next);  m_data[--m_next] = thread; }
-        void clear_next() { m_next = m_capacity; }
-        ConstArrayView<Thread> next_threads() const { return { m_data + m_next, m_data + m_capacity }; }
+        void push_next(Thread thread) { m_data[m_next_end] = thread; increment(m_next_end); }
+        Thread pop_next() { return m_data[decrement(m_next_end)]; }
 
         void swap_next()
         {
-            kak_assert(m_next < m_capacity);
-            const int32_t count = m_capacity - m_next;
-            std::copy_n(m_data + m_next, count, m_data);
-            m_current = count;
-            m_next = m_capacity;
+            m_current = m_next_begin;
+            m_next_begin = m_next_end;
+        }
+
+        void ensure_initial_capacity() {
+            if (m_capacity == 0)
+                grow_ifn();
         }
 
         void grow_ifn()
         {
-            if (m_current != m_next)
+            if (m_current != m_next_end)
                 return;
 
             constexpr int32_t initial_capacity = 64 / sizeof(Thread);
             static_assert(initial_capacity >= 4);
 
             const auto new_capacity = m_capacity ? m_capacity * 2 : initial_capacity;
-            const auto next_count = m_capacity - m_next;
-            const auto new_next = new_capacity - next_count;
             Thread* new_data = new Thread[new_capacity];
-            std::copy_n(m_data, m_current, new_data);
-            std::copy_n(m_data + m_next, next_count, new_data + new_next);
-            delete[] m_data;
-            m_data = new_data;
+            if (m_current < m_next_end)
+                m_next_end = std::copy(m_data.get() + m_current, m_data.get() + m_next_end, new_data) - new_data;
+            else
+                m_next_end = std::copy(m_data.get(), m_data.get() + m_next_end, std::copy(m_data.get() + m_current, m_data.get() + m_capacity, new_data)) - new_data;
+
+            m_next_begin = m_next_begin >= m_current ? m_next_begin - m_current : m_capacity - (m_current - m_next_begin);
+            m_current = 0;
+
+            m_data.reset(new_data);
             m_capacity = new_capacity;
-            m_next = new_next;
         }
 
     private:
-        Thread* m_data = nullptr;
+        int32_t decrement(int32_t& index) {
+            if (index == 0)
+                index = m_capacity;
+            return --index;
+        }
+
+        int32_t increment(int32_t& index) {
+            if (++index == m_capacity)
+                index = 0;
+            return index;
+        }
+
+        std::unique_ptr<Thread[]> m_data;
         int32_t m_capacity = 0; // Maximum capacity should be 2*instruction count, so 65536
         int32_t m_current = 0;
-        int32_t m_next = 0;
+        int32_t m_next_begin = 0;
+        int32_t m_next_end = 0;
     };
 
-    static_assert(has_direction(mode));
     static constexpr bool forward = mode & RegexMode::Forward;
 
     DualThreadStack m_threads;
