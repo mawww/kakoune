@@ -1579,6 +1579,11 @@ auto test_regex = UnitTest{[]{
     }
 
     {
+        TestVM<RegexMode::Forward | RegexMode::Search> vm{".{40}"};
+        kak_assert(vm.exec("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", RegexExecFlags::None));
+    }
+
+    {
         auto eq = [](const CompiledRegex::NamedCapture& lhs,
                      const CompiledRegex::NamedCapture& rhs) {
             return lhs.name == rhs.name and

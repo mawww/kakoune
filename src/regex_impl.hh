@@ -492,6 +492,7 @@ private:
                 if (start_desc and m_threads.next_is_empty())
                     to_next_start(pos, config, *start_desc);
                 m_threads.push_next({first_inst, -1});
+                m_threads.grow_ifn(false);
             }
             m_threads.swap_next();
         }
@@ -609,10 +610,10 @@ private:
         bool current_is_empty() const { return m_current == m_next_begin; }
         bool next_is_empty() const { return m_next_end == m_next_begin; }
 
-        void push_current(Thread thread) { m_data[decrement(m_current)] = thread; grow_ifn(); }
-        Thread pop_current() { auto res = m_data[m_current]; increment(m_current); return res; }
+        void push_current(Thread thread) { m_data[decrement(m_current)] = thread; grow_ifn(true); }
+        Thread pop_current() { return m_data[post_increment(m_current)]; }
 
-        void push_next(Thread thread) { m_data[m_next_end] = thread; increment(m_next_end); }
+        void push_next(Thread thread) { m_data[post_increment(m_next_end)] = thread; }
         Thread pop_next() { return m_data[decrement(m_next_end)]; }
 
         void swap_next()
@@ -621,27 +622,31 @@ private:
             m_next_begin = m_next_end;
         }
 
-        void ensure_initial_capacity() {
-            if (m_capacity == 0)
-                grow_ifn();
-        }
-
-        void grow_ifn()
+        void ensure_initial_capacity()
         {
-            if (m_current != m_next_end)
+            if (m_capacity != 0)
                 return;
 
             constexpr int32_t initial_capacity = 64 / sizeof(Thread);
             static_assert(initial_capacity >= 4);
+            m_data.reset(new Thread[initial_capacity]);
+            m_capacity = initial_capacity;
 
-            const auto new_capacity = m_capacity ? m_capacity * 2 : initial_capacity;
+        }
+
+        void grow_ifn(bool pushed_current)
+        {
+            if (m_current != m_next_end)
+                return;
+
+            const auto new_capacity = m_capacity * 2;
             Thread* new_data = new Thread[new_capacity];
-            if (m_current < m_next_end)
-                m_next_end = std::copy(m_data.get() + m_current, m_data.get() + m_next_end, new_data) - new_data;
-            else
-                m_next_end = std::copy(m_data.get(), m_data.get() + m_next_end, std::copy(m_data.get() + m_current, m_data.get() + m_capacity, new_data)) - new_data;
-
-            m_next_begin = m_next_begin >= m_current ? m_next_begin - m_current : m_capacity - (m_current - m_next_begin);
+            Thread* old_data = m_data.get();
+            std::rotate_copy(old_data, old_data + m_current, old_data + m_capacity, new_data);
+            m_next_begin -= m_current;
+            if ((pushed_current and m_next_begin == 0) or m_next_begin < 0)
+                m_next_begin += m_capacity;
+            m_next_end = m_capacity;
             m_current = 0;
 
             m_data.reset(new_data);
@@ -649,16 +654,19 @@ private:
         }
 
     private:
-        int32_t decrement(int32_t& index) {
+        int32_t decrement(int32_t& index)
+        {
             if (index == 0)
                 index = m_capacity;
             return --index;
         }
 
-        int32_t increment(int32_t& index) {
+        int32_t post_increment(int32_t& index)
+        {
+            auto res = index;
             if (++index == m_capacity)
                 index = 0;
-            return index;
+            return res;
         }
 
         std::unique_ptr<Thread[]> m_data;
