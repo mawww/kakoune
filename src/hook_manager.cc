@@ -20,16 +20,62 @@ struct HookManager::HookData
     HookFlags flags;
     Regex filter;
     String commands;
+
+    bool should_run(bool only_always, const Regex& disabled_hooks, StringView param,
+                    MatchResults<const char*>& captures) const
+    {
+        return (not only_always or (flags & HookFlags::Always)) and
+                (group.empty() or disabled_hooks.empty() or
+                 not regex_match(group.begin(), group.end(), disabled_hooks))
+                and regex_match(param.begin(), param.end(), captures, filter);
+    }
+
+    void exec(Hook hook, StringView param, Context& context, const MatchResults<const char*>& captures)
+    {
+        if (context.options()["debug"].get<DebugFlags>() & DebugFlags::Hooks)
+            write_to_debug_buffer(format("hook {}({})/{}",
+                                  enum_desc(Meta::Type<Hook>{})[to_underlying(hook)].name,
+                                  param, group));
+
+        ScopedSetBool disable_history{context.history_disabled()};
+
+        EnvVarMap env_vars{ {"hook_param", param.str()} };
+        for (size_t i = 0; i < captures.size(); ++i)
+            env_vars.insert({format("hook_param_capture_{}", i),
+                             {captures[i].first, captures[i].second}});
+        for (auto& c : filter.impl()->named_captures)
+            env_vars.insert({format("hook_param_capture_{}", c.name),
+                             {captures[c.index].first, captures[c.index].second}});
+
+        CommandManager::instance().execute(commands, context, {{}, std::move(env_vars)});
+    }
+
 };
 
 HookManager::HookManager() : m_parent(nullptr) {}
 HookManager::HookManager(HookManager& parent) : SafeCountable{}, m_parent(&parent) {}
 HookManager::~HookManager() = default;
 
-void HookManager::add_hook(Hook hook, String group, HookFlags flags, Regex filter, String commands)
+void HookManager::add_hook(Hook hook, String group, HookFlags flags, Regex filter, String commands, Context& context)
 {
-    auto& hooks = m_hooks[to_underlying(hook)];
-    hooks.emplace_back(new HookData{std::move(group), flags, std::move(filter), std::move(commands)});
+    std::unique_ptr<HookData> hook_data{new HookData{std::move(group), flags, std::move(filter), std::move(commands)}};
+    if (hook == Hook::ModuleLoaded)
+    {
+        const bool only_always = context.hooks_disabled();
+        auto& disabled_hooks = context.options()["disabled_hooks"].get<Regex>();
+
+        for (auto&& name : CommandManager::instance().loaded_modules())
+        {
+            MatchResults<const char*> captures;
+            if (hook_data->should_run(only_always, disabled_hooks, name, captures))
+            {
+                hook_data->exec(hook, name, context, captures);
+                if (hook_data->flags & HookFlags::Once)
+                    return;
+            }
+        }
+    }
+    m_hooks[to_underlying(hook)].push_back(std::move(hook_data));
 }
 
 void HookManager::remove_hooks(const Regex& regex)
@@ -62,21 +108,16 @@ CandidateList HookManager::complete_hook_group(StringView prefix, ByteCount pos_
 
 void HookManager::run_hook(Hook hook, StringView param, Context& context)
 {
-    auto& hook_list = m_hooks[to_underlying(hook)];
-
     const bool only_always = context.hooks_disabled();
     auto& disabled_hooks = context.options()["disabled_hooks"].get<Regex>();
 
     struct ToRun { HookData* hook; MatchResults<const char*> captures; };
     Vector<ToRun> hooks_to_run; // The m_hooks_trash vector ensure hooks wont die during this method
-    for (auto& hook : hook_list)
+    for (auto& hook : m_hooks[to_underlying(hook)])
     {
         MatchResults<const char*> captures;
-        if ((not only_always or (hook->flags & HookFlags::Always)) and
-            (hook->group.empty() or disabled_hooks.empty() or
-             not regex_match(hook->group.begin(), hook->group.end(), disabled_hooks))
-            and regex_match(param.begin(), param.end(), captures, hook->filter))
-            hooks_to_run.push_back({ hook.get(), std::move(captures) });
+        if (hook->should_run(only_always, disabled_hooks, param, captures))
+            hooks_to_run.push_back({hook.get(), std::move(captures)});
     }
 
     if (m_parent)
@@ -106,26 +147,12 @@ void HookManager::run_hook(Hook hook, StringView param, Context& context)
     {
         try
         {
-            if (debug_flags & DebugFlags::Hooks)
-                write_to_debug_buffer(format("hook {}({})/{}", hook_name, param, to_run.hook->group));
-
-            ScopedSetBool disable_history{context.history_disabled()};
-
-            EnvVarMap env_vars{ {"hook_param", param.str()} };
-            for (size_t i = 0; i < to_run.captures.size(); ++i)
-                env_vars.insert({format("hook_param_capture_{}", i),
-                                 {to_run.captures[i].first, to_run.captures[i].second}});
-            for (auto& c : to_run.hook->filter.impl()->named_captures)
-                env_vars.insert({format("hook_param_capture_{}", c.name),
-                                 {to_run.captures[c.index].first, to_run.captures[c.index].second}});
-
-            CommandManager::instance().execute(to_run.hook->commands, context,
-                                               { {}, std::move(env_vars) });
+            to_run.hook->exec(hook, param, context, to_run.captures);
 
             if (to_run.hook->flags & HookFlags::Once)
             {
-                auto it = find(hook_list, to_run.hook);
-                if (it != hook_list.end())
+                auto& hook_list = m_hooks[to_underlying(hook)];
+                if (auto it = find(hook_list, to_run.hook); it != hook_list.end())
                 {
                     m_hooks_trash.push_back(std::move(*it));
                     hook_list.erase(it);

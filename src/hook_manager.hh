@@ -120,17 +120,17 @@ public:
     ~HookManager();
 
     void add_hook(Hook hook, String group, HookFlags flags,
-                  Regex filter, String commands);
+                  Regex filter, String commands, Context& context);
     void remove_hooks(const Regex& regex);
     CandidateList complete_hook_group(StringView prefix, ByteCount pos_in_token);
     void run_hook(Hook hook, StringView param, Context& context);
 
 private:
+    struct HookData;
+
     HookManager();
     // the only one allowed to construct a root hook manager
     friend class Scope;
-
-    struct HookData;
 
     SafePtr<HookManager> m_parent;
     Array<Vector<std::unique_ptr<HookData>, MemoryDomain::Hooks>, enum_desc(Meta::Type<Hook>{}).size()> m_hooks;

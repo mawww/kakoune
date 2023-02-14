@@ -1127,7 +1127,7 @@ const CommandDesc add_hook_cmd = {
         const auto flags = (parser.get_switch("always") ? HookFlags::Always : HookFlags::None) |
                            (parser.get_switch("once")   ? HookFlags::Once   : HookFlags::None);
         get_scope(parser[0], context).hooks().add_hook(it->value, group.str(), flags,
-                                                       std::move(regex), command);
+                                                       std::move(regex), command, context);
     }
 };
 

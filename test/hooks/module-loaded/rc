@@ -1,0 +1,10 @@
+provide-module foo %{ }
+provide-module foobar %{ }
+hook global ModuleLoaded foo %{ set-register a %reg{a} literal }
+hook global ModuleLoaded f.* %{ set-register a %reg{a} regex }
+hook -once global ModuleLoaded f.* %{ set-register a %reg{a} regex-once }
+require-module foo
+require-module foobar
+hook global ModuleLoaded foo %{ set-register a %reg{a} literal-late }
+hook global ModuleLoaded f.* %{ set-register a %reg{a} late-regex }
+hook -once global ModuleLoaded f.* %{ set-register a %reg{a} late-regex-once }

@@ -123,6 +123,7 @@ public:
     void register_module(String module_name, String commands);
 
     void load_module(StringView module_name, Context& context);
+    HashSet<String> loaded_modules() const;
 
     Completions complete_module_name(StringView query) const;
 

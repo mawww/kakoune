@@ -90,6 +90,13 @@ void CommandManager::load_module(StringView module_name, Context& context)
     context.hooks().run_hook(Hook::ModuleLoaded, module_name, context);
 }
 
+HashSet<String> CommandManager::loaded_modules() const
+{
+    return m_modules | filter([](auto&& elem) { return elem.value.state == Module::State::Loaded; })
+                     | transform([](auto&& elem) { return elem.key; })
+                     | gather<HashSet>();
+}
+
 struct parse_error : runtime_error
 {
     parse_error(StringView error)
