@@ -1820,21 +1820,15 @@ void scroll_window(Context& context, LineCount offset, bool mouse_dragging)
     SelectionList& selections = context.selections();
     Selection& main_selection = selections.main();
     const BufferCoord anchor = main_selection.anchor();
-    const BufferCoord cursor = main_selection.cursor();
+    const BufferCoordAndTarget cursor = main_selection.cursor();
 
     auto cursor_off = mouse_dragging ? win_pos.line - window.position().line : 0;
 
     auto line = clamp(cursor.line + cursor_off, win_pos.line + scrolloff.line,
                       win_pos.line + win_dim.line - 1 - scrolloff.line);
-    line = clamp(line, 0_line, buffer.line_count() - 1);
 
-    using std::min; using std::max;
-    // This is not exactly a clamp, and must be done in this order as
-    // byte_count_to could return line length
-    auto col = min(max(cursor.column, buffer[line].byte_count_to(win_pos.column)),
-                   buffer[line].length()-1);
-
-    BufferCoord new_cursor = { line, col };
+    const ColumnCount tabstop = context.options()["tabstop"].get<int>();
+    auto new_cursor = buffer.offset_coord(cursor, line - cursor.line, tabstop);
     BufferCoord new_anchor = (mouse_dragging or new_cursor == cursor) ? anchor : new_cursor;
 
     window.set_position(win_pos);
