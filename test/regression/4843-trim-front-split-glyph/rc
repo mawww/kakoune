@@ -1,0 +1,2 @@
+add-highlighter window/ regex d 0:green
+add-highlighter window/ regex ^[^\n]+e 0:yellow

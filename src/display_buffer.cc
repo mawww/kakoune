@@ -253,14 +253,18 @@ bool DisplayLine::trim_from(ColumnCount first_col, ColumnCount front, ColumnCoun
     }
 
     auto front_it = it;
+    Face last_face{};
     while (front > 0 and it != end())
     {
         front -= it->trim_begin(front);
-        kak_assert(it->empty() or front == 0);
+        kak_assert(it->empty() or front <= 0);
+        last_face = it->face;
         if (it->empty())
             ++it;
     }
-    m_atoms.erase(front_it, it);
+    it = m_atoms.erase(front_it, it);
+    if (front < 0)
+        it = m_atoms.insert(it, DisplayAtom{String{' ', -front}, last_face});
 
     it = begin();
     for (; it != end() and col_count > 0; ++it)
