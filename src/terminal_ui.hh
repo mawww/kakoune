@@ -170,6 +170,7 @@ private:
     void set_resize_pending();
 
     ColumnCount m_status_len = 0;
+    ColumnCount m_info_max_width = 0;
 };
 
 }

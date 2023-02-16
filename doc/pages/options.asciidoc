@@ -377,6 +377,10 @@ are exclusively available to built-in options.
             reduce terminal output with sequences that could trigger flickering
             if unsynchronized (defaults to *false*)
 
+        *terminal_info_max_width*:::
+            set the maximum allowable width of an info box. set to zero for
+            no limit.
+
 [[startup-info]]
 *startup_info_version* `int`::
     _default_ 0 +

@@ -1264,7 +1264,9 @@ void TerminalUI::info_show(const DisplayLine& title, const DisplayLineList& cont
     else if (style != InfoStyle::Modal)
         max_size.line -= m_menu.size.line;
 
-    const auto max_content_width = max_size.column - (framed ? 4 : 2) - (assisted ? m_assistant[0].column_length() : 0);
+    const auto max_content_width = (m_info_max_width > 0 ? std::min(max_size.column, m_info_max_width) : max_size.column) -
+                                   (framed ? 4 : 2) -
+                                   (assisted ? m_assistant[0].column_length() : 0);
     if (max_content_width <= 0)
         return;
 
@@ -1495,6 +1497,8 @@ void TerminalUI::set_ui_options(const Options& options)
 
     m_padding_char = find("terminal_padding_char").map([](StringView s) { return s.column_length() < 1 ? ' ' : s[0_char]; }).value_or(Codepoint{'~'});
     m_padding_fill = find("terminal_padding_fill").map(to_bool).value_or(false);
+
+    m_info_max_width = find("terminal_info_max_width").map(str_to_int_ifp).value_or(0);
 }
 
 }
