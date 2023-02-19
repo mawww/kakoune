@@ -959,7 +959,7 @@ private:
                 {
                     for (Codepoint cp = 0; cp < CompiledRegex::StartDesc::count; ++cp)
                     {
-                        if (start_desc.map[cp] or is_character_class(character_class, cp))
+                        if (start_desc.map[cp] or character_class.matches(cp))
                             start_desc.map[cp] = true;
                     }
                 }
@@ -1163,20 +1163,6 @@ String dump_regex(const CompiledRegex& program)
 CompiledRegex compile_regex(StringView re, RegexCompileFlags flags)
 {
     return RegexCompiler{RegexParser::parse(re), flags}.get_compiled_regex();
-}
-
-bool is_character_class(const CharacterClass& character_class, Codepoint cp)
-{
-    if (character_class.ignore_case)
-        cp = to_lower(cp);
-
-    auto it = std::find_if(character_class.ranges.begin(),
-                           character_class.ranges.end(),
-                           [cp](auto& range) { return range.min <= cp and cp <= range.max; });
-
-    bool found = it != character_class.ranges.end() or (character_class.ctypes != CharacterType::None and
-                                                        is_ctype(character_class.ctypes, cp));
-    return found != character_class.negative;
 }
 
 bool is_ctype(CharacterType ctype, Codepoint cp)

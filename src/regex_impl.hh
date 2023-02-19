@@ -31,6 +31,8 @@ enum class CharacterType : unsigned char
 };
 constexpr bool with_bit_ops(Meta::Type<CharacterType>) { return true; }
 
+bool is_ctype(CharacterType ctype, Codepoint cp);
+
 struct CharacterClass
 {
     struct Range
@@ -45,10 +47,24 @@ struct CharacterClass
     bool ignore_case = false;
 
     friend bool operator==(const CharacterClass&, const CharacterClass&) = default;
-};
 
-bool is_character_class(const CharacterClass& character_class, Codepoint cp);
-bool is_ctype(CharacterType ctype, Codepoint cp);
+    bool matches(Codepoint cp) const
+    {
+        if (ignore_case)
+            cp = to_lower(cp);
+
+        for (auto& range : ranges)
+        {
+            if (cp < range.min)
+                break;
+            else if (cp <= range.max)
+                return not negative;
+        }
+
+        return (ctypes != CharacterType::None and is_ctype(ctypes, cp)) != negative;
+    }
+
+};
 
 struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
 {
@@ -418,7 +434,7 @@ private:
                 case CompiledRegex::CharClass:
                     if (pos == config.end)
                         return failed();
-                    return is_character_class(m_program.character_classes[inst.param.character_class_index], codepoint(pos, config)) ?
+                    return m_program.character_classes[inst.param.character_class_index].matches(codepoint(pos, config)) ?
                         consumed() : failed();
                 case CompiledRegex::CharType:
                     if (pos == config.end)
@@ -552,7 +568,7 @@ private:
             else if (op >= Lookaround::CharacterClass and op < Lookaround::CharacterType)
             {
                 auto index = to_underlying(op) - to_underlying(Lookaround::CharacterClass);
-                if (not is_character_class(m_program.character_classes[index], cp))
+                if (not m_program.character_classes[index].matches(cp))
                     return false;
             }
             else if (op >= Lookaround::CharacterType and op < Lookaround::OpEnd)
