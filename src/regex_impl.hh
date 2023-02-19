@@ -249,17 +249,12 @@ public:
 
         constexpr bool search = (mode & RegexMode::Search);
 
-        ConstArrayView<CompiledRegex::Instruction> instructions{m_program.instructions};
-        instructions = forward ? instructions.subrange(0, m_program.first_backward_inst)
-                               : instructions.subrange(m_program.first_backward_inst);
-
         const ExecConfig config{
             Sentinel{forward ? begin : end},
             Sentinel{forward ? end : begin},
             Sentinel{subject_begin},
             Sentinel{subject_end},
-            flags,
-            instructions
+            flags
         };
 
         Iterator start = forward ? begin : end;
@@ -353,7 +348,6 @@ private:
         const Sentinel subject_begin;
         const Sentinel subject_end;
         const RegexExecFlags flags;
-        ConstArrayView<CompiledRegex::Instruction> instructions;
     };
 
     // Steps a thread until it consumes the current character, matches or fail
@@ -483,7 +477,11 @@ private:
             if (++current_step == 0)
             {
                 // We wrapped, avoid potential collision on inst.last_step by resetting them
-                for (auto& inst : config.instructions)
+                ConstArrayView<CompiledRegex::Instruction> instructions{m_program.instructions};
+                instructions = forward ? instructions.subrange(0, m_program.first_backward_inst)
+                                       : instructions.subrange(m_program.first_backward_inst);
+
+                for (auto& inst : instructions)
                     inst.last_step = 0;
                 current_step = 1; // step 0 is never valid
             }
