@@ -352,7 +352,7 @@ private:
 
     // Steps a thread until it consumes the current character, matches or fail
     [[gnu::always_inline]]
-    void step_thread(const Iterator& pos, uint16_t current_step, Thread thread, const ExecConfig& config)
+    void step_thread(const Iterator& pos, Codepoint cp, uint16_t current_step, Thread thread, const ExecConfig& config)
     {
         auto failed = [this, &thread]() {
             release_saves(thread.saves);
@@ -388,14 +388,13 @@ private:
                     return;
                 case CompiledRegex::Literal:
                     if (pos != config.end and
-                        inst.param.literal.codepoint == (inst.param.literal.ignore_case ? to_lower(codepoint(pos, config))
-                                                                                        : codepoint(pos, config)))
+                        inst.param.literal.codepoint == (inst.param.literal.ignore_case ? to_lower(cp) : cp))
                         return consumed();
                     return failed();
                 case CompiledRegex::AnyChar:
                     return consumed();
                 case CompiledRegex::AnyCharExceptNewLine:
-                    if (pos != config.end and codepoint(pos, config) != '\n')
+                    if (pos != config.end and cp != '\n')
                         return consumed();
                     return failed();
                 case CompiledRegex::Jump:
@@ -428,13 +427,11 @@ private:
                 case CompiledRegex::CharClass:
                     if (pos == config.end)
                         return failed();
-                    return m_program.character_classes[inst.param.character_class_index].matches(codepoint(pos, config)) ?
-                        consumed() : failed();
+                    return m_program.character_classes[inst.param.character_class_index].matches(cp) ? consumed() : failed();
                 case CompiledRegex::CharType:
                     if (pos == config.end)
                         return failed();
-                    return is_ctype(inst.param.character_type, codepoint(pos, config)) ?
-                        consumed() : failed();
+                    return is_ctype(inst.param.character_type, cp) ? consumed() : failed();
                 case CompiledRegex::LineAssertion:
                     if (not (inst.param.line_start ? is_line_start(pos, config) : is_line_end(pos, config)))
                         return failed();
@@ -486,8 +483,11 @@ private:
                 current_step = 1; // step 0 is never valid
             }
 
+            auto next = pos;
+            Codepoint cp = pos != config.end ? codepoint(next, config) : -1;
+
             while (not m_threads.current_is_empty())
-                step_thread(pos, current_step, m_threads.pop_current(), config);
+                step_thread(pos, cp, current_step, m_threads.pop_current(), config);
 
             if (pos == config.end or
                 (m_threads.next_is_empty() and (not search or m_found_match)) or
@@ -498,9 +498,7 @@ private:
                 return m_found_match;
             }
 
-            forward ? utf8::to_next(pos, config.end)
-                    : utf8::to_previous(pos, config.end);
-
+            pos = next;
             if (search and not m_found_match)
             {
                 if (start_desc and m_threads.next_is_empty())
@@ -611,10 +609,17 @@ private:
                is_word(utf8::codepoint(pos, config.subject_end));
     }
 
-    static Codepoint codepoint(const Iterator& it, const ExecConfig& config)
+    static Codepoint codepoint(Iterator& it, const ExecConfig& config)
     {
-        return utf8::codepoint(forward ? it : utf8::previous(it, config.subject_begin),
-                               config.subject_end);
+        if constexpr (forward)
+        {
+            return utf8::read_codepoint(it, config.end);
+        }
+        else
+        {
+            utf8::to_previous(it, config.end);
+            return utf8::codepoint(it, config.begin);
+        }
     }
 
     const CompiledRegex& m_program;
