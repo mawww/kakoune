@@ -367,31 +367,38 @@ void Client::check_if_buffer_needs_reloading()
     if (not (buffer.flags() & Buffer::Flags::File) or reload == Autoreload::No)
         return;
 
-    const String& filename = buffer.name();
-    const timespec ts = get_fs_timestamp(filename);
-    const auto status = buffer.fs_status();
-
-    if (ts == InvalidTime or ts == status.timestamp)
-        return;
-
-    if (MappedFile fd{filename};
-        fd.st.st_size == status.file_size and hash_data(fd.data, fd.st.st_size) == status.hash)
-        return;
-
-    if (reload == Autoreload::Ask)
+    try
     {
-        StringView bufname = buffer.display_name();
-        info_show(format("reload '{}' ?", bufname),
-                  format("'{}' was modified externally\n"
-                         " y, <ret>: reload | n, <esc>: keep\n"
-                         " Y: always reload | N: always keep\n",
-                         bufname), {}, InfoStyle::Modal);
+        const String& filename = buffer.name();
+        const timespec ts = get_fs_timestamp(filename);
+        const auto status = buffer.fs_status();
 
-        m_buffer_reload_dialog_opened = true;
-        m_input_handler.on_next_key("buffer-reload", KeymapMode::None, [this](Key key, Context&){ on_buffer_reload_key(key); });
+        if (ts == InvalidTime or ts == status.timestamp)
+            return;
+
+        if (MappedFile fd{filename};
+            fd.st.st_size == status.file_size and hash_data(fd.data, fd.st.st_size) == status.hash)
+            return;
+
+        if (reload == Autoreload::Ask)
+        {
+            StringView bufname = buffer.display_name();
+            info_show(format("reload '{}' ?", bufname),
+                      format("'{}' was modified externally\n"
+                             " y, <ret>: reload | n, <esc>: keep\n"
+                             " Y: always reload | N: always keep\n",
+                             bufname), {}, InfoStyle::Modal);
+
+            m_buffer_reload_dialog_opened = true;
+            m_input_handler.on_next_key("buffer-reload", KeymapMode::None, [this](Key key, Context&){ on_buffer_reload_key(key); });
+        }
+        else
+            reload_buffer();
     }
-    else
-        reload_buffer();
+    catch (Kakoune::runtime_error& error)
+    {
+        write_to_debug_buffer(format("Error while checking if buffer {} changed: {}", buffer.name(), error.what()));
+    }
 }
 
 StringView Client::get_env_var(StringView name) const
