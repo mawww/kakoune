@@ -5,15 +5,14 @@
 provide-module zellij %{
 
 evaluate-commands %sh{
-    if [ -z "$ZELLIJ_SESSION_NAME" ]
-    then
-        echo "fail 'This command is only available from within a zellij session'"
-        exit
-    fi
-    if ! which zellij &> /dev/null
-    then
-        echo "fail 'Could not find \`zellij\` in PATH'"
-    fi
+    [ -z "${kak_opt_windowing_modules}" ] || \
+    [ -n "$ZELLIJ" -a -n "$ZELLIJ_SESSION_NAME" ] || \
+    echo "fail zellij not detected"
+}
+
+evaluate-commands %sh{
+    which zellij &> /dev/null || \
+    echo "fail zellij not detected"
 }
 
 define-command -hidden zellij-probe %{
