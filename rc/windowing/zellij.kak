@@ -16,7 +16,15 @@ evaluate-commands %sh{
     fi
 }
 
+define-command -hidden zellij-probe %{
+    evaluate-commands %sh{
+        [ -n "$kak_client_env_ZELLIJ_SESSION_NAME" ] || \
+        echo "fail 'This command is only available from within a zellij session'"
+    }
+}
+
 define-command -hidden -params 2.. zellij-terminal-impl %{
+    zellij-probe
     nop %sh{
         zellij_session="$ZELLIJ_SESSION_NAME"
         zellij_args="$1"
@@ -66,6 +74,7 @@ define-command zellij-focus -params ..1 -docstring '
 zellij-focus [<client>]: focus the given client
 If no client is passed then the current one is used' \
 %{
+    zellij-probe
     # I don't know if there is any way to do it currently.
     # In most cases though this should not be necessary as focus
     # should automatically go back to the kakoune's pane after the
@@ -78,6 +87,7 @@ define-command zellij-action -params 1.. -docstring '
 zellij-action <action> [<parameters>]: send an action to a zellij session
 List of all available actions: `zellij action --help`' \
 %{
+    zellij-probe
     nop %sh{
         zellij_session="$ZELLIJ_SESSION_NAME"
         zellij \
