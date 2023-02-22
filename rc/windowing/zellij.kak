@@ -13,7 +13,7 @@ declare-option -hidden -docstring %{zellij run options (please check out "zellij
 
 define-command -hidden -params .. zellij-run %{
     nop %sh{
-        zellij run ${kak_opt_zellij_run_options} -- $SHELL -i -c "$*" < /dev/null > /dev/null 2>&1 &
+        zellij run $kak_opt_zellij_run_options -- "$@"
     }
     set global zellij_run_options ""
     unset buffer zellij_run_options
