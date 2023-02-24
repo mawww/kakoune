@@ -5,24 +5,17 @@ provide-module zellij %{
 
 # ensure we're running under zellij
 evaluate-commands %sh{
-    [ -z "${kak_opt_windowing_modules}" ] || [ -n "$ZELLIJ" ] || echo 'fail zellij not detected'
+    [ -z "${kak_opt_windowing_modules}" ] || [ -n "$ZELLIJ" -a -n "$ZELLIJ_SESSION_NAME" ] || echo 'fail zellij not detected'
 }
 
-declare-option -hidden -docstring %{zellij run options (please check out "zellij run --help" for detail)}\
-    str zellij_run_options ""
-
-define-command -hidden -params .. zellij-run %{
-    nop %sh{
-        zellij run $kak_opt_zellij_run_options -- "$@"
-    }
-    set global zellij_run_options ""
-    unset buffer zellij_run_options
-    unset window zellij_run_options
-}
+define-command -hidden -params 2.. zellij-run %{ nop %sh{
+    zellij_run_options=$1
+    shift
+    zellij --session "$kak_client_env_ZELLIJ_SESSION_NAME" run $zellij_run_options -- "$@"
+}}
 
 define-command -hidden -params 1.. zellij-terminal-impl %{
-    set global zellij_run_options "--close-on-exit"
-    zellij-run %arg{@}
+    zellij-run "--close-on-exit" %arg{@}
 }
 complete-command zellij-terminal-impl shell
 
@@ -31,8 +24,7 @@ zellij-terminal-vertical <program> [<arguments>]: create a new terminal as a zel
 The current pane is split into two, top and bottom
 The program passed as argument will be executed in the new terminal' \
 %{
-    set global zellij_run_options "--direction down"
-    zellij-run %arg{@}
+    zellij-run "--direction down" %arg{@}
 }
 complete-command zellij-terminal-vertical shell
 
@@ -41,8 +33,7 @@ zellij-terminal-horizontal <program> [<arguments>]: create a new terminal as a z
 The current pane is split into two, left and right
 The program passed as argument will be executed in the new terminal' \
 %{
-    set global zellij_run_options "--direction right"
-    zellij-run %arg{@}
+    zellij-run "--direction right" %arg{@}
 }
 complete-command zellij-terminal-horizontal shell
 
