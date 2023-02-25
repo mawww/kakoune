@@ -8,6 +8,9 @@ evaluate-commands %sh{
     [ -z "${kak_opt_windowing_modules}" ] || [ -n "$ZELLIJ" -a -n "$ZELLIJ_SESSION_NAME" ] || echo 'fail zellij not detected'
 }
 
+define-command -params 1.. zellij-action %{ nop %sh{
+    zellij --session "$kak_client_env_ZELLIJ_SESSION_NAME" action "$@"
+}}
 define-command -hidden -params 2.. zellij-run %{ nop %sh{
     zellij_run_options=$1
     shift
