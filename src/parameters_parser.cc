@@ -11,21 +11,21 @@ String generate_switches_doc(const SwitchMap& switches)
     if (switches.empty())
         return res;
 
-    auto switch_len = [](auto& sw) { return sw.key.column_length() + (sw.value.takes_arg ? 5 : 0); };
+    auto switch_len = [](auto& sw) { return sw.key.column_length() + (sw.value.arg_completer ? 5 : 0); };
     auto switches_len = switches | transform(switch_len);
     const ColumnCount maxlen = *std::max_element(switches_len.begin(), switches_len.end());
 
     for (auto& sw : switches) {
         res += format("-{} {}{}{}\n",
                       sw.key,
-                      sw.value.takes_arg ? "<arg>" : "",
+                      sw.value.arg_completer ? "<arg>" : "",
                       String{' ', maxlen - switch_len(sw) + 1},
                       sw.value.description);
     }
     return res;
 }
 
-ParametersParser::ParametersParser(ParameterList params, const ParameterDesc& desc)
+ParametersParser::ParametersParser(ParameterList params, const ParameterDesc& desc, bool ignore_errors)
     : m_params(params)
 {
     const bool switches_only_at_start = desc.flags & ParameterDesc::Flags::SwitchesOnlyAtStart;
@@ -36,11 +36,16 @@ ParametersParser::ParametersParser(ParameterList params, const ParameterDesc& de
     for (size_t i = 0; i < params.size(); ++i)
     {
         if (not only_pos and not ignore_unknown_switches and params[i] == "--")
+        {
+            m_state = State::Switch;
             only_pos = true;
+        }
         else if (not only_pos and not params[i].empty() and params[i][0_byte] == '-')
         {
             StringView switch_name = params[i].substr(1_byte);
             auto it = desc.switches.find(switch_name);
+            m_state = it == desc.switches.end() and ignore_unknown_switches ?
+                        State::Positional : State::Switch;
             if (it == desc.switches.end())
             {
                 if (ignore_unknown_switches)
@@ -50,28 +55,43 @@ ParametersParser::ParametersParser(ParameterList params, const ParameterDesc& de
                         only_pos = true;
                     continue;
                 }
+                if (ignore_errors)
+                    continue;
                 throw unknown_option(params[i]);
             }
 
             auto switch_index = it - desc.switches.begin();
             if (switch_seen[switch_index])
+            {
+                if (ignore_errors)
+                    continue;
                 throw runtime_error{format("switch '-{}' specified more than once", it->key)};
+            }
             switch_seen[switch_index] = true;
 
-            if (it->value.takes_arg and ++i == params.size())
-               throw missing_option_value(it->key);
+            if (it->value.arg_completer)
+            {
+               if (++i == params.size())
+               {
+                   if (ignore_errors)
+                       continue;
+                   throw missing_option_value(it->key);
+               }
+               m_state = State::SwitchArgument;
+            }
 
-            m_switches[switch_name.str()] = it->value.takes_arg ? params[i] : StringView{};
+            m_switches[switch_name.str()] = it->value.arg_completer ? params[i] : StringView{};
         }
         else // positional
         {
+            m_state = State::Positional;
             if (switches_only_at_start)
                 only_pos = true;
             m_positional_indices.push_back(i);
         }
     }
     size_t count = m_positional_indices.size();
-    if (count > desc.max_positionals or count < desc.min_positionals)
+    if (not ignore_errors and (count > desc.max_positionals or count < desc.min_positionals))
         throw wrong_argument_count();
 }
 

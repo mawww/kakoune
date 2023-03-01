@@ -678,10 +678,10 @@ const HighlighterDesc wrap_desc = {
     "Parameters: [-word] [-indent] [-width <max_width>] [-marker <marker_text>]\n"
     "Wrap lines to window width",
     { {
-        { "word",   { false, "wrap at word boundaries instead of codepoint boundaries" } },
-        { "indent", { false, "preserve line indentation of the wrapped line" } },
-        { "width",  { true, "wrap at the given column instead of the window's width" } },
-        { "marker", { true, "insert the given text at the beginning of the wrapped line" } }, },
+        { "word",   { {}, "wrap at word boundaries instead of codepoint boundaries" } },
+        { "indent", { {}, "preserve line indentation of the wrapped line" } },
+        { "width",  { ArgCompleter{}, "wrap at the given column instead of the window's width" } },
+        { "marker", { ArgCompleter{}, "insert the given text at the beginning of the wrapped line" } }, },
         ParameterDesc::Flags::None, 0, 0
     }
 };
@@ -1047,11 +1047,11 @@ const HighlighterDesc show_whitespace_desc = {
     "Parameters: [-tab <separator>] [-tabpad <separator>] [-lf <separator>] [-spc <separator>] [-nbsp <separator>]\n"
     "Display whitespaces using symbols",
     { {
-        { "tab",    { true, "replace tabulations with the given character" } },
-        { "tabpad", { true, "append as many of the given character as is necessary to honor `tabstop`" } },
-        { "spc",    { true, "replace spaces with the given character" } },
-        { "lf",     { true, "replace line feeds with the given character" } },
-        { "nbsp",   { true, "replace non-breakable spaces with the given character" } } },
+        { "tab",    { ArgCompleter{}, "replace tabulations with the given character" } },
+        { "tabpad", { ArgCompleter{}, "append as many of the given character as is necessary to honor `tabstop`" } },
+        { "spc",    { ArgCompleter{}, "replace spaces with the given character" } },
+        { "lf",     { ArgCompleter{}, "replace line feeds with the given character" } },
+        { "nbsp",   { ArgCompleter{}, "replace non-breakable spaces with the given character" } } },
         ParameterDesc::Flags::None, 0, 0
     }
 };
@@ -1131,11 +1131,11 @@ const HighlighterDesc line_numbers_desc = {
     "Parameters: [-relative] [-hlcursor] [-separators <separator|separator:cursor|cursor:up:down>] [-min-digits <cols>]\n"
     "Display line numbers",
     { {
-        { "relative", { false, "show line numbers relative to the main cursor line" } },
-        { "separator", { true, "string to separate the line numbers column from the rest of the buffer (default '|')" } },
-        { "cursor-separator", { true, "identical to -separator but applies only to the line of the cursor (default is the same value passed to -separator)" } },
-        { "min-digits", { true, "use at least the given number of columns to display line numbers (default 2)" } },
-        { "hlcursor", { false, "highlight the cursor line with a separate face" } } },
+        { "relative", { {}, "show line numbers relative to the main cursor line" } },
+        { "separator", { ArgCompleter{}, "string to separate the line numbers column from the rest of the buffer (default '|')" } },
+        { "cursor-separator", { ArgCompleter{}, "identical to -separator but applies only to the line of the cursor (default is the same value passed to -separator)" } },
+        { "min-digits", { ArgCompleter{}, "use at least the given number of columns to display line numbers (default 2)" } },
+        { "hlcursor", { {}, "highlight the cursor line with a separate face" } } },
         ParameterDesc::Flags::None, 0, 0
     }
 };
@@ -1777,9 +1777,9 @@ const HighlighterDesc higlighter_group_desc = {
     "Parameters: [-passes <passes>]\n"
     "Creates a group that can contain other highlighters",
     { {
-        { "passes", { true, "flags(colorize|move|wrap) "
-                            "kind of highlighters can be put in the group "
-                            "(default colorize)" } } },
+        { "passes", { ArgCompleter{}, "flags(colorize|move|wrap) "
+                                       "kind of highlighters can be put in the group "
+                                       "(default colorize)" } } },
         ParameterDesc::Flags::SwitchesOnlyAtStart, 0, 0
     }
 };
@@ -1795,9 +1795,9 @@ const HighlighterDesc ref_desc = {
     "Parameters: [-passes <passes>] <path>\n"
     "Reference the highlighter at <path> in shared highlighters",
     { {
-        { "passes", { true, "flags(colorize|move|wrap) "
-                            "kind of highlighters that can be referenced "
-                            "(default colorize)" } } },
+        { "passes", { ArgCompleter{}, "flags(colorize|move|wrap) "
+                                      "kind of highlighters that can be referenced "
+                                      "(default colorize)" } } },
         ParameterDesc::Flags::SwitchesOnlyAtStart, 1, 1
     }
 };
@@ -1885,8 +1885,8 @@ const HighlighterDesc region_desc = {
     "highlighter as defined by <type> and eventual <params>...\n"
     "The region starts at <begin> match and ends at the first <end>",
     { {
-        { "match-capture", { false, "only consider region ending/recurse delimiters whose first capture group match the region beginning delimiter" } },
-        { "recurse",       { true, "make the region end on the first ending delimiter that does not close the given parameter" } } },
+        { "match-capture", { {}, "only consider region ending/recurse delimiters whose first capture group match the region beginning delimiter" } },
+        { "recurse",       { ArgCompleter{}, "make the region end on the first ending delimiter that does not close the given parameter" } } },
         ParameterDesc::Flags::SwitchesOnlyAtStart | ParameterDesc::Flags::IgnoreUnknownSwitches,
         3
     }

@@ -1071,23 +1071,23 @@ int main(int argc, char* argv[])
     set_signal_handler(SIGTTOU, SIG_IGN);
 
     const ParameterDesc param_desc{
-        SwitchMap{ { "c", { true,  "connect to given session" } },
-                   { "e", { true,  "execute argument on client initialisation" } },
-                   { "E", { true,  "execute argument on server initialisation" } },
-                   { "n", { false, "do not source kakrc files on startup" } },
-                   { "s", { true,  "set session name" } },
-                   { "d", { false, "run as a headless session (requires -s)" } },
-                   { "p", { true,  "just send stdin as commands to the given session" } },
-                   { "f", { true,  "filter: for each file, select the entire buffer and execute the given keys" } },
-                   { "i", { true, "backup the files on which a filter is applied using the given suffix" } },
-                   { "q", { false, "in filter mode, be quiet about errors applying keys" } },
-                   { "ui", { true, "set the type of user interface to use (terminal, dummy, or json)" } },
-                   { "l", { false, "list existing sessions" } },
-                   { "clear", { false, "clear dead sessions" } },
-                   { "debug", { true, "initial debug option value" } },
-                   { "version", { false, "display kakoune version and exit" } },
-                   { "ro", { false, "readonly mode" } },
-                   { "help", { false, "display a help message and quit" } } }
+        SwitchMap{ { "c", { ArgCompleter{},  "connect to given session" } },
+                   { "e", { ArgCompleter{},  "execute argument on client initialisation" } },
+                   { "E", { ArgCompleter{},  "execute argument on server initialisation" } },
+                   { "n", { {}, "do not source kakrc files on startup" } },
+                   { "s", { ArgCompleter{},  "set session name" } },
+                   { "d", { {}, "run as a headless session (requires -s)" } },
+                   { "p", { ArgCompleter{},  "just send stdin as commands to the given session" } },
+                   { "f", { ArgCompleter{},  "filter: for each file, select the entire buffer and execute the given keys" } },
+                   { "i", { ArgCompleter{}, "backup the files on which a filter is applied using the given suffix" } },
+                   { "q", { {}, "in filter mode, be quiet about errors applying keys" } },
+                   { "ui", { ArgCompleter{}, "set the type of user interface to use (terminal, dummy, or json)" } },
+                   { "l", { {}, "list existing sessions" } },
+                   { "clear", { {}, "clear dead sessions" } },
+                   { "debug", { ArgCompleter{}, "initial debug option value" } },
+                   { "version", { {}, "display kakoune version and exit" } },
+                   { "ro", { {}, "readonly mode" } },
+                   { "help", { {}, "display a help message and quit" } } }
     };
 
     try
