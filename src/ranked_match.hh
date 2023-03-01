@@ -4,6 +4,8 @@
 #include "string.hh"
 #include "meta.hh"
 
+#include <cstdint>
+
 namespace Kakoune
 {
 

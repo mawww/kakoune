@@ -9,6 +9,8 @@
 #include "unicode.hh"
 #include "vector.hh"
 
+#include <cstdint>
+
 namespace Kakoune
 {
 
