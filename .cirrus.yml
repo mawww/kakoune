@@ -41,7 +41,10 @@ macos_task:
           env:
               CXX: /usr/local/opt/llvm@11/bin/clang++
         - name: macos_gcc
-          gcc_script: brew install gcc@10
+          gcc_script:
+            - /usr/sbin/softwareupdate --install-rosetta --agree-to-license
+            - arch -x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+            - arch -x86_64 /usr/local/bin/brew install gcc@10
           env:
               CXX: g++-10
     test_script: make -j4 test
