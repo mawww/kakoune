@@ -22,7 +22,7 @@ linux_task:
     matrix:
         - name: linux_clang
           container:
-              image: silkeh/clang:10
+              image: silkeh/clang:11
           env:
               CXX: clang++
         - name: linux_gcc
