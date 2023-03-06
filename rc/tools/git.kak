@@ -39,6 +39,22 @@ hook -group git-show-branch-highlight global WinSetOption filetype=git-show-bran
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/git-show-branch}
 }
 
+hook -group git-format-patch global WinSetOption filetype=git-format-patch %{
+    require-module diff
+    add-highlighter window/git-format-patch group
+    add-highlighter window/git-format-patch/ regex '^( ?[*|\\ /_.-])*\h{,3}([a-zA-Z_-]+:) (.*?)$' 2:variable 3:value
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/git-format-patch }
+}
+
+hook -group git-send-email global WinSetOption filetype=git-send-email %{
+    require-module diff
+    add-highlighter window/git-send-email group
+    add-highlighter window/git-send-email/ regex '^( ?[*|\\ /_.-])*\h{,3}([a-zA-Z_-]+:) (.*?)$' 2:variable 3:value
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/git-send-email}
+}
+
 declare-option -hidden line-specs git_blame_flags
 declare-option -hidden line-specs git_diff_flags
 declare-option -hidden int-list git_hunk_list
@@ -50,17 +66,18 @@ define-command -params 1.. \
         Available commands:
             add
             rm
-            reset
             blame
             commit
             checkout
             diff
+            format-patch
             hide-blame
             hide-diff
             init
             log
             next-hunk
             previous-hunk
+            send-email
             show
             show-branch
             show-diff
@@ -68,11 +85,13 @@ define-command -params 1.. \
             update-diff
     } -shell-script-candidates %{
     if [ $kak_token_to_complete -eq 0 ]; then
-        printf "add\nrm\nreset\nblame\ncommit\ncheckout\ndiff\nhide-blame\nhide-diff\nlog\nnext-hunk\nprev-hunk\nshow\nshow-branch\nshow-diff\ninit\nstatus\nupdate-diff\n"
+        printf "add\nrm\nblame\ncommit\ncheckout\nformat-patch\ndiff\nhide-blame\nhide-diff\nlog\nnext-hunk\nprev-hunk\nsend-email\nshow\nshow-branch\nshow-diff\ninit\nstatus\nupdate-diff\n"
     else
         case "$1" in
             commit) printf -- "--amend\n--no-edit\n--all\n--reset-author\n--fixup\n--squash\n"; git ls-files -m ;;
             add) git ls-files -dmo --exclude-standard ;;
+            send-email) git ls-files -dmo --exclude-standard ;;
+            format-patch) git ls-files -dmo --exclude-standard ;;
             rm) git ls-files -c ;;
         esac
     fi
@@ -92,6 +111,8 @@ define-command -params 1.. \
 
         case "$1" in
            diff) map_diff_goto_source=true; filetype=diff ;;
+           format-patch) map_diff_goto_source=true; filetype=git-format-patch ;;
+           send-email) map_diff_goto_source=true; filetype=git-send-email;;
            show) map_diff_goto_source=true; filetype=git-log ;;
            show-branch) filetype=git-show-branch ;;
            log)  filetype=git-log ;;
@@ -312,7 +333,7 @@ define-command -params 1.. \
     }
 
     case "$1" in
-        show|show-branch|log|diff|status)
+        send-email|show|show-branch|log|format-patch|diff|status)
             show_git_cmd_output "$@"
             ;;
         blame)
@@ -347,6 +368,16 @@ define-command -params 1.. \
             cmd="$1"
             shift
             run_git_cmd $cmd "${@:-${kak_buffile}}"
+            ;;
+		format-patch)
+			cmd="$1"
+			shift
+			run_git_cmd $cmd "${@:-${kak_buffile}}"
+            ;;
+		send-email)
+			cmd="$1"
+			shift
+			run_git_cmd $cmd "${@:-${kak_bufname}}"
             ;;
         reset|checkout)
             run_git_cmd "$@"
