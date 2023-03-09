@@ -77,13 +77,17 @@ void InputMode::paste(StringView content)
     try
     {
         Buffer& buffer = context().buffer();
+        const bool linewise = not content.empty() and content.back() == '\n';
         ScopedEdition edition{context()};
         ScopedSelectionEdition selection_edition{context()};
-        context().selections().for_each([&buffer, content=std::move(content)]
+        context().selections().for_each([&buffer, content=std::move(content), linewise]
                                         (size_t index, Selection& sel) {
-            BufferRange range = buffer.insert(sel.min(), content);
-            sel.min() = range.begin;
-            sel.max() = range.end > range.begin ? buffer.char_prev(range.end) : range.begin;
+            auto& min = sel.min();
+            auto& max = sel.max();
+            BufferRange range =
+                buffer.insert(paste_pos(buffer, min, max, PasteMode::Insert, linewise), content);
+            min = range.begin;
+            max = range.end > range.begin ? buffer.char_prev(range.end) : range.begin;
         }, false);
     }
     catch (Kakoune::runtime_error& error)
