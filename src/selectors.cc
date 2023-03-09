@@ -420,6 +420,12 @@ select_to_reverse(const Context& context, const Selection& selection,
                   Codepoint c, int count, bool inclusive)
 {
     auto& buffer = context.buffer();
+
+    // if we are selecting backwards from the beginning of the buffer,
+    // there is nothing more that can be selected.
+    if (selection.cursor() == buffer.begin())
+        return {};
+
     Utf8Iterator begin{buffer.iterator_at(selection.cursor()), buffer};
     Utf8Iterator end = begin;
     do
