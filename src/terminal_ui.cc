@@ -700,7 +700,7 @@ Optional<Key> TerminalUI::get_next_key()
 
     static constexpr auto control = [](char c) { return c & 037; };
 
-    auto convert = [this](Codepoint c) -> Codepoint {
+    static auto convert = [this](Codepoint c) -> Codepoint {
         if (c == control('m') or c == control('j'))
             return Key::Return;
         if (c == control('i'))
@@ -715,7 +715,7 @@ Optional<Key> TerminalUI::get_next_key()
             return Key::Escape;
         return c;
     };
-    auto parse_key = [&convert](unsigned char c) -> Key {
+    static auto parse_key = [](unsigned char c) -> Key {
         if (Codepoint cp = convert(c); cp > 255)
             return Key{cp};
         // Special case: you can type NUL with Ctrl-2 or Ctrl-Shift-2 or
@@ -743,7 +743,7 @@ Optional<Key> TerminalUI::get_next_key()
        return Key{utf8::codepoint(CharIterator{c}, Sentinel{})};
     };
 
-    auto parse_mask = [](int mask) {
+    static auto parse_mask = [](int mask) {
         Key::Modifiers mod = Key::Modifiers::None;
         if (mask & 1)
             mod |= Key::Modifiers::Shift;
@@ -754,7 +754,7 @@ Optional<Key> TerminalUI::get_next_key()
         return mod;
     };
 
-    auto parse_csi = [this, &convert, &parse_mask]() -> Optional<Key> {
+    auto parse_csi = [this]() -> Optional<Key> {
         auto next_char = [] { return get_char().value_or((unsigned char)0xff); };
         int params[16][4] = {};
         auto c = next_char();
@@ -899,7 +899,7 @@ Optional<Key> TerminalUI::get_next_key()
         return {};
     };
 
-    auto parse_ss3 = [&parse_mask]() -> Optional<Key> {
+    static auto parse_ss3 = []() -> Optional<Key> {
         int raw_mask = 0;
         char code = '0';
         do {
