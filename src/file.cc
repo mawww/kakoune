@@ -252,13 +252,14 @@ bool regular_file_exists(StringView filename)
            (st.st_mode & S_IFMT) == S_IFREG;
 }
 
+template<bool atomic>
 void write(int fd, StringView data)
 {
     const char* ptr = data.data();
     ssize_t count   = (int)data.length();
 
     int flags = fcntl(fd, F_GETFL, 0);
-    if (EventManager::has_instance())
+    if (not atomic and EventManager::has_instance())
         fcntl(fd, F_SETFL, flags | O_NONBLOCK);
     auto restore_flags = on_scope_end([&] { fcntl(fd, F_SETFL, flags); });
 
@@ -269,12 +270,15 @@ void write(int fd, StringView data)
             ptr += written;
             count -= written;
         }
-        else if (errno == EAGAIN and EventManager::has_instance())
+        else if (errno == EAGAIN and not atomic and EventManager::has_instance())
             EventManager::instance().handle_next_events(EventMode::Urgent, nullptr, false);
         else
             throw file_access_error(format("fd: {}", fd), strerror(errno));
     }
 }
+template void write<true>(int fd, StringView data);
+template void write<false>(int fd, StringView data);
+
 
 void write_to_file(StringView filename, StringView data)
 {
@@ -295,7 +299,7 @@ void write_buffer_to_fd(Buffer& buffer, int fd)
         eoldata = "\n";
 
 
-    BufferedWriter writer{fd};
+    BufferedWriter<false> writer{fd};
     if (buffer.options()["BOM"].get<ByteOrderMark>() == ByteOrderMark::Utf8)
         writer.write("\xEF\xBB\xBF");
 

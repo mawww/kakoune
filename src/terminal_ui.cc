@@ -208,7 +208,7 @@ void TerminalUI::Window::draw(DisplayCoord pos,
         lines[(int)pos.line].append({}, size.column - pos.column, default_face);
 }
 
-struct Writer : BufferedWriter<>
+struct Writer : BufferedWriter<true>
 {
     using Writer::BufferedWriter::BufferedWriter;
     ~Writer() noexcept(false) = default;

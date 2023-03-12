@@ -39,6 +39,7 @@ bool fd_readable(int fd);
 bool fd_writable(int fd);
 String read_fd(int fd, bool text = false);
 String read_file(StringView filename, bool text = false);
+template<bool force_blocking = false>
 void write(int fd, StringView data);
 void write_to_file(StringView filename, StringView data);
 
@@ -121,7 +122,7 @@ CandidateList complete_filename(StringView prefix, const Regex& ignore_regex,
 
 CandidateList complete_command(StringView prefix, ByteCount cursor_pos = -1);
 
-template<int buffer_size = 4096>
+template<bool atomic, int buffer_size = 4096>
 struct BufferedWriter
 {
     BufferedWriter(int fd)
@@ -149,7 +150,7 @@ struct BufferedWriter
 
     void flush()
     {
-        Kakoune::write(m_fd, {m_buffer, m_pos});
+        Kakoune::write<atomic>(m_fd, {m_buffer, m_pos});
         m_pos = 0;
     }
 
