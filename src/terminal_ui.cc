@@ -971,7 +971,15 @@ Optional<Key> TerminalUI::get_next_key()
 
     if (m_paste_buffer)
     {
-        m_paste_buffer->push_back(*c);
+        auto paste_convert = [](char c) {
+            switch (c)
+            {
+                case '\r': return '\n';
+                default: return c;
+            }
+        };
+
+        m_paste_buffer->push_back(paste_convert(*c));
         return Key{Key::Invalid};
     }
     return parse_key(*c);
