@@ -9,3 +9,4 @@ sleep .1
 ui_in '{ "jsonrpc": "2.0", "method": "mouse_release", "params": [ "left", 0, 4 ] }'
 sleep .1
 ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "c<esc>" ] }'
+sleep .1
