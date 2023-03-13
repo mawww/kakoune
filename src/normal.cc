@@ -662,6 +662,8 @@ BufferCoord paste_pos(Buffer& buffer, BufferCoord min, BufferCoord max, PasteMod
     switch (mode)
     {
         case PasteMode::Append:
+            if (buffer.is_end(max))
+                return max;
             return linewise ? std::min(buffer.line_count(), max.line+1) : buffer.char_next(max);
         case PasteMode::Insert:
             return linewise ? min.line : min;
