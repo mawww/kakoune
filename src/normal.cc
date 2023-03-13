@@ -657,13 +657,6 @@ void change(Context& context, NormalParams params)
     enter_insert_mode<InsertMode::Replace>(context, params);
 }
 
-enum class PasteMode
-{
-    Append,
-    Insert,
-    Replace
-};
-
 BufferCoord paste_pos(Buffer& buffer, BufferCoord min, BufferCoord max, PasteMode mode, bool linewise)
 {
     switch (mode)

@@ -10,6 +10,7 @@
 namespace Kakoune
 {
 
+class Buffer;
 class Context;
 
 struct no_selections_remaining : runtime_error
@@ -39,6 +40,15 @@ struct KeyInfo
 
 String build_autoinfo_for_mapping(const Context& context, KeymapMode mode,
                                   ConstArrayView<KeyInfo> built_ins);
+
+enum class PasteMode
+{
+    Append,
+    Insert,
+    Replace
+};
+
+BufferCoord paste_pos(Buffer& buffer, BufferCoord min, BufferCoord max, PasteMode mode, bool linewise);
 
 }
 

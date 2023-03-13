@@ -32,6 +32,7 @@ public:
     InputMode& operator=(const InputMode&) = delete;
 
     void handle_key(Key key) { RefPtr<InputMode> keep_alive{this}; on_key(key); }
+    virtual void paste(StringView content);
 
     virtual void on_enabled() {}
     virtual void on_disabled(bool temporary) {}
@@ -70,6 +71,32 @@ protected:
 private:
     InputHandler& m_input_handler;
 };
+
+void InputMode::paste(StringView content)
+{
+    try
+    {
+        Buffer& buffer = context().buffer();
+        const bool linewise = not content.empty() and content.back() == '\n';
+        ScopedEdition edition{context()};
+        ScopedSelectionEdition selection_edition{context()};
+        context().selections().for_each([&buffer, content=std::move(content), linewise]
+                                        (size_t index, Selection& sel) {
+            auto& min = sel.min();
+            auto& max = sel.max();
+            BufferRange range =
+                buffer.insert(paste_pos(buffer, min, max, PasteMode::Insert, linewise), content);
+            min = range.begin;
+            max = range.end > range.begin ? buffer.char_prev(range.end) : range.begin;
+        }, false);
+    }
+    catch (Kakoune::runtime_error& error)
+    {
+        write_to_debug_buffer(format("Error: {}", error.what()));
+        context().print_status({error.what().str(), context().faces()["Error"] });
+        context().hooks().run_hook(Hook::RuntimeError, error.what(), context());
+    }
+}
 
 namespace InputModes
 {
@@ -1015,6 +1042,17 @@ public:
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
+    void paste(StringView content) override
+    {
+        m_line_editor.insert(content);
+        clear_completions();
+        m_refresh_completion_pending = true;
+        display();
+        m_line_changed = true;
+        if (not (context().flags() & Context::Flags::Draft))
+            m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
+    }
+
     void set_prompt_face(Face face)
     {
         if (face != m_prompt_face)
@@ -1433,6 +1471,12 @@ public:
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
+    void paste(StringView content) override
+    {
+        insert(ConstArrayView{content});
+        m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
+    }
+
     DisplayLine mode_line() const override
     {
         auto num_sel = context().selections().size();
@@ -1462,7 +1506,8 @@ private:
         selections.sort_and_merge_overlapping();
     }
 
-    void insert(ConstArrayView<String> strings)
+    template<typename S>
+    void insert(ConstArrayView<S> strings)
     {
         m_completer.try_accept();
         context().selections().for_each([strings, &buffer=context().buffer()]
@@ -1474,7 +1519,7 @@ private:
     void insert(Codepoint key)
     {
         String str{key};
-        insert(str);
+        insert(ConstArrayView{str});
         context().hooks().run_hook(Hook::InsertChar, str, context());
     }
 
@@ -1642,6 +1687,11 @@ void InputHandler::repeat_last_insert()
         current_mode().handle_key(key);
     }
     kak_assert(dynamic_cast<InputModes::Normal*>(&current_mode()) != nullptr);
+}
+
+void InputHandler::paste(StringView content)
+{
+    current_mode().paste(content);
 }
 
 void InputHandler::prompt(StringView prompt, String initstr, String emptystr,
