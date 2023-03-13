@@ -1449,6 +1449,7 @@ const CommandDesc echo_cmd = {
     ParameterDesc{
         { { "markup", { {}, "parse markup" } },
           { "quoting", { {arg_completer(Array{"raw", "kakoune", "shell"})}, "quote each argument separately using the given style (raw|kakoune|shell)" } },
+          { "end-of-line", { {}, "add trailing end-of-line" } },
           { "to-file", { {filename_arg_completer<false>}, "echo contents to given filename" } },
           { "to-shell-script", { ArgCompleter{}, "pipe contents to given shell script" } },
           { "debug", { {}, "write to debug buffer instead of status line" } } },
@@ -1465,6 +1466,9 @@ const CommandDesc echo_cmd = {
                            ' ', false);
         else
             message = join(parser, ' ', false);
+
+        if (parser.get_switch("end-of-line"))
+            message.push_back('\n');
 
         if (auto filename = parser.get_switch("to-file"))
             write_to_file(*filename, message);

@@ -14,29 +14,26 @@ main() {
             exec -save-regs / %{%s%\(\K[^)]+\)<ret>a<backspace><esc>i<backspace><backspace><c-u><esc><a-;>}
         } catch %{ exec gg }
         try %{ source rc }
-        hook global RuntimeError .+ %{
-            echo -debug -- error: %val{hook_param}
-            eval -buffer *debug* write -force debug
-            quit!
-        }
-        try %{ exec -with-maps -with-hooks "%sh{cat cmd}" }
+        try %{ eval -draft %{ edit cmd; exec \%H"zy; delete-buffer } }
+        try %{ exec -with-maps -with-hooks %reg{z} }
         exec -with-hooks <c-l>
       '
 
   root=$PWD
   tmpdir="${TMPDIR:-/tmp}"
   work=$(mktemp -d $tmpdir/kak-tests.XXXXXXXX)
+  session="kak-tests"
+  if [ -n "$XDG_RUNTIME_DIR" ]; then
+    session_path="${XDG_RUNTIME_DIR}/kakoune/$session"
+  else
+    session_path="${TMPDIR:-/tmp}/kakoune/${USER}/$session"
+  fi
   trap "rm -R $work" EXIT
 
   number_tests=0
   number_failures=0
   for dir in $(find "${@:-.}" -type d | sort); do
     cd $root/$dir;
-    mkdir -p $work/$dir
-    for file in in cmd rc enabled; do
-      [ -f $file ] && cp $file $work/$dir/
-    done
-    cd $work/$dir;
     indent="$(echo "$dir/" | sed -e 's|[^/]*//*|  |g')"
     name=${PWD##*/}
     if [ ! -f cmd ]; then
@@ -47,13 +44,15 @@ main() {
       continue
     fi
 
-    env_vars=$(cd "${root}/${dir}" && ls -1 kak_* 2>/dev/null)
+    env_vars=$(ls -1 kak_* 2>/dev/null)
+    number_tests=$(($number_tests + 1))
+    mkdir -p $work/$dir
+    cp in cmd rc $work/$dir/ 2>/dev/null
+    cd $work/$dir;
 
     mkfifo ui-in ui-out
-    number_tests=$(($number_tests + 1))
     touch in; cp in out
-    session="kak-tests"
-    rm -f "$(session_path $session)"
+    rm -f "$session_path"
     $DEBUGGER $root/../src/kak out -n -s "$session" -ui json -e "$kak_commands" >ui-out <ui-in &
     kakpid=$!
 
@@ -128,14 +127,6 @@ main() {
 
 # Utility ├─────────────────────────────────────────────────────────────────────
 
-session_path() {
-  if [ -n "$XDG_RUNTIME_DIR" ]; then
-    printf %s "${XDG_RUNTIME_DIR}/kakoune/$1"
-  else
-    printf %s "${TMPDIR:-/tmp}/kakoune/${USER}/$1"
-  fi
-}
-
 show_diff() {
   diff -u $1 $2 | while IFS='' read -r line; do
     first_character=$(printf '%s\n' "$line" | cut -b 1)
@@ -152,12 +143,14 @@ show_diff() {
 finished_commands() {
   printf %s 'eval -client client0 %{
                eval -buffer *debug* write -force debug
-               nop %sh{
             '
   for env_var in $env_vars; do
-    printf 'printf %%s\\\\n "$%s" >%s\n' "$env_var" "$env_var"
+      case $env_var in
+          kak_quoted_*) printf 'echo -to-file %s -end-of-line -quoting shell -- %s\n' "$env_var" "%val{${env_var##kak_quoted_}}" ;;
+          kak_*) printf 'echo -to-file %s -end-of-line -- %s\n' "$env_var" "%val{${env_var##kak_}}" ;;
+      esac
   done
-  printf %s '  }
+  printf %s '
                write -force out
                quit!
              }
