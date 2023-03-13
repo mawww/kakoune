@@ -447,9 +447,9 @@ TerminalUI::TerminalUI()
 
         while (auto key = get_next_key())
         {
-            if (key == ctrl('z'))
+            if (*key == ctrl('z'))
                 kill(0, SIGTSTP); // We suspend at this line
-            else
+            else if (*key != Key::Invalid)
                 m_on_key(*key);
         }
       }},
@@ -689,11 +689,7 @@ Optional<Key> TerminalUI::get_next_key()
             return {};
 
         if (unsigned char c = 0; read(STDIN_FILENO, &c, 1) == 1)
-        {
-            if (m_paste_buffer)
-                m_paste_buffer->push_back(c);
             return c;
-        }
 
         stdin_closed = 1;
         return {};
@@ -759,16 +755,7 @@ Optional<Key> TerminalUI::get_next_key()
         return mod;
     };
 
-    enum class PasteEvent { Begin, End };
-    struct KeyOrPasteEvent {
-        KeyOrPasteEvent() = default;
-        KeyOrPasteEvent(Key key) : key(key) {}
-        KeyOrPasteEvent(Optional<Key> key) : key(key) {}
-        KeyOrPasteEvent(PasteEvent paste) : paste(paste) {}
-        const Optional<Key> key;
-        const Optional<PasteEvent> paste;
-    };
-    auto parse_csi = [this]() -> KeyOrPasteEvent {
+    auto parse_csi = [this]() -> Optional<Key> {
         auto next_char = [] { return get_char().value_or((unsigned char)0xff); };
         int params[16][4] = {};
         auto c = next_char();
@@ -878,9 +865,15 @@ Optional<Key> TerminalUI::get_next_key()
             case 33: case 34:
                 return Key{Key::Modifiers::Shift, Key::F9 + params[0][0] - 33}; // rxvt style
             case 200:
-                return PasteEvent::Begin;
+                m_paste_buffer = String{};
+                return Key{Key::Invalid};
             case 201:
-                return PasteEvent::End;
+                if (m_paste_buffer)
+                {
+                    m_on_paste(*m_paste_buffer);
+                    m_paste_buffer.reset();
+                }
+                return Key{Key::Invalid};
             }
             return {};
         case 'u':
@@ -962,41 +955,26 @@ Optional<Key> TerminalUI::get_next_key()
         }
     };
 
+    if (*c == 27)
+    {
+        if (auto next = get_char())
+        {
+            if (*next == '[') // potential CSI
+                return parse_csi().value_or(alt('['));
+            if (*next == 'O') // potential SS3
+                return parse_ss3().value_or(alt('O'));
+            return alt(parse_key(*next));
+        }
+        else if (not m_paste_buffer)
+            return Key{Key::Escape};
+    }
+
     if (m_paste_buffer)
     {
-        if (*c == 27 and get_char() == '[' and parse_csi().paste == PasteEvent::End)
-        {
-            m_paste_buffer->resize(m_paste_buffer->length() - "\033[201~"_str.length(), '\0');
-            m_on_paste(*m_paste_buffer);
-            m_paste_buffer.reset();
-        }
-        return get_next_key();
+        m_paste_buffer->push_back(*c);
+        return Key{Key::Invalid};
     }
-
-    if (*c != 27)
-        return parse_key(*c);
-
-    if (auto next = get_char())
-    {
-        if (*next == 'O') // potential SS3
-            return parse_ss3().value_or(alt('O'));
-        if (*next != '[')
-            return alt(parse_key(*next));
-        // potential CSI
-        KeyOrPasteEvent csi = parse_csi();
-        if (csi.paste == PasteEvent::Begin)
-        {
-            m_paste_buffer = String{};
-            return get_next_key();
-        }
-        if (csi.paste == PasteEvent::End) // Unmatched bracketed paste sequence.
-            return {};
-        if (csi.key)
-            return *csi.key;
-        return alt('[');
-    }
-
-    return Key{Key::Escape};
+    return parse_key(*c);
 }
 
 template<typename T>

@@ -1750,8 +1750,7 @@ static bool is_valid(Key key)
 {
     constexpr Key::Modifiers valid_mods = (Key::Modifiers::Control | Key::Modifiers::Alt | Key::Modifiers::Shift);
 
-    return key != Key::Invalid and
-        ((key.modifiers & ~valid_mods) or key.key <= 0x10FFFF);
+    return ((key.modifiers & ~valid_mods) or key.key <= 0x10FFFF);
 }
 
 void InputHandler::handle_key(Key key)
