@@ -46,6 +46,7 @@ public:
 
     DisplayCoord dimensions() override;
     void set_on_key(OnKeyCallback callback) override;
+    void set_on_paste(OnPasteCallback callback) override;
     void set_ui_options(const Options& options) override;
 
 private:
@@ -54,6 +55,7 @@ private:
 
     FDWatcher m_stdin_watcher;
     OnKeyCallback m_on_key;
+    OnPasteCallback m_on_paste;
     Vector<Key, MemoryDomain::Client> m_pending_keys;
     DisplayCoord m_dimensions;
     String m_requests;

@@ -72,6 +72,8 @@ public:
     void insert(InsertMode mode, int count);
     // repeat last insert mode key sequence
     void repeat_last_insert();
+    // insert a string without affecting the mode stack
+    void paste(StringView content);
 
     // enter prompt mode, callback is called on each change,
     // abort or validation with corresponding PromptEvent value

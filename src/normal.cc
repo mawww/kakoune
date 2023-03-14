@@ -657,18 +657,13 @@ void change(Context& context, NormalParams params)
     enter_insert_mode<InsertMode::Replace>(context, params);
 }
 
-enum class PasteMode
-{
-    Append,
-    Insert,
-    Replace
-};
-
 BufferCoord paste_pos(Buffer& buffer, BufferCoord min, BufferCoord max, PasteMode mode, bool linewise)
 {
     switch (mode)
     {
         case PasteMode::Append:
+            if (buffer.is_end(max))
+                return max;
             return linewise ? std::min(buffer.line_count(), max.line+1) : buffer.char_next(max);
         case PasteMode::Insert:
             return linewise ? min.line : min;

@@ -504,7 +504,6 @@ private:
                 if (start_desc and m_threads.next_is_empty())
                     to_next_start(pos, config, *start_desc);
                 m_threads.push_next({first_inst, -1});
-                m_threads.grow_ifn(false);
             }
             m_threads.swap_next();
         }
@@ -632,7 +631,7 @@ private:
         void push_current(Thread thread) { m_data[decrement(m_current)] = thread; grow_ifn(true); }
         Thread pop_current() { return m_data[post_increment(m_current)]; }
 
-        void push_next(Thread thread) { m_data[post_increment(m_next_end)] = thread; }
+        void push_next(Thread thread) { m_data[post_increment(m_next_end)] = thread; grow_ifn(false); }
         Thread pop_next() { return m_data[decrement(m_next_end)]; }
 
         void swap_next()

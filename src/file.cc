@@ -345,11 +345,11 @@ void write_buffer_to_file(Buffer& buffer, StringView filename,
     }
 
     if (force and ::chmod(zfilename, st.st_mode | S_IWUSR) < 0)
-        throw runtime_error("unable to change file permissions");
+        throw runtime_error(format("unable to change file permissions: {}", strerror(errno)));
 
     auto restore_mode = on_scope_end([&]{
         if ((force or replace) and ::chmod(zfilename, st.st_mode) < 0)
-            throw runtime_error("unable to restore file permissions");
+            throw runtime_error(format("unable to restore file permissions: {}", strerror(errno)));
     });
 
     char temp_filename[PATH_MAX];

@@ -1,5 +1,6 @@
 #include "terminal_ui.hh"
 
+#include "buffer_utils.hh"
 #include "display_buffer.hh"
 #include "event_manager.hh"
 #include "exception.hh"
@@ -446,9 +447,9 @@ TerminalUI::TerminalUI()
 
         while (auto key = get_next_key())
         {
-            if (key == ctrl('z'))
+            if (*key == ctrl('z'))
                 kill(0, SIGTSTP); // We suspend at this line
-            else
+            else if (*key != Key::Invalid)
                 m_on_key(*key);
         }
       }},
@@ -683,7 +684,7 @@ Optional<Key> TerminalUI::get_next_key()
         return resize(dimensions());
     }
 
-    static auto get_char = []() -> Optional<unsigned char> {
+    static auto get_char = [this]() -> Optional<unsigned char> {
         if (not fd_readable(STDIN_FILENO))
             return {};
 
@@ -700,7 +701,7 @@ Optional<Key> TerminalUI::get_next_key()
 
     static constexpr auto control = [](char c) { return c & 037; };
 
-    auto convert = [this](Codepoint c) -> Codepoint {
+    static auto convert = [this](Codepoint c) -> Codepoint {
         if (c == control('m') or c == control('j'))
             return Key::Return;
         if (c == control('i'))
@@ -715,7 +716,7 @@ Optional<Key> TerminalUI::get_next_key()
             return Key::Escape;
         return c;
     };
-    auto parse_key = [&convert](unsigned char c) -> Key {
+    static auto parse_key = [](unsigned char c) -> Key {
         if (Codepoint cp = convert(c); cp > 255)
             return Key{cp};
         // Special case: you can type NUL with Ctrl-2 or Ctrl-Shift-2 or
@@ -743,7 +744,7 @@ Optional<Key> TerminalUI::get_next_key()
        return Key{utf8::codepoint(CharIterator{c}, Sentinel{})};
     };
 
-    auto parse_mask = [](int mask) {
+    static auto parse_mask = [](int mask) {
         Key::Modifiers mod = Key::Modifiers::None;
         if (mask & 1)
             mod |= Key::Modifiers::Shift;
@@ -754,7 +755,7 @@ Optional<Key> TerminalUI::get_next_key()
         return mod;
     };
 
-    auto parse_csi = [this, &convert, &parse_mask]() -> Optional<Key> {
+    auto parse_csi = [this]() -> Optional<Key> {
         auto next_char = [] { return get_char().value_or((unsigned char)0xff); };
         int params[16][4] = {};
         auto c = next_char();
@@ -819,7 +820,7 @@ Optional<Key> TerminalUI::get_next_key()
             {
                 if (params[0][0] == 2026)
                     m_synchronized.supported = (params[1][0] == 1 or params[1][0] == 2);
-                return {Key::Invalid};
+                return Key{Key::Invalid};
             }
             switch (params[0][0])
             {
@@ -863,6 +864,16 @@ Optional<Key> TerminalUI::get_next_key()
                 return Key{Key::Modifiers::Shift, Key::F7 + params[0][0] - 31}; // rxvt style
             case 33: case 34:
                 return Key{Key::Modifiers::Shift, Key::F9 + params[0][0] - 33}; // rxvt style
+            case 200:
+                m_paste_buffer = String{};
+                return Key{Key::Invalid};
+            case 201:
+                if (m_paste_buffer)
+                {
+                    m_on_paste(*m_paste_buffer);
+                    m_paste_buffer.reset();
+                }
+                return Key{Key::Invalid};
             }
             return {};
         case 'u':
@@ -899,7 +910,7 @@ Optional<Key> TerminalUI::get_next_key()
         return {};
     };
 
-    auto parse_ss3 = [&parse_mask]() -> Optional<Key> {
+    static auto parse_ss3 = []() -> Optional<Key> {
         int raw_mask = 0;
         char code = '0';
         do {
@@ -944,18 +955,34 @@ Optional<Key> TerminalUI::get_next_key()
         }
     };
 
-    if (*c != 27)
-        return parse_key(*c);
-
-    if (auto next = get_char())
+    if (*c == 27)
     {
-        if (*next == '[') // potential CSI
-            return parse_csi().value_or(alt('['));
-        if (*next == 'O') // potential SS3
-            return parse_ss3().value_or(alt('O'));
-        return alt(parse_key(*next));
+        if (auto next = get_char())
+        {
+            if (*next == '[') // potential CSI
+                return parse_csi().value_or(alt('['));
+            if (*next == 'O') // potential SS3
+                return parse_ss3().value_or(alt('O'));
+            return alt(parse_key(*next));
+        }
+        else if (not m_paste_buffer)
+            return Key{Key::Escape};
     }
-    return Key{Key::Escape};
+
+    if (m_paste_buffer)
+    {
+        auto paste_convert = [](char c) {
+            switch (c)
+            {
+                case '\r': return '\n';
+                default: return c;
+            }
+        };
+
+        m_paste_buffer->push_back(paste_convert(*c));
+        return Key{Key::Invalid};
+    }
+    return parse_key(*c);
 }
 
 template<typename T>
@@ -1395,6 +1422,11 @@ void TerminalUI::set_on_key(OnKeyCallback callback)
     EventManager::instance().force_signal(0);
 }
 
+void TerminalUI::set_on_paste(OnPasteCallback callback)
+{
+    m_on_paste = std::move(callback);
+}
+
 DisplayCoord TerminalUI::dimensions()
 {
     return m_dimensions;
@@ -1422,6 +1454,7 @@ void TerminalUI::setup_terminal()
         "\033[?25l"   // hide cursor
         "\033="       // set application keypad mode, so the keypad keys send unique codes
         "\033[?2026$p" // query support for synchronize output
+        "\033[?2004h" // force enable bracketed-paste events
     );
 }
 
@@ -1435,6 +1468,7 @@ void TerminalUI::restore_terminal()
         "\033[>4;0m"
         "\033[?1004l"
         "\033[?1049l"
+        "\033[?2004l"
         "\033[m" // set the terminal output back to default colours and style
     );
 }
