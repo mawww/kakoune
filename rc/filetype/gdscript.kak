@@ -58,8 +58,11 @@ add-highlighter shared/gdscript/code/ regex '\b\d+\.'                         0:
 # functions
 add-highlighter shared/gdscript/code/ regex _?[a-zA-Z]\w*\s*(?=\()            0:function
 add-highlighter shared/gdscript/code/ regex (?:func\h+)(_?\w+)(?:<[^>]+?>)?\( 1:function
-
+# operators
 add-highlighter shared/gdscript/code/ regex '(?:\+|-|\*|/|%|=|<|>|&|\||\^|~|:=)' 0:operator
+# constants & enums
+add-highlighter shared/gdscript/code/ regex \b[A-Z0-9_]+\b 0:variable
+
 
 evaluate-commands %sh{
     keywords="as await break breakpoint class class const continue elif else enum extends for func if is match name pass return self signal static super var void while"
