@@ -36,36 +36,42 @@ provide-module gdscript %§
 add-highlighter shared/gdscript regions
 add-highlighter shared/gdscript/code default-region group
 
-add-highlighter shared/gdscript/string region -match-capture ("|'|"""|''')   (?<!\\)(?:\\\\)*("|'|"""|''')  group
+add-highlighter shared/gdscript/string region -match-capture ("|'|"""|''') (?<!\\)(?:\\\\)*("|'|"""|''') group
 add-highlighter shared/gdscript/string/ fill string
-add-highlighter shared/gdscript/string/ regex \\[abfnrtv\n\\]                             0:meta
-add-highlighter shared/gdscript/string/ regex '%%'                                        0:meta
-add-highlighter shared/gdscript/string/ regex '%[cs]'                                     0:value
-add-highlighter shared/gdscript/string/ regex '%0?[+-]?([\d]*|\*?)\.?([\d]*|\*?)[dfoxX]'  0:value
-add-highlighter shared/gdscript/string/ regex '%0?([\d]*|\*?)\.?([\d]*|\*?)[+-]?[dfoxX]'  0:value
+add-highlighter shared/gdscript/string/ regex \\[abfnrtv\n\\]                            0:meta
+add-highlighter shared/gdscript/string/ regex '%%'                                       0:meta
+add-highlighter shared/gdscript/string/ regex '%[cs]'                                    0:value
+add-highlighter shared/gdscript/string/ regex '%0?[+-]?([\d]*|\*?)\.?([\d]*|\*?)[dfoxX]' 0:value
+add-highlighter shared/gdscript/string/ regex '%0?([\d]*|\*?)\.?([\d]*|\*?)[+-]?[dfoxX]' 0:value
 
-add-highlighter shared/gdscript/comment       region '#'   '$'              fill comment
+add-highlighter shared/gdscript/comment region '#' $ fill comment
 
 # integers
-add-highlighter shared/gdscript/code/ regex '(?i)\b0b[01]+l?\b'               0:value
-add-highlighter shared/gdscript/code/ regex '(?i)\b0x[\da-f]+l?\b'            0:value
-add-highlighter shared/gdscript/code/ regex '(?i)\b0o?[0-7]+l?\b'             0:value
-add-highlighter shared/gdscript/code/ regex '(?i)\b([1-9]\d*|0)l?\b'          0:value
+add-highlighter shared/gdscript/code/ regex (?i)\b0b[01]+l?\b                    0:value
+add-highlighter shared/gdscript/code/ regex (?i)\b0x[\da-f]+l?\b                 0:value
+add-highlighter shared/gdscript/code/ regex (?i)\b0o?[0-7]+l?\b                  0:value
+add-highlighter shared/gdscript/code/ regex (?i)\b([1-9]\d*|0)l?\b               0:value
 # floats
-add-highlighter shared/gdscript/code/ regex '\b\d+[eE][+-]?\d+\b'             0:value
-add-highlighter shared/gdscript/code/ regex '(\b\d+)?\.\d+\b'                 0:value
-add-highlighter shared/gdscript/code/ regex '\b\d+\.'                         0:value
+add-highlighter shared/gdscript/code/ regex \b\d+[eE][+-]?\d+\b                  0:value
+add-highlighter shared/gdscript/code/ regex (\b\d+)?\.\d+\b                      0:value
+add-highlighter shared/gdscript/code/ regex \b\d+\.                              0:value
 # functions
-add-highlighter shared/gdscript/code/ regex _?[a-zA-Z]\w*\s*(?=\()            0:function
-add-highlighter shared/gdscript/code/ regex (?:func\h+)(_?\w+)(?:<[^>]+?>)?\( 1:function
+add-highlighter shared/gdscript/code/ regex _?[a-zA-Z]\w*\s*(?=\()               0:function
+add-highlighter shared/gdscript/code/ regex (?:func\h+)(_?\w+)(?:<[^>]+?>)?\(    1:function
 # operators
-add-highlighter shared/gdscript/code/ regex '(?:\+|-|\*|/|%|=|<|>|&|\||\^|~|:=)' 0:operator
+add-highlighter shared/gdscript/code/ regex \+|-|\*|/|%|=|<|>|&|\||\^|~|:=       0:operator
 # constants & enums
-add-highlighter shared/gdscript/code/ regex \b[A-Z0-9_]+\b 0:variable
-
-
+add-highlighter shared/gdscript/code/ regex \b[A-Z_][A-Z0-9_]*\b                 0:variable
+# annotations
+add-highlighter shared/gdscript/code/ regex @\w+                                 0:attribute
+# special case of get =, set =
+add-highlighter shared/gdscript/code/ regex (get)\h*=\h*(\w+)                    1:keyword 2:function
+add-highlighter shared/gdscript/code/ regex (set)\h*=\h*(\w+)                    1:keyword 2:function
+# nodes
+add-highlighter shared/gdscript/code/ regex \$[\w/]*                             0:module
+# keywords and built-ins
 evaluate-commands %sh{
-    keywords="as await break breakpoint class class const continue elif else enum extends for func if is match name pass return self signal static super var void while"
+    keywords="as await break breakpoint class class_name const continue elif else enum extends for func if is match pass return self signal static super var void while"
 
     values="false true null"
 
@@ -92,17 +98,6 @@ evaluate-commands %sh{
         add-highlighter shared/gdscript/code/ regex '\b($(join "${gdscript_constants}" '|'))\b' 0:keyword
     "
 }
-
-# annotations
-add-highlighter shared/gdscript/code/ regex '@\w+'                            0:attribute
-
-# special case of get =, set =
-add-highlighter shared/gdscript/code/ regex (get)\h*=\h*(\w+)             1:keyword   2:function
-add-highlighter shared/gdscript/code/ regex (set)\h*=\h*(\w+)             1:keyword   2:function
-
-# nodes
-add-highlighter shared/gdscript/code/ regex '\$[\w/]*'                        0:module
-
 
 # Commands
 # ‾‾‾‾‾‾‾‾
