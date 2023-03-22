@@ -67,8 +67,6 @@ add-highlighter shared/gdscript/code/ regex @\w+                                
 # special case of get =, set =
 add-highlighter shared/gdscript/code/ regex (get)\h*=\h*(\w+)                    1:keyword 2:function
 add-highlighter shared/gdscript/code/ regex (set)\h*=\h*(\w+)                    1:keyword 2:function
-# nodes
-add-highlighter shared/gdscript/code/ regex \$[\w/]*                             0:module
 # keywords and built-ins
 evaluate-commands %sh{
     keywords="as await break breakpoint class class_name const continue elif else enum extends for func if is match pass return self signal static super var void while"
@@ -98,6 +96,9 @@ evaluate-commands %sh{
         add-highlighter shared/gdscript/code/ regex '\b($(join "${gdscript_constants}" '|'))\b' 0:keyword
     "
 }
+# nodes
+add-highlighter shared/gdscript/code/ regex \$[\w/]+\b                           0:module
+add-highlighter shared/gdscript/code/ regex \%\w+(?!/)\b                         0:string
 
 # Commands
 # ‾‾‾‾‾‾‾‾
