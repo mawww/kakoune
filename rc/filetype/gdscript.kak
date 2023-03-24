@@ -69,7 +69,7 @@ add-highlighter shared/gdscript/code/ regex (get)\h*=\h*(\w+)                   
 add-highlighter shared/gdscript/code/ regex (set)\h*=\h*(\w+)                    1:keyword 2:function
 # keywords and built-ins
 evaluate-commands %sh{
-    keywords="as await break breakpoint class class_name const continue elif else enum extends for func if is match pass return self signal static super var void while"
+    keywords="as await break breakpoint class class_name const continue elif else enum extends for func if in is match pass return self signal static super var void while"
 
     values="false true null"
 
