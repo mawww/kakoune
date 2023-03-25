@@ -65,8 +65,8 @@ add-highlighter shared/gdscript/code/ regex \b[A-Z_][A-Z0-9_]*\b                
 # annotations
 add-highlighter shared/gdscript/code/ regex @\w+                                 0:attribute
 # special case of get =, set =
-add-highlighter shared/gdscript/code/ regex (get)\h*=\h*(\w+)                    1:keyword 2:function
-add-highlighter shared/gdscript/code/ regex (set)\h*=\h*(\w+)                    1:keyword 2:function
+add-highlighter shared/gdscript/code/ regex \b(get)\h*=\h*(\w+)                  1:keyword 2:function
+add-highlighter shared/gdscript/code/ regex \b(set)\h*=\h*(\w+)                  1:keyword 2:function
 # keywords and built-ins
 evaluate-commands %sh{
     keywords="as await break breakpoint class class_name const continue elif else enum extends for func if in is match pass return self signal static super var void while"
