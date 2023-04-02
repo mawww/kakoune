@@ -163,12 +163,25 @@ add-highlighter shared/python/code/ regex ^\h*(?:from|import)\h+(\S+) 1:module
 # Commands
 # ‾‾‾‾‾‾‾‾
 
-define-command -hidden python-insert-on-new-line %{
-    evaluate-commands -draft -itersel %{
-        # copy '#' comment prefix and following white spaces
-        try %{ execute-keys -draft k x s ^\h*#\h* <ret> y jgh P }
+define-command -hidden python-insert-on-new-line %{ evaluate-commands -itersel -draft %{
+    execute-keys <semicolon>
+    try %{
+        evaluate-commands -draft -save-regs '/"' %{
+            # copy the commenting prefix
+            execute-keys -save-regs '' k x1s^\h*(#+\h*)<ret> y
+            try %{
+                # if the previous comment isn't empty, create a new one
+                execute-keys x<a-K>^\h*#+\h*$<ret> jxs^\h*<ret>P
+            } catch %{
+                # if there is no text in the previous comment, remove it completely
+                execute-keys d
+            }
+        }
+
+        # trim trailing whitespace on the previous line
+        try %{ execute-keys -draft k x s\h+$<ret> d }
     }
-}
+} }
 
 define-command -hidden python-indent-on-new-line %<
     evaluate-commands -draft -itersel %<
