@@ -9,9 +9,23 @@ define-command -params .. -docstring %{
     All optional arguments are forwarded to the grep utility
     Passing no argument will perform a literal-string grep for the current selection
 } grep %{ evaluate-commands %sh{
-     if [ $# -eq 0 ]; then
-         set -- -F "${kak_selection}"
-     fi
+    if [ $# -eq 0 ]; then
+        IFS=" " greptool=$(
+            set -- $kak_opt_grepcmd
+            echo "$1"
+        )
+        case "$greptool" in
+        ag | grep | rg | ripgrep | ugrep | ug)
+            set -- -F "${kak_selection}"
+            ;;
+        ack )
+            set -- -Q "${kak_selection}"
+            ;;
+        *)
+            set -- "${kak_selection}"
+            ;;
+        esac
+    fi
 
      output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-grep.XXXXXXXX)/fifo
      mkfifo ${output}
