@@ -10,15 +10,11 @@ define-command -params .. -docstring %{
     Passing no argument will perform a literal-string grep for the current selection
 } grep %{ evaluate-commands %sh{
     if [ $# -eq 0 ]; then
-        IFS=" " greptool=$(
-            set -- $kak_opt_grepcmd
-            echo "$1"
-        )
-        case "$greptool" in
-        ag | grep | rg | ripgrep | ugrep | ug)
+        case "$kak_opt_grepcmd" in
+        ag\ * | git\ grep\ * | grep\ * | rg\ * | ripgrep\ * | ugrep\ * | ug\ *)
             set -- -F "${kak_selection}"
             ;;
-        ack )
+        ack\ *)
             set -- -Q "${kak_selection}"
             ;;
         *)
