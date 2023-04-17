@@ -305,14 +305,8 @@ Yanking (copying) and pasting use the *"* register by default (See <<registers#,
 *u*::
     undo last change
 
-*<a-u>*::
-    move backward in history
-
 *U*::
     redo last change
-
-*<a-U>*::
-    move forward in history
 
 *<c-h>*::
     undo last selection change

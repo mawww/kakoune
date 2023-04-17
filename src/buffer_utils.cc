@@ -301,14 +301,6 @@ void write_to_debug_buffer(StringView str)
 }
 
 
-auto to_string(Buffer::HistoryId id)
-{
-    using Result = decltype(to_string(size_t{}));
-    if (id == Buffer::HistoryId::Invalid)
-        return Result{1, "-"};
-    return to_string(static_cast<size_t>(id));
-}
-
 static String modification_as_string(const Buffer::Modification& modification)
 {
     return format("{}{}.{}|{}",
@@ -323,9 +315,7 @@ Vector<String> history_as_strings(const Vector<Buffer::HistoryNode>& history)
     for (auto& node : history)
     {
         auto seconds = std::chrono::duration_cast<std::chrono::seconds>(node.committed.time_since_epoch());
-        res.push_back(to_string(node.parent));
         res.push_back(to_string(seconds.count()));
-        res.push_back(to_string(node.redo_child));
         for (auto& modification : node.undo_group)
             res.push_back(modification_as_string(modification));
     };
