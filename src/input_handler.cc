@@ -1473,7 +1473,7 @@ public:
 
     void paste(StringView content) override
     {
-        insert(ConstArrayView{content});
+        insert(ConstArrayView<StringView>{content});
         m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
@@ -1519,7 +1519,7 @@ private:
     void insert(Codepoint key)
     {
         String str{key};
-        insert(ConstArrayView{str});
+        insert(ConstArrayView<String>{str});
         context().hooks().run_hook(Hook::InsertChar, str, context());
     }
 

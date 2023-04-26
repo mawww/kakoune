@@ -123,8 +123,6 @@ public:
     };
     friend constexpr bool with_bit_ops(Meta::Type<Flags>) { return true; }
 
-    enum class HistoryId : size_t { First = 0, Invalid = (size_t)-1 };
-
     Buffer(String name, Flags flags, BufferLines lines,
            ByteOrderMark bom = ByteOrderMark::None,
            EolFormat eolformat = EolFormat::Lf,
@@ -150,9 +148,7 @@ public:
     void           commit_undo_group();
     bool           undo(size_t count = 1);
     bool           redo(size_t count = 1);
-    bool           move_to(HistoryId id);
-    HistoryId      current_history_id() const noexcept { return m_history_id; }
-    HistoryId      next_history_id() const noexcept { return (HistoryId)m_history.size(); }
+    size_t         current_history_id() const noexcept { return m_history_id; }
 
     String         string(BufferCoord begin, BufferCoord end) const;
     StringView     substr(BufferCoord begin, BufferCoord end) const;
@@ -245,13 +241,13 @@ public:
 
     struct HistoryNode : UseMemoryDomain<MemoryDomain::BufferMeta>
     {
-        HistoryNode(HistoryId parent);
+        HistoryNode();
 
-        HistoryId parent;
-        HistoryId redo_child = HistoryId::Invalid;
         TimePoint committed;
         UndoGroup undo_group;
     };
+
+    static constexpr size_t InvalidHistoryId = (size_t)-1;
 
     const Vector<HistoryNode>& history() const { return m_history; }
     const UndoGroup& current_undo_group() const { return m_current_undo_group; }
@@ -263,7 +259,6 @@ private:
     BufferCoord do_erase(BufferCoord begin, BufferCoord end);
 
     void apply_modification(const Modification& modification);
-    void revert_modification(const Modification& modification);
 
     struct LineList : BufferLines
     {
@@ -289,14 +284,12 @@ private:
     Flags  m_flags;
 
     Vector<HistoryNode> m_history;
-    HistoryId           m_history_id = HistoryId::Invalid;
-    HistoryId           m_last_save_history_id = HistoryId::Invalid;
+    size_t              m_history_id = InvalidHistoryId;
+    size_t              m_last_save_history_id = InvalidHistoryId;
     UndoGroup           m_current_undo_group;
 
-          HistoryNode& history_node(HistoryId id)       { return m_history[(size_t)id]; }
-    const HistoryNode& history_node(HistoryId id) const { return m_history[(size_t)id]; }
-          HistoryNode& current_history_node()           { return m_history[(size_t)m_history_id]; }
-    const HistoryNode& current_history_node()     const { return m_history[(size_t)m_history_id]; }
+          HistoryNode& current_history_node()           { return m_history[m_history_id]; }
+    const HistoryNode& current_history_node()     const { return m_history[m_history_id]; }
 
     Vector<Change, MemoryDomain::BufferMeta> m_changes;
 

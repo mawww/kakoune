@@ -285,15 +285,13 @@ The following expansions are supported (with required context _in italics_):
 
 *%val{history}*::
     _in buffer, window scope_ +
-    the full change history of the buffer, including undo forks, in terms
-    of `parent committed redo_child modification0 modification1 ...`
-    entries, where _parent_ is the index of the entry's predecessor (entry
-    0, which is the root of the history tree, will always have `-` here),
-    _committed_ is a count in seconds from Kakoune's steady clock's epoch
-    of the  creation of the history entry, _redo_child_ is the index of the
-    child which will be visited for `U` (always `-` at the leaves of the
-    history), and each _modification_ is presented as in
-    `%val{uncommitted_modifications}`.
+    the full change history of the buffer, as a list of
+    `committed modification0 modification1 ...` entries.
+    _committed_ is a count in seconds from Kakoune's steady clock's epoch of
+    the creation of the history entry, and each _modification_ is presented
+    as in `%val{uncommitted_modifications}`.
+    Boundaries in the list can be identified knowing that _committed_ is a
+    plain integer, and each _modification_ starts with `+` or `-`.
 
 *%val{history_id}*::
     _in buffer, window scope_ +
