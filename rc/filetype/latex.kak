@@ -14,6 +14,7 @@ hook global BufCreate .*\.(tex|cls|sty|dtx) %{
 hook global WinSetOption filetype=latex %(
     require-module latex
 
+    hook window InsertChar \n -group latex-insert %{ latex-insert-on-newline }
     hook window InsertChar \n -group latex-indent %{ latex-indent-newline }
     hook window InsertChar \} -group latex-indent %{ latex-indent-closing-brace }
     hook window ModeChange pop:insert:.* -group latex-indent %{ latex-trim-indent }
@@ -84,10 +85,13 @@ define-command -hidden latex-trim-indent %{
     }
 }
 
+define-command -hidden latex-insert-on-newline %{
+    # copy '%' comment prefix and following white spaces
+    try %{ execute-keys -draft kx s^\h*%\h*<ret> y jgh P }
+}
+
 define-command -hidden latex-indent-newline %(
     evaluate-commands -no-hooks -draft -itersel %(
-        # copy '%' comment prefix and following white spaces
-        try %{ execute-keys -draft kx s^\h*%\h*<ret> y jgh P }
         # preserve previous line indent
         try %{ execute-keys -draft K<a-&> }
         # cleanup trailing whitespaces from previous line

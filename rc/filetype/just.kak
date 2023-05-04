@@ -9,6 +9,7 @@ hook global WinSetOption filetype=justfile %{
     require-module justfile
 
     hook window ModeChange pop:insert:.* -group justfile-trim-indent justfile-trim-indent
+    hook window InsertChar \n -group justfile-insert just-insert-on-new-line
     hook window InsertChar \n -group justfile-indent just-indent-on-new-line
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window justfile-.+ }
 }
@@ -32,14 +33,17 @@ define-command -hidden justfile-trim-indent %{
     }
 }
 
+define-command -hidden just-insert-on-new-line %{
+    # copy '#' comment prefix and following white spaces
+    try %{ execute-keys -draft k x s ^\h*//\h* <ret> y jgh P }
+}
+
 define-command -hidden just-indent-on-new-line %{
      evaluate-commands -draft -itersel %{
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon>K<a-&> }
         # cleanup trailing white spaces on previous line
         try %{ execute-keys -draft kx s \h+$ <ret>"_d }
-        # copy '#' comment prefix and following white spaces
-        try %{ execute-keys -draft k x s ^\h*//\h* <ret> y jgh P }
     }
 }
 

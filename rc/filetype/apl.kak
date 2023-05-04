@@ -14,6 +14,7 @@ hook global BufCreate .*\.(apl|aplf|aplo|apln|aplc|apli|dyalog) %{
 hook global WinSetOption filetype=apl %|
     require-module apl
 
+    hook window InsertChar \n -group apl-insert apl-insert-on-new-line
     hook window InsertChar \n -group apl-indent apl-indent-on-new-line
     hook window InsertChar [}⟩\]] -group apl-indent apl-indent-on-closing
 
@@ -57,12 +58,17 @@ declare-user-mode apl
 # Commands
 # ‾‾‾‾‾‾‾‾
 
+define-command -hidden apl-insert-on-new-line %{
+    evaluate-commands -draft -itersel %[
+        # copy # comments prefix
+        try %{ execute-keys -draft <semicolon><c-s>k<a-x> s ^\h*\K#+\h* <ret> y<c-o>P<esc> }
+    ]
+}
+
 define-command -hidden apl-indent-on-new-line %`
     evaluate-commands -draft -itersel %_
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon> K <a-&> }
-        # copy # comments prefix
-        try %{ execute-keys -draft <semicolon><c-s>k<a-x> s ^\h*\K#+\h* <ret> y<c-o>P<esc> }
         # indent after lines ending with { [
         try %( execute-keys -draft k<a-x> <a-k> [{\[]\h*$ <ret> j<a-gt> )
         # cleanup trailing white spaces on the previous line
