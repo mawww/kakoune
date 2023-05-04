@@ -44,6 +44,11 @@ struct {
     unsigned int version;
     StringView notes;
 } constexpr version_notes[] = { {
+        0,
+        "» History is now stored linearly instead of in a tree\n"
+        "» {+u}%exp\\{...}{} expansions provide flexible quoting for expanded "
+        "strings (as double quoted strings)\n"
+    }, {
         20221031,
         "» {+b}<esc>{} does not end macro recording anymore, use {+b}Q{}\n"
         "» pipe commands do not append final end-of-lines anymore\n"

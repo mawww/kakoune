@@ -45,7 +45,7 @@ struct Token
     {
         Raw,
         RawQuoted,
-        RawEval,
+        Expand,
         ShellExpand,
         RegisterExpand,
         OptionExpand,

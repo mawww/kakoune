@@ -427,3 +427,8 @@ everywhere.
 A value described as a "quoted list" will follow the rules of Kakoune string
 quoting (See <<command-parsing#,`:doc command-parsing`>>). An "unquoted list"
 cannot contain any special characters that would require quoting.
+
+== Recursive Expansions
+
+Expansions with the type `exp` expand their content, the same way doubly
+quoted strings do.

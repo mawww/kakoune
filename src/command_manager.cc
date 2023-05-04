@@ -220,6 +220,8 @@ Token::Type token_type(StringView type_name, bool throw_on_invalid)
         return Token::Type::ArgExpand;
     else if (type_name == "file")
         return Token::Type::FileExpand;
+    else if (type_name == "exp")
+        return Token::Type::Expand;
     else if (throw_on_invalid)
         throw parse_error{format("unknown expand '{}'", type_name)};
     else
@@ -396,7 +398,7 @@ void expand_token(Token&& token, const Context& context, const ShellContext& she
     }
     case Token::Type::FileExpand:
         return set_target(read_file(content));
-    case Token::Type::RawEval:
+    case Token::Type::Expand:
         return set_target(expand(content, context, shell_context));
     case Token::Type::Raw:
     case Token::Type::RawQuoted:
@@ -425,7 +427,7 @@ Optional<Token> CommandParser::read_token(bool throw_on_unterminated)
         ParseResult quoted = parse_quoted(m_state, c);
         if (throw_on_unterminated and not quoted.terminated)
             throw parse_error{format("unterminated string {0}...{0}", c)};
-        return Token{c == '"' ? Token::Type::RawEval
+        return Token{c == '"' ? Token::Type::Expand
                               : Token::Type::RawQuoted,
                      start - line.begin(), std::move(quoted.content),
                      quoted.terminated};
@@ -613,7 +615,7 @@ Optional<CommandInfo> CommandManager::command_info(const Context& context, Strin
         {
             if (it->type == Token::Type::Raw or
                 it->type == Token::Type::RawQuoted or
-                it->type == Token::Type::RawEval)
+                it->type == Token::Type::Expand)
                 params.push_back(it->content);
         }
         String helpstr = cmd->value.helper(context, params);
@@ -692,9 +694,9 @@ static Completions complete_expansion(const Context& context, CompletionFlags fl
     }
 }
 
-static Completions complete_raw_eval(const Context& context, CompletionFlags flags,
-                                     StringView prefix, ByteCount start,
-                                     ByteCount cursor_pos, ByteCount pos_in_token)
+static Completions complete_expand(const Context& context, CompletionFlags flags,
+                                        StringView prefix, ByteCount start,
+                                        ByteCount cursor_pos, ByteCount pos_in_token)
 {
     ParseState state{prefix, prefix.begin()};
     while (state)
@@ -849,8 +851,8 @@ Completions CommandManager::complete(const Context& context,
 
         return offset_pos(requote(command.completer(context, flags, params, index, pos_in_token), token.type), start);
     }
-    case Token::Type::RawEval:
-        return complete_raw_eval(context, flags, token.content, start, cursor_pos, pos_in_token);
+    case Token::Type::Expand:
+        return complete_expand(context, flags, token.content, start, cursor_pos, pos_in_token);
     default:
         break;
     }
