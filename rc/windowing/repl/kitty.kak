@@ -20,7 +20,7 @@ define-command -params .. \
 
        match=""
         if [ -n "$kak_client_env_KITTY_WINDOW_ID" ]; then
-            match="--match=id:$kak_client_env_KITTY_WINDOW_ID"
+            match="--match=window_id:$kak_client_env_KITTY_WINDOW_ID"
         fi
 
         listen=""

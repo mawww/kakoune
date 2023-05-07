@@ -17,7 +17,7 @@ The program passed as argument will be executed in the new terminal' \
     nop %sh{
         match=""
         if [ -n "$kak_client_env_KITTY_WINDOW_ID" ]; then
-            match="--match=id:$kak_client_env_KITTY_WINDOW_ID"
+            match="--match=window_id:$kak_client_env_KITTY_WINDOW_ID"
         fi
 
         listen=""
@@ -37,7 +37,7 @@ The program passed as argument will be executed in the new terminal' \
     nop %sh{
         match=""
         if [ -n "$kak_client_env_KITTY_WINDOW_ID" ]; then
-            match="--match=id:$kak_client_env_KITTY_WINDOW_ID"
+            match="--match=window_id:$kak_client_env_KITTY_WINDOW_ID"
         fi
 
         listen=""
