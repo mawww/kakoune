@@ -3,6 +3,12 @@
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
+== Development version
+
+* History is now stored linearly instead of in a tree
+* `<a-u>` and `<a-U>` now undo selection history
+* `%exp{...}` expansions provide flexible quoting for expanded strings (as double quoted strings)
+
 == Kakoune 2022.10.31
 
 * `complete-command` (See <<commands#configuring-command-completion,`:doc commands configuring-command-completion`>>)

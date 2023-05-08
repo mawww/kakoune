@@ -46,6 +46,7 @@ struct {
 } constexpr version_notes[] = { {
         0,
         "» History is now stored linearly instead of in a tree\n"
+        "» {+b}<a-u>{} and {+b}<a-U>{} now undo selection history\n"
         "» {+u}%exp\\{...}{} expansions provide flexible quoting for expanded "
         "strings (as double quoted strings)\n"
     }, {
