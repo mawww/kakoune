@@ -1,0 +1,1 @@
+:exec %{<percent>cç<lt>esc>x_<semicolon>iab<lt>esc>}<ret>

@@ -1768,6 +1768,7 @@ void spaces_to_tabs(Context& context, NormalParams params)
 
 void trim_selections(Context& context, NormalParams)
 {
+    using Utf8It = utf8::iterator<BufferIterator>;
     auto& buffer = context.buffer();
     ScopedSelectionEdition selection_edition{context};
     auto& selections = context.selections();
@@ -1776,8 +1777,8 @@ void trim_selections(Context& context, NormalParams)
     for (int i = 0; i < (int)selections.size(); ++i)
     {
         auto& sel = selections[i];
-        auto beg = buffer.iterator_at(sel.min());
-        auto end = buffer.iterator_at(sel.max());
+        auto beg = Utf8It{buffer.iterator_at(sel.min()), buffer};
+        auto end = Utf8It{buffer.iterator_at(sel.max()), buffer};
         while (beg != end and is_blank(*beg))
             ++beg;
         while (beg != end and is_blank(*end))
@@ -1787,8 +1788,8 @@ void trim_selections(Context& context, NormalParams)
             to_remove.push_back(i);
         else
         {
-            sel.min() = beg.coord();
-            sel.max() = end.coord();
+            sel.min() = beg.base().coord();
+            sel.max() = end.base().coord();
         }
     }
 
