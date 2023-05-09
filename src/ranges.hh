@@ -8,6 +8,11 @@
 #include <tuple>
 
 #include "constexpr_utils.hh"
+#if __clang_major__ >= 16
+#include "memory.hh"
+#include "meta.hh"
+#include "vector.hh"
+#endif
 
 namespace Kakoune
 {
@@ -638,6 +643,35 @@ auto gather()
     }};
 }
 
+#if __clang_major__ >= 16
+
+template <template <typename T,
+                    MemoryDomain domain = memory_domain(Meta::Type<T>{})>
+          class Container>
+auto gather()
+{
+    return ViewFactory{[](auto&& range) {
+        using std::begin; using std::end;
+        using ValueType = std::remove_cv_t<std::remove_reference_t<decltype(*begin(range))>>;
+        return Container<ValueType>(begin(range), end(range));
+    }};
+}
+
+template <template <typename T,
+                    MemoryDomain domain = MemoryDomain::Undefined,
+                    template<typename, MemoryDomain> class C = Vector>
+          class Container>
+auto gather()
+{
+    return ViewFactory{[](auto&& range) {
+        using std::begin; using std::end;
+        using ValueType = std::remove_cv_t<std::remove_reference_t<decltype(*begin(range))>>;
+        return Container<ValueType>(begin(range), end(range));
+    }};
+}
+
+#else
+
 template<template <typename Element> class Container>
 auto gather()
 {
@@ -647,6 +681,8 @@ auto gather()
         return Container<ValueType>(begin(range), end(range));
     }};
 }
+
+#endif
 
 template<typename ExceptionType, bool exact_size, size_t... Indexes>
 auto elements()
