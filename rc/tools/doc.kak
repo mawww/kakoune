@@ -1,9 +1,13 @@
 declare-option -docstring "name of the client in which documentation is to be displayed" \
     str docsclient
 
+declare-option -docstring "maximum number of search matches `:doc-search` returns from every topic" \
+    int doc_max_search_results 10
+
 declare-option -hidden range-specs doc_render_ranges
 declare-option -hidden range-specs doc_links
 declare-option -hidden range-specs doc_anchors
+declare-option -hidden str-list    doc_search_matches
 
 define-command -hidden -params 4 doc-render-regex %{
     evaluate-commands -draft %{ try %{
@@ -98,7 +102,6 @@ define-command -hidden doc-follow-link %{
 }
 
 define-command -params 1 -hidden doc-render %{
-    edit! -scratch "*doc-%sh{basename $1 .asciidoc}*"
     execute-keys "!cat %arg{1}<ret>gg"
 
     doc-parse-anchors
@@ -154,11 +157,13 @@ define-command doc -params 0..2 -menu -docstring %{
                 head -1
         )
         if [ -f "${page}" ]; then
-            jump_cmd=""
+            printf 'evaluate-commands -try-client %%opt{docsclient} %%{
+                edit! -scratch "*doc-%s*"
+                doc-render "%s"
+            }' "$(basename "$1" .asciidoc)" "${page}"
             if [ $# -eq 2 ]; then
-                jump_cmd="doc-jump-to-anchor '$2'"
+                printf "doc-jump-to-anchor '%s'" "$2"
             fi
-            printf %s\\n "evaluate-commands -try-client %opt{docsclient} %{ doc-render ${page}; ${jump_cmd} }"
         else
             printf 'fail No such doc file: %s\n' "$topic.asciidoc"
         fi
@@ -193,3 +198,99 @@ complete-command doc shell-script-candidates %{
 }
 
 alias global help doc
+
+define-command -params 1.. -docstring %{
+        doc-search <pattern> [topic...]: search for a pattern in the documentation
+
+        Display a menu listing all the search matches in the given topics, or the whole documentation if unspecified (the number of search results is effected by the `doc_max_search_results` option)
+    } \
+    -shell-script-candidates %{
+        case "${kak_token_to_complete}" in
+            0) ;;
+            *) find -L \
+                "${kak_config}/autoload/" \
+                "${kak_runtime}/doc/" \
+                "${kak_runtime}/rc/" \
+                -type f -name "*.asciidoc" 2>/dev/null |
+                sed 's,.*/,,; s/\.[^.]*$//';;
+        esac
+    } doc-search %{
+    set-option global doc_search_matches
+
+    evaluate-commands %sh{
+        readonly SEARCH_PATTERN="${1}"
+
+        shift
+        if [ $# -eq 0 ]; then
+            set -- $(find -L \
+                        "${kak_config}/autoload/" \
+                        "${kak_runtime}/doc/" \
+                        "${kak_runtime}/rc/" \
+                        -type f -name "*.asciidoc" 2>/dev/null)
+        else
+            set -- $(
+                for topic; do
+                    path_doc=$(find -L \
+                                "${kak_config}/autoload/" \
+                                "${kak_runtime}/doc/" \
+                                "${kak_runtime}/rc/" \
+                                -type f -name "${topic}.asciidoc" 2>/dev/null)
+                    if [ -z "${path_doc}" ]; then
+                        printf 'fail No such topic %%{%s}' "${topic}"
+                        exit 1
+                    else
+                        printf %s\\n "${path_doc}"
+                    fi
+                done
+            )
+        fi
+
+        for path_doc; do
+            SEARCH_PATTERN_ESC=$(printf %s "${SEARCH_PATTERN}" | sed "s/'/&&/g")
+            printf "doc-search-impl '%s' '%s'\n" "${path_doc}" "${SEARCH_PATTERN_ESC}"
+        done
+    }
+
+    evaluate-commands %sh{
+        kakquote() { printf "%s" "$*" | sed "s/'/''/g; 1s/^/'/; \$s/\$/'/"; }
+
+        eval "set -- ${kak_quoted_opt_doc_search_matches}"
+
+        while [ $# -gt 0 ]; do
+            topic=$(basename "${1}" .asciidoc)
+            candidates="${candidates} $(kakquote "{MenuInfo}${1}{default}{\\} ${3}") 'doc ${topic}; select $2'"
+            shift 3
+        done
+
+        if [ -n "${candidates}" ]; then
+            printf '
+                set global doc_search_matches
+                menu -markup --%s
+            ' "${candidates}"
+        fi
+    }
+}
+
+define-command -hidden -params 2 doc-search-impl %{
+    edit -scratch
+
+    try %{
+        doc-render %arg{1}
+
+        execute-keys gg / "%arg{2}" <ret> %opt{doc_max_search_results} N <a-n> )
+
+        evaluate-commands -draft -itersel %{
+            # Topic and selection description of the search match
+            set-option -add global doc_search_matches %arg{1} %val{selection_desc}
+
+            # Search match context
+            execute-keys <a-x>
+            try %{
+                execute-keys <a-K>^$<ret> H
+            }
+            set-option -add global doc_search_matches %val{selection}
+        }
+    }
+
+    delete-buffer!
+}
