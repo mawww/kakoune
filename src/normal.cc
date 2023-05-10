@@ -2340,8 +2340,8 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
     { {'u'}, {"undo", undo} },
     { {'U'}, {"redo", redo} },
 
-    { {ctrl('h')}, {"undo selection change", undo_selection_change<Backward>} },
-    { {ctrl('k')}, {"redo selection change", undo_selection_change<Forward>} },
+    { {alt('u')}, {"undo selection change", undo_selection_change<Backward>} },
+    { {alt('U')}, {"redo selection change", undo_selection_change<Forward>} },
 
     { {alt('i')}, {"select inner object", select_object<ObjectFlags::ToBegin | ObjectFlags::ToEnd | ObjectFlags::Inner>} },
     { {alt('a')}, {"select whole object", select_object<ObjectFlags::ToBegin | ObjectFlags::ToEnd>} },
