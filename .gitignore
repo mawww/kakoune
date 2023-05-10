@@ -5,7 +5,9 @@
 .*.kak.*
 src/kak
 src/kak.debug
+src/kak.debug.san_*
 src/kak.opt
+src/kak.opt.san_*
 src/.version*
 src/.*.json
 doc/kak.1.gz
