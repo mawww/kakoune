@@ -1,5 +1,5 @@
-hook global WinCreate .*\.svelte %[
-    set-option window filetype svelte
+hook global BufCreate .*\.svelte %[
+    set-option buffer filetype svelte
 ]
 
 hook global WinSetOption filetype=(svelte) %{
