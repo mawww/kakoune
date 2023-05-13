@@ -783,14 +783,18 @@ class Prompt : public InputMode
 public:
     Prompt(InputHandler& input_handler, StringView prompt,
            String initstr, String emptystr, Face face, PromptFlags flags,
-           char history_register, PromptCompleter completer, PromptCallback callback)
+           char history_register, PromptCompleter completer, PromptCallback callback,
+           bool for_regex)
         : InputMode(input_handler), m_callback(std::move(callback)), m_completer(std::move(completer)),
           m_prompt(prompt.str()), m_prompt_face(face),
           m_empty_text{std::move(emptystr)},
           m_line_editor{context().faces()}, m_flags(flags),
           m_history{RegisterManager::instance()[history_register]},
           m_current_history{-1},
-          m_auto_complete{context().options()["autocomplete"].get<AutoComplete>() & AutoComplete::Prompt},
+          m_auto_complete{
+              context().options()["autocomplete"].get<AutoComplete>() & AutoComplete::Prompt
+              and (not for_regex or not (context().options()["autocomplete"].get<AutoComplete>() & AutoComplete::NoRegexPrompt))
+          },
           m_idle_timer{TimePoint::max(), context().flags() & Context::Flags::Draft ?
                            Timer::Callback{} : [this](Timer&) {
                            RefPtr<InputMode> keep_alive{this}; // hook or m_callback could trigger pop_mode()
@@ -1696,11 +1700,12 @@ void InputHandler::paste(StringView content)
 
 void InputHandler::prompt(StringView prompt, String initstr, String emptystr,
                           Face prompt_face, PromptFlags flags, char history_register,
-                          PromptCompleter completer, PromptCallback callback)
+                          PromptCompleter completer, PromptCallback callback,
+                          bool for_regex)
 {
     push_mode(new InputModes::Prompt(*this, prompt, std::move(initstr), std::move(emptystr),
                                      prompt_face, flags, history_register,
-                                     std::move(completer), std::move(callback)));
+                                     std::move(completer), std::move(callback), for_regex));
 }
 
 void InputHandler::set_prompt_face(Face prompt_face)

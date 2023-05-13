@@ -870,7 +870,7 @@ void regex_prompt(Context& context, String prompt, char reg, T func)
                 if (event == PromptEvent::Validate)
                     throw;
             }
-        });
+        }, true);
 }
 
 template<RegexMode mode>
