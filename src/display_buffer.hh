@@ -185,10 +185,13 @@ public:
     void set_timestamp(size_t timestamp) { m_timestamp = timestamp; }
     size_t timestamp() const { return m_timestamp; }
 
+    void set_highlighting_interrupted(bool interrupted) { m_highlighting_interrupted = interrupted; }
+    bool highlighting_interrupted() const { return m_highlighting_interrupted; }
 private:
     DisplayLineList m_lines;
     BufferRange m_range;
     size_t m_timestamp = -1;
+    bool m_highlighting_interrupted = false;
 };
 
 }
