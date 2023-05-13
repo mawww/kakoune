@@ -7,6 +7,7 @@
 #include "context.hh"
 #include "clock.hh"
 #include "display_buffer.hh"
+#include "event_manager.hh"
 #include "face_registry.hh"
 #include "highlighter_group.hh"
 #include "line_modification.hh"
@@ -276,6 +277,8 @@ public:
 
     void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range) override
     {
+        if (display_buffer.highlighting_interrupted())
+            return;
         auto overlaps = [](const BufferRange& lhs, const BufferRange& rhs) {
             return lhs.begin < rhs.begin ? lhs.end > rhs.begin
                                          : rhs.end > lhs.begin;
@@ -466,6 +469,8 @@ public:
 
     void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range) override
     {
+        if (display_buffer.highlighting_interrupted())
+            return;
         Regex regex = m_regex_getter(context.context);
         FacesSpec face = regex.empty() ? FacesSpec{} : m_face_getter(context.context, regex);
         if (regex != m_last_regex or face != m_last_face)
@@ -1906,6 +1911,8 @@ public:
 
     void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range) override
     {
+        if (display_buffer.highlighting_interrupted())
+            return;
         if (m_regions.empty())
             return;
 
@@ -2268,7 +2275,7 @@ private:
                 {
                     auto extra_flags = RegexExecFlags::None;
                     auto pos = l.begin();
-                    while (vm.exec(pos, l.end(), l.begin(), l.end(), flags | extra_flags))
+                    while (vm.exec(pos, l.end(), l.begin(), l.end(), flags | extra_flags, EventManager::handle_urgent_events))
                     {
                         ConstArrayView<const char*> captures = vm.captures();
                         const bool with_capture = regex.mark_count() > 0 and captures[2] != nullptr and
