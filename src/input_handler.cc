@@ -800,9 +800,18 @@ public:
                            RefPtr<InputMode> keep_alive{this}; // hook or m_callback could trigger pop_mode()
                            if (m_auto_complete and m_refresh_completion_pending)
                                refresh_completions(CompletionFlags::Fast);
-                           if (m_line_changed)
+                           if (not m_interrupted and m_line_changed)
                            {
-                               m_callback(m_line_editor.line(), PromptEvent::Change, context());
+                               try
+                               {
+                                   m_callback(m_line_editor.line(), PromptEvent::Change, context());
+                               } 
+                               catch (cancel&)
+                               {
+                                   m_interrupted = true;
+                                   m_current_completion = -1;
+                                   m_completions = {};
+                               }
                                m_line_changed = false;
                            }
                            context().hooks().run_hook(Hook::PromptIdle, "", context());
@@ -1103,6 +1112,8 @@ private:
 
     void refresh_completions(CompletionFlags flags)
     {
+        if (m_interrupted)
+            return;
         try
         {
             m_refresh_completion_pending = false;
@@ -1139,7 +1150,9 @@ private:
                 else
                     m_prefix_in_completions = false;
             }
-        } catch (runtime_error&) {}
+        }
+        catch (cancel&) { m_interrupted = true; }
+        catch (runtime_error&) {}
     }
 
     void clear_completions()
@@ -1183,6 +1196,7 @@ private:
     PromptCallback  m_callback;
     PromptCompleter m_completer;
     PromptCompleter m_explicit_completer;
+    bool           m_interrupted = false;
     const String   m_prompt;
     Face           m_prompt_face;
     Completions    m_completions;

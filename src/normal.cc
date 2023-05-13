@@ -826,6 +826,7 @@ void regex_prompt(Context& context, String prompt, char reg, T func)
             candidates.reserve(std::min(matches.size(), max_count));
             for_n_best(matches, max_count, [](auto& lhs, auto& rhs) { return rhs < lhs; },
                        [&](auto&& m) { candidates.push_back(m.candidate().str()); return true; });
+            EventManager::handle_urgent_events();
             return {(int)(word.begin() - regex.begin()), pos,  std::move(candidates) };
         },
         [=, func=T(std::move(func)), selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
@@ -861,6 +862,11 @@ void regex_prompt(Context& context, String prompt, char reg, T func)
                     throw;
                 else
                     context.input_handler().set_prompt_face(context.faces()["Error"]);
+            }
+            catch (cancel&)
+            {
+                context.selections_write_only() = selections;
+                throw;
             }
             catch (runtime_error&)
             {
