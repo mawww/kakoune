@@ -22,13 +22,13 @@ void setup_builtin_highlighters(HighlighterGroup& group);
 Window::Window(Buffer& buffer)
     : Scope(buffer),
       m_buffer(&buffer),
-      m_builtin_highlighters{highlighters()}
+      m_highlighters{highlighters()}
 {
     run_hook_in_own_context(Hook::WinCreate, buffer.name());
 
     options().register_watcher(*this);
 
-    setup_builtin_highlighters(m_builtin_highlighters.group());
+    setup_builtin_highlighters(m_highlighters.group());
 
     // gather as on_option_changed can mutate the option managers
     for (auto& option : options().flatten_options()
@@ -156,7 +156,7 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
     m_display_buffer.compute_range();
     const BufferRange range{{0,0}, buffer().end_coord()};
     for (auto pass : { HighlightPass::Wrap, HighlightPass::Move, HighlightPass::Colorize })
-        m_builtin_highlighters.highlight({context, setup, pass, {}}, m_display_buffer, range);
+        m_highlighters.highlight({context, setup, pass, {}}, m_display_buffer, range);
 
     for (auto& line : m_display_buffer.lines())
         line.trim_from(setup.widget_columns, setup.first_column, m_dimensions.column);
@@ -236,7 +236,7 @@ DisplaySetup Window::compute_display_setup(const Context& context) const
         offset
     };
     for (auto pass : { HighlightPass::Move, HighlightPass::Wrap })
-        m_builtin_highlighters.compute_display_setup({context, setup, pass, {}}, setup);
+        m_highlighters.compute_display_setup({context, setup, pass, {}}, setup);
     check_display_setup(setup, *this);
 
     // now ensure the cursor column is visible

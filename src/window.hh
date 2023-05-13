@@ -67,7 +67,7 @@ private:
     DisplayCoord m_dimensions;
     DisplayBuffer m_display_buffer;
 
-    Highlighters m_builtin_highlighters;
+    Highlighters m_highlighters;
     bool m_resize_hook_pending = false;
 
     struct Setup
