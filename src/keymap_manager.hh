@@ -6,6 +6,7 @@
 #include "hash.hh"
 #include "string.hh"
 #include "hash_map.hh"
+#include "utils.hh"
 #include "vector.hh"
 
 namespace Kakoune
@@ -42,8 +43,9 @@ public:
     {
         KeyList keys;
         String docstring;
+        NestedBool is_executing{};
     };
-    const KeymapInfo& get_mapping(Key key, KeymapMode mode) const;
+    KeymapInfo& get_mapping(Key key, KeymapMode mode);
 
     using UserModeList = Vector<String>;
     UserModeList& user_modes() {

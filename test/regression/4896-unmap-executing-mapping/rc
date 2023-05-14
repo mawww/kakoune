@@ -1,0 +1,1 @@
+map global user u %{i123<esc>:unmap global user u<ret>i456<esc>}

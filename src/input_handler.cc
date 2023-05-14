@@ -1773,7 +1773,10 @@ void InputHandler::handle_key(Key key)
     if (keymaps.is_mapped(key, keymap_mode) and not m_context.keymaps_disabled())
     {
         ScopedSetBool disable_history{context().history_disabled()};
-        for (auto& k : keymaps.get_mapping(key, keymap_mode).keys)
+
+        auto& mapping = keymaps.get_mapping(key, keymap_mode);
+        ScopedSetBool executing_mapping{mapping.is_executing};
+        for (auto& k : mapping.keys)
             process_key(k);
     }
     else
