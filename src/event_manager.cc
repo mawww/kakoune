@@ -161,6 +161,13 @@ void EventManager::force_signal(int fd)
     m_has_forced_fd = true;
 }
 
+void EventManager::handle_urgent_events()
+{
+    if (has_instance())
+        instance().handle_next_events(EventMode::Urgent, nullptr, false);
+}
+
+
 SignalHandler set_signal_handler(int signum, SignalHandler handler)
 {
     struct sigaction new_action, old_action;
@@ -171,4 +178,5 @@ SignalHandler set_signal_handler(int signum, SignalHandler handler)
     sigaction(signum, &new_action, &old_action);
     return old_action.sa_handler;
 }
+
 }

@@ -29,6 +29,11 @@ struct failure : runtime_error
     using runtime_error::runtime_error;
 };
 
+struct cancel : runtime_error
+{
+    cancel() : runtime_error("cancellation requested") {}
+};
+
 struct logic_error : exception
 {
 };

@@ -1159,7 +1159,7 @@ void keep(Context& context, NormalParams params)
             const auto flags = match_flags(is_bol(begin.coord()), false,
                                            is_bow(buffer, begin.coord()),
                                            is_eow(buffer, end.coord()));
-            if (regex_search(begin, end, begin, end, regex, flags) == matching)
+            if (regex_search(begin, end, begin, end, regex, flags, EventManager::handle_urgent_events) == matching)
                 keep.push_back(sel);
         }
         if (keep.empty())
