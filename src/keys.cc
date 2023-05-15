@@ -184,37 +184,33 @@ Key::MouseButton str_to_button(StringView str)
 String to_string(Key key)
 {
     const auto coord = key.coord() + DisplayCoord{1,1};
-    switch (Key::Modifiers(key.modifiers & ~Key::Modifiers::MouseButtonMask))
-    {
-        case Key::Modifiers::MousePos:
-            return format("<mouse:move:{}.{}>", coord.line, coord.column);
-        case Key::Modifiers::MousePress:
-            return format("<mouse:press:{}:{}.{}>", key.mouse_button(), coord.line, coord.column);
-        case Key::Modifiers::MouseRelease:
-            return format("<mouse:release:{}:{}.{}>", key.mouse_button(), coord.line, coord.column);
-        case Key::Modifiers::Scroll:
-            return format("<scroll:{}>", static_cast<int>(key.key));
-        case Key::Modifiers::Resize:
-            return format("<resize:{}.{}>", coord.line, coord.column);
-        default: break;
-    }
-
-    bool named = false;
+    bool named = true;
     String res;
-    auto it = find_if(keynamemap, [&key](const KeyAndName& item)
-                                  { return item.key == key.key; });
-    if (it != std::end(keynamemap))
-    {
-        named = true;
-        res = it->name;
-    }
-    else if (key.key >= Key::F1 and key.key <= Key::F12)
-    {
-        named = true;
-        res = "F" + to_string((int)(key.key - Key::F1 + 1));
-    }
+
+    if (key.modifiers & Key::Modifiers::MousePos)
+        res = format("mouse:move:{}.{}", coord.line, coord.column);
+    else if (key.modifiers & Key::Modifiers::MousePress)
+        res = format("mouse:press:{}:{}.{}", key.mouse_button(), coord.line, coord.column);
+    else if (key.modifiers & Key::Modifiers::MouseRelease)
+        res = format("mouse:release:{}:{}.{}", key.mouse_button(), coord.line, coord.column);
+    else if (key.modifiers & Key::Modifiers::Scroll)
+        res = format("scroll:{}", static_cast<int>(key.key));
+    else if (key.modifiers & Key::Modifiers::Resize)
+        res = format("resize:{}.{}", coord.line, coord.column);
     else
-        res = String{key.key};
+    {
+        auto it = find_if(keynamemap, [&key](const KeyAndName& item)
+                                      { return item.key == key.key; });
+        if (it != std::end(keynamemap))
+            res = it->name;
+        else if (key.key >= Key::F1 and key.key <= Key::F12)
+            res = "F" + to_string((int)(key.key - Key::F1 + 1));
+        else
+        {
+            named = false;
+            res = String{key.key};
+        }
+    }
 
     if (key.modifiers & Key::Modifiers::Shift)   { res = "s-" + res; named = true; }
     if (key.modifiers & Key::Modifiers::Alt)     { res = "a-" + res; named = true; }
