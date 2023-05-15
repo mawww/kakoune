@@ -7,10 +7,21 @@ declare-option -hidden int grep_current_line 0
 define-command -params .. -docstring %{
     grep [<arguments>]: grep utility wrapper
     All optional arguments are forwarded to the grep utility
+    Passing no argument will perform a literal-string grep for the current selection
 } grep %{ evaluate-commands %sh{
-     if [ $# -eq 0 ]; then
-         set -- "${kak_selection}"
-     fi
+    if [ $# -eq 0 ]; then
+        case "$kak_opt_grepcmd" in
+        ag\ * | git\ grep\ * | grep\ * | rg\ * | ripgrep\ * | ugrep\ * | ug\ *)
+            set -- -F "${kak_selection}"
+            ;;
+        ack\ *)
+            set -- -Q "${kak_selection}"
+            ;;
+        *)
+            set -- "${kak_selection}"
+            ;;
+        esac
+    fi
 
      output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-grep.XXXXXXXX)/fifo
      mkfifo ${output}
