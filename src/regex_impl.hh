@@ -244,6 +244,13 @@ public:
               const Iterator& subject_begin, const Iterator& subject_end,
               RegexExecFlags flags)
     {
+        return exec(begin, end, subject_begin, subject_end, flags, []{});
+    }
+
+    bool exec(const Iterator& begin, const Iterator& end,
+              const Iterator& subject_begin, const Iterator& subject_end,
+              RegexExecFlags flags, auto&& idle_func)
+    {
         if (flags & RegexExecFlags::NotInitialNull and begin == end)
             return false;
 
@@ -274,7 +281,7 @@ public:
             }
         }
 
-        return exec_program(std::move(start), config);
+        return exec_program(std::move(start), config, idle_func);
     }
 
     ArrayView<const Iterator> captures() const
@@ -453,7 +460,7 @@ private:
         return failed();
     }
 
-    bool exec_program(Iterator pos, const ExecConfig& config)
+    bool exec_program(Iterator pos, const ExecConfig& config, auto&& idle_func)
     {
         kak_assert(m_threads.current_is_empty() and m_threads.next_is_empty());
         release_saves(m_captures);
@@ -473,6 +480,8 @@ private:
         {
             if (++current_step == 0)
             {
+                idle_func();
+
                 // We wrapped, avoid potential collision on inst.last_step by resetting them
                 ConstArrayView<CompiledRegex::Instruction> instructions{m_program.instructions};
                 instructions = forward ? instructions.subrange(0, m_program.first_backward_inst)
