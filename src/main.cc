@@ -894,12 +894,17 @@ int run_server(StringView session, StringView server_init,
             // Loop so that eventual inputs happening during the processing are handled as
             // well, avoiding unneeded redraws.
             bool allow_blocking = not client_manager.has_pending_inputs();
-            while (event_manager.handle_next_events(EventMode::Normal, nullptr, allow_blocking))
+            try
             {
-                if (client_manager.process_pending_inputs())
-                    break;
-                allow_blocking = false;
+                while (event_manager.handle_next_events(EventMode::Normal, nullptr, allow_blocking))
+                {
+                    if (client_manager.process_pending_inputs())
+                        break;
+                    allow_blocking = false;
+                }
             }
+            catch (const cancel&) {}
+
             client_manager.process_pending_inputs();
 
             client_manager.clear_client_trash();

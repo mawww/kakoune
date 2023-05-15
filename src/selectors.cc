@@ -2,6 +2,7 @@
 
 #include "buffer_utils.hh"
 #include "context.hh"
+#include "event_manager.hh"
 #include "flags.hh"
 #include "option_types.hh"
 #include "regex.hh"
@@ -287,16 +288,19 @@ find_opening(Iterator pos, const Container& container,
     // When on the token of a non-nestable block, we want to consider it opening
     if (nestable and
         backward_regex_search(container.begin(), pos,
-                              container.begin(), container.end(), res, closing) and
+                              container.begin(), container.end(), res, closing,
+                              RegexExecFlags::None, EventManager::handle_urgent_events) and
         res[0].second == pos)
         pos = res[0].first;
 
-    using RegexIt = RegexIterator<Iterator, RegexMode::Backward>;
-    for (auto&& match : RegexIt{container.begin(), pos, container.begin(), container.end(), opening})
+    using RegexIt = RegexIterator<Iterator, RegexMode::Backward, const Regex, void (*)()>;
+    for (auto&& match : RegexIt{container.begin(), pos, container.begin(), container.end(), opening,
+                                RegexExecFlags::None, EventManager::handle_urgent_events})
     {
         if (nestable)
         {
-            for (auto m [[maybe_unused]] : RegexIt{match[0].second, pos, container.begin(), container.end(), closing})
+            for (auto m [[maybe_unused]] : RegexIt{match[0].second, pos, container.begin(), container.end(), closing,
+                                                   RegexExecFlags::None, EventManager::handle_urgent_events})
                 ++level;
         }
 
@@ -314,12 +318,13 @@ find_closing(Iterator pos, const Container& container,
              const Regex& opening, const Regex& closing,
              int level, bool nestable)
 {
-    using RegexIt = RegexIterator<Iterator, RegexMode::Forward>;
-    for (auto match : RegexIt{pos, container.end(), container.begin(), container.end(), closing})
+    for (auto match : RegexIterator{pos, container.end(), container.begin(), container.end(), closing,
+                                    RegexExecFlags::None, EventManager::handle_urgent_events})
     {
         if (nestable)
         {
-            for (auto m [[maybe_unused]] : RegexIt{pos, match[0].first, container.begin(), container.end(), opening})
+            for (auto m [[maybe_unused]] : RegexIterator{pos, match[0].first, container.begin(), container.end(), opening,
+                                                         RegexExecFlags::None, EventManager::handle_urgent_events})
                 ++level;
         }
 
@@ -356,7 +361,8 @@ find_surrounding(const Container& container, Iterator pos,
             return {};
     }
     else if (MatchResults<Iterator> res;
-             regex_search(pos, container.end(), container.begin(), container.end(), res, opening) and
+             regex_search(pos, container.end(), container.begin(), container.end(), res, opening,
+                          RegexExecFlags::None, EventManager::handle_urgent_events) and
              res[0].first == pos) // Skip opening match if pos lies on it
         last = empty(res[0]) ? std::next(res[0].second) : res[0].second;
 
@@ -868,11 +874,13 @@ static bool find_next(const Buffer& buffer, const BufferIterator& pos,
 {
     if (pos != buffer.end() and
         regex_search(pos, buffer.end(), buffer.begin(), buffer.end(),
-                     matches, ex, match_flags(buffer, pos, buffer.end())))
+                     matches, ex, match_flags(buffer, pos, buffer.end()),
+                     EventManager::handle_urgent_events))
         return true;
     wrapped = true;
     return regex_search(buffer.begin(), buffer.end(), buffer.begin(), buffer.end(),
-                        matches, ex, match_flags(buffer, buffer.begin(), buffer.end()));
+                        matches, ex, match_flags(buffer, buffer.begin(), buffer.end()),
+                        EventManager::handle_urgent_events);
 }
 
 static bool find_prev(const Buffer& buffer, const BufferIterator& pos,
@@ -883,13 +891,15 @@ static bool find_prev(const Buffer& buffer, const BufferIterator& pos,
         backward_regex_search(buffer.begin(), pos, buffer.begin(), buffer.end(),
                               matches, ex,
                               match_flags(buffer, buffer.begin(), pos) |
-                              RegexExecFlags::NotInitialNull))
+                              RegexExecFlags::NotInitialNull,
+                              EventManager::handle_urgent_events))
         return true;
     wrapped = true;
     return backward_regex_search(buffer.begin(), buffer.end(), buffer.begin(), buffer.end(),
                                  matches, ex,
                                  match_flags(buffer, buffer.begin(), buffer.end()) |
-                                 RegexExecFlags::NotInitialNull);
+                                 RegexExecFlags::NotInitialNull,
+                                 EventManager::handle_urgent_events);
 }
 
 template<RegexMode mode>
@@ -935,7 +945,8 @@ Vector<Selection> select_matches(const Buffer& buffer, ConstArrayView<Selection>
         auto sel_beg = buffer.iterator_at(sel.min());
         auto sel_end = utf8::next(buffer.iterator_at(sel.max()), buffer.end());
 
-        for (auto&& match : RegexIterator{sel_beg, sel_end, vm, match_flags(buffer, sel_beg, sel_end)})
+        for (auto&& match : RegexIterator{sel_beg, sel_end, vm, match_flags(buffer, sel_beg, sel_end),
+                                          EventManager::handle_urgent_events})
         {
             auto capture = match[capture_idx];
             if (not capture.matched or capture.first == sel_end)

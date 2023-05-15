@@ -53,6 +53,12 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
             killpg(getpgrp(), SIGINT);
             set_signal_handler(SIGINT, prev_handler);
         }
+        else if (key == ctrl('g'))
+        {
+            m_pending_keys.clear();
+            print_status({"operation cancelled", context().faces()["Error"]});
+            throw cancel{};
+        }
         else if (key.modifiers & Key::Modifiers::Resize)
         {
             m_window->set_dimensions(key.coord());
@@ -110,7 +116,7 @@ bool Client::process_pending_inputs()
         catch (Kakoune::runtime_error& error)
         {
             write_to_debug_buffer(format("Error: {}", error.what()));
-            context().print_status({error.what().str(), context().faces()["Error"] });
+            context().print_status({error.what().str(), context().faces()["Error"]});
             context().hooks().run_hook(Hook::RuntimeError, error.what(), context());
         }
     }

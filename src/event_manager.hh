@@ -96,6 +96,8 @@ public:
     // on next handle_next_events call.
     void force_signal(int fd);
 
+    static void handle_urgent_events();
+
 private:
     friend class FDWatcher;
     friend class Timer;
