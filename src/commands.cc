@@ -409,7 +409,7 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
         {
             if (buffer != nullptr and force_reload)
                 buffer_manager.delete_buffer(*buffer);
-            buffer = create_buffer_from_string(std::move(name), flags, {});
+            buffer = create_buffer_from_string(name, flags, {});
         }
         else if (buffer->flags() & Buffer::Flags::File)
             throw runtime_error(format("buffer '{}' exists but is not a scratch buffer", name));
@@ -2632,7 +2632,7 @@ const CommandDesc declare_user_mode_cmd = {
     CommandCompleter{},
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        context.keymaps().add_user_mode(std::move(parser[0]));
+        context.keymaps().add_user_mode(parser[0]);
     }
 };
 
@@ -2688,7 +2688,7 @@ const CommandDesc enter_user_mode_cmd = {
     {
         auto lock = (bool)parser.get_switch("lock");
         KeymapMode mode = parse_keymap_mode(parser[0], context.keymaps().user_modes());
-        enter_user_mode(context, std::move(parser[0]), mode, lock);
+        enter_user_mode(context, parser[0], mode, lock);
     }
 };
 
