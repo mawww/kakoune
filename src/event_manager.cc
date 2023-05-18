@@ -161,10 +161,41 @@ void EventManager::force_signal(int fd)
     m_has_forced_fd = true;
 }
 
+static auto fast_clock() {
+    // TODO Maybe use this for other clocks as well.
+    timespec ts{};
+#if defined(__linux__)
+    clock_gettime(CLOCK_MONOTONIC_COARSE, &ts);
+#elif defined(__FreeBSD__) or defined(__NetBSD__) or defined(__APPLE__)
+    clock_gettime(CLOCK_MONOTONIC_FAST, &ts);
+#else
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+#endif
+    auto elapsed = std::chrono::seconds{ts.tv_sec} + std::chrono::nanoseconds{ts.tv_nsec};
+    return elapsed;
+}
+
 void EventManager::handle_urgent_events()
 {
-    if (has_instance())
-        instance().handle_next_events(EventMode::Urgent, nullptr, false);
+    if (not has_instance())
+        return;
+
+    // Run approximately once every 5ms.
+    static unsigned int i;
+    static unsigned int limit = 1;
+    if (++i < limit)
+        return;
+    i = 0;
+    static decltype(fast_clock()) last;
+    auto now = fast_clock();
+    auto diff = now - last;
+    last = now;
+    if (diff <= std::chrono::milliseconds{5})
+        limit = std::max(limit * 8, limit);
+    else
+        limit = std::max(limit / 8, 1u);
+
+    instance().handle_next_events(EventMode::Urgent, nullptr, false);
 }
 
 
