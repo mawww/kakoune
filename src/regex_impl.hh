@@ -269,7 +269,7 @@ public:
         {
             if (search)
             {
-                to_next_start(start, config, *start_desc);
+                to_next_start(start, config, *start_desc, idle_func);
                 if (start == config.end) // If start_desc is not null, it means we consume at least one char
                     return false;
             }
@@ -512,17 +512,18 @@ private:
             if (search and not m_found_match)
             {
                 if (start_desc and m_threads.next_is_empty())
-                    to_next_start(pos, config, *start_desc);
+                    to_next_start(pos, config, *start_desc, idle_func);
                 m_threads.push_next({first_inst, -1});
             }
             m_threads.swap_next();
         }
     }
 
-    static void to_next_start(Iterator& start, const ExecConfig& config, const StartDesc& start_desc)
+    static void to_next_start(Iterator& start, const ExecConfig& config, const StartDesc& start_desc, auto&& idle_func)
     {
         while (start != config.end)
         {
+            idle_func();
             static_assert(StartDesc::count <= 128, "start desc should be ascii only");
             if constexpr (forward)
             {
