@@ -478,9 +478,10 @@ private:
         m_found_match = false;
         while (true) // Iterate on all codepoints and once at the end
         {
+            idle_func();
+
             if (++current_step == 0)
             {
-                idle_func();
 
                 // We wrapped, avoid potential collision on inst.last_step by resetting them
                 ConstArrayView<CompiledRegex::Instruction> instructions{m_program.instructions};
