@@ -53,7 +53,7 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
             killpg(getpgrp(), SIGINT);
             set_signal_handler(SIGINT, prev_handler);
         }
-        else if (key == ctrl('g'))
+        if (key == ctrl('g') or key == ctrl('c'))
         {
             m_pending_keys.clear();
             print_status({"operation cancelled", context().faces()["Error"]});
