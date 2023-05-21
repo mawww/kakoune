@@ -144,6 +144,9 @@ possible combination can be triggered. For example, due to limitations in
 the way terminals handle control characters, mappings like *<c-s-a>* are
 unlikely to work in Kakoune's terminal UI.
 
+Some keys, like `<c-c>` and `<c-g>`, cannot be remapped because they are
+used to cancel operations. See <<keys#cancelling-operations,`:doc keys cancelling-operations`>>.
+
 == Default mappings
 
 Some mappings exist by default in the global scope:

@@ -825,3 +825,23 @@ The following keys are recognized by this mode to help with editing
 *<space>*::
     enter default `user mode` to access custom commands
     (See <<modes#user-mode,`:doc modes user-mode`>>)
+
+== Cancelling operations
+
+These keys are used to cancel long-running operations, either inside
+Kakoune or outside it. Because they are intended as a safety mechanism
+when something goes wrong, these keys are handled very early on in
+Kakoune's input processing, and therefore cannot be remapped in any mode.
+
+*<c-c>*::
+    Stop any external processes. If you ever see Kakoune display a message
+    like "waiting for shell command to finish", this key will stop
+    that command so you can regain control of Kakoune.
+    Technically, this key causes Kakoune to send the SIGINT signal
+    to its entire process group.
+
+*<c-g>*::
+    Cancel a long-running Kakoune operation, such as a regex search on a
+    very large file. This also clears Kakoune's input buffer, so any
+    commands that were waiting for the long-running operation to complete
+    will also be cancelled.
