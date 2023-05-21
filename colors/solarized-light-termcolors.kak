@@ -52,3 +52,4 @@ face global Prompt             yellow+b
 face global MatchingChar       red,white+b
 face global BufferPadding      bright-cyan,bright-white
 face global Whitespace         yellow+f
+face global IndentGuide        yellow+f

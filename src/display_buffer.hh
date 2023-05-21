@@ -22,7 +22,7 @@ BufferIterator get_iterator(const Buffer& buffer, BufferCoord coord);
 struct DisplayAtom : public UseMemoryDomain<MemoryDomain::Display>
 {
 public:
-    enum Type { Range, ReplacedRange, Text };
+    enum Type { Range, ReplacedRange, Text, Whitespace };
 
     DisplayAtom(const Buffer& buffer, BufferRange range, Face face = {})
         : face(face), m_type(Range), m_buffer(&buffer), m_range{range} {}
@@ -66,9 +66,22 @@ public:
         m_range = range;
     }
 
+    void whitespace_replace(String text)
+    {
+        kak_assert(m_type == Whitespace or m_type == Range);
+        if (m_type == Range)
+            m_type = Whitespace;
+        m_text = text;
+    }
+
     bool has_buffer_range() const
     {
-        return m_type == Range or m_type == ReplacedRange;
+        return m_type != Text;
+    }
+
+    bool has_replaced_range() const
+    {
+        return m_type != Range;
     }
 
     const Buffer& buffer() const { kak_assert(m_buffer); return *m_buffer; }

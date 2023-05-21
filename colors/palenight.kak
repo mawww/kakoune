@@ -93,5 +93,6 @@ evaluate-commands %sh{
 
     # Whitespace characters
     face global Whitespace         $gutter_fg_grey,$black+fg
+    face global IndentGuide        $gutter_fg_grey,$black+fg
     "
 }

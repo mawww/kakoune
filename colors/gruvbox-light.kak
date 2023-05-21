@@ -75,5 +75,6 @@ evaluate-commands %sh{
         face global MatchingChar       ${fg},${bg3}+b
         face global BufferPadding      ${bg2},${bg}
         face global Whitespace         ${bg2}+f
+        face global IndentGuide        ${bg2}+f
     "
 }

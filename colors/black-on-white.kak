@@ -50,4 +50,5 @@ face global StatusCursor bright-white,black
 face global Prompt bright-white,black
 face global MatchingChar black,bright-white+b
 face global Whitespace black,bright-white+fd
+face global IndentGuide black,bright-white+fd
 face global BufferPadding black,bright-white

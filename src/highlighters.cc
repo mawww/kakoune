@@ -64,7 +64,7 @@ void highlight_range(DisplayBuffer& display_buffer,
 
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
         {
-            bool is_replaced = atom_it->type() == DisplayAtom::ReplacedRange;
+            bool is_replaced = atom_it->type() == DisplayAtom::ReplacedRange or atom_it->type() == DisplayAtom::Whitespace;
 
             if (not atom_it->has_buffer_range() or
                 (skip_replaced and is_replaced) or
@@ -162,7 +162,7 @@ void apply_highlighter(HighlightContext context,
                 if (not atom_it->has_buffer_range() or end <= atom_it->begin() or begin >= atom_it->end())
                     continue;
 
-                bool is_replaced = atom_it->type() == DisplayAtom::ReplacedRange;
+                bool is_replaced = atom_it->type() == DisplayAtom::ReplacedRange or atom_it->type() == DisplayAtom::Whitespace;
                 if (atom_it->begin() <= begin)
                 {
                     if (is_replaced or atom_it->begin() == begin)
@@ -1097,6 +1097,7 @@ private:
                 {
                     auto coord = it.coord();
                     Codepoint cp = utf8::read_codepoint(it, end);
+
                     if (cp == '\t' or cp == ' ' or cp == '\n' or cp == 0xA0 or cp == 0x202F)
                     {
                         if (coord != begin.coord())
@@ -1108,12 +1109,12 @@ private:
                         {
                             const ColumnCount column = get_column(buffer, tabstop, coord);
                             const ColumnCount count = tabstop - (column % tabstop);
-                            atom_it->replace(m_tab + String(m_tabpad[(CharCount)0], count - m_tab.column_length()));
+                            atom_it->whitespace_replace(m_tab + String(m_tabpad[(CharCount)0], count - m_tab.column_length()));
                         }
                         else if (cp == ' ')
-                            atom_it->replace(m_spc);
+                            atom_it->whitespace_replace(m_spc);
                         else if (cp == '\n')
-                            atom_it->replace(m_lf);
+                            atom_it->whitespace_replace(m_lf);
                         else if (cp == 0xA0 or cp == 0x202F)
                             atom_it->replace(m_nbsp);
                         atom_it->face = merge_faces(atom_it->face, whitespaceface);
@@ -1125,6 +1126,247 @@ private:
     }
 
     const String m_tab, m_tabpad, m_spc, m_lf, m_nbsp;
+};
+
+const HighlighterDesc indent_guide_desc = {
+    "Parameters: [-guide <char>] [-max-step <step-size>] [-use-indentwidth] [-use-actual]\n"
+    "Display whitespaces using symbols",
+    { {
+        { "guide",      { true,  "this character is used for drawing guides" } },
+        { "tabpad",     { true,  "append as many of the given character as is necessary to honor `tabstop`" } },
+        { "spcpad",     { true,  "optional character for displaying non-aligning spaces" } },
+        { "use-actual", { false, "lines are drawn based on actual position of text"} } },
+        ParameterDesc::Flags::None, 0, 0
+    }
+};
+struct IndentGuideHighlighter : Highlighter
+{
+    IndentGuideHighlighter(String guide, String tabpad, String spcpad, bool use_actual)
+      : Highlighter{HighlightPass::Move}, m_guide{std::move(guide)}, m_tabpad{std::move(tabpad)},
+        m_spcpad{std::move(spcpad)}, m_use_actual{use_actual}
+    {}
+
+    static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
+    {
+        ParametersParser parser(params, indent_guide_desc.params);
+        auto get_param = [&parser](StringView param, StringView alt) {
+            auto value = parser.get_switch(param);
+            if (value and value->char_length() != 1)
+                throw runtime_error{format("-{} expects a single character parameter", param)};
+            return value.value_or(alt).str();
+        };
+
+        return std::make_unique<IndentGuideHighlighter>(get_param("guide", "▏" ), get_param("tabpad", " "),
+                                                        get_param("spcpad", ""), (bool)parser.get_switch("use-actual"));
+    }
+
+private:
+    using Indents = Vector<ColumnCount>;
+
+    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange) override
+    {
+        const int tabstop = context.context.options()["tabstop"].get<int>();
+        int indentwidth = context.context.options()["indentwidth"].get<int>();
+        if (indentwidth == 0)
+            indentwidth = tabstop;
+        const auto face = context.context.faces()["IndentGuide"];
+        const auto& buffer = context.context.buffer();
+        const auto wstart = context.setup.first_column;
+        const auto wend = wstart + context.context.window().dimensions().column - context.setup.widget_columns;
+        auto& lines = display_buffer.lines();
+
+        // initialize the indentation levels above the screen
+        Indents indents{INDENT_MAX};
+        if (m_use_actual)
+        {
+            for (auto line = context.setup.first_line - 1; line >= 0 and wstart < indents.back(); line--)
+            {
+                auto next = count_indent(buffer[line], tabstop, wend);
+                if (next != EMPTY_LINE and wstart <= next and next < indents.back())
+                    indents.push_back(next);
+            }
+        }
+        ColumnCount last_indent = indents.size() > 1 ? indents[1] : EMPTY_LINE;
+        std::reverse(indents.begin(), indents.end());
+
+        LineCount line = -1;
+        auto empty_start = lines.end();
+
+        for (auto line_it = lines.begin(); line_it != lines.end(); line_it++)
+        {
+            auto indent_it = indents.begin();
+            auto atom_it = line_it->begin();
+
+            // skip wrapped lines and number-line/flag-line
+            if (line_count(line_it) == line or
+                not skip_while(atom_it, line_it->end(),
+                               [](DisplayAtom atom) { return not atom.has_buffer_range(); }))
+                continue;
+            line = line_count(line_it);
+
+            // handle anything offscreen
+            ColumnCount offscreen = count_indent(buffer[line], tabstop, wstart);
+            if (offscreen < wstart)
+            {
+                if (offscreen == EMPTY_LINE and empty_start == lines.end())
+                    empty_start = line_it;
+                else if (offscreen != EMPTY_LINE)
+                {
+                    empty_start = lines.end();
+                    indents.clear();
+                    indents.push_back(INDENT_MAX);
+                    last_indent = offscreen;
+                }
+                continue;
+            }
+
+            ColumnCount col = wstart;
+            for (; atom_it != line_it->end(); atom_it++)
+            {
+                if (not_replaceable(*atom_it)) break;
+
+                auto begin = get_iterator(buffer, atom_it->begin());
+                auto end = get_iterator(buffer, atom_it->end());
+                for (BufferIterator it = begin; it != end;)
+                {
+                    auto coord = it.coord();
+                    Codepoint cp = utf8::read_codepoint(it, end);
+                    if (cp == ' ' or cp == '\t')
+                    {
+                        if (coord != begin.coord())
+                            atom_it = ++line_it->split(atom_it, coord);
+                        if (it != end)
+                            atom_it = line_it->split(atom_it, it.coord());
+                        atom_it->face = merge_faces(atom_it->face, face);
+                    }
+                    if (cp == ' ')
+                    {
+                        if (is_guide(col, indent_it, indentwidth))
+                            atom_it->whitespace_replace(m_guide);
+                        else if (not m_spcpad.empty())
+                            atom_it->whitespace_replace(m_spcpad);
+                        col += 1;
+                    }
+                    else if (cp == '\t')
+                    {
+                        auto tabend = col + tabstop - (col % tabstop) - std::max(wstart - col, 0_col);
+                        atom_it->whitespace_replace(mk_guide_str(indent_it, indentwidth, col, tabend));
+                        col = tabend;
+                    }
+                    else goto line_end;
+                    break;
+                }
+            }
+
+            line_end:
+            if (empty_start != lines.end())
+            {
+                fill_empty_lines(empty_start, line_it, buffer, face, indents,
+                                 indentwidth, wstart, std::min(last_indent, col));
+                empty_start = lines.end();
+            }
+            if (m_use_actual)
+            {
+                for (auto it = indents.rbegin(); it != indents.rend() and *it >= col; it++)
+                    indents.pop_back();
+                indents.push_back(col);
+                indents.push_back(INDENT_MAX);
+            }
+            last_indent = col;
+        }
+
+        if (empty_start != lines.end())
+        {
+            ColumnCount offscreen = EMPTY_LINE;
+            for (auto l = line + 1; l < buffer.line_count() and offscreen == EMPTY_LINE; l++)
+                offscreen = count_indent(buffer[l], tabstop, wend);
+            fill_empty_lines(empty_start, lines.end(), buffer, face, indents,
+                             indentwidth, wstart, std::min(last_indent, offscreen));
+        }
+    }
+
+    void fill_empty_lines(DisplayLineList::iterator& empty_start, DisplayLineList::iterator empty_end,
+                          const Buffer& buffer, Face face, Indents& indents, int indentwidth,
+                          ColumnCount wstart, ColumnCount text_end)
+    {
+        if (text_end <= 0) return;
+
+        auto indent_it = indents.begin();
+        if (*indent_it == 0) indent_it++;
+        String nlstring = mk_guide_str(indent_it, indentwidth, std::max(wstart, 1_col), text_end + 1);
+
+        for (auto empty_line = empty_start; empty_line != empty_end; empty_line++)
+        {
+            auto atom_it = empty_line->begin();
+            if (skip_while(atom_it, empty_line->end(), not_replaceable))
+            {
+                auto begin = get_iterator(buffer, atom_it->begin());
+                auto end = get_iterator(buffer, atom_it->end());
+                for (BufferIterator it = begin; it != end;)
+                {
+                    auto coord = it.coord();
+                    Codepoint cp = utf8::read_codepoint(it, end);
+                    if (cp == '\n')
+                    {
+                        if (coord != begin.coord())
+                            atom_it = ++empty_line->split(atom_it, coord);
+                        if (it != end)
+                            atom_it = empty_line->split(atom_it, it.coord());
+                        atom_it->whitespace_replace(m_guide);
+                        atom_it->face = merge_faces(atom_it->face, face);
+                    }
+                    break;
+                }
+                atom_it++;
+            }
+            empty_line->insert(atom_it, {nlstring, face});
+        }
+    }
+
+    String mk_guide_str(Indents::iterator& indent_it, int indentwidth, ColumnCount from, ColumnCount to)
+    {
+        String str;
+        while (from < to)
+            if (is_guide(from++, indent_it, indentwidth))
+                str.append(m_guide.data(), m_guide.length());
+            else
+                str.append(m_tabpad.data(), m_tabpad.length());
+        return str;
+    }
+
+    ColumnCount count_indent(StringView line, int tabstop, ColumnCount max)
+    {
+        ColumnCount count = 0;
+        utf8::iterator it{line.begin(), line};
+        if (*it == '\n') return EMPTY_LINE;
+        for (; it != line.end() and count < max; it++)
+        {
+            if (*it == ' ')
+                count += 1;
+            else if (*it == '\t')
+                count += tabstop - (count % tabstop);
+            else break;
+        }
+        return count;
+    }
+
+    bool is_guide(ColumnCount col, Indents::iterator& it, int indentwidth)
+    {
+        if (col == *it) { it++; return true; }
+        return not m_use_actual and col % indentwidth == 0;
+    }
+
+    static bool not_replaceable(DisplayAtom atom)
+    {
+        return atom.type() != DisplayAtom::Range and atom.type() != DisplayAtom::Whitespace;
+    }
+
+    static LineCount line_count(const Vector<DisplayLine>::iterator it) { return it->range().begin.line; }
+
+    static constexpr int INDENT_MAX = std::numeric_limits<int>::max();
+    static constexpr ColumnCount EMPTY_LINE = -2;
+    const String m_guide, m_tabpad, m_spcpad;
+    const bool m_use_actual;
 };
 
 const HighlighterDesc line_numbers_desc = {
@@ -2103,13 +2345,13 @@ private:
               m_delegate{std::move(delegate)},
               m_begin{std::move(begin)}, m_end{std::move(end)}, m_recurse{std::move(recurse)},
               m_match_capture{match_capture}
-       {
-       }
+        {
+        }
 
         RegionHighlighter(std::unique_ptr<Highlighter>&& delegate)
             : Highlighter{delegate->passes()}, m_delegate{std::move(delegate)}, m_default{true}
-       {
-       }
+        {
+        }
 
         bool has_children() const override
         {
@@ -2494,6 +2736,9 @@ void register_highlighters()
     registry.insert({
         "show-whitespaces",
         { ShowWhitespacesHighlighter::create, &show_whitespace_desc } });
+    registry.insert({
+        "indent-guide",
+        { IndentGuideHighlighter::create, &indent_guide_desc} });
     registry.insert({
         "wrap",
         { WrapHighlighter::create, &wrap_desc } });
