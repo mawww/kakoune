@@ -47,6 +47,18 @@ constexpr size_t hash_value(const std::pair<T1, T2>& val)
     return hash_values(val.first, val.second);
 }
 
+template<typename Tuple, size_t... I>
+auto apply(const Tuple& val, std::index_sequence<I...>)
+{
+     return hash_values(std::get<I>(val)...);
+}
+
+template<typename... T>
+constexpr size_t hash_value(const std::tuple<T...>& val)
+{
+    return apply(val, std::index_sequence_for<T...>());
+}
+
 template<typename Type>
 struct Hash
 {

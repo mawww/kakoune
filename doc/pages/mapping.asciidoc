@@ -46,6 +46,9 @@ An optional *-docstring* switch followed by a string can be used
 to describe what the mapping does. This docstring will be used
 in autoinfo boxes.
 
+An optional *-interrupt* switch means the mapping will work even when waiting
+for a shell command or a regex search to complete.
+
 The *unmap* command removes a mapping of *key* in the given *scope* and
 *mode*. If *expected* is specified, the mapping is removed only if it is
 set to the same sequence of keys passed using the *expected* argument.
