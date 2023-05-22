@@ -363,6 +363,9 @@ std::pair<String, int> ShellManager::eval(
         {
             EventManager::instance().handle_next_events(EventMode::Urgent, &orig_mask);
         }
+        catch (cancel&)
+        {
+        }
         catch (runtime_error& error)
         {
             write_to_debug_buffer(format("error while waiting for shell: {}", error.what()));
