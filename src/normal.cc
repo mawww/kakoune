@@ -2033,6 +2033,7 @@ void exec_user_mappings(Context& context, NormalParams params)
 
         ScopedEdition edition(context);
         ScopedSelectionEdition selection_edition{context};
+        ScopedSetBool executing_mapping{mapping.is_executing};
         for (auto& key : mapping.keys)
             context.input_handler().handle_key(key);
     }, "user mapping",

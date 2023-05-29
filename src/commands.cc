@@ -1933,10 +1933,15 @@ const CommandDesc unmap_key_cmd = {
         if (key.size() != 1)
             throw runtime_error("only a single key can be unmapped");
 
-        if (keymaps.is_mapped(key[0], keymap_mode) and
-            (parser.positional_count() < 4 or
-             (keymaps.get_mapping(key[0], keymap_mode).keys ==
-              parse_keys(parser[3]))))
+        if (not keymaps.is_mapped(key[0], keymap_mode))
+            return;
+        auto& mapping = keymaps.get_mapping(key[0], keymap_mode);
+
+        if (mapping.is_executing)
+            throw runtime_error("cannot unmap key that is currently executing");
+
+        if (parser.positional_count() < 4 or
+             (mapping.keys == parse_keys(parser[3])))
             keymaps.unmap_key(key[0], keymap_mode);
     }
 };
@@ -2653,8 +2658,12 @@ void enter_user_mode(Context& context, String mode_name, KeymapMode mode, bool l
         InputHandler::ScopedForceNormal force_normal{context.input_handler(), {}};
 
         ScopedEdition edition(context);
-        for (auto& key : mapping.keys)
-            context.input_handler().handle_key(key);
+
+        {
+            ScopedSetBool executing_mapping{mapping.is_executing};
+            for (auto& key : mapping.keys)
+                context.input_handler().handle_key(key);
+        }
 
         if (lock)
             enter_user_mode(context, std::move(mode_name), mode, true);

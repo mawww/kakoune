@@ -40,8 +40,8 @@ bool KeymapManager::is_mapped(Key key, KeymapMode mode) const
            (m_parent and m_parent->is_mapped(key, mode));
 }
 
-const KeymapManager::KeymapInfo&
-KeymapManager::get_mapping(Key key, KeymapMode mode) const
+KeymapManager::KeymapInfo&
+KeymapManager::get_mapping(Key key, KeymapMode mode)
 {
     auto it = m_mapping.find(KeyAndMode{key, mode});
     if (it != m_mapping.end())
