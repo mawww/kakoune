@@ -355,6 +355,7 @@ std::pair<String, int> ShellManager::eval(
         client.redraw_ifn();
     }, EventMode::Urgent};
 
+    bool cancelling = false;
     while (not terminated or child_stdin.write_fd() != -1 or
            ((flags & Flags::WaitForStdout) and
             (child_stdout.read_fd() != -1 or child_stderr.read_fd() != -1)))
@@ -362,6 +363,11 @@ std::pair<String, int> ShellManager::eval(
         try
         {
             EventManager::instance().handle_next_events(EventMode::Urgent, &orig_mask);
+        }
+        catch (cancel&)
+        {
+            kill(pid, SIGINT);
+            cancelling = true;
         }
         catch (runtime_error& error)
         {
@@ -384,6 +390,9 @@ std::pair<String, int> ShellManager::eval(
         write_to_debug_buffer(format("shell execution took {} us (spawn: {}, wait: {})",
                                      (size_t)full.count(), (size_t)spawn.count(), (size_t)wait.count()));
     }
+
+    if (cancelling)
+        throw cancel{};
 
     if (previous_status) // restore the status line
     {
