@@ -191,7 +191,7 @@ String build_autoinfo_for_mapping(const Context& context, KeymapMode mode,
 
     for (auto& key : keymaps.get_mapped_keys(mode))
         descs.emplace_back(to_string(key),
-                           keymaps.get_mapping(key, mode).docstring);
+                           keymaps.get_mapping_docstring(key, mode));
 
     auto max_len = 0_col;
     for (auto& desc : descs)
@@ -2025,7 +2025,6 @@ void exec_user_mappings(Context& context, NormalParams params)
         if (not context.keymaps().is_mapped(key, KeymapMode::User))
             return;
 
-        auto& mapping = context.keymaps().get_mapping(key, KeymapMode::User);
         ScopedSetBool disable_keymaps(context.keymaps_disabled());
         ScopedSetBool disable_history(context.history_disabled());
 
@@ -2033,8 +2032,7 @@ void exec_user_mappings(Context& context, NormalParams params)
 
         ScopedEdition edition(context);
         ScopedSelectionEdition selection_edition{context};
-        ScopedSetBool executing_mapping{mapping.is_executing};
-        for (auto& key : mapping.keys)
+        for (auto& key : context.keymaps().get_mapping_keys(key, KeymapMode::User))
             context.input_handler().handle_key(key);
     }, "user mapping",
     build_autoinfo_for_mapping(context, KeymapMode::User, {}));

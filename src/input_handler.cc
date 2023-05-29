@@ -1774,9 +1774,7 @@ void InputHandler::handle_key(Key key)
     {
         ScopedSetBool disable_history{context().history_disabled()};
 
-        auto& mapping = keymaps.get_mapping(key, keymap_mode);
-        ScopedSetBool executing_mapping{mapping.is_executing};
-        for (auto& k : mapping.keys)
+        for (auto& k : keymaps.get_mapping_keys(key, keymap_mode))
             process_key(k);
     }
     else

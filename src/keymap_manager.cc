@@ -18,7 +18,12 @@ void KeymapManager::map_key(Key key, KeymapMode mode,
 
 void KeymapManager::unmap_key(Key key, KeymapMode mode)
 {
-    m_mapping.remove(KeyAndMode{key, mode});
+    auto it = m_mapping.find(KeyAndMode{key, mode});
+    if (it == m_mapping.end())
+        return;
+    if (it->value.is_executing)
+        throw runtime_error("cannot unmap key that is currently executing");
+    m_mapping.remove(it);
 }
 
 void KeymapManager::unmap_keys(KeymapMode mode)

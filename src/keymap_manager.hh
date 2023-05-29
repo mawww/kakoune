@@ -39,13 +39,13 @@ public:
     bool is_mapped(Key key, KeymapMode mode) const;
     KeyList get_mapped_keys(KeymapMode mode) const;
 
-    struct KeymapInfo
-    {
-        KeyList keys;
-        String docstring;
-        NestedBool is_executing{};
-    };
-    KeymapInfo& get_mapping(Key key, KeymapMode mode);
+    auto get_mapping_keys(Key key, KeymapMode mode) {
+        struct Keys : ConstArrayView<Key> { ScopedSetBool executing; };
+        auto& mapping = get_mapping(key, mode);
+        return Keys{mapping.keys, mapping.is_executing};
+    }
+
+    const String& get_mapping_docstring(Key key, KeymapMode mode) { return get_mapping(key, mode).docstring; }
 
     using UserModeList = Vector<String>;
     UserModeList& user_modes() {
@@ -56,6 +56,14 @@ public:
     void add_user_mode(String user_mode_name);
 
 private:
+    struct KeymapInfo
+    {
+        KeyList keys;
+        String docstring;
+        NestedBool is_executing{};
+    };
+    KeymapInfo& get_mapping(Key key, KeymapMode mode);
+
     KeymapManager()
         : m_parent(nullptr) {}
     // the only one allowed to construct a root map manager

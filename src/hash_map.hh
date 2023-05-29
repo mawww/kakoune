@@ -328,6 +328,15 @@ struct HashMap
         return const_cast<HashMap*>(this)->find(key);
     }
 
+    constexpr void remove(const const_iterator& it)
+    {
+        auto index = it - m_items.begin();
+        const auto hash = hash_value(it->key);
+        m_index.remove(hash, index);
+        m_items.erase(it);
+        m_index.ordered_fix_entries(index);
+    }
+
     constexpr void clear() { m_items.clear(); m_index.clear(); }
 
     constexpr size_t size() const { return m_items.size(); }

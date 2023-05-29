@@ -1598,7 +1598,7 @@ const CommandDesc debug_cmd = {
                 KeymapMode m = parse_keymap_mode(mode, user_modes);
                 for (auto& key : keymaps.get_mapped_keys(m))
                     write_to_debug_buffer(format(" * {} {}: {}",
-                                          mode, key, keymaps.get_mapping(key, m).docstring));
+                                          mode, key, keymaps.get_mapping_docstring(key, m)));
             }
         }
         else if (parser[0] == "regex")
@@ -1933,15 +1933,9 @@ const CommandDesc unmap_key_cmd = {
         if (key.size() != 1)
             throw runtime_error("only a single key can be unmapped");
 
-        if (not keymaps.is_mapped(key[0], keymap_mode))
-            return;
-        auto& mapping = keymaps.get_mapping(key[0], keymap_mode);
-
-        if (mapping.is_executing)
-            throw runtime_error("cannot unmap key that is currently executing");
-
-        if (parser.positional_count() < 4 or
-             (mapping.keys == parse_keys(parser[3])))
+        if (keymaps.is_mapped(key[0], keymap_mode) and
+            (parser.positional_count() < 4 or
+             keymaps.get_mapping_keys(key[0], keymap_mode) == ConstArrayView<Key>{parse_keys(parser[3])}))
             keymaps.unmap_key(key[0], keymap_mode);
     }
 };
@@ -2651,7 +2645,6 @@ void enter_user_mode(Context& context, String mode_name, KeymapMode mode, bool l
         if (not context.keymaps().is_mapped(key, mode))
             return;
 
-        auto& mapping = context.keymaps().get_mapping(key, mode);
         ScopedSetBool disable_keymaps(context.keymaps_disabled());
         ScopedSetBool disable_history(context.history_disabled());
 
@@ -2659,11 +2652,8 @@ void enter_user_mode(Context& context, String mode_name, KeymapMode mode, bool l
 
         ScopedEdition edition(context);
 
-        {
-            ScopedSetBool executing_mapping{mapping.is_executing};
-            for (auto& key : mapping.keys)
-                context.input_handler().handle_key(key);
-        }
+        for (auto& key : context.keymaps().get_mapping_keys(key, mode))
+            context.input_handler().handle_key(key);
 
         if (lock)
             enter_user_mode(context, std::move(mode_name), mode, true);
