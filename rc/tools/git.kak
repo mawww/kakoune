@@ -150,11 +150,7 @@ define-command -params 1.. \
                       count=$4
                   }
                   /^author / { authors[sha]=substr($0,8) }
-                  /^author-time ([0-9]*)/ {
-                       cmd = "date -d @" $2 " +\"%F %T\""
-                       cmd | getline dates[sha]
-                       close(cmd)
-                  }
+                  /^author-time ([0-9]*)/ { dates[sha]=strftime("%F %T", $2) }
                   END { send_flags(1); }'
         ) > /dev/null 2>&1 < /dev/null &
     }
