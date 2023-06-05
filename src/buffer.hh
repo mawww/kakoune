@@ -217,6 +217,9 @@ public:
     };
     ConstArrayView<Change> changes_since(size_t timestamp) const;
 
+    void set_highlighting_interrupted() { m_highlighting_interrupted = true; }
+    bool highlighting_interrupted() const { return m_highlighting_interrupted; }
+
     String debug_description() const;
 
     // Methods called by the buffer manager
@@ -294,6 +297,8 @@ private:
     Vector<Change, MemoryDomain::BufferMeta> m_changes;
 
     FsStatus m_fs_status;
+
+    bool m_highlighting_interrupted = false;
 
     // Values are just data holding by the buffer, they are not part of its
     // observable state

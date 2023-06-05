@@ -11,6 +11,10 @@ void Highlighter::highlight(HighlightContext context, DisplayBuffer& display_buf
     {
         do_highlight(context, display_buffer, range);
     }
+    catch (cancel&)
+    {
+        throw;
+    }
     catch (runtime_error& error)
     {
         write_to_debug_buffer(format("Error while highlighting: {}", error.what()));
