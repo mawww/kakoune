@@ -27,7 +27,7 @@ The *map* command makes *key* behave as if the *keys* sequence was typed.
         mode entered when a menu is displayed with the 'menu' command
 
     *user*::
-        mode entered when the user prefix is hit (default: ',')
+        mode entered when the user prefix is hit (default: '<space>')
 
     *goto*::
         mode entered when the goto key is hit (default: 'g')
