@@ -118,7 +118,7 @@ provide-module hare %§
             execute-keys -save-regs '' k x s ^\h*\K//\h* <ret> y
             try %{
                 # paste the comment prefix
-                execute-keys x j x s ^\h* <ret>p
+                execute-keys x j x s ^\h* <ret>P
             }
         } }
         try %{
