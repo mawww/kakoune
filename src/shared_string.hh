@@ -67,6 +67,10 @@ inline StringDataPtr intern(StringView str)
     return StringRegistry::instance().intern(str);
 }
 
+String to_string(const StringDataPtr& ptr);
+
+size_t hash_value(const StringDataPtr& ptr);
+
 }
 
 #endif // shared_string_hh_INCLUDED

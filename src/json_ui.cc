@@ -58,8 +58,8 @@ String to_json(Attribute attributes)
 
 String to_json(Face face)
 {
-    return format(R"(\{ "fg": {}, "bg": {}, "underline": {}, "attributes": {} })",
-                  to_json(face.fg), to_json(face.bg), to_json(face.underline), to_json(face.attributes));
+    return format(R"(\{ "name": {}, "fg": {}, "bg": {}, "underline": {}, "attributes": {} })",
+                  to_json(face.name), to_json(face.fg), to_json(face.bg), to_json(face.underline), to_json(face.attributes));
 }
 
 String to_json(const DisplayAtom& atom)

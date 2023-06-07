@@ -11,7 +11,7 @@ static FaceRegistry::FaceSpec parse_face(StringView facedesc)
 {
     constexpr StringView invalid_face_error = "invalid face description, expected [<fg>][,<bg>[,<underline>]][+<attr>][@base] or just [base]";
     if (all_of(facedesc, [](char c){ return is_word(c); }) and not is_color_name(facedesc))
-        return {Face{}, facedesc.str()};
+        return {Face{}, intern(facedesc.str())};
 
     auto bg_it = find(facedesc, ',');
     auto underline_it = bg_it == facedesc.end() ? bg_it : std::find(bg_it+1, facedesc.end(), ',');
@@ -65,7 +65,7 @@ static FaceRegistry::FaceSpec parse_face(StringView facedesc)
         }
     }
     if (base_it != facedesc.end())
-        spec.base = String{base_it+1, facedesc.end()};
+        spec.base = intern({base_it+1, facedesc.end()});
     return spec;
 }
 
@@ -113,10 +113,10 @@ Face FaceRegistry::operator[](StringView facedesc) const
 
 Face FaceRegistry::resolve_spec(const FaceSpec& spec) const
 {
-    if (spec.base.empty())
+    if (!spec.base)
         return spec.face;
 
-    StringView base = spec.base;
+    StringDataPtr base = spec.base;
     Face face = spec.face;
     for (auto* reg = this; reg != nullptr; reg = reg->m_parent.get())
     {
@@ -124,7 +124,7 @@ Face FaceRegistry::resolve_spec(const FaceSpec& spec) const
         if (it == reg->m_faces.end())
             continue;
 
-        if (it->value.base.empty())
+        if (!it->value.base)
             return merge_faces(it->value.face, face);
         if (it->value.base != it->key)
             return merge_faces(reg->resolve_spec(it->value), face);
@@ -139,7 +139,9 @@ Face FaceRegistry::resolve_spec(const FaceSpec& spec) const
 
 void FaceRegistry::add_face(StringView name, StringView facedesc, bool override)
 {
-    if (not override and m_faces.find(name) != m_faces.end())
+    StringDataPtr interned = intern(name);
+
+    if (not override and m_faces.find(interned) != m_faces.end())
         throw runtime_error(format("face '{}' already defined", name));
 
     if (name.empty() or is_color_name(name) or
@@ -147,58 +149,63 @@ void FaceRegistry::add_face(StringView name, StringView facedesc, bool override)
         throw runtime_error(format("invalid face name: '{}'", name));
 
     FaceSpec spec = parse_face(facedesc);
+    spec.face.name = interned->strview();
     auto it = m_faces.find(spec.base);
-    if (spec.base == name and it != m_faces.end())
+    if (spec.base == interned and it != m_faces.end())
     {
         it->value.face = merge_faces(it->value.face, spec.face);
         it->value.base = spec.base;
         return;
     }
 
-    while (it != m_faces.end() and not it->value.base.empty())
+    while (it != m_faces.end() and it->value.base)
     {
-        if (it->value.base == name)
+        if (it->value.base == interned)
             throw runtime_error("face cycle detected");
         it = m_faces.find(it->value.base);
     }
-    m_faces[name] = std::move(spec);
+    m_faces[interned] = std::move(spec);
 }
 
 void FaceRegistry::remove_face(StringView name)
 {
-    m_faces.remove(name);
+    m_faces.remove(intern(name));
 }
 
 FaceRegistry::FaceRegistry()
-    : m_faces{
-        { "Default", {Face{ Color::Default, Color::Default }} },
-        { "PrimarySelection", {Face{ Color::White, Color::Blue }} },
-        { "SecondarySelection", {Face{ Color::Black, Color::Blue }} },
-        { "PrimaryCursor", {Face{ Color::Black, Color::White }} },
-        { "SecondaryCursor", {Face{ Color::Black, Color::White }} },
-        { "PrimaryCursorEol", {Face{ Color::Black, Color::Cyan }} },
-        { "SecondaryCursorEol", {Face{ Color::Black, Color::Cyan }} },
-        { "LineNumbers", {Face{ Color::Default, Color::Default }} },
-        { "LineNumberCursor", {Face{ Color::Default, Color::Default, Attribute::Reverse }} },
-        { "LineNumbersWrapped", {Face{ Color::Default, Color::Default, Attribute::Italic }} },
-        { "WrapMarker", {Face{ Color::Blue, Color::Default }} },
-        { "MenuForeground", {Face{ Color::White, Color::Blue }} },
-        { "MenuBackground", {Face{ Color::Blue, Color::White }} },
-        { "MenuInfo", {Face{ Color::Cyan, Color::Default }} },
-        { "Information", {Face{ Color::Black, Color::Yellow }} },
-        { "Error", {Face{ Color::Black, Color::Red }} },
-        { "DiagnosticError", {Face{ Color::Red, Color::Default }} },
-        { "DiagnosticWarning", {Face{ Color::Yellow, Color::Default }} },
-        { "StatusLine", {Face{ Color::Cyan, Color::Default }} },
-        { "StatusLineMode", {Face{ Color::Yellow, Color::Default }} },
-        { "StatusLineInfo", {Face{ Color::Blue, Color::Default }} },
-        { "StatusLineValue", {Face{ Color::Green, Color::Default }} },
-        { "StatusCursor", {Face{ Color::Black, Color::Cyan }} },
-        { "Prompt", {Face{ Color::Yellow, Color::Default }} },
-        { "MatchingChar", {Face{ Color::Default, Color::Default, Attribute::Bold }} },
-        { "BufferPadding", {Face{ Color::Blue, Color::Default }} },
-        { "Whitespace", {Face{ Color::Default, Color::Default, Attribute::FinalFg }} },
-      }
-{}
+{
+    auto add = [&](StringView name, Face face) {
+        StringDataPtr interned = intern(name);
+        face.name = interned->strview();
+        m_faces.insert({ interned, { face }});
+    };
+    add("Default", Face{ Color::Default, Color::Default,  });
+    add("PrimarySelection", Face{ Color::White, Color::Blue,  });
+    add("SecondarySelection", Face{ Color::Black, Color::Blue,  });
+    add("PrimaryCursor", Face{ Color::Black, Color::White,  });
+    add("SecondaryCursor", Face{ Color::Black, Color::White,  });
+    add("PrimaryCursorEol", Face{ Color::Black, Color::Cyan,  });
+    add("SecondaryCursorEol", Face{ Color::Black, Color::Cyan,  });
+    add("LineNumbers", Face{ Color::Default, Color::Default,  });
+    add("LineNumberCursor", Face{ Color::Default, Color::Default, Attribute::Reverse,  });
+    add("LineNumbersWrapped", Face{ Color::Default, Color::Default, Attribute::Italic,  });
+    add("WrapMarker", Face{ Color::Blue, Color::Default,  });
+    add("MenuForeground", Face{ Color::White, Color::Blue,  });
+    add("MenuBackground", Face{ Color::Blue, Color::White,  });
+    add("MenuInfo", Face{ Color::Cyan, Color::Default,  });
+    add("Information", Face{ Color::Black, Color::Yellow,  });
+    add("Error", Face{ Color::Black, Color::Red,  });
+    add("DiagnosticError", Face{ Color::Red, Color::Default,  });
+    add("DiagnosticWarning", Face{ Color::Yellow, Color::Default,  });
+    add("StatusLine", Face{ Color::Cyan, Color::Default,  });
+    add("StatusLineMode", Face{ Color::Yellow, Color::Default,  });
+    add("StatusLineInfo", Face{ Color::Blue, Color::Default,  });
+    add("StatusLineValue", Face{ Color::Green, Color::Default,  });
+    add("StatusCursor", Face{ Color::Black, Color::Cyan,  });
+    add("Prompt", Face{ Color::Yellow, Color::Default,  });
+    add("MatchingChar", Face{ Color::Default, Color::Default, Attribute::Bold,  });
+    add("BufferPadding", Face{ Color::Blue, Color::Default,  });
+    add("Whitespace", Face{ Color::Default, Color::Default, Attribute::FinalFg,  });
+}
 
 }
