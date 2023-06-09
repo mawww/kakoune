@@ -143,13 +143,12 @@ static std::unique_ptr<Highlighter> create_fill_highlighter(HighlighterParameter
     if (params.size() != 1)
         throw runtime_error("wrong parameter count");
 
-    const String& facespec = params[0];
-    auto func = [facespec](HighlightContext context, DisplayBuffer& display_buffer, BufferRange range)
-    {
-        highlight_range(display_buffer, range.begin, range.end, false,
-                        apply_face(context.context.faces()[facespec]));
-    };
-    return make_highlighter(std::move(func));
+    return make_highlighter(
+        [spec=parse_face(params[0])](HighlightContext context, DisplayBuffer& display_buffer,
+                                     BufferRange range) {
+            highlight_range(display_buffer, range.begin, range.end, false,
+                            apply_face(context.context.faces()[spec]));
+        });
 }
 
 template<typename T>
@@ -168,7 +167,7 @@ private:
     ValueId m_id;
 };
 
-using FacesSpec = Vector<std::pair<size_t, String>, MemoryDomain::Highlight>;
+using FacesSpec = Vector<std::pair<size_t, FaceSpec>, MemoryDomain::Highlight>;
 
 const HighlighterDesc regex_desc = {
     "Parameters: <regex> <capture num>:<face> <capture num>:<face>...\n"
@@ -197,7 +196,7 @@ public:
             return;
 
         const auto faces = m_faces | transform([&faces = context.context.faces()](auto&& spec) {
-                return spec.second.empty() ? Face{} : faces[spec.second];
+                return faces[spec.second];
             }) | gather<Vector<Face>>();
 
         const auto& matches = get_matches(context.context.buffer(), display_buffer.range(), range);
@@ -242,7 +241,7 @@ public:
             if (capture < 0)
                 throw runtime_error(format("capture name {} is neither a capture index, nor an existing capture name",
                                            capture_name));
-            faces.emplace_back(capture, String{colon+1, spec.end()});
+            faces.emplace_back(capture, parse_face({colon+1, spec.end()}));
         }
 
         return std::make_unique<RegexHighlighter>(std::move(re), std::move(faces));
@@ -272,11 +271,9 @@ private:
             return;
 
         std::sort(m_faces.begin(), m_faces.end(),
-                  [](const std::pair<size_t, String>& lhs,
-                     const std::pair<size_t, String>& rhs)
-                  { return lhs.first < rhs.first; });
+                  [](auto&& lhs, auto&& rhs) { return lhs.first < rhs.first; });
         if (m_faces[0].first != 0)
-            m_faces.emplace(m_faces.begin(), 0, String{});
+            m_faces.emplace(m_faces.begin(), 0, FaceSpec{});
     }
 
     void add_matches(const Buffer& buffer, MatchList& matches, BufferRange range)
@@ -411,14 +408,14 @@ std::unique_ptr<Highlighter> create_dynamic_regex_highlighter(HighlighterParamet
     if (params.size() < 2)
         throw runtime_error("wrong parameter count");
 
-    Vector<std::pair<String, String>> faces;
+    Vector<std::pair<String, FaceSpec>> faces;
     for (auto& spec : params.subrange(1))
     {
         auto colon = find(spec, ':');
         if (colon == spec.end())
             throw runtime_error("wrong face spec: '" + spec +
                                  "' expected <capture>:<facespec>");
-        faces.emplace_back(String{spec.begin(), colon}, String{colon+1, spec.end()});
+        faces.emplace_back(String{spec.begin(), colon}, parse_face({colon+1, spec.end()}));
     }
 
     auto make_hl = [](auto& regex_getter, auto& face_getter) {
@@ -440,7 +437,7 @@ std::unique_ptr<Highlighter> create_dynamic_regex_highlighter(HighlighterParamet
                                              face.first));
                 return FacesSpec{};
             }
-            spec.emplace_back(capture, face.second);
+            spec.emplace_back(capture, std::move(face.second));
         }
         return spec;
     };
@@ -1258,7 +1255,7 @@ void highlight_selections(HighlightContext context, DisplayBuffer& display_buffe
 void expand_unprintable(HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
 {
     const auto& buffer = context.context.buffer();
-    auto error = context.context.faces()["Error"];
+    auto error = context.context.faces()[FaceSpec{{}, "Error"}];
     for (auto& line : display_buffer.lines())
     {
         for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)

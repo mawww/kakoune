@@ -11,20 +11,24 @@
 namespace Kakoune
 {
 
+struct FaceSpec
+{
+    Face face = {};
+    String base = {};
+
+    friend bool operator==(const FaceSpec&, const FaceSpec&) = default;
+};
+
 class FaceRegistry : public SafeCountable
 {
 public:
     FaceRegistry(FaceRegistry& parent) : SafeCountable{}, m_parent(&parent) {}
 
     Face operator[](StringView facedesc) const;
+    Face operator[](const FaceSpec& facespec) const;
     void add_face(StringView name, StringView facedesc, bool override = false);
     void remove_face(StringView name);
 
-    struct FaceSpec
-    {
-        Face face = {};
-        String base = {};
-    };
     using FaceMap = HashMap<String, FaceSpec, MemoryDomain::Faces>;
 
     auto flatten_faces() const
@@ -50,6 +54,7 @@ private:
     FaceMap m_faces;
 };
 
+FaceSpec parse_face(StringView facedesc);
 String to_string(Face face);
 
 }

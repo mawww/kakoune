@@ -7,7 +7,7 @@
 namespace Kakoune
 {
 
-static FaceRegistry::FaceSpec parse_face(StringView facedesc)
+FaceSpec parse_face(StringView facedesc)
 {
     constexpr StringView invalid_face_error = "invalid face description, expected [<fg>][,<bg>[,<underline>]][+<attr>][@base] or just [base]";
     if (all_of(facedesc, [](char c){ return is_word(c); }) and not is_color_name(facedesc))
@@ -33,7 +33,7 @@ static FaceRegistry::FaceSpec parse_face(StringView facedesc)
         return spec.empty() ? Color::Default : str_to_color(spec);
     };
 
-    FaceRegistry::FaceSpec spec;
+    FaceSpec spec;
     auto& face = spec.face;
     face.fg = parse_color({facedesc.begin(), std::min(bg_it, colors_end)});
     if (bg_it != facedesc.end())
@@ -109,6 +109,11 @@ String to_string(Face face)
 Face FaceRegistry::operator[](StringView facedesc) const
 {
     return resolve_spec(parse_face(facedesc));
+}
+
+Face FaceRegistry::operator[](const FaceSpec& spec) const
+{
+    return resolve_spec(spec);
 }
 
 Face FaceRegistry::resolve_spec(const FaceSpec& spec) const
