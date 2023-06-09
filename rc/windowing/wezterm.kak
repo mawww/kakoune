@@ -11,7 +11,7 @@ evaluate-commands %sh{
 
 define-command wezterm-terminal-impl -hidden -params 2.. %{
     nop %sh{
-        wezterm cli $@
+        wezterm cli "$@"
     }
 }
 
