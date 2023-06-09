@@ -684,7 +684,7 @@ Optional<Key> TerminalUI::get_next_key()
         return resize(dimensions());
     }
 
-    static auto get_char = [this]() -> Optional<unsigned char> {
+    static auto get_char = []() -> Optional<unsigned char> {
         if (not fd_readable(STDIN_FILENO))
             return {};
 
