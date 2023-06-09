@@ -135,13 +135,19 @@ public:
     iterator insert(iterator it, DisplayAtom atom);
 
     template<typename It>
-    iterator insert(iterator it, It beg, It end)
+    iterator insert(iterator pos, It beg, It end)
     {
-        auto res = m_atoms.insert(it, beg, end);
-        compute_range();
-        return res;
+        auto has_buffer_range = std::mem_fn(&DisplayAtom::has_buffer_range);
+        if (auto first = std::find_if(beg, end, has_buffer_range); first != end)
+        {
+            auto last = std::find_if(std::reverse_iterator(end), std::reverse_iterator(first), has_buffer_range);
+            m_range.begin = std::min(m_range.begin, first->begin());
+            m_range.end = std::max(m_range.end, last->end());
+        }
+        return m_atoms.insert(pos, beg, end);
     }
 
+    DisplayLine extract(iterator beg, iterator end);
     iterator erase(iterator beg, iterator end);
     DisplayAtom& push_back(DisplayAtom atom);
 

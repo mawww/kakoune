@@ -165,9 +165,7 @@ DisplayLine::iterator DisplayLine::insert(iterator it, DisplayAtom atom)
         m_range.begin  = std::min(m_range.begin, atom.begin());
         m_range.end = std::max(m_range.end, atom.end());
     }
-    auto res = m_atoms.insert(it, std::move(atom));
-    compute_range();
-    return res;
+    return m_atoms.insert(it, std::move(atom));
 }
 
 DisplayAtom& DisplayLine::push_back(DisplayAtom atom)
@@ -179,6 +177,19 @@ DisplayAtom& DisplayLine::push_back(DisplayAtom atom)
     }
     m_atoms.push_back(std::move(atom));
     return m_atoms.back();
+}
+
+DisplayLine DisplayLine::extract(iterator beg, iterator end)
+{
+    if (beg == this->begin() and end == this->end())
+        return DisplayLine{std::move(*this)};
+
+    DisplayLine extracted{AtomList(std::move_iterator(beg), std::move_iterator(end))};
+    m_atoms.erase(beg, end);
+    if (extracted.m_range.begin == m_range.begin or
+        extracted.m_range.end == m_range.end)
+        compute_range();
+    return extracted;
 }
 
 DisplayLine::iterator DisplayLine::erase(iterator beg, iterator end)
@@ -281,15 +292,16 @@ const BufferRange init_range{ {INT_MAX, INT_MAX}, {INT_MIN, INT_MIN} };
 void DisplayLine::compute_range()
 {
     m_range = init_range;
-    for (auto& atom : m_atoms)
-    {
-        if (not atom.has_buffer_range())
-            continue;
-        m_range.begin  = std::min(m_range.begin, atom.begin());
-        m_range.end = std::max(m_range.end, atom.end());
-    }
-    if (m_range == init_range)
+    auto first = find_if(m_atoms, std::mem_fn(&DisplayAtom::has_buffer_range));
+    if (first == m_atoms.end())
         m_range = { { 0, 0 }, { 0, 0 } };
+    else
+    {
+        auto last = std::find_if(m_atoms.rbegin(), std::reverse_iterator(first+1), std::mem_fn(&DisplayAtom::has_buffer_range));
+        m_range.begin = first->begin();
+        m_range.end = last->end();
+    }
+
     kak_assert(m_range.begin <= m_range.end);
 }
 

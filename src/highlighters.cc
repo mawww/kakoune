@@ -127,94 +127,6 @@ void replace_range(DisplayBuffer& display_buffer,
     func(*first_it, first_atom_it);
 }
 
-void apply_highlighter(HighlightContext context,
-                       DisplayBuffer& display_buffer,
-                       BufferCoord begin, BufferCoord end,
-                       Highlighter& highlighter)
-{
-    if (begin == end)
-        return;
-
-    using LineIterator = DisplayLineList::iterator;
-    LineIterator first_line;
-    Vector<size_t> insert_idx;
-    auto line_end = display_buffer.lines().end();
-
-    DisplayBuffer region_display;
-    auto& region_lines = region_display.lines();
-    for (auto line_it = display_buffer.lines().begin(); line_it != line_end; ++line_it)
-    {
-        auto& line = *line_it;
-        auto& range = line.range();
-        if (range.end <= begin or end <= range.begin)
-            continue;
-
-        if (region_lines.empty())
-            first_line = line_it;
-
-        if (range.begin < begin or range.end > end)
-        {
-            size_t beg_idx = 0;
-            size_t end_idx = line.atoms().size();
-
-            for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
-            {
-                if (not atom_it->has_buffer_range() or end <= atom_it->begin() or begin >= atom_it->end())
-                    continue;
-
-                bool is_replaced = atom_it->type() == DisplayAtom::ReplacedRange;
-                if (atom_it->begin() <= begin)
-                {
-                    if (is_replaced or atom_it->begin() == begin)
-                        beg_idx = atom_it - line.begin();
-                    else
-                    {
-                        atom_it = ++line.split(atom_it, begin);
-                        beg_idx = atom_it - line.begin();
-                        ++end_idx;
-                    }
-                }
-
-                if (atom_it->end() >= end)
-                {
-                    if (is_replaced or atom_it->end() == end)
-                        end_idx = atom_it - line.begin() + 1;
-                    else
-                    {
-                        atom_it = ++line.split(atom_it, end);
-                        end_idx = atom_it - line.begin();
-                    }
-                }
-            }
-            region_lines.emplace_back();
-            std::move(line.begin() + beg_idx, line.begin() + end_idx,
-                      std::back_inserter(region_lines.back()));
-            auto it = line.erase(line.begin() + beg_idx, line.begin() + end_idx);
-            insert_idx.push_back(it - line.begin());
-        }
-        else
-        {
-            insert_idx.push_back(0);
-            region_lines.push_back(std::move(line));
-        }
-    }
-
-    if (region_display.lines().empty())
-        return;
-
-    region_display.compute_range();
-    highlighter.highlight(context, region_display, {begin, end});
-
-    for (size_t i = 0; i < region_lines.size(); ++i)
-    {
-        auto& line = *(first_line + i);
-        auto pos = line.begin() + insert_idx[i];
-        for (auto& atom : region_lines[i])
-            pos = ++line.insert(pos, std::move(atom));
-    }
-    display_buffer.compute_range();
-}
-
 auto apply_face = [](const Face& face)
 {
     return [&face](DisplayAtom& atom) {
@@ -1874,6 +1786,70 @@ struct RegionMatches : UseMemoryDomain<MemoryDomain::Highlight>
     RegexMatchList recurse_matches;
 };
 
+struct ForwardHighlighterApplier
+{
+    DisplayBuffer& display_buffer;
+    HighlightContext& context;
+    DisplayLineList::iterator cur_line = display_buffer.lines().begin();
+    DisplayLineList::iterator end_line = display_buffer.lines().end();
+    DisplayLine::iterator cur_atom = cur_line->begin();
+    DisplayBuffer region_display{};
+
+    void operator()(BufferCoord begin, BufferCoord end, Highlighter& highlighter)
+    {
+        if (begin == end)
+            return;
+
+        auto first_line = std::find_if(cur_line, end_line, [&](auto&& line) { return line.range().end > begin; });
+        if (first_line != cur_line and first_line != end_line)
+            cur_atom = first_line->begin();
+        cur_line = first_line;
+        if (cur_line == end_line)
+            return;
+
+        auto& region_lines = region_display.lines();
+        region_lines.clear();
+        Vector<size_t> insert_idx;
+        while (cur_line != end_line and cur_line->range().begin < end)
+        {
+            auto& line = *cur_line;
+            auto first = std::find_if(cur_atom, line.end(), [&](auto&& atom) { return atom.has_buffer_range() and atom.end() > begin; });
+            if (first->type() != DisplayAtom::ReplacedRange and first->begin() < begin)
+                first = ++line.split(first, begin);
+            auto idx = first - line.begin();
+
+            auto last = std::find_if(first, line.end(), [&](auto&& atom) { return atom.has_buffer_range() and atom.end() > end; });
+            if (last != line.end() and last->type() != DisplayAtom::ReplacedRange and last->begin() < end and last->end() > end)
+                last = ++line.split(last, end);
+
+            insert_idx.push_back(idx);
+            region_lines.push_back(line.extract(line.begin() + idx, last));
+
+            if (idx != line.atoms().size())
+                break;
+            else if (++cur_line != end_line)
+                cur_atom = cur_line->begin();
+        }
+
+        if (region_lines.empty())
+            return;
+
+        region_display.compute_range();
+        highlighter.highlight(context, region_display, {begin, end});
+
+        for (size_t i = 0; i < region_lines.size(); ++i, ++first_line)
+        {
+            auto it = first_line->insert(
+                first_line->begin() + insert_idx[i],
+                std::move_iterator(region_lines[i].begin()),
+                std::move_iterator(region_lines[i].end()));
+
+            if (first_line == cur_line)
+                cur_atom = it + region_lines[i].atoms().size();
+        }
+    }
+};
+
 const HighlighterDesc default_region_desc = {
     "Parameters: <delegate_type> <delegate_params>...\n"
     "Define the default region of a regions highlighter",
@@ -1926,28 +1902,25 @@ public:
         auto default_region_it = m_regions.find(m_default_region);
         const bool apply_default = default_region_it != m_regions.end();
 
-        auto last_begin = (begin == regions.begin()) ?
-                             range.begin : (begin-1)->end;
+        auto last_begin = (begin == regions.begin()) ? range.begin : (begin-1)->end;
         kak_assert(begin <= end);
+
+        ForwardHighlighterApplier apply_highlighter{display_buffer, context};
         for (; begin != end; ++begin)
         {
             if (apply_default and last_begin < begin->begin)
-                apply_highlighter(context, display_buffer,
-                                  correct(last_begin), correct(begin->begin),
-                                  *default_region_it->value);
+                apply_highlighter(correct(last_begin), correct(begin->begin), *default_region_it->value);
 
             auto it = m_regions.find(begin->region);
             if (it == m_regions.end())
                 continue;
-            apply_highlighter(context, display_buffer,
-                              correct(begin->begin), correct(begin->end),
-                              *it->value);
+            apply_highlighter(correct(begin->begin), correct(begin->end), *it->value);
             last_begin = begin->end;
         }
         if (apply_default and last_begin < display_range.end)
-            apply_highlighter(context, display_buffer,
-                              correct(last_begin), range.end,
-                              *default_region_it->value);
+            apply_highlighter(correct(last_begin), range.end, *default_region_it->value);
+
+        display_buffer.compute_range();
     }
 
     bool has_children() const override { return true; }
