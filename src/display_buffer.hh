@@ -2,12 +2,12 @@
 #define display_buffer_hh_INCLUDED
 
 #include "face.hh"
-#include "hash.hh"
 #include "coord.hh"
 #include "range.hh"
 #include "string.hh"
 #include "vector.hh"
 #include "hash_map.hh"
+#include <functional>
 
 namespace Kakoune
 {
