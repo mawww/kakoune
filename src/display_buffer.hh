@@ -9,6 +9,8 @@
 #include "vector.hh"
 #include "hash_map.hh"
 
+#include <functional> // for std::mem_fn
+
 namespace Kakoune
 {
 
