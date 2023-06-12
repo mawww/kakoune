@@ -155,11 +155,13 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
 
     m_display_buffer.compute_range();
     const BufferRange range{{0,0}, buffer().end_coord()};
-    for (auto pass : { HighlightPass::Wrap, HighlightPass::Move, HighlightPass::Colorize })
-        m_builtin_highlighters.highlight({context, setup, pass, {}}, m_display_buffer, range);
+    m_builtin_highlighters.highlight({context, setup, HighlightPass::Wrap, {}}, m_display_buffer, range);
+    m_builtin_highlighters.highlight({context, setup, HighlightPass::Move, {}}, m_display_buffer, range);
 
     for (auto& line : m_display_buffer.lines())
         line.trim_from(setup.widget_columns, setup.first_column, m_dimensions.column);
+
+    m_builtin_highlighters.highlight({context, setup, HighlightPass::Colorize, {}}, m_display_buffer, range);
 
     m_display_buffer.optimize();
 

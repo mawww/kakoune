@@ -264,18 +264,22 @@ bool DisplayLine::trim_from(ColumnCount first_col, ColumnCount front, ColumnCoun
     }
 
     auto front_it = it;
-    Face last_face{};
+    Optional<DisplayAtom> padding;
     while (front > 0 and it != end())
     {
         front -= it->trim_begin(front);
         kak_assert(it->empty() or front <= 0);
-        last_face = it->face;
+        if (front < 0)
+            padding.emplace(it->has_buffer_range()
+                ? DisplayAtom{it->buffer(), {it->begin(), it->begin()}, String{' ', -front}, it->face}
+                : DisplayAtom{String{' ', -front}, it->face});
+
         if (it->empty())
             ++it;
     }
     it = m_atoms.erase(front_it, it);
-    if (front < 0)
-        it = m_atoms.insert(it, DisplayAtom{String{' ', -front}, last_face});
+    if (padding)
+        it = m_atoms.insert(it, std::move(*padding));
 
     it = begin();
     for (; it != end() and col_count > 0; ++it)

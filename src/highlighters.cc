@@ -530,7 +530,7 @@ std::unique_ptr<Highlighter> create_column_highlighter(HighlighterParameters par
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
 
-    auto func = [col_expr=params[0], facespec=params[1]]
+    auto func = [col_expr=params[0], facespec=parse_face(params[1])]
                 (HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
     {
         ColumnCount column = -1;
@@ -551,7 +551,7 @@ std::unique_ptr<Highlighter> create_column_highlighter(HighlighterParameters par
         if (column < context.setup.first_column or column >= context.setup.first_column + context.context.window().dimensions().column)
             return;
 
-        column += context.setup.widget_columns;
+        column += context.setup.widget_columns - context.setup.first_column;
         for (auto& line : display_buffer.lines())
         {
             auto remaining_col = column;
@@ -1801,26 +1801,29 @@ struct ForwardHighlighterApplier
         if (first_line != cur_line and first_line != end_line)
             cur_atom = first_line->begin();
         cur_line = first_line;
-        if (cur_line == end_line)
+        if (cur_line == end_line or cur_line->range().begin >= end)
             return;
 
         auto& region_lines = region_display.lines();
         region_lines.clear();
-        Vector<size_t> insert_idx;
+        Vector<std::pair<DisplayLineList::iterator, size_t>> insert_pos;
         while (cur_line != end_line and cur_line->range().begin < end)
         {
             auto& line = *cur_line;
             auto first = std::find_if(cur_atom, line.end(), [&](auto&& atom) { return atom.has_buffer_range() and atom.end() > begin; });
-            if (first->type() != DisplayAtom::ReplacedRange and first->begin() < begin)
+            if (first->type() == DisplayAtom::Range and first->begin() < begin)
                 first = ++line.split(first, begin);
             auto idx = first - line.begin();
 
             auto last = std::find_if(first, line.end(), [&](auto&& atom) { return atom.has_buffer_range() and atom.end() > end; });
-            if (last != line.end() and last->type() != DisplayAtom::ReplacedRange and last->begin() < end and last->end() > end)
+            if (last != line.end() and last->type() == DisplayAtom::Range and last->begin() < end)
                 last = ++line.split(last, end);
 
-            insert_idx.push_back(idx);
-            region_lines.push_back(line.extract(line.begin() + idx, last));
+            if (line.begin() + idx != last)
+            {
+                insert_pos.emplace_back(cur_line, idx);
+                region_lines.push_back(line.extract(line.begin() + idx, last));
+            }
 
             if (idx != line.atoms().size())
                 break;
@@ -1828,21 +1831,20 @@ struct ForwardHighlighterApplier
                 cur_atom = cur_line->begin();
         }
 
-        if (region_lines.empty())
-            return;
-
         region_display.compute_range();
         highlighter.highlight(context, region_display, {begin, end});
 
-        for (size_t i = 0; i < region_lines.size(); ++i, ++first_line)
+        for (size_t i = 0; i < insert_pos.size(); ++i)
         {
-            auto it = first_line->insert(
-                first_line->begin() + insert_idx[i],
-                std::move_iterator(region_lines[i].begin()),
-                std::move_iterator(region_lines[i].end()));
+            auto& [line_it, idx] = insert_pos[i];
+            auto& atoms = region_lines[i].atoms();
+            auto it = line_it->insert(
+                line_it->begin() + idx,
+                std::move_iterator(atoms.begin()),
+                std::move_iterator(atoms.end()));
 
-            if (first_line == cur_line)
-                cur_atom = it + region_lines[i].atoms().size();
+            if (line_it == cur_line)
+                cur_atom = it + atoms.size();
         }
     }
 };

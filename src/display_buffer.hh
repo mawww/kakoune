@@ -54,8 +54,8 @@ public:
 
     void replace(String text)
     {
-        kak_assert(m_type == Range);
-        m_type = ReplacedRange;
+        if (m_type == Range)
+            m_type = ReplacedRange;
         m_text = std::move(text);
     }
 
