@@ -1910,10 +1910,7 @@ public:
             if (apply_default and last_begin < begin->begin)
                 apply_highlighter(correct(last_begin), correct(begin->begin), *default_region_it->value);
 
-            auto it = m_regions.find(begin->region);
-            if (it == m_regions.end())
-                continue;
-            apply_highlighter(correct(begin->begin), correct(begin->end), *it->value);
+            apply_highlighter(correct(begin->begin), correct(begin->end), *begin->highlighter);
             last_begin = begin->end;
         }
         if (apply_default and last_begin < display_range.end)
@@ -2040,32 +2037,6 @@ public:
     }
 
 private:
-    struct Region
-    {
-        BufferCoord begin;
-        BufferCoord end;
-        StringView region;
-    };
-    using RegionList = Vector<Region, MemoryDomain::Highlight>;
-
-    struct RegexKey
-    {
-        StringView regex;
-        bool match_captures;
-
-        friend size_t hash_value(const RegexKey& key) { return hash_values(key.regex, key.match_captures); }
-        friend bool operator==(const RegexKey&, const RegexKey&) = default;
-    };
-
-    struct Cache
-    {
-        size_t buffer_timestamp = 0;
-        size_t regions_timestamp = 0;
-        LineRangeSet ranges;
-        HashMap<RegexKey, RegexMatchList> matches;
-        HashMap<BufferRange, RegionList, MemoryDomain::Highlight> regions;
-    };
-
     struct RegionHighlighter : public Highlighter
     {
         RegionHighlighter(std::unique_ptr<Highlighter>&& delegate,
@@ -2132,6 +2103,32 @@ private:
         String m_recurse;
         bool  m_match_capture = false;
         bool  m_default = false;
+    };
+
+    struct Region
+    {
+        BufferCoord begin;
+        BufferCoord end;
+        RegionHighlighter* highlighter;
+    };
+    using RegionList = Vector<Region, MemoryDomain::Highlight>;
+
+    struct RegexKey
+    {
+        StringView regex;
+        bool match_captures;
+
+        friend size_t hash_value(const RegexKey& key) { return hash_values(key.regex, key.match_captures); }
+        friend bool operator==(const RegexKey&, const RegexKey&) = default;
+    };
+
+    struct Cache
+    {
+        size_t buffer_timestamp = 0;
+        size_t regions_timestamp = 0;
+        LineRangeSet ranges;
+        HashMap<RegexKey, RegexMatchList> matches;
+        HashMap<BufferRange, RegionList, MemoryDomain::Highlight> regions;
     };
 
 
@@ -2367,24 +2364,24 @@ private:
         for (auto begin = find_next_begin(cache, range.begin); begin; )
         {
             auto& [index, beg_it] = *begin;
-            auto& [name, region] = m_regions.item(index);
-            auto& end_matches = cache.matches.get(RegexKey{region->m_end, region->match_capture()});
-            auto& recurse_matches = region->m_recurse.empty() ?
-                empty_matches : cache.matches.get(RegexKey{region->m_recurse, region->match_capture()});
+            auto& region = *m_regions.item(index).value;
+            auto& end_matches = cache.matches.get(RegexKey{region.m_end, region.match_capture()});
+            auto& recurse_matches = region.m_recurse.empty() ?
+                empty_matches : cache.matches.get(RegexKey{region.m_recurse, region.match_capture()});
 
             auto end_it = find_matching_end(buffer, beg_it->end_coord(), end_matches, recurse_matches,
-                                            region->match_capture() ? beg_it->capture(buffer) : Optional<StringView>{});
+                                            region.match_capture() ? beg_it->capture(buffer) : Optional<StringView>{});
 
             if (end_it == end_matches.end() or end_it->end_coord() >= range.end) // region continue past range end
             {
                 auto begin_coord = beg_it->begin_coord();
                 if (begin_coord < range.end)
-                    regions.push_back({begin_coord, range.end, name});
+                    regions.push_back({begin_coord, range.end, &region});
                 break;
             }
 
             auto end_coord = end_it->end_coord();
-            regions.push_back({beg_it->begin_coord(), end_coord, name});
+            regions.push_back({beg_it->begin_coord(), end_coord, &region});
 
             // With empty begin and end matches (for example if the regexes
             // are /"\K/ and /(?=")/), that case can happen, and would
