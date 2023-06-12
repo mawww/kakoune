@@ -478,7 +478,7 @@ std::unique_ptr<Highlighter> create_line_highlighter(HighlighterParameters param
     if (params.size() != 2)
         throw runtime_error("wrong parameter count");
 
-    auto func = [line_expr=params[0], facespec=params[1]]
+    auto func = [line_expr=params[0], facespec=parse_face(params[1])]
                 (HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
     {
         LineCount line = -1;
