@@ -49,6 +49,7 @@ struct {
         "» {+b}<a-u>{} and {+b}<a-U>{} now undo selection history\n"
         "» {+u}%exp\\{...}{} expansions provide flexible quoting for expanded "
         "strings (as double quoted strings)\n"
+        "» {+u}show-matching -previous{} switch\n"
     }, {
         20221031,
         "» {+b}<esc>{} does not end macro recording anymore, use {+b}Q{}\n"

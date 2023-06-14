@@ -30,7 +30,11 @@ highlighter is replaced with the new one.
 
 *show-matching*::
     highlight matching char of the character under the selections' cursor
-    using `MatchingChar` face
+    using `MatchingChar` face, with the following *options*:
+
+    *-previous*:::
+        fall back to the character before the cursor when the cursor is not
+        over a matching char
 
 *show-whitespaces* [options]::
     display symbols on top of whitespaces to make them more explicit

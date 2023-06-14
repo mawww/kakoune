@@ -197,7 +197,7 @@ public:
 
         const auto faces = m_faces | transform([&faces = context.context.faces()](auto&& spec) {
                 return faces[spec.second];
-            }) | gather<Vector<Face>>();
+            }) | gather<Vector>();
 
         const auto& matches = get_matches(context.context.buffer(), display_buffer.range(), range);
         kak_assert(matches.size() % m_faces.size() == 0);
@@ -1154,8 +1154,9 @@ constexpr StringView LineNumbersHighlighter::ms_id;
 
 const HighlighterDesc show_matching_desc = {
     "Apply the MatchingChar face to the char matching the one under the cursor",
-    {}
+    { { { "previous", {} } }, ParameterDesc::Flags::SwitchesOnlyAtStart, 0, 0 }
 };
+template<bool match_prev>
 void show_matching_char(HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
 {
     const Face face = context.context.faces()["MatchingChar"];
@@ -1170,9 +1171,16 @@ void show_matching_char(HighlightContext context, DisplayBuffer& display_buffer,
 
         Utf8Iterator it{buffer.iterator_at(pos), buffer};
         auto match = find(matching_pairs, *it);
+        bool matching_prev = match == matching_pairs.end() and match_prev;
+        if (matching_prev)
+            match = find(matching_pairs, *--it);
 
         if (match == matching_pairs.end())
             continue;
+
+        if (matching_prev)
+            highlight_range(display_buffer, it.base().coord(), (it+1).base().coord(),
+                            false, apply_face(face));
 
         int level = 0;
         if (((match - matching_pairs.begin()) % 2) == 0)
@@ -1216,7 +1224,8 @@ void show_matching_char(HighlightContext context, DisplayBuffer& display_buffer,
 
 std::unique_ptr<Highlighter> create_matching_char_highlighter(HighlighterParameters params, Highlighter*)
 {
-    return make_highlighter(show_matching_char);
+    ParametersParser parser{params, show_matching_desc.params};
+    return make_highlighter(parser.get_switch("previous") ? show_matching_char<true> : show_matching_char<false>);
 }
 
 void highlight_selections(HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
