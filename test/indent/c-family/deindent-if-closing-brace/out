@@ -19,3 +19,8 @@ if (1) {
   if (1) {
          bar()
   }
+
+        foo(bar) {}
+    {
+        baz
+    }
