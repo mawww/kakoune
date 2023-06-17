@@ -2011,6 +2011,29 @@ void redo(Context& context, NormalParams params)
 }
 
 template<Direction direction>
+void move_in_history(Context& context, NormalParams params)
+{
+    Buffer& buffer = context.buffer();
+    size_t timestamp = buffer.timestamp();
+    const int count = std::max(1, params.count);
+    const int history_id = (size_t)buffer.current_history_id() + direction * count;
+    const int max_history_id = (int)buffer.next_history_id() - 1;
+    if (buffer.move_to((Buffer::HistoryId)history_id))
+    {
+        auto ranges = compute_modified_ranges(buffer, timestamp);
+        if (not ranges.empty())
+            context.selections_write_only() = std::move(ranges);
+
+        context.print_status({ format("moved to change #{} ({})",
+                               history_id, max_history_id),
+                               context.faces()["Information"] });
+    }
+    else
+        throw runtime_error(format("no such change: #{} ({})",
+                            history_id, max_history_id));
+}
+
+template<Direction direction>
 void undo_selection_change(Context& context, NormalParams params)
 {
     int count = std::max(1, params.count);
@@ -2339,6 +2362,8 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
 
     { {'u'}, {"undo", undo} },
     { {'U'}, {"redo", redo} },
+    { {ctrl('k')}, {"move backward in history", move_in_history<Direction::Backward>} },
+    { {ctrl('j')}, {"move forward in history", move_in_history<Direction::Forward>} },
 
     { {alt('u')}, {"undo selection change", undo_selection_change<Backward>} },
     { {alt('U')}, {"redo selection change", undo_selection_change<Forward>} },

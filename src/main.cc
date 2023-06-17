@@ -45,7 +45,8 @@ struct {
     StringView notes;
 } constexpr version_notes[] = { {
         0,
-        "» History is now stored linearly instead of in a tree\n"
+        "» Selection undo/redo moved to {+b}<a-u>{}/{+b}<a-U>{} "
+        "and moving in history tree to {+b}<c-k>{}/{+b}c-j>{}\n"
         "» {+b}<a-u>{} and {+b}<a-U>{} now undo selection history\n"
         "» {+u}%exp\\{...}{} expansions provide flexible quoting for expanded "
         "strings (as double quoted strings)\n"

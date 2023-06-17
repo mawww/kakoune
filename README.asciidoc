@@ -540,7 +540,9 @@ Changes
  * `<a-!>`: append command output after each selection
 
  * `u`: undo last change
+ * `<c-k>`: move backward in history
  * `U`: redo last change
+ * `<c-f>`: move forward in history
 
  * `&`: align selections, align the cursor of selections by inserting
         spaces before the first character of the selection
