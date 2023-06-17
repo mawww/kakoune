@@ -50,6 +50,7 @@ struct {
         "» {+u}%exp\\{...}{} expansions provide flexible quoting for expanded "
         "strings (as double quoted strings)\n"
         "» {+u}show-matching -previous{} switch\n"
+        "» {+b}<c-g>{} to cancel current operation\n"
     }, {
         20221031,
         "» {+b}<esc>{} does not end macro recording anymore, use {+b}Q{}\n"
