@@ -145,24 +145,24 @@ void show_startup_info(Client* local_client, int last_version)
 {
     const Face version_face{Color::Default, Color::Default, Attribute::Bold};
     DisplayLineList info;
-    for (auto note : version_notes)
+    for (auto [version, notes] : version_notes)
     {
-        if (note.version and note.version <= last_version)
+        if (version and version <= last_version)
             continue;
 
-        if (not note.version)
+        if (not version)
             info.push_back({"• Development version", version_face});
         else
         {
-            const auto year = note.version / 10000;
-            const auto month = (note.version / 100) % 100;
-            const auto day = note.version % 100;
+            const auto year = version / 10000;
+            const auto month = (version / 100) % 100;
+            const auto day = version % 100;
             info.push_back({format("• Kakoune v{}.{}{}.{}{}",
                                    year, month < 10 ? "0" : "", month, day < 10 ? "0" : "", day),
                             version_face});
         }
 
-        for (auto&& line : note.notes | split<StringView>('\n'))
+        for (auto&& line : notes | split<StringView>('\n'))
             info.push_back(parse_display_line(line, GlobalScope::instance().faces()));
     }
     if (not info.empty())
