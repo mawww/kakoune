@@ -1840,6 +1840,9 @@ struct ForwardHighlighterApplier
                 cur_atom = cur_line->begin();
         }
 
+        if (region_lines.empty())
+            return;
+
         region_display.compute_range();
         highlighter.highlight(context, region_display, {begin, end});
 
