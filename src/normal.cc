@@ -2344,6 +2344,9 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
     { {'x'}, {"extend selections to whole lines", select<SelectMode::Replace, select_lines>} },
     { {alt('x')}, {"crop selections to whole lines", select<SelectMode::Replace, trim_partial_lines>} },
 
+    { {'X'}, {"extend selections to whole lines downwards", repeated<select<SelectMode::Replace, extend_lines_downwards>>} },
+    { {alt('X')}, {"extend selections to whole lines upwards", repeated<select<SelectMode::Replace, extend_lines_upwards>>} },
+
     { {'m'}, {"select to matching character", select<SelectMode::Replace, select_matching<true>>} },
     { {alt('m')}, {"backward select to matching character", select<SelectMode::Replace, select_matching<false>>} },
     { {'M'}, {"extend to matching character", select<SelectMode::Extend, select_matching<true>>} },

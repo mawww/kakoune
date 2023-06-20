@@ -861,6 +861,38 @@ trim_partial_lines(const Context& context, const Selection& selection)
     return Selection{anchor, {cursor, max_column}};
 }
 
+Optional<Selection>
+extend_lines_downwards(const Context& context, const Selection& selection)
+{
+    auto& buffer = context.buffer();
+    BufferCoord anchor = selection.anchor();
+    BufferCoord cursor = selection.cursor();
+    BufferCoord& to_line_start = anchor <= cursor ? anchor : cursor;
+    BufferCoord& to_line_end = anchor <= cursor ? cursor : anchor;
+
+    to_line_start.column = 0;
+    to_line_end.column = buffer[to_line_end.line].length()-1;
+    to_line_end.line = std::min(to_line_end.line + 1, buffer.line_count() - 1);
+
+    return Selection{anchor, {cursor, max_column}};
+}
+
+Optional<Selection>
+extend_lines_upwards(const Context& context, const Selection& selection)
+{
+    auto& buffer = context.buffer();
+    BufferCoord anchor = selection.anchor();
+    BufferCoord cursor = selection.cursor();
+    BufferCoord& to_line_start = anchor <= cursor ? anchor : cursor;
+    BufferCoord& to_line_end = anchor <= cursor ? cursor : anchor;
+
+    to_line_start.column = 0;
+    to_line_start.line = std::max(to_line_start.line - 1, LineCount(0));
+    to_line_end.column = buffer[to_line_end.line].length()-1;
+
+    return Selection{anchor, {cursor, max_column}};
+}
+
 static RegexExecFlags
 match_flags(const Buffer& buf, const BufferIterator& begin, const BufferIterator& end)
 {

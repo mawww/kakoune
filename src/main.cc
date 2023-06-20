@@ -52,6 +52,8 @@ struct {
         "strings (as double quoted strings)\n"
         "» {+u}show-matching -previous{} switch\n"
         "» {+b}<c-g>{} to cancel current operation\n"
+        "» {+b}<X>{} and {+b}<a-X>{} to expand line selections downwards and "
+        "upwards, respectively\n"
     }, {
         20221031,
         "» {+b}<esc>{} does not end macro recording anymore, use {+b}Q{}\n"

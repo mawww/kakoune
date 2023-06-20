@@ -5,6 +5,9 @@ released versions.
 
 == Development version
 
+* `<X>` and `<a-X>` to expand line selections downwards and upwards,
+  respectively. 
+
 * History is now stored linearly instead of in a tree
 
 * `<a-u>` and `<a-U>` now undo selection history

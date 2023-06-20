@@ -107,6 +107,12 @@ select_lines(const Context& context, const Selection& selection);
 Optional<Selection>
 trim_partial_lines(const Context& context, const Selection& selection);
 
+Optional<Selection>
+extend_lines_downwards(const Context& context, const Selection& selection);
+
+Optional<Selection>
+extend_lines_upwards(const Context& context, const Selection& selection);
+
 enum class RegexMode;
 
 template<RegexMode mode>

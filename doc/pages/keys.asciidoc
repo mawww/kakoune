@@ -168,6 +168,14 @@ the Shift modifier and moving will extend each selection instead.
     trim selections to only contain full lines (not including last
     end-of-line)
 
+*X*::
+    expand selections to contain full lines (including end-of-lines) and extend
+    the selected block one line downwards
+
+*<a-X>*::
+    expand selections to contain full lines (including end-of-lines) and extend
+    the selected block one line upwards
+
 *%*, *<percent>*::
     select whole buffer
 
