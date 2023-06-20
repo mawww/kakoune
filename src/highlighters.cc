@@ -1820,7 +1820,7 @@ struct ForwardHighlighterApplier
         {
             auto& line = *cur_line;
             auto first = std::find_if(cur_atom, line.end(), [&](auto&& atom) { return atom.has_buffer_range() and atom.end() > begin; });
-            if (first->type() == DisplayAtom::Range and first->begin() < begin)
+            if (first != line.end() and first->type() == DisplayAtom::Range and first->begin() < begin)
                 first = ++line.split(first, begin);
             auto idx = first - line.begin();
 
