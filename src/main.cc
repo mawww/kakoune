@@ -473,6 +473,10 @@ void register_keymaps()
     keymaps.map_key(Key::Home, KeymapMode::Normal, {alt('h')}, "");
     keymaps.map_key(shift(Key::End), KeymapMode::Normal, {alt('L')}, "");
     keymaps.map_key(shift(Key::Home), KeymapMode::Normal, {alt('H')}, "");
+
+    keymaps.map_key(ctrl('c'), KeymapMode::Normal, {parse_keys(":cancel-subprocess<ret>")}, "", /*interrupt=*/true);
+    keymaps.map_key(ctrl('g'), KeymapMode::Normal, {parse_keys(":cancel-regex<ret>")}, "", /*interrupt=*/true);
+    keymaps.map_key(ctrl('g'), KeymapMode::Prompt, {parse_keys("<a-;>:cancel-regex<ret>")}, "", /*interrupt=*/true);
 }
 
 static void check_tabstop(const int& val)

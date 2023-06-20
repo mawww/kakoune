@@ -1793,6 +1793,17 @@ void InputHandler::handle_key(Key key)
     }
 }
 
+bool InputHandler::handle_interrupt_key(Key key) {
+    const auto keymap_mode = current_mode().keymap_mode();
+    KeymapManager& keymaps = context().keymaps();
+    if (not keymaps.is_mapped(key, keymap_mode, /*interrupt=*/true))
+        return false;
+    ScopedSetBool disable_history{context().history_disabled()};
+    for (auto& key : keymaps.get_mapping_keys(key, keymap_mode, /*interrupt=*/true))
+        context().input_handler().handle_key(key);
+    return true;
+}
+
 void InputHandler::start_recording(char reg)
 {
     kak_assert(m_recording_reg == 0);

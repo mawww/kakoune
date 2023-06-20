@@ -1887,7 +1887,8 @@ const CommandDesc map_key_cmd = {
     nullptr,
     "map [<switches>] <scope> <mode> <key> <keys>: map <key> to <keys> in given <mode> in <scope>",
     ParameterDesc{
-        { { "docstring", { ArgCompleter{},  "specify mapping description" } } },
+        { { "docstring", { ArgCompleter{},  "specify mapping description" } },
+          { "interrupt", { {},  "enable during regex search and shell execution" } } },
         ParameterDesc::Flags::None, 4, 4
     },
     CommandFlags::None,
@@ -1904,17 +1905,21 @@ const CommandDesc map_key_cmd = {
 
         KeyList mapping = parse_keys(parser[3]);
         keymaps.map_key(key[0], keymap_mode, std::move(mapping),
-                        trim_indent(parser.get_switch("docstring").value_or("")));
+                        trim_indent(parser.get_switch("docstring").value_or("")),
+                        (bool)parser.get_switch("interrupt"));
     }
 };
 
 const CommandDesc unmap_key_cmd = {
     "unmap",
     nullptr,
-    "unmap <scope> <mode> [<key> [<expected-keys>]]: unmap <key> from given <mode> in <scope>.\n"
+    "unmap [<switches>] <scope> <mode> [<key> [<expected-keys>]]: unmap <key> from given <mode> in <scope>.\n"
     "If <expected-keys> is specified, remove the mapping only if its value is <expected-keys>.\n"
     "If only <scope> and <mode> are specified remove all mappings",
-    ParameterDesc{{}, ParameterDesc::Flags::None, 2, 4},
+    ParameterDesc{
+        { { "interrupt", { {},  "unmap interrupt mapping" } }, },
+        ParameterDesc::Flags::None, 2, 4
+    },
     CommandFlags::None,
     CommandHelper{},
     map_key_completer<true>,
@@ -1936,7 +1941,7 @@ const CommandDesc unmap_key_cmd = {
         if (keymaps.is_mapped(key[0], keymap_mode) and
             (parser.positional_count() < 4 or
              keymaps.get_mapping_keys(key[0], keymap_mode) == ConstArrayView<Key>{parse_keys(parser[3])}))
-            keymaps.unmap_key(key[0], keymap_mode);
+            keymaps.unmap_key(key[0], keymap_mode, (bool)parser.get_switch("interrupt"));
     }
 };
 
@@ -2621,6 +2626,38 @@ const CommandDesc fail_cmd = {
     }
 };
 
+const CommandDesc cancel_regex_cmd = {
+    "cancel-regex",
+    nullptr,
+    "cancel-regex: cancel regex search",
+    ParameterDesc{},
+    CommandFlags::Hidden,
+    CommandHelper{},
+    CommandCompleter{},
+    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    {
+        context.client().clear_pending_inputs();
+        context.client().print_status({"operation cancelled", context.faces()["Error"]});
+        throw cancel{};
+    }
+};
+
+const CommandDesc cancel_subprocess_cmd = {
+    "cancel-subprocess",
+    nullptr,
+    "cancel-subprocess: send SIGINT to our process group",
+    ParameterDesc{},
+    CommandFlags::Hidden,
+    CommandHelper{},
+    CommandCompleter{},
+    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    {
+        auto prev_handler = set_signal_handler(SIGINT, SIG_IGN);
+        killpg(getpgrp(), SIGINT);
+        set_signal_handler(SIGINT, prev_handler);
+    }
+};
+
 const CommandDesc declare_user_mode_cmd = {
     "declare-user-mode",
     nullptr,
@@ -2801,6 +2838,8 @@ void register_commands()
     register_command(change_directory_cmd);
     register_command(rename_session_cmd);
     register_command(fail_cmd);
+    register_command(cancel_regex_cmd);
+    register_command(cancel_subprocess_cmd);
     register_command(declare_user_mode_cmd);
     register_command(enter_user_mode_cmd);
     register_command(provide_module_cmd);

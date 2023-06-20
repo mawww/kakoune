@@ -32,20 +32,20 @@ public:
     KeymapManager(KeymapManager& parent) : m_parent(&parent) {}
 
     using KeyList = Vector<Key, MemoryDomain::Mapping>;
-    void map_key(Key key, KeymapMode mode, KeyList mapping, String docstring);
-    void unmap_key(Key key, KeymapMode mode);
+    void map_key(Key key, KeymapMode mode, KeyList mapping, String docstring, bool interrupt = false);
+    void unmap_key(Key key, KeymapMode mode, bool interrupt);
     void unmap_keys(KeymapMode mode);
 
-    bool is_mapped(Key key, KeymapMode mode) const;
+    bool is_mapped(Key key, KeymapMode mode, bool interrupt = false) const;
     KeyList get_mapped_keys(KeymapMode mode) const;
 
-    auto get_mapping_keys(Key key, KeymapMode mode) {
+    auto get_mapping_keys(Key key, KeymapMode mode, bool interrupt = false) {
         struct Keys : ConstArrayView<Key> { ScopedSetBool executing; };
-        auto& mapping = get_mapping(key, mode);
+        auto& mapping = get_mapping(key, mode, interrupt);
         return Keys{mapping.keys, mapping.is_executing};
     }
 
-    const String& get_mapping_docstring(Key key, KeymapMode mode) { return get_mapping(key, mode).docstring; }
+    const String& get_mapping_docstring(Key key, KeymapMode mode, bool interrupt = false) { return get_mapping(key, mode, interrupt).docstring; }
 
     using UserModeList = Vector<String>;
     UserModeList& user_modes() {
@@ -62,7 +62,7 @@ private:
         String docstring;
         NestedBool is_executing{};
     };
-    KeymapInfo& get_mapping(Key key, KeymapMode mode);
+    KeymapInfo& get_mapping(Key key, KeymapMode mode, bool interrupt);
 
     KeymapManager()
         : m_parent(nullptr) {}
@@ -70,7 +70,7 @@ private:
     friend class Scope;
 
     KeymapManager* m_parent;
-    using KeyAndMode = std::pair<Key, KeymapMode>;
+    using KeyAndMode = std::tuple<Key, KeymapMode, bool>;
     HashMap<KeyAndMode, KeymapInfo, MemoryDomain::Mapping> m_mapping;
 
     UserModeList m_user_modes;

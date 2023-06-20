@@ -11,14 +11,15 @@ namespace Kakoune
 {
 
 void KeymapManager::map_key(Key key, KeymapMode mode,
-                            KeyList mapping, String docstring)
+                            KeyList mapping, String docstring,
+                            bool interrupt)
 {
-    m_mapping[KeyAndMode{key, mode}] = {std::move(mapping), std::move(docstring)};
+    m_mapping[KeyAndMode{key, mode, interrupt}] = {std::move(mapping), std::move(docstring)};
 }
 
-void KeymapManager::unmap_key(Key key, KeymapMode mode)
+void KeymapManager::unmap_key(Key key, KeymapMode mode, bool interrupt)
 {
-    auto it = m_mapping.find(KeyAndMode{key, mode});
+    auto it = m_mapping.find(KeyAndMode{key, mode, interrupt});
     if (it == m_mapping.end())
         return;
     if (it->value.is_executing)
@@ -32,27 +33,27 @@ void KeymapManager::unmap_keys(KeymapMode mode)
     while (it != m_mapping.end())
     {
         auto& map = *it;
-        if (map.key.second == mode)
-            unmap_key(map.key.first, map.key.second);
+        if (std::get<1>(map.key) == mode)
+            unmap_key(std::get<0>(map.key), std::get<1>(map.key), std::get<2>(map.key));
         else
             ++it;
     }
 }
 
-bool KeymapManager::is_mapped(Key key, KeymapMode mode) const
+bool KeymapManager::is_mapped(Key key, KeymapMode mode, bool interrupt) const
 {
-    return m_mapping.find(KeyAndMode{key, mode}) != m_mapping.end() or
-           (m_parent and m_parent->is_mapped(key, mode));
+    return m_mapping.find(KeyAndMode{key, mode, interrupt}) != m_mapping.end() or
+           (m_parent and m_parent->is_mapped(key, mode, interrupt));
 }
 
 KeymapManager::KeymapInfo&
-KeymapManager::get_mapping(Key key, KeymapMode mode)
+KeymapManager::get_mapping(Key key, KeymapMode mode, bool interrupt)
 {
-    auto it = m_mapping.find(KeyAndMode{key, mode});
+    auto it = m_mapping.find(KeyAndMode{key, mode, interrupt});
     if (it != m_mapping.end())
         return it->value;
     kak_assert(m_parent);
-    return m_parent->get_mapping(key, mode);
+    return m_parent->get_mapping(key, mode, interrupt);
 }
 
 KeymapManager::KeyList KeymapManager::get_mapped_keys(KeymapMode mode) const
@@ -62,8 +63,8 @@ KeymapManager::KeyList KeymapManager::get_mapped_keys(KeymapMode mode) const
         res = m_parent->get_mapped_keys(mode);
     for (auto& map : m_mapping)
     {
-        if (map.key.second == mode and not contains(res, map.key.first))
-            res.emplace_back(map.key.first);
+        if (std::get<1>(map.key) == mode and not contains(res, std::get<0>(map.key)))
+            res.emplace_back(std::get<0>(map.key));
     }
     return res;
 }

@@ -97,6 +97,7 @@ public:
 
     // process the given key
     void handle_key(Key key);
+    bool handle_interrupt_key(Key key);
 
     void start_recording(char reg);
     bool is_recording() const;
