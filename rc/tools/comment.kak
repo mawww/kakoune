@@ -142,6 +142,12 @@ hook global BufSetOption filetype=ruby %{
     set-option buffer comment_block_end '^=end'
 }
 
+hook global BufSetOption filetype=sql %{
+    set-option buffer comment_line '--'
+    set-option buffer comment_block_begin '/*'
+    set-option buffer comment_block_end '*/'
+}
+
 define-command comment-block -docstring '(un)comment selections using block comments' %{
     evaluate-commands %sh{
         if [ -z "${kak_opt_comment_block_begin}" ] || [ -z "${kak_opt_comment_block_end}" ]; then
