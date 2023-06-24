@@ -34,8 +34,8 @@ public:
     void handle_key(Key key, bool synthesized) { RefPtr<InputMode> keep_alive{this}; on_key(key, synthesized); }
     virtual void paste(StringView content);
 
-    virtual void on_enabled() {}
-    virtual void on_disabled(bool temporary) {}
+    virtual void on_enabled(bool from_pop) {}
+    virtual void on_disabled(bool from_push) {}
 
     bool enabled() const { return &m_input_handler.current_mode() == this; }
     Context& context() const { return m_input_handler.context(); }
@@ -227,7 +227,7 @@ public:
           m_state(single_command ? State::SingleCommand : State::Normal)
     {}
 
-    void on_enabled() override
+    void on_enabled(bool from_pop) override
     {
         if (m_state == State::PopOnEnabled)
             return pop_mode();
@@ -248,12 +248,12 @@ public:
         }
     }
 
-    void on_disabled(bool temporary) override
+    void on_disabled(bool from_push) override
     {
         m_idle_timer.disable();
         m_fs_check_timer.disable();
 
-        if (not temporary and m_hooks_disabled)
+        if (not from_push and m_hooks_disabled)
         {
             context().hooks_disabled().unset();
             m_hooks_disabled = false;
@@ -1117,21 +1117,10 @@ private:
                                       line.byte_count_to(m_line_editor.cursor_pos()));
             if (not context().has_client())
                 return;
-
-            if (m_completions.candidates.empty())
-                return context().client().menu_hide();
-
-            Vector<DisplayLine> items;
-            for (auto& candidate : m_completions.candidates)
-                items.push_back({ candidate, {} });
-
-            const auto menu_style = (m_flags & PromptFlags::Search) ? MenuStyle::Search : MenuStyle::Prompt;
-            context().client().menu_show(std::move(items), {}, menu_style);
-
+            show_completions();
             const bool menu = (bool)(m_completions.flags & Completions::Flags::Menu);
             if (menu)
                 context().client().menu_select(0);
-
             auto prefix = line.substr(m_completions.start, m_completions.end - m_completions.start);
             if (not menu and not contains(m_completions.candidates, prefix))
             {
@@ -1142,6 +1131,19 @@ private:
             else
                 m_prefix_in_completions = false;
         } catch (runtime_error&) {}
+    }
+
+    void show_completions()
+    {
+        if (m_completions.candidates.empty())
+            return context().client().menu_hide();
+
+        Vector<DisplayLine> items;
+        for (auto& candidate : m_completions.candidates)
+            items.push_back({ candidate, {} });
+
+        const auto menu_style = (m_flags & PromptFlags::Search) ? MenuStyle::Search : MenuStyle::Prompt;
+        context().client().menu_show(std::move(items), {}, menu_style);
     }
 
     void clear_completions()
@@ -1163,18 +1165,31 @@ private:
         context().print_status(display_line);
     }
 
-    void on_enabled() override
+    void on_enabled(bool from_pop) override
     {
         display();
-        m_line_changed = true;
+        if (from_pop)
+        {
+            if (context().has_client())
+            {
+                show_completions();
+                const bool menu = (bool)(m_completions.flags & Completions::Flags::Menu);
+                if (m_current_completion != -1)
+                    context().client().menu_select(m_current_completion);
+                else if (menu)
+                    context().client().menu_select(0);
+            }
+        }
+        else
+            m_line_changed = true;
 
         if (not (context().flags() & Context::Flags::Draft))
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
-    void on_disabled(bool temporary) override
+    void on_disabled(bool from_push) override
     {
-        if (not temporary)
+        if (not from_push)
             context().print_status({});
 
         m_idle_timer.disable();
@@ -1274,17 +1289,17 @@ public:
         prepare(mode, count);
     }
 
-    void on_enabled() override
+    void on_enabled(bool from_pop) override
     {
         if (not (context().flags() & Context::Flags::Draft))
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
-    void on_disabled(bool temporary) override
+    void on_disabled(bool from_push) override
     {
         m_idle_timer.disable();
 
-        if (not temporary)
+        if (not from_push)
         {
             last_insert().recording.unset();
 
@@ -1625,7 +1640,7 @@ InputHandler::InputHandler(SelectionList selections, Context::Flags flags, Strin
     : m_context(*this, std::move(selections), flags, std::move(name))
 {
     m_mode_stack.emplace_back(new InputModes::Normal(*this));
-    current_mode().on_enabled();
+    current_mode().on_enabled(false);
 }
 
 InputHandler::~InputHandler() = default;
@@ -1636,7 +1651,7 @@ void InputHandler::push_mode(InputMode* new_mode)
 
     current_mode().on_disabled(true);
     m_mode_stack.emplace_back(new_mode);
-    new_mode->on_enabled();
+    new_mode->on_enabled(false);
 
     context().hooks().run_hook(Hook::ModeChange, format("push:{}:{}", prev_name, new_mode->name()), context());
 }
@@ -1651,7 +1666,7 @@ void InputHandler::pop_mode(InputMode* mode)
 
     current_mode().on_disabled(false);
     m_mode_stack.pop_back();
-    current_mode().on_enabled();
+    current_mode().on_enabled(true);
 
     context().hooks().run_hook(Hook::ModeChange, format("pop:{}:{}", prev_name, current_mode().name()), context());
 }
