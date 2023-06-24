@@ -40,9 +40,7 @@ public:
     KeyList get_mapped_keys(KeymapMode mode) const;
 
     auto get_mapping_keys(Key key, KeymapMode mode) {
-        struct Keys : ConstArrayView<Key> { ScopedSetBool executing; };
-        auto& mapping = get_mapping(key, mode);
-        return Keys{mapping.keys, mapping.is_executing};
+        return get_mapping(key, mode).keys;
     }
 
     const String& get_mapping_docstring(Key key, KeymapMode mode) { return get_mapping(key, mode).docstring; }
@@ -60,9 +58,8 @@ private:
     {
         KeyList keys;
         String docstring;
-        NestedBool is_executing{};
     };
-    KeymapInfo& get_mapping(Key key, KeymapMode mode);
+    const KeymapInfo& get_mapping(Key key, KeymapMode mode) const;
 
     KeymapManager()
         : m_parent(nullptr) {}

@@ -13,20 +13,12 @@ namespace Kakoune
 void KeymapManager::map_key(Key key, KeymapMode mode,
                             KeyList mapping, String docstring)
 {
-    if (auto it = m_mapping.find(KeyAndMode{key, mode}); it != m_mapping.end())
-        if (it->value.is_executing)
-            throw runtime_error("cannot map key that is currently executing");
     m_mapping[KeyAndMode{key, mode}] = {std::move(mapping), std::move(docstring)};
 }
 
 void KeymapManager::unmap_key(Key key, KeymapMode mode)
 {
-    auto it = m_mapping.find(KeyAndMode{key, mode});
-    if (it == m_mapping.end())
-        return;
-    if (it->value.is_executing)
-        throw runtime_error("cannot unmap key that is currently executing");
-    m_mapping.remove(it);
+    m_mapping.remove(KeyAndMode{key, mode});
 }
 
 void KeymapManager::unmap_keys(KeymapMode mode)
@@ -48,8 +40,8 @@ bool KeymapManager::is_mapped(Key key, KeymapMode mode) const
            (m_parent and m_parent->is_mapped(key, mode));
 }
 
-KeymapManager::KeymapInfo&
-KeymapManager::get_mapping(Key key, KeymapMode mode)
+const KeymapManager::KeymapInfo&
+KeymapManager::get_mapping(Key key, KeymapMode mode) const
 {
     auto it = m_mapping.find(KeyAndMode{key, mode});
     if (it != m_mapping.end())

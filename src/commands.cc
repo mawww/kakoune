@@ -1935,7 +1935,7 @@ const CommandDesc unmap_key_cmd = {
 
         if (keymaps.is_mapped(key[0], keymap_mode) and
             (parser.positional_count() < 4 or
-             keymaps.get_mapping_keys(key[0], keymap_mode) == ConstArrayView<Key>{parse_keys(parser[3])}))
+             keymaps.get_mapping_keys(key[0], keymap_mode) == parse_keys(parser[3])))
             keymaps.unmap_key(key[0], keymap_mode);
     }
 };
