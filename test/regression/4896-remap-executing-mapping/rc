@@ -1,0 +1,3 @@
+try %{ map global user s %exp{:source %%{%val{source}}<ret>} -docstring "re-source my kakrc" }
+declare-option int source_count
+set-option -add global source_count 1
