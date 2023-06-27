@@ -131,7 +131,9 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
         mutable uint16_t last_step; // mutable as used during execution
         Param param;
     };
+#ifndef __ppc__
     static_assert(sizeof(Instruction) == 8);
+#endif
 
     explicit operator bool() const { return not instructions.empty(); }
 

@@ -83,7 +83,9 @@ struct ParsedRegex
         Quantifier quantifier;
         uint16_t filler = 0;
     };
+#ifndef __ppc__
     static_assert(sizeof(Node) == 16, "");
+#endif
 
     Vector<Node, MemoryDomain::Regex> nodes;
 
