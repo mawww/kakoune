@@ -99,7 +99,7 @@ define-command -hidden doc-follow-link %{
 
 define-command -params 1 -hidden doc-render %{
     edit! -scratch "*doc-%sh{basename $1 .asciidoc}*"
-    execute-keys "!cat %arg{1}<ret>gg"
+    execute-keys "!cat '%arg{1}'<ret>gg"
 
     doc-parse-anchors
 
