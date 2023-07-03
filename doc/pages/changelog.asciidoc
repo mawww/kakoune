@@ -5,9 +5,8 @@ released versions.
 
 == Development version
 
-* History is now stored linearly instead of in a tree
-
-* `<a-u>` and `<a-U>` now undo selection history
+* `<a-u>` and `<a-U>` now undo/redo selection changes; the previous meaning
+  of moving in history tree has been moved to `<c-j>` and `<c-k>`
 
 * `%exp{...}` expansions provide flexible quoting for expanded strings
   (as double quoted strings)
