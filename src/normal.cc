@@ -190,23 +190,29 @@ String build_autoinfo_for_mapping(const Context& context, KeymapMode mode,
     }
 
     for (auto& key : keymaps.get_mapped_keys(mode))
-        descs.emplace_back(to_string(key),
-                           keymaps.get_mapping_docstring(key, mode));
+    {
+        const String& docstring = keymaps.get_mapping_docstring(key, mode);
+        if (auto it = find_if(descs, [&](auto& elem) { return elem.second == docstring; });
+            it != descs.end())
+            it->first += ',' + to_string(key);
+        else
+            descs.emplace_back(to_string(key), docstring);
+    }
 
     auto max_len = 0_col;
-    for (auto& desc : descs)
+    for (auto& [keys, docstring] : descs)
     {
-        auto len = desc.first.column_length();
+        auto len = keys.column_length();
         if (len > max_len)
             max_len = len;
     }
 
     String res;
-    for (auto& desc : descs)
+    for (auto& [keys, docstring] : descs)
         res += format("{}:{}{}\n",
-                      desc.first,
-                      String{' ', max_len - desc.first.column_length() + 1},
-                      desc.second);
+                      keys,
+                      String{' ', max_len - keys.column_length() + 1},
+                      docstring);
     return res;
 }
 
