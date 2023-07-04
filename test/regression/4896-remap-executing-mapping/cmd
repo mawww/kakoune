@@ -1,0 +1,3 @@
+!printf $kak_opt_source_count<ret>l
+<space>s
+!printf $kak_opt_source_count<ret>

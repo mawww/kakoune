@@ -13,6 +13,9 @@ namespace Kakoune
 void KeymapManager::map_key(Key key, KeymapMode mode,
                             KeyList mapping, String docstring)
 {
+    if (auto it = m_mapping.find(KeyAndMode{key, mode}); it != m_mapping.end())
+        if (it->value.is_executing)
+            throw runtime_error("cannot map key that is currently executing");
     m_mapping[KeyAndMode{key, mode}] = {std::move(mapping), std::move(docstring)};
 }
 
