@@ -101,10 +101,22 @@ define-command -hidden zig-trim-indent %{
 }
 
 define-command -hidden zig-insert-on-new-line %<
-    evaluate-commands -draft -itersel %<
-        # copy // or /// comments prefix or \\ string literal prefix and following whitespace
-        try %< execute-keys -draft k x s ^\h*\K(///?|\\\\)\h* <ret> y gh j P >
-    >
+    try %[
+        evaluate-commands -draft -save-regs '/"' %[
+            # copy // or /// comments prefix or \\ string literal prefix and following whitespace
+            execute-keys -save-regs '' k x1s^\h*((///?|\\\\)+\h*)<ret> y
+            try %[
+                # if the previous comment isn't empty, create a new one
+                execute-keys x<a-K>^\h*//+\h*$<ret> jxs^\h*<ret>P
+            ] catch %[
+                # if there is no text in the previous comment, remove it completely
+                execute-keys d
+            ]
+        ]
+
+        # trim trailing whitespace on the previous line
+        try %[ execute-keys -draft k x s\h+$<ret> d ]
+    ]
 >
 
 define-command -hidden zig-indent-on-new-line %<
