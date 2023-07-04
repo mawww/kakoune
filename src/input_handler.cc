@@ -815,9 +815,10 @@ public:
             const bool has_completions = not m_completions.candidates.empty();
             const bool completion_selected = m_current_completion != -1;
             const bool text_entered = m_completions.start != line.byte_count_to(m_line_editor.cursor_pos());
+            const bool at_end = line.byte_count_to(m_line_editor.cursor_pos()) == line.length();
             return (m_completions.flags & Completions::Flags::Menu) and
                 has_completions and
-                not completion_selected and
+                not completion_selected and at_end and
                 (not (m_completions.flags & Completions::Flags::NoEmpty) or text_entered);
         };
 
