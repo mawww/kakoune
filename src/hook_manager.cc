@@ -37,7 +37,7 @@ struct HookManager::HookData
                                   enum_desc(Meta::Type<Hook>{})[to_underlying(hook)].name,
                                   param, group));
 
-        ScopedSetBool disable_history{context.history_disabled()};
+        ScopedSetBool noninteractive{context.noninteractive()};
 
         EnvVarMap env_vars{ {"hook_param", param.str()} };
         for (size_t i = 0; i < captures.size(); ++i)

@@ -83,6 +83,7 @@ public:
                 Face prompt_face, PromptFlags flags, char history_register,
                 PromptCompleter completer, PromptCallback callback);
     void set_prompt_face(Face prompt_face);
+    bool history_enabled() const;
 
     // enter menu mode, callback is called on each selection change,
     // abort or validation with corresponding MenuEvent value
