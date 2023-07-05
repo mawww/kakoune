@@ -834,7 +834,8 @@ void regex_prompt(Context& context, String prompt, char reg, T func)
                        [&](auto&& m) { candidates.push_back(m.candidate().str()); return true; });
             return {(int)(word.begin() - regex.begin()), pos,  std::move(candidates) };
         },
-        [=, func=T(std::move(func)), selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
+        [=, func=T(std::move(func)), saved_reg=RegisterManager::instance()[reg].save(context),
+         selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
         (StringView str, PromptEvent event, Context& context) mutable {
             try
             {
@@ -857,6 +858,11 @@ void regex_prompt(Context& context, String prompt, char reg, T func)
 
                 if (event == PromptEvent::Validate)
                     context.push_jump();
+                else
+                    RegisterManager::instance()[reg].restore(context, saved_reg);
+
+                if (not str.empty() and event == PromptEvent::Change) // Ensure search register based highlighters work incrementally
+                    RegisterManager::instance()[reg].set(context, str.str());
 
                 if (not str.empty() or event == PromptEvent::Validate)
                     func(Regex{str.empty() ? default_regex : str, direction_flags(mode)}, event, context);
@@ -930,13 +936,8 @@ void search(Context& context, NormalParams params)
     const int count = params.count;
 
     regex_prompt<regex_mode>(context, prompt.str(), reg,
-                 [reg, count, saved_reg = RegisterManager::instance()[reg].save(context)]
+                 [reg, count]
                  (const Regex& regex, PromptEvent event, Context& context) {
-                     RegisterManager::instance()[reg].restore(context, saved_reg);
-                     if (event == PromptEvent::Abort)
-                         return;
-                     RegisterManager::instance()[reg].set(context, regex.str());
-
                      if (regex.empty() or regex.str().empty())
                          return;
 
@@ -1017,14 +1018,8 @@ void select_regex(Context& context, NormalParams params)
     auto prompt = capture ? format("select (capture {}):", capture) :  "select:"_str;
 
     regex_prompt(context, std::move(prompt), reg,
-                 [reg, capture, saved_reg = RegisterManager::instance()[reg].save(context)]
+                 [reg, capture]
                  (Regex ex, PromptEvent event, Context& context) {
-        RegisterManager::instance()[reg].restore(context, saved_reg);
-        if (event == PromptEvent::Abort)
-            return;
-        if (context.input_handler().history_enabled())
-            RegisterManager::instance()[reg].set(context, ex.str());
-
         auto& selections = context.selections();
         auto& buffer = selections.buffer();
         if (not ex.empty() and not ex.str().empty())
@@ -1039,14 +1034,8 @@ void split_regex(Context& context, NormalParams params)
     auto prompt = capture ? format("split (on capture {}):", (int)capture) :  "split:"_str;
 
     regex_prompt(context, std::move(prompt), reg,
-                 [reg, capture, saved_reg = RegisterManager::instance()[reg].save(context)]
+                 [reg, capture]
                  (Regex ex, PromptEvent event, Context& context) {
-        RegisterManager::instance()[reg].restore(context, saved_reg);
-        if (event == PromptEvent::Abort)
-            return;
-        if (context.input_handler().history_enabled())
-            RegisterManager::instance()[reg].set(context, ex.str());
-
         auto& selections = context.selections();
         auto& buffer = selections.buffer();
         if (not ex.empty() and not ex.str().empty())
@@ -1142,15 +1131,8 @@ void keep(Context& context, NormalParams params)
     const char reg = to_lower(params.reg ? params.reg : '/');
 
     regex_prompt(context, prompt.str(), reg,
-                 [reg, saved_reg = RegisterManager::instance()[reg].save(context),
-                  selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
+                 [reg, selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
                  (const Regex& regex, PromptEvent event, Context& context) {
-        RegisterManager::instance()[reg].restore(context, saved_reg);
-        if (event == PromptEvent::Abort)
-            return;
-        if (context.input_handler().history_enabled())
-            RegisterManager::instance()[reg].set(context, regex.str());
-
         if (regex.empty() or regex.str().empty())
             return;
 

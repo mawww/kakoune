@@ -31,7 +31,7 @@ public:
     InputMode(const InputMode&) = delete;
     InputMode& operator=(const InputMode&) = delete;
 
-    void handle_key(Key key) { RefPtr<InputMode> keep_alive{this}; on_key(key); }
+    void handle_key(Key key, bool synthesized) { RefPtr<InputMode> keep_alive{this}; on_key(key, synthesized); }
     virtual void paste(StringView content);
 
     virtual void on_enabled() {}
@@ -57,7 +57,7 @@ public:
     Insertion& last_insert() { return m_input_handler.m_last_insert; }
 
 protected:
-    virtual void on_key(Key key) = 0;
+    virtual void on_key(Key key, bool synthesized) = 0;
 
     void push_mode(InputMode* new_mode)
     {
@@ -260,7 +260,7 @@ public:
         }
     }
 
-    void on_key(Key key) override
+    void on_key(Key key, bool) override
     {
         kak_assert(m_state != State::PopOnEnabled);
         ScopedSetBool set_in_on_key{m_in_on_key};
@@ -646,7 +646,7 @@ public:
         context().client().menu_select(0);
     }
 
-    void on_key(Key key) override
+    void on_key(Key key, bool) override
     {
         auto match_filter = [this](const DisplayLine& choice) {
             for (auto& atom : choice)
@@ -808,9 +808,11 @@ public:
         m_line_editor.reset(std::move(initstr), m_empty_text);
     }
 
-    void on_key(Key key) override
+    void on_key(Key key, bool synthesized) override
     {
         const String& line = m_line_editor.line();
+        if (not synthesized)
+            m_was_interactive = true;
 
         auto can_auto_insert_completion = [&] {
             const bool has_completions = not m_completions.candidates.empty();
@@ -1064,16 +1066,6 @@ public:
         }
     }
 
-    bool was_interactive()
-    {
-        return m_was_interactive;
-    }
-
-    void set_was_interactive()
-    {
-        m_was_interactive = true;
-    }
-
     DisplayLine mode_line() const override
     {
         return { "prompt", context().faces()["StatusLineMode"] };
@@ -1210,7 +1202,7 @@ private:
 
     void history_push(StringView entry)
     {
-        if (entry.empty() or not was_interactive() or
+        if (entry.empty() or not m_was_interactive or
             (m_flags & PromptFlags::DropHistoryEntriesWithBlankPrefix and
              is_horizontal_blank(entry[0_byte])))
             return;
@@ -1227,7 +1219,7 @@ public:
         : InputMode(input_handler), m_name{std::move(name)}, m_callback(std::move(callback)), m_keymap_mode(keymap_mode),
           m_idle_timer{Clock::now() + get_idle_timeout(context()), std::move(idle_callback)} {}
 
-    void on_key(Key key) override
+    void on_key(Key key, bool) override
     {
         // maintain hooks disabled in the callback if they were before pop_mode
         ScopedSetBool disable_hooks(context().hooks_disabled(),
@@ -1306,7 +1298,7 @@ public:
         }
     }
 
-    void on_key(Key key) override
+    void on_key(Key key, bool) override
     {
         auto& buffer = context().buffer();
 
@@ -1697,7 +1689,7 @@ void InputHandler::repeat_last_insert()
         // refill last_insert,  this is very inefficient, but necessary at the moment
         // to properly handle insert completion
         m_last_insert.keys.push_back(key);
-        current_mode().handle_key(key);
+        current_mode().handle_key(key, true);
     }
     kak_assert(dynamic_cast<InputModes::Normal*>(&current_mode()) != nullptr);
 }
@@ -1718,15 +1710,8 @@ void InputHandler::prompt(StringView prompt, String initstr, String emptystr,
 
 void InputHandler::set_prompt_face(Face prompt_face)
 {
-    auto* prompt = dynamic_cast<InputModes::Prompt*>(&current_mode());
-    if (prompt)
+    if (auto* prompt = dynamic_cast<InputModes::Prompt*>(&current_mode()))
         prompt->set_prompt_face(prompt_face);
-}
-
-bool InputHandler::history_enabled() const
-{
-    auto* prompt = dynamic_cast<InputModes::Prompt*>(&current_mode());
-    return prompt and prompt->was_interactive();
 }
 
 void InputHandler::menu(Vector<DisplayLine> choices, MenuCallback callback)
@@ -1779,18 +1764,12 @@ void InputHandler::handle_key(Key key)
 
     const bool was_recording = is_recording();
     ++m_handle_key_level;
-    auto dec = on_scope_end([this]{
-        --m_handle_key_level;
-        if (m_handle_key_level == 0)
-            for (auto& mode : m_mode_stack)
-                if (auto* prompt = dynamic_cast<InputModes::Prompt*>(&*mode))
-                    prompt->set_was_interactive();
-    });
+    auto dec = on_scope_end([this]{ --m_handle_key_level;} );
 
-    auto process_key = [&](Key key) {
+    auto process_key = [&](Key key, bool synthesized) {
         if (m_last_insert.recording)
             m_last_insert.keys.push_back(key);
-        current_mode().handle_key(key);
+        current_mode().handle_key(key, synthesized);
     };
 
     const auto keymap_mode = current_mode().keymap_mode();
@@ -1800,10 +1779,10 @@ void InputHandler::handle_key(Key key)
         ScopedSetBool noninteractive{context().noninteractive()};
 
         for (auto& k : keymaps.get_mapping_keys(key, keymap_mode))
-            process_key(k);
+            process_key(k, true);
     }
     else
-        process_key(key);
+        process_key(key, m_handle_key_level > 1);
 
     // do not record the key that made us enter or leave recording mode,
     // and the ones that are triggered recursively by previous keys.
