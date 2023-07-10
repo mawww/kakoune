@@ -8,6 +8,10 @@ hook global BufCreate .*\.go %{
     set-option buffer filetype go
 }
 
+hook global BufCreate go\.mod %{
+    set-option buffer filetype go-mod
+}
+
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
