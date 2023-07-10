@@ -77,6 +77,12 @@ String to_json(DisplayCoord coord)
     return format(R"(\{ "line": {}, "column": {} })", coord.line, coord.column);
 }
 
+String to_json(const DisplaySetup& setup)
+{
+    return format(R"(\{ "first_line": {}, "first_column": {}, "widget_columns": {}, "cursor_pos": {} })",
+                  setup.first_line, setup.first_column, setup.widget_columns, to_json(setup.cursor_pos));
+}
+
 String to_json(MenuStyle style)
 {
     switch (style)
@@ -146,7 +152,7 @@ JsonUI::JsonUI()
 void JsonUI::draw(const DisplayBuffer& display_buffer,
                   const Face& default_face, const Face& padding_face)
 {
-    rpc_call("draw", display_buffer.lines(), default_face, padding_face);
+    rpc_call("draw", display_buffer.lines(), default_face, padding_face, display_buffer.display_setup());
 }
 
 void JsonUI::draw_status(const DisplayLine& status_line,

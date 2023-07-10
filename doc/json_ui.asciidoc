@@ -20,10 +20,12 @@ Here are the data structures used:
 * Atom { Face face; String contents; }
 * Line : Array of Atom
 * Coord { int line; int column }
+* DisplaySetup { int first_line, int first_column, int widget_columns, Coord cursor_pos }
+  widget_columns is the number of columns at the start of each line used by flag-lines highlighters.
 
 Here are the requests that can be written by the json ui on stdout:
 
-* draw(Array<Line> lines, Face default_face, Face padding_face)
+* draw(Array<Line> lines, Face default_face, Face padding_face, DisplaySetup setup)
   padding_face is the face of the padding characters '~' in the
   terminal UI.
 * draw_status(Line status_line, Line mode_line,

@@ -173,6 +173,18 @@ class FaceRegistry;
 DisplayLine parse_display_line(StringView line, const FaceRegistry& faces, const HashMap<String, DisplayLine>& builtins = {});
 DisplayLineList parse_display_line_list(StringView content, const FaceRegistry& faces, const HashMap<String, DisplayLine>& builtins = {});
 
+struct DisplaySetup
+{
+    LineCount first_line;
+    LineCount line_count;
+    ColumnCount first_column;
+    ColumnCount widget_columns;
+    // Position of the cursor in the window
+    DisplayCoord cursor_pos;
+    // Offset of line and columns that must remain visible around cursor
+    DisplayCoord scroll_offset;
+};
+
 class DisplayBuffer : public UseMemoryDomain<MemoryDomain::Display>
 {
 public:
@@ -191,10 +203,14 @@ public:
     void set_timestamp(size_t timestamp) { m_timestamp = timestamp; }
     size_t timestamp() const { return m_timestamp; }
 
+    void set_display_setup(DisplaySetup display_setup) { m_display_setup = display_setup; }
+    const DisplaySetup& display_setup() const { return m_display_setup; }
+
 private:
     DisplayLineList m_lines;
     BufferRange m_range;
     size_t m_timestamp = -1;
+    DisplaySetup m_display_setup;
 };
 
 }
