@@ -4,7 +4,7 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate .*\.mli? %{
+hook global BufCreate .*\.(ml|mli|mll|mly)$ %{
     set-option buffer filetype ocaml
 }
 
