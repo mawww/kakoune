@@ -6,7 +6,7 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate .*[.]zig %{
+hook global BufCreate .*[.](zig|zon) %{
   set-option buffer filetype zig
 }
 
