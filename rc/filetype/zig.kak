@@ -69,7 +69,7 @@ add-highlighter shared/zig/code/ regex '\b(?:fn|usingnamespace|test)\b' 0:keywor
 add-highlighter shared/zig/code/ regex '\b(?:bool|f16|f32|f64|f128|void|noreturn|type|anyerror|anyframe|anytype|anyopaque)\b' 0:type
 add-highlighter shared/zig/code/ regex '\b(?:i0|u0|isize||usize|comptime_int|comptime_float)\b' 0:type
 add-highlighter shared/zig/code/ regex '\b(?:[iu][1-9]\d*)\b' 0:type
-add-highlighter shared/zig/code/ regex '\b(?:c_short|c_ushort|c_int|c_uint|c_long|c_ulong|c_longlong|c_ulonglong|c_longdouble)\b' 0:type
+add-highlighter shared/zig/code/ regex '\b(?:c_char|c_short|c_ushort|c_int|c_uint|c_long|c_ulong|c_longlong|c_ulonglong|c_longdouble)\b' 0:type
 
 # primitive values
 add-highlighter shared/zig/code/ regex '\b(?:true|false|null|undefined)\b' 0:value
