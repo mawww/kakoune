@@ -44,7 +44,7 @@ struct {
     unsigned int version;
     StringView notes;
 } constexpr version_notes[] = { {
-        0,
+        20230729,
         "» {+b}<a-u>{} and {+b}<a-U>{} now undo/redo selection changes; "
         "the previous meaning of moving in history tree has been moved to "
         "{+b}<c-j>{} and {+b}<c-k>{}\n"

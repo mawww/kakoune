@@ -3,7 +3,7 @@
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
-== Development version
+== Kakoune 2023.07.29
 
 * `<a-u>` and `<a-U>` now undo/redo selection changes; the previous meaning
   of moving in history tree has been moved to `<c-j>` and `<c-k>`
