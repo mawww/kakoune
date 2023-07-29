@@ -69,7 +69,7 @@ add-highlighter shared/zig/code/ regex '\b(?:fn|usingnamespace|test)\b' 0:keywor
 add-highlighter shared/zig/code/ regex '\b(?:bool|f16|f32|f64|f128|void|noreturn|type|anyerror|anyframe|anytype|anyopaque)\b' 0:type
 add-highlighter shared/zig/code/ regex '\b(?:i0|u0|isize||usize|comptime_int|comptime_float)\b' 0:type
 add-highlighter shared/zig/code/ regex '\b(?:[iu][1-9]\d*)\b' 0:type
-add-highlighter shared/zig/code/ regex '\b(?:c_short|c_ushort|c_int|c_uint|c_long|c_ulong|c_longlong|c_ulonglong|c_longdouble)\b' 0:type
+add-highlighter shared/zig/code/ regex '\b(?:c_char|c_short|c_ushort|c_int|c_uint|c_long|c_ulong|c_longlong|c_ulonglong|c_longdouble)\b' 0:type
 
 # primitive values
 add-highlighter shared/zig/code/ regex '\b(?:true|false|null|undefined)\b' 0:value
@@ -90,7 +90,7 @@ add-highlighter shared/zig/code/ regex '\b0x[0-9a-fA-F]+\.?[eE][-+]?[0-9a-fA-F]+
 add-highlighter shared/zig/code/ regex '(?:\+|-|\*|/|%|=|<|>|&|\||\^|~|\?|!)' 0:operator
 
 # builtin functions
-add-highlighter shared/zig/code/ regex "@(?:addWithOverflow|alignCast|alignOf|as|asyncCall|atomicLoad|atomicRmw|atomicStore|bitCast|bitOffsetOf|boolToInt|bitSizeOf|breakpoint|mulAdd|byteSwap|bitReverse|offsetOf|call|cDefine|cImport|cInclude|clz|cmpxchgStrong|cmpxchgWeak|compileError|compileLog|ctz|cUndef|divExact|divFloor|divTrunc|embedFile|enumToInt|errorName|errorReturnTrace|errorToInt|errSetCast|export|extern|fence|field|fieldParentPtr|floatCast|floatToInt|frame|Frame|frameAddress|frameSize|hasDecl|hasField|import|intCast|intToEnum|intToError|intToFloat|intToPtr|maximum|memcpy|memset|minimum|wasmMemorySize|wasmMemoryGrow|mod|mulWithOverflow|panic|popCount|prefetch|ptrCast|ptrToInt|rem|returnAddress|select|setAlignStack|setCold|setEvalBranchQuota|setFloatMode|setRuntimeSafety|shlExact|shlWithOverflow|shrExact|shuffle|sizeOf|splat|reduce|src|sqrt|sin|cos|exp|exp2|log|log2|log10|fabs|floor|ceil|trunc|round|subWithOverflow|tagName|This|truncate|Type|typeInfo|typeName|TypeOf|unionInit)\b" 0:function
+add-highlighter shared/zig/code/ regex "@(?:align|addWithOverflow|as|atomicLoad|atomicStore|bitCast|breakpoint|trap|alignCast|alignOf|cDefine|cImport|cInclude|cUndef|clz|cmpxchgWeak|cmpxchgStrong|compileError|compileLog|constCast|ctz|popCount|divExact|divFloor|divTrunc|embedFile|export|extern|tagName|TagType|errorName|call|errorReturnTrace|fence|fieldParentPtr|field|unionInit|frameAddress|import|inComptime|newStackCall|asyncCall|ptrFromInt|max|min|memcpy|memset|mod|mulAdd|mulWithOverflow|splat|src|bitOffsetOf|byteOffsetOf|offsetOf|OpaqueType|panic|prefetch|ptrCast|intFromPtr|rem|returnAddress|setCold|Type|shuffle|reduce|select|setRuntimeSafety|setEvalBranchQuota|setFloatMode|shlExact|This|hasDecl|hasField|shlWithOverflow|shrExact|sizeOf|bitSizeOf|sqrt|byteSwap|subWithOverflow|intCast|floatCast|floatFromInt|intFromFloat|intFromBool|errSetCast|truncate|typeInfo|typeName|TypeOf|atomicRmw|errorFromInt|intFromError|enumFromInt|intFromEnum|setAlignStack|frame|Frame|frameSize|bitReverse|Vector|volatileCast|sin|cos|tan|exp|exp2|log|log2|log10|fabs|floor|ceil|trunc|wasmMemorySize|wasmMemoryGrow|round)\b" 0:meta
 
 # Commands
 # ‾‾‾‾‾‾‾‾
