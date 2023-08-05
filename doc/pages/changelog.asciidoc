@@ -3,6 +3,10 @@
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
+== Kakoune 2023.08.08
+
+* Fix compilation errors on FreeBSD and MacOS using clang
+
 == Kakoune 2023.07.29
 
 * `<a-u>` and `<a-U>` now undo/redo selection changes; the previous meaning

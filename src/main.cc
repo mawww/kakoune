@@ -44,6 +44,9 @@ struct {
     unsigned int version;
     StringView notes;
 } constexpr version_notes[] = { {
+        20230805,
+        "» Fix FreeBSD/MacOS clang compilation\n"
+    }, {
         20230729,
         "» {+b}<a-u>{} and {+b}<a-U>{} now undo/redo selection changes; "
         "the previous meaning of moving in history tree has been moved to "
