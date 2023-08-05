@@ -936,7 +936,7 @@ void search(Context& context, NormalParams params)
     const int count = params.count;
 
     regex_prompt<regex_mode>(context, prompt.str(), reg,
-                 [reg, count]
+                 [count]
                  (const Regex& regex, PromptEvent event, Context& context) {
                      if (regex.empty() or regex.str().empty())
                          return;
@@ -1018,7 +1018,7 @@ void select_regex(Context& context, NormalParams params)
     auto prompt = capture ? format("select (capture {}):", capture) :  "select:"_str;
 
     regex_prompt(context, std::move(prompt), reg,
-                 [reg, capture]
+                 [capture]
                  (Regex ex, PromptEvent event, Context& context) {
         auto& selections = context.selections();
         auto& buffer = selections.buffer();
@@ -1034,7 +1034,7 @@ void split_regex(Context& context, NormalParams params)
     auto prompt = capture ? format("split (on capture {}):", (int)capture) :  "split:"_str;
 
     regex_prompt(context, std::move(prompt), reg,
-                 [reg, capture]
+                 [capture]
                  (Regex ex, PromptEvent event, Context& context) {
         auto& selections = context.selections();
         auto& buffer = selections.buffer();
@@ -1131,7 +1131,7 @@ void keep(Context& context, NormalParams params)
     const char reg = to_lower(params.reg ? params.reg : '/');
 
     regex_prompt(context, prompt.str(), reg,
-                 [reg, selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
+                 [selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
                  (const Regex& regex, PromptEvent event, Context& context) {
         if (regex.empty() or regex.str().empty())
             return;
