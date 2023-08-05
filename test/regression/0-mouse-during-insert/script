@@ -1,15 +1,10 @@
 ui_out -ignore 4
 ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "i" ] }'
 ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "a" ] }'
-sleep .1
+ui_out -ignore 4
 ui_in '{ "jsonrpc": "2.0", "method": "mouse_press", "params": [ "left", 0, 2 ] }'
-sleep .1
 ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "b" ] }'
-sleep .1
+ui_out -ignore 4
 ui_in '{ "jsonrpc": "2.0", "method": "mouse_release", "params": [ "left", 0, 4 ] }'
-sleep .1
 ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "c<esc>" ] }'
-sleep .1
-if [ -n "$CI" ]; then
-	sleep 1
-fi
+ui_out -ignore 1
