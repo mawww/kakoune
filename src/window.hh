@@ -43,7 +43,7 @@ public:
     Buffer& buffer() const { return *m_buffer; }
 
     bool needs_redraw(const Context& context) const;
-    void force_redraw() { m_last_setup = Setup{}; }
+    void force_redraw() { m_last_setup.dimensions = {}; }
 
     void set_client(Client* client) { m_client = client; }
 
@@ -59,6 +59,8 @@ private:
     friend class ClientManager;
     void run_hook_in_own_context(Hook hook, StringView param,
                                  String client_name = "");
+
+    bool should_make_cursor_visible(const Context& context) const;
 
     SafePtr<Buffer> m_buffer;
     SafePtr<Client> m_client;
@@ -77,7 +79,7 @@ private:
         size_t timestamp;
         size_t faces_hash;
         size_t main_selection;
-        Vector<BufferRange, MemoryDomain::Display> selections;
+        Vector<BasicSelection, MemoryDomain::Display> selections;
     };
     Setup build_setup(const Context& context) const;
     Setup m_last_setup;
