@@ -13,17 +13,14 @@ using CaptureList = Vector<String, MemoryDomain::Selections>;
 constexpr ColumnCount max_column{std::numeric_limits<int>::max()};
 constexpr ColumnCount max_non_eol_column{max_column-1};
 
-// A selection is a Selection, associated with a CaptureList
-struct Selection
+struct BasicSelection
 {
     static constexpr MemoryDomain Domain = MemoryDomain::Selections;
 
-    Selection() = default;
-    Selection(BufferCoord pos) : Selection(pos,pos) {}
-    Selection(BufferCoord anchor, BufferCoordAndTarget cursor,
-              CaptureList captures = {})
-        : m_anchor{anchor}, m_cursor{cursor},
-          m_captures(std::move(captures)) {}
+    BasicSelection() = default;
+    BasicSelection(BufferCoord pos) : BasicSelection(pos,pos) {}
+    BasicSelection(BufferCoord anchor, BufferCoordAndTarget cursor)
+        : m_anchor{anchor}, m_cursor{cursor} {}
 
     BufferCoord& anchor() { return m_anchor; }
     BufferCoordAndTarget& cursor() { return m_cursor; }
@@ -39,13 +36,7 @@ struct Selection
 
     void set(BufferCoord coord) { set(coord, coord); }
 
-    CaptureList& captures() { return m_captures; }
-    const CaptureList& captures() const { return m_captures; }
-
-    bool operator== (const Selection& other) const
-    {
-        return m_anchor == other.m_anchor and m_cursor == other.m_cursor;
-    }
+    friend bool operator==(const BasicSelection&, const BasicSelection&) = default;
 
     // When selections are single char, we want the anchor to be considered min, and cursor max
     const BufferCoord& min() const { return m_anchor <= m_cursor ? m_anchor : m_cursor; }
@@ -57,11 +48,23 @@ struct Selection
 private:
     BufferCoord m_anchor;
     BufferCoordAndTarget m_cursor;
+};
+;
 
+struct Selection : BasicSelection
+{
+    Selection() = default;
+    Selection(BufferCoord pos) : BasicSelection(pos,pos) {}
+    Selection(BufferCoord anchor, BufferCoordAndTarget cursor, CaptureList captures = {})
+        : BasicSelection{anchor, cursor}, m_captures(std::move(captures)) {}
+    CaptureList& captures() { return m_captures; }
+    const CaptureList& captures() const { return m_captures; }
+
+private:
     CaptureList m_captures;
 };
 
-inline bool overlaps(const Selection& lhs, const Selection& rhs)
+inline bool overlaps(const BasicSelection& lhs, const BasicSelection& rhs)
 {
     return lhs.min() <= rhs.min() ? lhs.max() >= rhs.min()
                                   : lhs.min() <= rhs.max();

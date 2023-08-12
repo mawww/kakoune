@@ -2191,9 +2191,17 @@ void duplicate_selections(Context& context, NormalParams params)
     SelectionList& sels = context.selections();
     Vector<Selection> new_sels;
     const int count = params.count ? params.count : 2;
+    BasicSelection last{BufferCoord{-1,-1}};
+    size_t index = 0;
+    size_t main_index = 0;
     for (const auto& sel : sels)
-        new_sels.insert(new_sels.end(), count, sel);
-    context.selections().set(std::move(new_sels), sels.main_index() * count);
+    {
+        new_sels.insert(new_sels.end(), sel != last ? count : 1, sel);
+        last = sel;
+        if (index++ == sels.main_index())
+            main_index = new_sels.size() - 1;
+    }
+    context.selections().set(std::move(new_sels), main_index);
 }
 
 void force_redraw(Context& context, NormalParams)

@@ -45,6 +45,9 @@ struct {
     unsigned int version;
     StringView notes;
 } constexpr version_notes[] = { {
+        0,
+        "» {+b}+{} only duplicates identical selections a single time\n"
+    }, {
         20230805,
         "» Fix FreeBSD/MacOS clang compilation\n"
     }, {
