@@ -20,6 +20,7 @@
 #include "option_manager.hh"
 #include "option_types.hh"
 #include "parameters_parser.hh"
+#include "profile.hh"
 #include "ranges.hh"
 #include "ranked_match.hh"
 #include "regex.hh"
@@ -1639,9 +1640,9 @@ const CommandDesc source_cmd = {
     filename_completer<true>,
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        const DebugFlags debug_flags = context.options()["debug"].get<DebugFlags>();
-        const bool profile = debug_flags & DebugFlags::Profile;
-        auto start_time = profile ? Clock::now() : Clock::time_point{};
+        ProfileScope profile{context, [&](std::chrono::microseconds duration) {
+            write_to_debug_buffer(format("sourcing '{}' took {} us", parser[0], (size_t)duration.count()));
+        }};
 
         String path = real_path(parse_filename(parser[0]));
         MappedFile file_content{path};
@@ -1656,11 +1657,6 @@ const CommandDesc source_cmd = {
             write_to_debug_buffer(format("{}:{}", parser[0], err.what()));
             throw;
         }
-
-        using namespace std::chrono;
-        if (profile)
-            write_to_debug_buffer(format("sourcing '{}' took {} us", parser[0],
-                                         (size_t)duration_cast<microseconds>(Clock::now() - start_time).count()));
     }
 };
 

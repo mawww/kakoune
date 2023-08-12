@@ -8,6 +8,7 @@
 #include "file.hh"
 #include "optional.hh"
 #include "option_types.hh"
+#include "profile.hh"
 #include "ranges.hh"
 #include "regex.hh"
 #include "register_manager.hh"
@@ -525,12 +526,9 @@ void CommandManager::execute_single_command(CommandParameters params,
     if (debug_flags & DebugFlags::Commands)
         write_to_debug_buffer(format("command {}", join(params, ' ')));
 
-    auto profile = on_scope_end([&, start = (debug_flags & DebugFlags::Profile) ? Clock::now() : Clock::time_point{}] {
-        if (not (debug_flags & DebugFlags::Profile))
-            return;
-        auto full = std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - start);
-        write_to_debug_buffer(format("command {} took {} us", params[0], full.count()));
-    });
+    ProfileScope profile{debug_flags, [&](std::chrono::microseconds duration) {
+        write_to_debug_buffer(format("command {} took {} us", params[0], duration.count()));
+    }};
 
     command_it->value.func({{params.begin()+1, params.end()}, command_it->value.param_desc},
                            context, shell_context);

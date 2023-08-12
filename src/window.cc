@@ -10,6 +10,7 @@
 #include "buffer_utils.hh"
 #include "option.hh"
 #include "option_types.hh"
+#include "profile.hh"
 
 #include <algorithm>
 
@@ -119,10 +120,10 @@ bool Window::needs_redraw(const Context& context) const
 
 const DisplayBuffer& Window::update_display_buffer(const Context& context)
 {
-    const bool profile = context.options()["debug"].get<DebugFlags>() &
-                        DebugFlags::Profile;
-
-    auto start_time = profile ? Clock::now() : Clock::time_point{};
+    ProfileScope profile{context, [&](std::chrono::microseconds duration) {
+        write_to_debug_buffer(format("window display update for '{}' took {} us",
+                                     buffer().display_name(), (size_t)duration.count()));
+    }, not (buffer().flags() & Buffer::Flags::Debug)};
 
     if (m_display_buffer.timestamp() != -1)
     {
@@ -167,14 +168,6 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
 
     set_position({setup.first_line, setup.first_column});
     m_last_setup = build_setup(context);
-
-    if (profile and not (buffer().flags() & Buffer::Flags::Debug))
-    {
-        using namespace std::chrono;
-        auto duration = duration_cast<microseconds>(Clock::now() - start_time);
-        write_to_debug_buffer(format("window display update for '{}' took {} us",
-                                     buffer().display_name(), (size_t)duration.count()));
-    }
 
     return m_display_buffer;
 }

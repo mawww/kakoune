@@ -8,6 +8,7 @@
 #include "face_registry.hh"
 #include "option.hh"
 #include "option_types.hh"
+#include "profile.hh"
 #include "ranges.hh"
 #include "regex.hh"
 
@@ -138,9 +139,9 @@ void HookManager::run_hook(Hook hook, StringView param, Context& context)
             m_hooks_trash.clear();
     });
 
-    const DebugFlags debug_flags = context.options()["debug"].get<DebugFlags>();
-    const bool profile = debug_flags & DebugFlags::Profile;
-    auto start_time = profile ? Clock::now() : TimePoint{};
+    ProfileScope profile{context, [&](std::chrono::microseconds duration) {
+        write_to_debug_buffer(format("hook '{}({})' took {} us", hook_name, param, (size_t)duration.count()));
+    }};
 
     bool hook_error = false;
     for (auto& to_run : hooks_to_run)
@@ -171,13 +172,6 @@ void HookManager::run_hook(Hook hook, StringView param, Context& context)
         context.print_status({
             format("Error running hooks for '{}' '{}', see *debug* buffer",
                    hook_name, param), context.faces()["Error"] });
-
-    if (profile)
-    {
-        auto end_time = Clock::now();
-        auto full = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
-        write_to_debug_buffer(format("hook '{}({})' took {} us", hook_name, param, (size_t)full.count()));
-    }
 }
 
 }

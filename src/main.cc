@@ -16,6 +16,7 @@
 #include "terminal_ui.hh"
 #include "option_types.hh"
 #include "parameters_parser.hh"
+#include "profile.hh"
 #include "ranges.hh"
 #include "regex.hh"
 #include "register_manager.hh"
@@ -806,14 +807,11 @@ int run_server(StringView session, StringView server_init,
     write_to_debug_buffer("*** This is the debug buffer, where debug info will be written ***");
 
 #ifdef KAK_DEBUG
-    const auto start_time = Clock::now();
-    UnitTest::run_all_tests();
-
-    if (debug_flags & DebugFlags::Profile)
     {
-        using namespace std::chrono;
-        write_to_debug_buffer(format("running the unit tests took {} ms",
-                                     duration_cast<milliseconds>(Clock::now() - start_time).count()));
+        ProfileScope profile{debug_flags, [&](std::chrono::microseconds duration) {
+            write_to_debug_buffer(format("running the unit tests took {} ms", duration.count()));
+        }};
+        UnitTest::run_all_tests();
     }
 #endif
 
