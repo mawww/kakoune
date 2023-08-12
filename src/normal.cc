@@ -44,6 +44,7 @@ constexpr auto enum_desc(Meta::Type<SelectMode>)
         { SelectMode::Append, "append" },
     });
 }
+
 void merge_selections(Selection& sel, const Selection& new_sel)
 {
     const bool forward = sel.cursor() >= sel.anchor();

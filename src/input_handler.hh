@@ -31,6 +31,7 @@ enum class PromptEvent
     Validate
 };
 using PromptCallback = std::function<void (StringView, PromptEvent, Context&)>;
+
 enum class PromptFlags
 {
     None = 0,
@@ -39,7 +40,6 @@ enum class PromptFlags
     Search = 1 << 2,
 };
 constexpr bool with_bit_ops(Meta::Type<PromptFlags>) { return true; }
-
 
 using KeyCallback = std::function<void (Key, Context&)>;
 
@@ -199,9 +199,9 @@ void on_next_key_with_autoinfo(const Context& context, StringView mode_name,
             bool hide = should_show_info(AutoInfo::OnKey, context);
             hide_auto_info_ifn(context, hide);
             cmd(key, context);
-    }, [&context, title=std::move(title), info=std::move(info)](Timer&) {
+        }, [&context, title=std::move(title), info=std::move(info)](Timer&) {
            show_auto_info_ifn(title, info, AutoInfo::OnKey, context);
-    });
+        });
 }
 
 void scroll_window(Context& context, LineCount offset, bool mouse_dragging = false);
