@@ -85,34 +85,37 @@ static uint32_t compute_faces_hash(const FaceRegistry& faces)
 
 Window::Setup Window::build_setup(const Context& context) const
 {
-    return {m_position, m_dimensions,
-            context.buffer().timestamp(),
-            compute_faces_hash(context.faces()),
-            context.selections().main_index(),
-            context.selections() | gather<Vector<BasicSelection, MemoryDomain::Display>>()};
+    Vector<BufferRange, MemoryDomain::Display> selections;
+    for (auto& sel : context.selections())
+        selections.push_back({sel.cursor(), sel.anchor()});
+
+    return { m_position, m_dimensions,
+             context.buffer().timestamp(),
+             compute_faces_hash(context.faces()),
+             context.selections().main_index(),
+             std::move(selections) };
 }
 
 bool Window::needs_redraw(const Context& context) const
 {
     auto& selections = context.selections();
-    return m_position != m_last_setup.position or
+
+    if (m_position != m_last_setup.position or
         m_dimensions != m_last_setup.dimensions or
         context.buffer().timestamp() != m_last_setup.timestamp or
         selections.main_index() != m_last_setup.main_selection or
         selections.size() != m_last_setup.selections.size() or
-        compute_faces_hash(context.faces()) != m_last_setup.faces_hash or
-        not std::equal(selections.begin(), selections.end(),
-                       m_last_setup.selections.begin(), m_last_setup.selections.end());
-}
+        compute_faces_hash(context.faces()) != m_last_setup.faces_hash)
+        return true;
 
-bool Window::should_make_cursor_visible(const Context& context) const
-{
-    auto& selections = context.selections();
-    return context.buffer().timestamp() != m_last_setup.timestamp or
-        selections.main_index() != m_last_setup.main_selection or
-        selections.size() != m_last_setup.selections.size() or
-        not std::equal(selections.begin(), selections.end(),
-                       m_last_setup.selections.begin(), m_last_setup.selections.end());
+    for (int i = 0; i < selections.size(); ++i)
+    {
+        if (selections[i].cursor() != m_last_setup.selections[i].begin or
+            selections[i].anchor() != m_last_setup.selections[i].end)
+            return true;
+    }
+
+    return false;
 }
 
 const DisplayBuffer& Window::update_display_buffer(const Context& context)
@@ -212,15 +215,11 @@ DisplaySetup Window::compute_display_setup(const Context& context) const
     const int tabstop = context.options()["tabstop"].get<int>();
     const auto& cursor = context.selections().main().cursor();
 
-    bool ensure_cursor_visible = should_make_cursor_visible(context);
-
-    if (ensure_cursor_visible)
-    {
-        if (cursor.line - offset.line < win_pos.line)
-            win_pos.line = std::max(0_line, cursor.line - offset.line);
-        if (cursor.line + offset.line >= win_pos.line + m_dimensions.line)
-            win_pos.line = std::min(buffer().line_count()-1, cursor.line + offset.line - m_dimensions.line + 1);
-    }
+    // Ensure cursor line is visible
+    if (cursor.line - offset.line < win_pos.line)
+        win_pos.line = std::max(0_line, cursor.line - offset.line);
+    if (cursor.line + offset.line >= win_pos.line + m_dimensions.line)
+        win_pos.line = std::min(buffer().line_count()-1, cursor.line + offset.line - m_dimensions.line + 1);
 
     DisplaySetup setup{
         win_pos.line,
@@ -229,15 +228,13 @@ DisplaySetup Window::compute_display_setup(const Context& context) const
         0_col,
         {cursor.line - win_pos.line,
          get_column(buffer(), tabstop, cursor) - win_pos.column},
-        offset,
-        ensure_cursor_visible
+        offset
     };
     for (auto pass : { HighlightPass::Move, HighlightPass::Wrap })
         m_builtin_highlighters.compute_display_setup({context, setup, pass, {}}, setup);
     check_display_setup(setup, *this);
 
     // now ensure the cursor column is visible
-    if (ensure_cursor_visible)
     {
         auto underflow = std::max(-setup.first_column,
                                   setup.cursor_pos.column - setup.scroll_offset.column);

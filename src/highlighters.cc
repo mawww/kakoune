@@ -752,8 +752,7 @@ struct WrapHighlighter : Highlighter
             win_line += wrap_count + 1;
 
             // scroll window to keep cursor visible, and update range as lines gets removed
-            while (setup.ensure_cursor_visible and
-                   buf_line >= cursor.line and setup.first_line < cursor.line and
+            while (buf_line >= cursor.line and setup.first_line < cursor.line and
                    setup.cursor_pos.line + setup.scroll_offset.line >= win_height)
             {
                 auto remove_count = 1 + line_wrap_count(setup.first_line, indent);
@@ -1661,8 +1660,7 @@ private:
                 setup.cursor_pos.column += cursor_move;
             }
 
-            if (setup.ensure_cursor_visible and
-                last.line >= setup.first_line and
+            if (last.line >= setup.first_line and
                 range.first.line <= setup.first_line + setup.line_count and
                 range.first.line != last.line)
             {

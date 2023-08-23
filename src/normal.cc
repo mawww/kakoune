@@ -848,7 +848,7 @@ void regex_prompt(Context& context, String prompt, char reg, T func)
                 {
                     selections.update();
                     context.selections_write_only() = selections;
-                    if (context.has_window() and event != PromptEvent::Validate)
+                    if (context.has_window())
                         context.window().set_position(position);
 
                     context.input_handler().set_prompt_face(context.faces()["Prompt"]);

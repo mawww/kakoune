@@ -1,2 +1,2 @@
-ui_out -ignore 7
-ui_out '{ "jsonrpc": "2.0", "method": "draw", "params": [[[{ "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": "😃\u000a" }]], { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, { "fg": "blue", "bg": "default", "underline": "default", "attributes": [] }] }'
+ui_out -ignore 1
+ui_out '{ "jsonrpc": "2.0", "method": "draw", "params": [[[{ "face": { "fg": "black", "bg": "white", "underline": "default", "attributes": [] }, "contents": "😃" }, { "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": "\u000a" }]], { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, { "fg": "blue", "bg": "default", "underline": "default", "attributes": [] }] }'

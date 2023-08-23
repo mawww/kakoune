@@ -144,7 +144,6 @@ public:
     void repeat_last_select() { if (m_last_select) m_last_select(*this); }
 
     Buffer* last_buffer() const;
-
 private:
     void begin_edition();
     void end_edition();
@@ -216,16 +215,9 @@ struct ScopedEdition
     ScopedEdition(Context& context)
         : m_context{context},
           m_buffer{context.has_buffer() ? &context.buffer() : nullptr}
-    {
-        if (m_buffer)
-            m_context.begin_edition();
-    }
+    { if (m_buffer) m_context.begin_edition(); }
 
-    ~ScopedEdition()
-    {
-        if (m_buffer)
-            m_context.end_edition();
-    }
+    ~ScopedEdition() { if (m_buffer) m_context.end_edition(); }
 
     Context& context() const { return m_context; }
 private:
@@ -238,19 +230,11 @@ struct ScopedSelectionEdition
     ScopedSelectionEdition(Context& context)
         : m_context{context},
           m_buffer{not (m_context.flags() & Context::Flags::Draft) and context.has_buffer() ? &context.buffer() : nullptr}
-    { 
-        if (m_buffer)
-            m_context.m_selection_history.begin_edition();
-    }
-
+    { if (m_buffer) m_context.m_selection_history.begin_edition(); }
     ScopedSelectionEdition(ScopedSelectionEdition&& other) : m_context{other.m_context}, m_buffer{other.m_buffer}
     { other.m_buffer = nullptr; }
 
-    ~ScopedSelectionEdition()
-    {
-        if (m_buffer)
-            m_context.m_selection_history.end_edition();
-    }
+    ~ScopedSelectionEdition() { if (m_buffer) m_context.m_selection_history.end_edition(); }
 private:
     Context& m_context;
     SafePtr<Buffer> m_buffer;

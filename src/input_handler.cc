@@ -1870,27 +1870,25 @@ void scroll_window(Context& context, LineCount offset, bool mouse_dragging)
 
     win_pos.line = clamp(win_pos.line + offset, 0_line, line_count-1);
 
+    ScopedSelectionEdition selection_edition{context};
+    SelectionList& selections = context.selections();
+    Selection& main_selection = selections.main();
+    const BufferCoord anchor = main_selection.anchor();
+    const BufferCoordAndTarget cursor = main_selection.cursor();
+
+    auto cursor_off = mouse_dragging ? win_pos.line - window.position().line : 0;
+
+    auto line = clamp(cursor.line + cursor_off, win_pos.line + scrolloff.line,
+                      win_pos.line + win_dim.line - 1 - scrolloff.line);
+
+    const ColumnCount tabstop = context.options()["tabstop"].get<int>();
+    auto new_cursor = buffer.offset_coord(cursor, line - cursor.line, tabstop);
+    BufferCoord new_anchor = (mouse_dragging or new_cursor == cursor) ? anchor : new_cursor;
+
     window.set_position(win_pos);
-    if (mouse_dragging)
-    {
-        ScopedSelectionEdition selection_edition{context};
-        SelectionList& selections = context.selections();
-        Selection& main_selection = selections.main();
-        const BufferCoord anchor = main_selection.anchor();
-        const BufferCoordAndTarget cursor = main_selection.cursor();
+    main_selection = { new_anchor, new_cursor };
 
-        auto cursor_off = win_pos.line - window.position().line;
-
-        auto line = clamp(cursor.line + cursor_off, win_pos.line + scrolloff.line,
-                          win_pos.line + win_dim.line - 1 - scrolloff.line);
-
-        const ColumnCount tabstop = context.options()["tabstop"].get<int>();
-        auto new_cursor = buffer.offset_coord(cursor, line - cursor.line, tabstop);
-
-        main_selection = { anchor, new_cursor };
-
-        selections.sort_and_merge_overlapping();
-    }
+    selections.sort_and_merge_overlapping();
 }
 
 }

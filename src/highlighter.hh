@@ -46,7 +46,6 @@ struct DisplaySetup
     DisplayCoord cursor_pos;
     // Offset of line and columns that must remain visible around cursor
     DisplayCoord scroll_offset;
-    bool ensure_cursor_visible;
 };
 
 using HighlighterIdList = ConstArrayView<StringView>;
