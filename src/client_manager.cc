@@ -152,7 +152,6 @@ WindowAndSelections ClientManager::get_free_window(Buffer& buffer)
     if (it == m_free_windows.rend())
         return { std::make_unique<Window>(buffer), { buffer, Selection{} } };
 
-    it->window->force_redraw();
     WindowAndSelections res = std::move(*it);
     m_free_windows.erase(it.base()-1);
     res.selections.update();

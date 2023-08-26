@@ -54,7 +54,7 @@ public:
 
     DisplayCoord dimensions() const;
 
-    void force_redraw();
+    void force_redraw(bool full = false);
     void redraw_ifn();
 
     void check_if_buffer_needs_reloading();

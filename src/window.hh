@@ -43,7 +43,6 @@ public:
     Buffer& buffer() const { return *m_buffer; }
 
     bool needs_redraw(const Context& context) const;
-    void force_redraw() { m_last_setup = Setup{}; }
 
     void set_client(Client* client) { m_client = client; }
 

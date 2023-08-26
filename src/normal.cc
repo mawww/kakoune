@@ -1008,8 +1008,8 @@ void use_selection_as_search_pattern(Context& context, NormalParams params)
     RegisterManager::instance()[reg].set(context, {pattern});
 
     // Hack, as Window do not take register state into account
-    if (context.has_window())
-        context.window().force_redraw();
+    if (context.has_client())
+        context.client().force_redraw();
 }
 
 void select_regex(Context& context, NormalParams params)
@@ -2208,7 +2208,7 @@ void force_redraw(Context& context, NormalParams)
 {
     if (context.has_client())
     {
-        context.client().force_redraw();
+        context.client().force_redraw(true);
         context.client().redraw_ifn();
     }
 }

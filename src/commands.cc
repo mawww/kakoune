@@ -976,20 +976,23 @@ static void redraw_relevant_clients(Context& context, StringView highlighter_pat
 {
     StringView scope{highlighter_path.begin(), find(highlighter_path, '/')};
     if (scope == "window")
-        context.window().force_redraw();
+    {
+        if (context.has_client())
+            context.client().force_redraw();
+    }
     else if (scope == "buffer" or prefix_match(scope, "buffer="))
     {
         auto& buffer = scope == "buffer" ? context.buffer() : BufferManager::instance().get_buffer(scope.substr(7_byte));
         for (auto&& client : ClientManager::instance())
         {
             if (&client->context().buffer() == &buffer)
-                client->context().window().force_redraw();
+                client->force_redraw();
         }
     }
     else
     {
         for (auto&& client : ClientManager::instance())
-            client->context().window().force_redraw();
+            client->force_redraw();
     }
 }
 

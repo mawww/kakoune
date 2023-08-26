@@ -62,7 +62,7 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
         else if (key.modifiers & Key::Modifiers::Resize)
         {
             m_window->set_dimensions(key.coord());
-            force_redraw();
+            force_redraw(true);
         }
         else
             m_pending_keys.push_back(key);
@@ -210,7 +210,7 @@ void Client::change_buffer(Buffer& buffer, Optional<FunctionRef<void()>> set_sel
     m_ui->set_ui_options(m_window->options()["ui_options"].get<UserInterface::Options>());
 
     m_window->hooks().run_hook(Hook::WinDisplay, buffer.name(), context());
-    force_redraw();
+    force_redraw(true);
 }
 
 static bool is_inline(InfoStyle style)
@@ -289,11 +289,14 @@ void Client::redraw_ifn()
     m_ui_pending = 0;
 }
 
-void Client::force_redraw()
+void Client::force_redraw(bool full)
 {
-    m_ui_pending |= Refresh | Draw | StatusLine |
-        (m_menu.items.empty() ? MenuHide : MenuShow | MenuSelect) |
-        (m_info.content.empty() ? InfoHide : InfoShow);
+    if (full)
+        m_ui_pending |= Refresh | Draw | StatusLine |
+            (m_menu.items.empty() ? MenuHide : MenuShow | MenuSelect) |
+            (m_info.content.empty() ? InfoHide : InfoShow);
+    else
+        m_ui_pending |= Draw;
 }
 
 void Client::reload_buffer()
@@ -422,10 +425,8 @@ StringView Client::get_env_var(StringView name) const
 void Client::on_option_changed(const Option& option)
 {
     if (option.name() == "ui_options")
-    {
         m_ui->set_ui_options(option.get<UserInterface::Options>());
-        m_ui_pending |= Draw;
-    }
+    m_ui_pending |= Draw; // a highlighter might depend on the option, so we need to redraw
 }
 
 void Client::menu_show(Vector<DisplayLine> choices, BufferCoord anchor, MenuStyle style)

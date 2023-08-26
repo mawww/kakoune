@@ -324,8 +324,6 @@ void Window::clear_display_buffer()
 void Window::on_option_changed(const Option& option)
 {
     run_hook_in_own_context(Hook::WinSetOption, format("{}={}", option.name(), option.get_desc_string()));
-    // a highlighter might depend on the option, so we need to redraw
-    force_redraw();
 }
 
 
