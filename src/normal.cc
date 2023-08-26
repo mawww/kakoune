@@ -368,6 +368,7 @@ void view_commands(Context& context, NormalParams params)
     const int count = params.count;
     on_next_key_with_autoinfo(context, "view", KeymapMode::View,
                              [count](Key key, Context& context) {
+        context.ensure_cursor_visible = false;
         if (key == Key::Escape)
             return;
 
@@ -400,10 +401,10 @@ void view_commands(Context& context, NormalParams params)
             window.scroll(-std::max<ColumnCount>(1, count));
             break;
         case 'j':
-            scroll_window(context,  std::max<LineCount>(1, count));
+            scroll_window(context,  std::max<LineCount>(1, count), OnHiddenCursor::PreserveSelections);
             break;
         case 'k':
-            scroll_window(context, -std::max<LineCount>(1, count));
+            scroll_window(context, -std::max<LineCount>(1, count), OnHiddenCursor::PreserveSelections);
             break;
         case 'l':
             window.scroll( std::max<ColumnCount>(1, count));
@@ -1408,7 +1409,7 @@ void scroll(Context& context, NormalParams params)
     const int count = params.count ? params.count : 1;
     const LineCount offset = (window.dimensions().line - 2) / (half ? 2 : 1) * count;
 
-    scroll_window(context, offset * direction);
+    scroll_window(context, offset * direction, OnHiddenCursor::MoveCursorAndAnchor);
 }
 
 template<Direction direction>

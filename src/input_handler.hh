@@ -204,7 +204,13 @@ void on_next_key_with_autoinfo(const Context& context, StringView mode_name,
         });
 }
 
-void scroll_window(Context& context, LineCount offset, bool mouse_dragging = false);
+enum class OnHiddenCursor {
+    PreserveSelections,
+    MoveCursor,
+    MoveCursorAndAnchor,
+};
+
+void scroll_window(Context& context, LineCount offset, OnHiddenCursor on_hidden_cursor);
 
 }
 

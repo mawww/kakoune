@@ -144,6 +144,8 @@ public:
     void repeat_last_select() { if (m_last_select) m_last_select(*this); }
 
     Buffer* last_buffer() const;
+
+    bool ensure_cursor_visible = true;
 private:
     void begin_edition();
     void end_edition();

@@ -109,7 +109,10 @@ bool Client::process_pending_inputs()
             else if (key == Key::FocusOut)
                 context().hooks().run_hook(Hook::FocusOut, context().name(), context());
             else
+            {
+                context().ensure_cursor_visible = true;
                 m_input_handler.handle_key(key);
+            }
 
             context().hooks().run_hook(Hook::RawKey, to_string(key), context());
         }

@@ -202,11 +202,14 @@ DisplaySetup Window::compute_display_setup(const Context& context) const
     const int tabstop = context.options()["tabstop"].get<int>();
     const auto& cursor = context.selections().main().cursor();
 
-    // Ensure cursor line is visible
-    if (cursor.line - offset.line < win_pos.line)
-        win_pos.line = std::max(0_line, cursor.line - offset.line);
-    if (cursor.line + offset.line >= win_pos.line + m_dimensions.line)
-        win_pos.line = std::min(buffer().line_count()-1, cursor.line + offset.line - m_dimensions.line + 1);
+    bool ensure_cursor_visible = context.ensure_cursor_visible;
+    if (ensure_cursor_visible)
+    {
+        if (cursor.line - offset.line < win_pos.line)
+            win_pos.line = std::max(0_line, cursor.line - offset.line);
+        if (cursor.line + offset.line >= win_pos.line + m_dimensions.line)
+            win_pos.line = std::min(buffer().line_count()-1, cursor.line + offset.line - m_dimensions.line + 1);
+    }
 
     DisplaySetup setup{
         win_pos.line,
@@ -215,13 +218,15 @@ DisplaySetup Window::compute_display_setup(const Context& context) const
         0_col,
         {cursor.line - win_pos.line,
          get_column(buffer(), tabstop, cursor) - win_pos.column},
-        offset
+        offset,
+        ensure_cursor_visible
     };
     for (auto pass : { HighlightPass::Move, HighlightPass::Wrap })
         m_builtin_highlighters.compute_display_setup({context, setup, pass, {}}, setup);
     check_display_setup(setup, *this);
 
     // now ensure the cursor column is visible
+    if (ensure_cursor_visible)
     {
         auto underflow = std::max(-setup.first_column,
                                   setup.cursor_pos.column - setup.scroll_offset.column);

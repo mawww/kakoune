@@ -180,7 +180,7 @@ struct MouseHandler
         }
 
         case Key::Modifiers::Scroll:
-            scroll_window(context, static_cast<int32_t>(key.key), (bool)m_dragging);
+            scroll_window(context, static_cast<int32_t>(key.key), m_dragging ? OnHiddenCursor::MoveCursor : OnHiddenCursor::PreserveSelections);
             return true;
 
         default: return false;
@@ -1852,7 +1852,7 @@ void hide_auto_info_ifn(const Context& context, bool hide)
         context.client().info_hide();
 }
 
-void scroll_window(Context& context, LineCount offset, bool mouse_dragging)
+void scroll_window(Context& context, LineCount offset, OnHiddenCursor on_hidden_cursor)
 {
     Window& window = context.window();
     Buffer& buffer = context.buffer();
@@ -1860,6 +1860,9 @@ void scroll_window(Context& context, LineCount offset, bool mouse_dragging)
 
     DisplayCoord win_pos = window.position();
     DisplayCoord win_dim = window.dimensions();
+
+    if (on_hidden_cursor == OnHiddenCursor::PreserveSelections)
+        context.ensure_cursor_visible = false;
 
     if ((offset < 0 and win_pos.line == 0) or (offset > 0 and win_pos.line == line_count - 1))
         return;
@@ -1870,25 +1873,27 @@ void scroll_window(Context& context, LineCount offset, bool mouse_dragging)
 
     win_pos.line = clamp(win_pos.line + offset, 0_line, line_count-1);
 
-    ScopedSelectionEdition selection_edition{context};
-    SelectionList& selections = context.selections();
-    Selection& main_selection = selections.main();
-    const BufferCoord anchor = main_selection.anchor();
-    const BufferCoordAndTarget cursor = main_selection.cursor();
-
-    auto cursor_off = mouse_dragging ? win_pos.line - window.position().line : 0;
-
-    auto line = clamp(cursor.line + cursor_off, win_pos.line + scrolloff.line,
-                      win_pos.line + win_dim.line - 1 - scrolloff.line);
-
-    const ColumnCount tabstop = context.options()["tabstop"].get<int>();
-    auto new_cursor = buffer.offset_coord(cursor, line - cursor.line, tabstop);
-    BufferCoord new_anchor = (mouse_dragging or new_cursor == cursor) ? anchor : new_cursor;
-
     window.set_position(win_pos);
-    main_selection = { new_anchor, new_cursor };
+    if (on_hidden_cursor != OnHiddenCursor::PreserveSelections)
+    {
+        ScopedSelectionEdition selection_edition{context};
+        SelectionList& selections = context.selections();
+        Selection& main_selection = selections.main();
+        const BufferCoord anchor = main_selection.anchor();
+        const BufferCoordAndTarget cursor = main_selection.cursor();
 
-    selections.sort_and_merge_overlapping();
+        auto cursor_off = win_pos.line - window.position().line;
+
+        auto line = clamp(cursor.line + cursor_off, win_pos.line + scrolloff.line,
+                          win_pos.line + win_dim.line - 1 - scrolloff.line);
+
+        const ColumnCount tabstop = context.options()["tabstop"].get<int>();
+        auto new_cursor = buffer.offset_coord(cursor, line - cursor.line, tabstop);
+
+        main_selection = {on_hidden_cursor == OnHiddenCursor::MoveCursor ? anchor : new_cursor, new_cursor};
+
+        selections.sort_and_merge_overlapping();
+    }
 }
 
 }
