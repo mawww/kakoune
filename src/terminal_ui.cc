@@ -429,7 +429,7 @@ static constexpr StringView assistant_dilbert[] =
 template<typename T> T sq(T x) { return x * x; }
 
 static sig_atomic_t resize_pending = 0;
-static sig_atomic_t stdin_closed = 0;
+static sig_atomic_t terrminal_hangedup = 0;
 
 template<sig_atomic_t* signal_flag>
 static void signal_handler(int)
@@ -465,7 +465,7 @@ TerminalUI::TerminalUI()
     enable_mouse(true);
 
     set_signal_handler(SIGWINCH, &signal_handler<&resize_pending>);
-    set_signal_handler(SIGHUP, &signal_handler<&stdin_closed>);
+    set_signal_handler(SIGHUP, &signal_handler<&terrminal_hangedup>);
     set_signal_handler(SIGTSTP, [](int){ TerminalUI::instance().suspend(); });
 
     check_resize(true);
@@ -474,11 +474,13 @@ TerminalUI::TerminalUI()
 
 TerminalUI::~TerminalUI()
 {
-    enable_mouse(false);
-    restore_terminal();
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &m_original_termios);
+    if (not terrminal_hangedup) {
+        enable_mouse(false);
+        restore_terminal();
+        tcsetattr(STDIN_FILENO, TCSAFLUSH, &m_original_termios);
+    }
     set_signal_handler(SIGWINCH, SIG_DFL);
-    set_signal_handler(SIGHUP, SIG_DFL);
+    set_signal_handler(SIGHUP, SIG_IGN);
     set_signal_handler(SIGTSTP, SIG_DFL);
 }
 
@@ -666,10 +668,10 @@ void TerminalUI::check_resize(bool force)
 
 Optional<Key> TerminalUI::get_next_key()
 {
-    if (stdin_closed)
+    if (terrminal_hangedup)
     {
         set_signal_handler(SIGWINCH, SIG_DFL);
-        set_signal_handler(SIGHUP, SIG_DFL);
+        set_signal_handler(SIGHUP, SIG_IGN);
         if (m_window)
             m_window.destroy();
         m_stdin_watcher.disable();
@@ -691,7 +693,7 @@ Optional<Key> TerminalUI::get_next_key()
         if (unsigned char c = 0; read(STDIN_FILENO, &c, 1) == 1)
             return c;
 
-        stdin_closed = 1;
+        terrminal_hangedup = 1;
         return {};
     };
 
