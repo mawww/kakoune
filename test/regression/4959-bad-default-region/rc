@@ -1,0 +1,6 @@
+add-highlighter shared/test regions
+try %{
+    add-highlighter shared/test/ default-region invalid highlighter
+} catch %{
+    exec ibad-highlighter<esc>
+}
