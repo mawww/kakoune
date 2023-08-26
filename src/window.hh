@@ -77,7 +77,7 @@ private:
         size_t timestamp;
         size_t faces_hash;
         size_t main_selection;
-        Vector<BufferRange, MemoryDomain::Display> selections;
+        Vector<BasicSelection, MemoryDomain::Display> selections;
     };
     Setup build_setup(const Context& context) const;
     Setup m_last_setup;

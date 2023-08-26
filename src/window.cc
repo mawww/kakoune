@@ -85,37 +85,24 @@ static uint32_t compute_faces_hash(const FaceRegistry& faces)
 
 Window::Setup Window::build_setup(const Context& context) const
 {
-    Vector<BufferRange, MemoryDomain::Display> selections;
-    for (auto& sel : context.selections())
-        selections.push_back({sel.cursor(), sel.anchor()});
-
-    return { m_position, m_dimensions,
-             context.buffer().timestamp(),
-             compute_faces_hash(context.faces()),
-             context.selections().main_index(),
-             std::move(selections) };
+    return {m_position, m_dimensions,
+            context.buffer().timestamp(),
+            compute_faces_hash(context.faces()),
+            context.selections().main_index(),
+            context.selections() | gather<Vector<BasicSelection, MemoryDomain::Display>>()};
 }
 
 bool Window::needs_redraw(const Context& context) const
 {
     auto& selections = context.selections();
-
-    if (m_position != m_last_setup.position or
+    return m_position != m_last_setup.position or
         m_dimensions != m_last_setup.dimensions or
         context.buffer().timestamp() != m_last_setup.timestamp or
         selections.main_index() != m_last_setup.main_selection or
         selections.size() != m_last_setup.selections.size() or
-        compute_faces_hash(context.faces()) != m_last_setup.faces_hash)
-        return true;
-
-    for (int i = 0; i < selections.size(); ++i)
-    {
-        if (selections[i].cursor() != m_last_setup.selections[i].begin or
-            selections[i].anchor() != m_last_setup.selections[i].end)
-            return true;
-    }
-
-    return false;
+        compute_faces_hash(context.faces()) != m_last_setup.faces_hash or
+        not std::equal(selections.begin(), selections.end(),
+                       m_last_setup.selections.begin(), m_last_setup.selections.end());
 }
 
 const DisplayBuffer& Window::update_display_buffer(const Context& context)
