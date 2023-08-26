@@ -2044,7 +2044,13 @@ public:
         static const ParameterDesc param_desc{ {}, ParameterDesc::Flags::SwitchesOnlyAtStart, 1 };
         ParametersParser parser{params, param_desc};
 
-        auto delegate = HighlighterRegistry::instance()[parser[0]].factory(parser.positionals_from(1), nullptr);
+        const auto& type = parser[0];
+        auto& registry = HighlighterRegistry::instance();
+        auto it = registry.find(type);
+        if (it == registry.end())
+            throw runtime_error(format("no such highlighter type: '{}'", type));
+
+        auto delegate = it->value.factory(parser.positionals_from(1), nullptr);
         return std::make_unique<RegionHighlighter>(std::move(delegate));
     }
 
