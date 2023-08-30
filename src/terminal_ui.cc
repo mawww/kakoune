@@ -429,7 +429,7 @@ static constexpr StringView assistant_dilbert[] =
 template<typename T> T sq(T x) { return x * x; }
 
 static sig_atomic_t resize_pending = 0;
-static sig_atomic_t terrminal_hungup = 0;
+static sig_atomic_t terminal_hungup = 0;
 
 template<sig_atomic_t* signal_flag>
 static void signal_handler(int)
@@ -465,7 +465,7 @@ TerminalUI::TerminalUI()
     enable_mouse(true);
 
     set_signal_handler(SIGWINCH, &signal_handler<&resize_pending>);
-    set_signal_handler(SIGHUP, &signal_handler<&terrminal_hungup>);
+    set_signal_handler(SIGHUP, &signal_handler<&terminal_hungup>);
     set_signal_handler(SIGTSTP, [](int){ TerminalUI::instance().suspend(); });
 
     check_resize(true);
@@ -474,7 +474,7 @@ TerminalUI::TerminalUI()
 
 TerminalUI::~TerminalUI()
 {
-    if (not terrminal_hungup) {
+    if (not terminal_hungup) {
         enable_mouse(false);
         restore_terminal();
         tcsetattr(STDIN_FILENO, TCSAFLUSH, &m_original_termios);
@@ -668,7 +668,7 @@ void TerminalUI::check_resize(bool force)
 
 Optional<Key> TerminalUI::get_next_key()
 {
-    if (terrminal_hungup)
+    if (terminal_hungup)
     {
         set_signal_handler(SIGWINCH, SIG_DFL);
         set_signal_handler(SIGHUP, SIG_IGN);
@@ -693,7 +693,7 @@ Optional<Key> TerminalUI::get_next_key()
         if (unsigned char c = 0; read(STDIN_FILENO, &c, 1) == 1)
             return c;
 
-        terrminal_hungup = 1;
+        terminal_hungup = 1;
         return {};
     };
 
