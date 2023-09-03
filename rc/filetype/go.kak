@@ -51,7 +51,7 @@ add-highlighter shared/go/comment region /\* \*/ fill comment
 add-highlighter shared/go/comment_line region '//' $ fill comment
 
 add-highlighter shared/go/code/identifier regex %{-?([0-9]*\.(?!0[xX]))?\b([0-9]+|0[xX][0-9a-fA-F]+)\.?([eE][+-]?[0-9]+)?i?\b} 0:value
-add-highlighter shared/go/code/function regex "\b(\w*)\b[ ]*\(" 1:function
+add-highlighter shared/go/code/function regex "\b(\w*)\b\h*(?:\[[\w\s\.,]*\])?\h*\(" 1:function
 add-highlighter shared/go/code/operator regex "(\+|-|\*|/|%|\+\+|--|\+=|-=|\*=|/=|%=|==|!=|>|<|>=|<=|&|&&|\|\||!|<-|:=|\.\.\.)" 1:operator
 
 evaluate-commands %sh{
