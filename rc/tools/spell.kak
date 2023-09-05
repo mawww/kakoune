@@ -149,7 +149,7 @@ define-command \
             fi
             printf %s "$kak_selection" |
                 eval "aspell -a $options" |
-                sed -n -e '/^&/ { s/^[^:]*: //; s/, /\n/g; p }'
+                sed -n -e '/^&/ { s/^[^:]*: //; s/, /\n/g; p;}'
         } \
         "Replace with: " \
         %{
