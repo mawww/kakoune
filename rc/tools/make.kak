@@ -1,7 +1,15 @@
 declare-option -docstring "shell command run to build the project" \
     str makecmd make
-declare-option -docstring "pattern that describes lines containing information about errors in the output of the `makecmd` command" \
-    str make_error_pattern " (?:fatal )?error:"
+declare-option -docstring "pattern to find the next error" \
+    str make_error_pattern "^(?:\w:)?[^:\n]+:\d+:(?:\d+:)? (?:fatal )?error:"
+declare-option -docstring "pattern for highlighting errors" \
+    str make_error_highlight_pattern "(?:\w:)?[^:\n]+):(\d+):(?:(\d+):)"
+declare-option -docstring "pattern to capture information for navigating errors" \
+    str make_open_error_pattern "((?:\w:)?[^:]+):(\d+):(?:(\d+):)?([^\n]+)\z"
+declare-option -docstring "to determine if the build system entered a directory when building" \
+    str make_dir_pattern "Entering directory"
+declare-option -docstring "similar to make_open_error_pattern but for nested build files" \
+    str make_open_dir_error_pattern "Entering directory [`']([^']+)'.*\n([^:/][^:]*):(\d+):(?:(\d+):)?([^\n]+)\z"
 
 declare-option -docstring "name of the client in which utilities display information" \
     str toolsclient
@@ -25,7 +33,7 @@ define-command -params .. \
 }}
 
 add-highlighter shared/make group
-add-highlighter shared/make/ regex "^((?:\w:)?[^:\n]+):(\d+):(?:(\d+):)?\h+(?:((?:fatal )?error)|(warning)|(note)|(required from(?: here)?))?.*?$" 1:cyan 2:green 3:green 4:red 5:yellow 6:blue 7:yellow
+add-highlighter shared/make/ regex "^%opt{make_error_highlight_pattern}?\h+(?:((?:fatal )?error)|(warning)|(note)|(required from(?: here)?))?.*?$" 1:cyan 2:green 3:green 4:red 5:yellow 6:blue 7:yellow
 add-highlighter shared/make/ regex "^\h*(~*(?:(\^)~*)?)$" 1:green 2:cyan+b
 add-highlighter shared/make/ line '%opt{make_current_error_line}' default+b
 
@@ -53,13 +61,13 @@ define-command -hidden make-open-error -params 4 %{
 define-command -hidden make-jump %{
     evaluate-commands %{
         try %{
-            execute-keys gl<a-?> "Entering directory" <ret><a-:>
+            execute-keys gl<a-?> %opt{make_dir_pattern} <ret><a-:>
             # Try to parse the error into capture groups, failing on absolute paths
-            execute-keys s "Entering directory [`']([^']+)'.*\n([^:/][^:]*):(\d+):(?:(\d+):)?([^\n]+)\z" <ret>l
+            execute-keys s %opt{make_open_dir_error_pattern} <ret>l
             set-option buffer make_current_error_line %val{cursor_line}
             make-open-error "%reg{1}/%reg{2}" "%reg{3}" "%reg{4}" "%reg{5}"
         } catch %{
-            execute-keys <a-h><a-l> s "((?:\w:)?[^:]+):(\d+):(?:(\d+):)?([^\n]+)\z" <ret>l
+            execute-keys <a-h><a-l> s %opt{make_open_error_pattern} <ret>l
             set-option buffer make_current_error_line %val{cursor_line}
             make-open-error "%reg{1}" "%reg{2}" "%reg{3}" "%reg{4}"
         }
@@ -69,7 +77,7 @@ define-command -hidden make-jump %{
 define-command make-next-error -docstring 'Jump to the next make error' %{
     evaluate-commands -try-client %opt{jumpclient} %{
         buffer '*make*'
-        execute-keys "%opt{make_current_error_line}ggl" "/^(?:\w:)?[^:\n]+:\d+:(?:\d+:)?%opt{make_error_pattern}<ret>"
+        execute-keys "%opt{make_current_error_line}ggl" "/%opt{make_error_pattern}<ret>"
         make-jump
     }
     try %{
@@ -83,7 +91,7 @@ define-command make-next-error -docstring 'Jump to the next make error' %{
 define-command make-previous-error -docstring 'Jump to the previous make error' %{
     evaluate-commands -try-client %opt{jumpclient} %{
         buffer '*make*'
-        execute-keys "%opt{make_current_error_line}g" "<a-/>^(?:\w:)?[^:\n]+:\d+:(?:\d+:)?%opt{make_error_pattern}<ret>"
+        execute-keys "%opt{make_current_error_line}g" "<a-/>%opt{make_error_pattern}<ret>"
         make-jump
     }
     try %{
