@@ -49,10 +49,12 @@ public:
     void clear_display_buffer();
     void run_resize_hook_ifn();
 
-    DisplaySetup compute_display_setup(const Context& context) const;
+    const DisplaySetup& last_display_setup() const { return m_last_display_setup; }
+
 private:
     Window(const Window&) = delete;
 
+    DisplaySetup compute_display_setup(const Context& context) const;
     void on_option_changed(const Option& option) override;
 
     friend class ClientManager;
@@ -68,6 +70,7 @@ private:
 
     Highlighters m_builtin_highlighters;
     bool m_resize_hook_pending = false;
+    DisplaySetup m_last_display_setup;
 
     struct Setup
     {

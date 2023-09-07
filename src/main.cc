@@ -385,7 +385,7 @@ static const EnvVarDesc builtin_env_vars[] = { {
         "window_range", false,
         [](StringView name, const Context& context) -> Vector<String>
         {
-            auto setup = context.window().compute_display_setup(context);
+            const auto& setup = context.window().last_display_setup();
             return {format("{} {} {} {}", setup.first_line, setup.first_column,
                                           setup.line_count, 0)};
         }

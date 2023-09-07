@@ -155,6 +155,7 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
 
     set_position({setup.first_line, setup.first_column});
     m_last_setup = build_setup(context);
+    m_last_display_setup = setup;
 
     return m_display_buffer;
 }
