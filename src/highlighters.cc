@@ -961,21 +961,23 @@ const HighlighterDesc show_whitespace_desc = {
         { "tabpad", { ArgCompleter{}, "append as many of the given character as is necessary to honor `tabstop`" } },
         { "spc",    { ArgCompleter{}, "replace spaces with the given character" } },
         { "lf",     { ArgCompleter{}, "replace line feeds with the given character" } },
-        { "nbsp",   { ArgCompleter{}, "replace non-breakable spaces with the given character" } } },
+        { "nbsp",   { ArgCompleter{}, "replace non-breakable spaces with the given character" } },
+        { "only-trailing", { {}, "only highlighting trailing whitespaces" } } },
         ParameterDesc::Flags::None, 0, 0
     }
 };
 struct ShowWhitespacesHighlighter : Highlighter
 {
-    ShowWhitespacesHighlighter(String tab, String tabpad, String spc, String lf, String nbsp)
+    ShowWhitespacesHighlighter(String tab, String tabpad, String spc, String lf, String nbsp, bool only_trailing)
       : Highlighter{HighlightPass::Move}, m_tab{std::move(tab)}, m_tabpad{std::move(tabpad)},
-        m_spc{std::move(spc)}, m_lf{std::move(lf)}, m_nbsp{std::move(nbsp)}
+        m_spc{std::move(spc)}, m_lf{std::move(lf)}, m_nbsp{std::move(nbsp)}, m_only_trailing{std::move(only_trailing)}
     {}
 
     static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
     {
         ParametersParser parser(params, show_whitespace_desc.params);
 
+        bool only_trailing = (bool) parser.get_switch("only-trailing");
         auto get_param = [&](StringView param,  StringView fallback) {
             StringView value = parser.get_switch(param).value_or(fallback);
             if (value.char_length() != 1)
@@ -985,7 +987,7 @@ struct ShowWhitespacesHighlighter : Highlighter
 
         return std::make_unique<ShowWhitespacesHighlighter>(
             get_param("tab", "→"), get_param("tabpad", " "), get_param("spc", "·"),
-            get_param("lf", "¬"), get_param("nbsp", "⍽"));
+            get_param("lf", "¬"), get_param("nbsp", "⍽"), only_trailing);
     }
 
 private:
@@ -1003,12 +1005,30 @@ private:
 
                 auto begin = get_iterator(buffer, atom_it->begin());
                 auto end = get_iterator(buffer, atom_it->end());
+                auto last_non_space = begin.coord();
+
+                auto is_whitespace = [](Codepoint cp) {
+                    return cp == '\t' or cp == ' ' or cp == '\n' or cp == 0xA0 or cp == 0x202F;
+                };
+
+                if(m_only_trailing)
+                {
+                    for (BufferIterator it = begin; it != end; )
+                    {
+                        if (not is_whitespace(utf8::read_codepoint(it, end)))
+                            last_non_space = it.coord();
+                    }
+                }
+
                 for (BufferIterator it = begin; it != end; )
                 {
                     auto coord = it.coord();
                     Codepoint cp = utf8::read_codepoint(it, end);
-                    if (cp == '\t' or cp == ' ' or cp == '\n' or cp == 0xA0 or cp == 0x202F)
+                    if (is_whitespace(cp))
                     {
+                        if (m_only_trailing and it.coord() <= last_non_space)
+                            continue;
+
                         if (coord != begin.coord())
                             atom_it = ++line.split(atom_it, coord);
                         if (it != end)
@@ -1035,6 +1055,7 @@ private:
     }
 
     const String m_tab, m_tabpad, m_spc, m_lf, m_nbsp;
+    const bool m_only_trailing;
 };
 
 const HighlighterDesc line_numbers_desc = {

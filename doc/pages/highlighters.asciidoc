@@ -55,6 +55,9 @@ highlighter is replaced with the new one.
     *-tabpad* <separator>:::
         a one character long separator that will be appended to tabulations to honor the *tabstop* option
 
+    *-only-trailing*:::
+        only highlight whitespaces at the end of the line
+
 *number-lines* [options]::
     show line numbers using the `LineNumbers`, `LineNumberCursor` and `LineNumbersWrapped` faces,
     with the following *options*: 
