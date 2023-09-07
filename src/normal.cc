@@ -2209,7 +2209,6 @@ void force_redraw(Context& context, NormalParams)
 {
     if (context.has_client())
     {
-        context.ensure_cursor_visible = false;
         context.client().force_redraw(true);
         context.client().redraw_ifn();
     }
