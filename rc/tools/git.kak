@@ -66,9 +66,10 @@ define-command -params 1.. \
             show-diff
             status
             update-diff
+            grep
     } -shell-script-candidates %{
     if [ $kak_token_to_complete -eq 0 ]; then
-        printf "add\nrm\nreset\nblame\ncommit\ncheckout\ndiff\nhide-blame\nhide-diff\nlog\nnext-hunk\nprev-hunk\nshow\nshow-branch\nshow-diff\ninit\nstatus\nupdate-diff\n"
+        printf "add\nrm\nreset\nblame\ncommit\ncheckout\ndiff\nhide-blame\nhide-diff\nlog\nnext-hunk\nprev-hunk\nshow\nshow-branch\nshow-diff\ninit\nstatus\nupdate-diff\ngrep\n"
     else
         case "$1" in
             commit) printf -- "--amend\n--no-edit\n--all\n--reset-author\n--fixup\n--squash\n"; git ls-files -m ;;
@@ -346,6 +347,15 @@ define-command -params 1.. \
             ;;
         reset|checkout)
             run_git_cmd "$@"
+            ;;
+        grep)
+            shift
+            enquoted="$(printf '"%s" ' "$@")"
+            printf %s "try %{
+                set-option current grepcmd 'git grep -n'
+                grep $enquoted
+                set-option current grepcmd '$kak_opt_grepcmd'
+            }"
             ;;
         *)
             printf "fail unknown git command '%s'\n" "$1"
