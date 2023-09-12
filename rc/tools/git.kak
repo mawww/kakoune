@@ -95,7 +95,7 @@ define-command -params 1.. \
            diff) map_diff_goto_source=true; filetype=diff ;;
            show) map_diff_goto_source=true; filetype=git-log ;;
            show-branch) filetype=git-show-branch ;;
-           log)  filetype=git-log ;;
+           log)  map_diff_goto_source=true; filetype=git-log ;;
            status)  filetype=git-status ;;
            *) return 1 ;;
         esac
