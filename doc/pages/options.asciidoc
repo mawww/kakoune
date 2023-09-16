@@ -388,22 +388,6 @@ are exclusively available to built-in options.
     relating to a Kakoune version greater than this value will be displayed. Versions
     are written as a single number: Like `20180413` for version `2018.04.13`
 
-*diff_add_char* `str`::
-	  _default_ ▏ +
-	  Character used to denote added lines in diffs (e.g. git gutter).
-
-*diff_mod_char* `str`::
-	  _default_ ▏ +
-	  Character used to denote modified lines in diffs (e.g. git gutter).
-
-*diff_del_char* `str`::
-	  _default_ _ +
-	  Character used to denote deleted lines in diffs (e.g. git gutter).
-
-*diff_top_char* `str`::
-	  _default_ ‾ +
-	  Character used to denote the first line deleted in diffs (e.g. git gutter).
-
 == Current values
 
 The current value for an option can be viewed using
