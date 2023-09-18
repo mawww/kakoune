@@ -352,7 +352,7 @@ define-command -params 1.. \
             shift
             enquoted="$(printf '"%s" ' "$@")"
             printf %s "try %{
-                set-option current grepcmd 'git grep -n'
+                set-option current grepcmd 'git grep -n --column'
                 grep $enquoted
                 set-option current grepcmd '$kak_opt_grepcmd'
             }"
