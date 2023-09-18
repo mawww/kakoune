@@ -52,6 +52,7 @@ define-command -params 1.. \
             rm
             reset
             blame
+            cat-file
             commit
             checkout
             diff
@@ -69,7 +70,7 @@ define-command -params 1.. \
             grep
     } -shell-script-candidates %{
     if [ $kak_token_to_complete -eq 0 ]; then
-        printf "add\nrm\nreset\nblame\ncommit\ncheckout\ndiff\nhide-blame\nhide-diff\nlog\nnext-hunk\nprev-hunk\nshow\nshow-branch\nshow-diff\ninit\nstatus\nupdate-diff\ngrep\n"
+        printf "add\nrm\nreset\nblame\ncommit\ncheckout\ndiff\nhide-blame\nhide-diff\nlog\nnext-hunk\nprev-hunk\nshow\nshow-branch\nshow-diff\ninit\nstatus\nupdate-diff\ngrep\ncat-file\n"
     else
         case "$1" in
             commit) printf -- "--amend\n--no-edit\n--all\n--reset-author\n--fixup\n--squash\n"; git ls-files -m ;;
@@ -97,6 +98,7 @@ define-command -params 1.. \
            show-branch) filetype=git-show-branch ;;
            log)  filetype=git-log ;;
            status)  filetype=git-status ;;
+           cat-file)  filetype=git-cat-file ;;
            *) return 1 ;;
         esac
         output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-git.XXXXXXXX)/fifo
@@ -309,7 +311,7 @@ define-command -params 1.. \
     }
 
     case "$1" in
-        show|show-branch|log|diff|status)
+        show|show-branch|log|diff|status|cat-file)
             show_git_cmd_output "$@"
             ;;
         blame)
