@@ -931,8 +931,10 @@ public:
         else if (key == Key::Tab or key == shift(Key::Tab) or key.modifiers == Key::Modifiers::MenuSelect) // completion
         {
             CandidateList& candidates = m_completions.candidates;
-            // first try, we need to ask our completer for completions
-            if (candidates.empty())
+
+            if (m_auto_complete and m_refresh_completion_pending)
+                refresh_completions(CompletionFlags::Fast);
+            if (candidates.empty()) // manual completion, we need to ask our completer for completions
             {
                 refresh_completions(CompletionFlags::None);
                 if ((not m_prefix_in_completions and candidates.size() > 1) or
