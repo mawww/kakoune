@@ -31,8 +31,6 @@ regularly beating the best Vim solution.
 See the link:doc/design.asciidoc[design document] for more information on
 Kakoune's philosophy and design.
 
-:numbered:
-
 Introduction
 ------------
 
