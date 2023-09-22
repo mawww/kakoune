@@ -1229,7 +1229,7 @@ int main(int argc, char* argv[])
             }
             String new_files;
             for (auto name : files) {
-                new_files += format("edit '{}'", escape(real_path(name), "'", '\\'));
+                new_files += format("edit '{}'", escape(real_path(name), "'", '\''));
                 if (init_coord) {
                     new_files += format(" {} {}", init_coord->line + 1, init_coord->column + 1);
                     init_coord.reset();
