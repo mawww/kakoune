@@ -879,8 +879,26 @@ Optional<Key> TerminalUI::get_next_key()
             }
             return {};
         case 'u':
-            return masked_key(convert(static_cast<Codepoint>(params[0][0])),
-                              convert(static_cast<Codepoint>(params[0][1])));
+        {
+            Codepoint key;
+            switch (params[0][0])
+            {
+                // Treat numpad keys the same as their non-numpad counterparts. Could add a numpad modifier here.
+                case 57414: key = Key::Return; break;
+                case 57417: key = Key::Left; break;
+                case 57418: key = Key::Right; break;
+                case 57419: key = Key::Up; break;
+                case 57420: key = Key::Down; break;
+                case 57421: key = Key::PageUp; break;
+                case 57422: key = Key::PageDown; break;
+                case 57423: key = Key::Home; break;
+                case 57424: key = Key::End; break;
+                case 57425: key = Key::Insert; break;
+                case 57426: key = Key::Delete; break;
+                default: key = convert(static_cast<Codepoint>(params[0][0])); break;
+            }
+            return masked_key(key, convert(static_cast<Codepoint>(params[0][1])));
+        }
         case 'Z': return shift(Key::Tab);
         case 'I': return {Key::FocusIn};
         case 'O': return {Key::FocusOut};
