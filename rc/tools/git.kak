@@ -74,7 +74,7 @@ define-command -params 1.. \
         case "$1" in
             commit) printf -- "--amend\n--no-edit\n--all\n--reset-author\n--fixup\n--squash\n"; git ls-files -m ;;
             add) git ls-files -dmo --exclude-standard ;;
-            rm) git ls-files -c ;;
+            rm|grep) git ls-files -c ;;
         esac
     fi
   } \
