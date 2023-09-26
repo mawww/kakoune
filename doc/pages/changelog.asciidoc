@@ -8,6 +8,9 @@ released versions.
 * `+` only duplicates identical selections a single time to avoid surprising
   and slow exponential growth in the number of selections.
 
+* `daemonize-session` command makes it possible to convert the current session
+  to a deamon one (which will not exit on last client disconnecting)
+
 == Kakoune 2023.08.08
 
 * Fix compilation errors on FreeBSD and MacOS using clang

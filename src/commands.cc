@@ -688,6 +688,17 @@ const CommandDesc force_kill_cmd = {
     kill<true>
 };
 
+const CommandDesc daemonize_session_cmd = {
+    "daemonize-session",
+    nullptr,
+    "daemonize-session: set the session server not to quit on last client exit",
+    { {} },
+    CommandFlags::None,
+    CommandHelper{},
+    CommandCompleter{},
+    [](const ParametersParser&, Context&, const ShellContext&) { Server::instance().daemonize(); }
+};
+
 template<bool force>
 void quit(const ParametersParser& parser, Context& context, const ShellContext&)
 {
@@ -2756,6 +2767,7 @@ void register_commands()
     register_command(write_all_quit_cmd);
     register_command(kill_cmd);
     register_command(force_kill_cmd);
+    register_command(daemonize_session_cmd);
     register_command(quit_cmd);
     register_command(force_quit_cmd);
     register_command(write_quit_cmd);

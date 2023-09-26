@@ -47,6 +47,7 @@ struct {
 } constexpr version_notes[] = { {
         0,
         "» {+b}+{} only duplicates identical selections a single time\n"
+        "» {+u}daemonize-session{} command\n"
     }, {
         20230805,
         "» Fix FreeBSD/MacOS clang compilation\n"
@@ -603,7 +604,6 @@ void register_options()
 }
 
 static Client* local_client = nullptr;
-static int local_client_exit = 0;
 static bool convert_to_client_pending = false;
 
 enum class UIType
@@ -671,38 +671,7 @@ pid_t fork_server_to_background()
 
 std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
 {
-    if (ui_type != UIType::Terminal)
-        return make_ui(ui_type);
-
-    struct LocalUI : TerminalUI
-    {
-        LocalUI()
-        {
-            set_signal_handler(SIGTSTP, [](int) {
-                if (ClientManager::instance().count() == 1 and
-                    *ClientManager::instance().begin() == local_client)
-                    TerminalUI::instance().suspend();
-                else
-                    convert_to_client_pending = true;
-           });
-        }
-
-        ~LocalUI() override
-        {
-            local_client = nullptr;
-            if (convert_to_client_pending or
-                ClientManager::instance().empty())
-                return;
-
-            if (fork_server_to_background())
-            {
-                this->TerminalUI::~TerminalUI();
-                exit(local_client_exit);
-            }
-        }
-    };
-
-    if (not isatty(0))
+    if (ui_type == UIType::Terminal and not isatty(0))
     {
         // move stdin to another fd, and restore tty as stdin
         int fd = dup(0);
@@ -712,7 +681,19 @@ std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
         create_fifo_buffer("*stdin*", fd, Buffer::Flags::None);
     }
 
-    return std::make_unique<LocalUI>();
+    auto ui = make_ui(ui_type);
+
+    static SignalHandler old_handler = set_signal_handler(SIGTSTP, [](int sig) {
+        if (ClientManager::instance().count() == 1 and
+            *ClientManager::instance().begin() == local_client)
+            old_handler(sig);
+        else
+        {
+            convert_to_client_pending = true;
+            set_signal_handler(SIGTSTP, old_handler);
+        }
+    });
+    return ui;
 }
 
 int run_client(StringView session, StringView name, StringView client_init,
@@ -875,13 +856,14 @@ int run_server(StringView session, StringView server_init,
          write_to_debug_buffer(format("error while opening command line files: {}", error.what()));
     }
 
+    int exit_status = 0;
     try
     {
         if (not server.is_daemon())
         {
             local_client = client_manager.create_client(
                  create_local_ui(ui_type), getpid(), {}, get_env_vars(), client_init, init_buffer, std::move(init_coord),
-                 [](int status) { local_client_exit = status; });
+                 [&](int status) { exit_status = status; });
 
             if (startup_error and local_client)
                 local_client->print_status({
@@ -920,24 +902,22 @@ int run_server(StringView session, StringView server_init,
             global_scope.option_registry().clear_option_trash();
 
             if (local_client and not contains(client_manager, local_client))
-                local_client = nullptr;
-            else if (local_client and not local_client->is_ui_ok())
             {
-                ClientManager::instance().remove_client(*local_client, false, -1);
                 local_client = nullptr;
-                if (not client_manager.empty() and fork_server_to_background())
-                    return 0;
+                if ((not client_manager.empty() or server.is_daemon()) and fork_server_to_background())
+                    exit(exit_status); // We do not want to run destructors and hooks here
             }
             else if (convert_to_client_pending)
             {
                 kak_assert(local_client);
                 auto& local_context = local_client->context();
-                const String client_name = local_context.name();
-                const String buffer_name = local_context.buffer().name();
-                const String selections = selection_list_to_string(ColumnType::Byte, local_context.selections());
+                String client_name = local_context.name();
+                String buffer_name = local_context.buffer().name();
+                String selections = selection_list_to_string(ColumnType::Byte, local_context.selections());
 
                 ClientManager::instance().remove_client(*local_client, true, 0);
                 client_manager.clear_client_trash();
+                local_client = nullptr;
                 convert_to_client_pending = false;
 
                 if (fork_server_to_background())
@@ -952,7 +932,7 @@ int run_server(StringView session, StringView server_init,
     }
     catch (const kill_session& kill)
     {
-        local_client_exit = kill.exit_status;
+        exit_status = kill.exit_status;
     }
 
     {
@@ -960,7 +940,7 @@ int run_server(StringView session, StringView server_init,
         global_scope.hooks().run_hook(Hook::KakEnd, "", empty_context);
     }
 
-    return local_client_exit;
+    return exit_status;
 }
 
 int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet, StringView suffix_backup)

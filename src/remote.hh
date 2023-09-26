@@ -59,6 +59,7 @@ struct Server : public Singleton<Server>
 
     bool negotiating() const { return not m_accepters.empty(); }
 
+    void daemonize() { m_is_daemon = true; }
     bool is_daemon() const { return m_is_daemon; }
 
 private:
