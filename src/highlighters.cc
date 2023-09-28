@@ -1118,6 +1118,8 @@ private:
 
         char format[16];
         format_to(format, "%{}d", digit_count);
+        char empty[16];
+        format_to(empty, "%{}s", digit_count);
         const int main_line = (int)context.context.selections().main().cursor().line + 1;
         int last_line = -1;
         for (auto& line : display_buffer.lines())
@@ -1127,7 +1129,10 @@ private:
             const int line_to_format = (m_relative and not is_cursor_line) ?
                                        current_line - main_line : current_line;
             char buffer[16];
-            snprintf(buffer, 16, format, std::abs(line_to_format));
+            if (last_line == current_line)
+                snprintf(buffer, 16, empty, " ");
+            else
+                snprintf(buffer, 16, format, std::abs(line_to_format));
             const auto atom_face = last_line == current_line ? face_wrapped :
                 ((m_hl_cursor_line and is_cursor_line) ? face_absolute : face);
 
