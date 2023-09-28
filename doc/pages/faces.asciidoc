@@ -107,6 +107,9 @@ the user interface:
 *Information*::
     Face for windows and messages displaying other information.
 
+*InlineInformation*::
+    Face for windows and messages displaying inline information.
+
 *Error*::
     Face for errors reported by Kakoune in the status line.
 

@@ -278,7 +278,8 @@ void Client::redraw_ifn()
 
     if (m_ui_pending & InfoShow and m_info.ui_anchor)
         m_ui->info_show(m_info.title, m_info.content, *m_info.ui_anchor,
-                        faces["Information"], m_info.style);
+                        faces[(is_inline(m_info.style) || m_info.style == InfoStyle::MenuDoc)
+                        ? "InlineInformation" : "Information"], m_info.style);
     if (m_ui_pending & InfoHide)
         m_ui->info_hide();
 

@@ -191,6 +191,7 @@ FaceRegistry::FaceRegistry()
         { "MenuBackground", {Face{ Color::Blue, Color::White }} },
         { "MenuInfo", {Face{ Color::Cyan, Color::Default }} },
         { "Information", {Face{ Color::Black, Color::Yellow }} },
+        { "InlineInformation", {Face{}, "Information"} },
         { "Error", {Face{ Color::Black, Color::Red }} },
         { "DiagnosticError", {Face{ Color::Red, Color::Default }} },
         { "DiagnosticWarning", {Face{ Color::Yellow, Color::Default }} },
