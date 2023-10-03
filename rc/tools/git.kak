@@ -60,7 +60,7 @@ define-command -params 1.. \
             init
             log
             next-hunk
-            previous-hunk
+            prev-hunk
             show
             show-branch
             show-diff
