@@ -854,20 +854,22 @@ void regex_prompt(Context& context, String prompt, char reg, T func)
 
                     context.input_handler().set_prompt_face(context.faces()["Prompt"]);
                 }
-
-                if (not incsearch and event == PromptEvent::Change)
-                    return;
-
-                if (event == PromptEvent::Validate)
-                    context.push_jump();
-                else
-                    RegisterManager::instance()[reg].restore(context, saved_reg);
-
-                if (not str.empty() and event == PromptEvent::Change) // Ensure search register based highlighters work incrementally
-                    RegisterManager::instance()[reg].set(context, str.str());
-
-                if (not str.empty() or event == PromptEvent::Validate)
-                    func(Regex{str.empty() ? default_regex : str, direction_flags(mode)}, event, context);
+                switch (event)
+                {
+                    case PromptEvent::Change:
+                        if (not incsearch or str.empty())
+                            return;
+                        RegisterManager::instance()[reg].set(context, str.str());
+                        func(Regex{str, direction_flags(mode)}, event, context);
+                        return;
+                    case PromptEvent::Abort:
+                        RegisterManager::instance()[reg].restore(context, saved_reg);
+                        return;
+                    case PromptEvent::Validate:
+                        context.push_jump();
+                        func(Regex{str.empty() ? default_regex : str, direction_flags(mode)}, event, context);
+                        return;
+                }
             }
             catch (regex_error& err)
             {
