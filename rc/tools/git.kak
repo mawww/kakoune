@@ -60,7 +60,7 @@ define-command -params 1.. \
             init
             log
             next-hunk
-            previous-hunk
+            prev-hunk
             show
             show-branch
             show-diff
@@ -225,7 +225,7 @@ define-command -params 1.. \
         shift
 
         if [ $# -lt 1 ]; then
-            echo "fail 'no git hunks found'"
+            echo "fail 'no git hunks found, try \":git show-diff\" first'"
             exit
         fi
 
