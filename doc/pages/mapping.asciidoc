@@ -65,7 +65,7 @@ map global user n :make-next-error<ret>
 If you make a normal-mode mapping, you can prefix it with a count or a register
 name like any other normal-mode key. You can forward this information to the
 command you invoke with the `%val{count}` and `%val{register}` expansions
-(See <<expansions#`:doc expansions`>>). For example:
+(See <<expansions#,`:doc expansions`>>). For example:
 
 ----
 map global normal = ':echo Got count %val{count} and reg %val{register}<ret>'
