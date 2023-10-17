@@ -520,11 +520,11 @@ public:
                 m_line = m_line.substr(0, m_cursor_pos)
                        + m_line.substr(m_cursor_pos+1);
         }
-        else if (key == alt('f'))
+        else if (key == ctrl(Key::Right) or key == alt('f'))
             to_next_word_begin<Word>(m_cursor_pos, m_line);
         else if (key == alt('F'))
             to_next_word_begin<WORD>(m_cursor_pos, m_line);
-        else if (key == alt('b'))
+        else if (key == ctrl(Key::Left) or key == alt('b'))
             to_prev_word_begin<Word>(m_cursor_pos, m_line);
         else if (key == alt('B'))
             to_prev_word_begin<WORD>(m_cursor_pos, m_line);
