@@ -54,6 +54,11 @@ hook -group git-show-branch-highlight global WinSetOption filetype=git-show-bran
 declare-option -hidden line-specs git_blame_flags
 declare-option -hidden line-specs git_diff_flags
 declare-option -hidden int-list git_hunk_list
+declare-option -hidden \
+    -docstring %{
+        Path of the top-level directory of the working tree relevant for the given file
+    } \
+    str git_work_tree_top_level
 
 define-command -params 1.. \
     -docstring %{
@@ -106,6 +111,8 @@ define-command -params 1.. \
             update-diff \
         ;
     else
+        # Try cd-ing into the git work tree if exists
+        cd "$kak_opt_git_work_tree_top_level" &> /dev/null
         case "$1" in
             commit) printf -- "--amend\n--no-edit\n--all\n--reset-author\n--fixup\n--squash\n"; git ls-files -m ;;
             add) git ls-files -dmo --exclude-standard ;;
@@ -114,15 +121,16 @@ define-command -params 1.. \
         esac
     fi
   } \
-  git %{ evaluate-commands %sh{
-    cd_bufdir() {
-        dirname_buffer="${kak_buffile%/*}"
-        cd "${dirname_buffer}" 2>/dev/null || {
-            printf 'fail Unable to change the current working directory to: %s\n' "${dirname_buffer}"
-            exit 1
-        }
-    }
-
+  git %{
+  set-option global git_work_tree_top_level %sh{
+    # - try to find a toplevel for a given buffile
+    # - if failed, test the current toplevel variable and if it is a functional git repository
+    # - if failed, fallback to `pwd`
+    ( cd "${kak_buffile%/*}" && git rev-parse --show-toplevel ) 2>/dev/null || \
+    ( cd "${kak_opt_git_work_tree_top_level}" && git rev-parse --show-toplevel ) 2>/dev/null || \
+    pwd
+  }
+  evaluate-commands %sh{
     show_git_cmd_output() {
         local filetype
         local map_diff_goto_source
@@ -155,7 +163,6 @@ define-command -params 1.. \
 
     run_git_blame() {
         (
-            cd_bufdir
             printf %s "evaluate-commands -client '$kak_client' %{
                       try %{ add-highlighter window/git-blame flag-lines Information git_blame_flags }
                       set-option buffer=$kak_bufname git_blame_flags '$kak_timestamp'
@@ -197,13 +204,14 @@ define-command -params 1.. \
         if git "${@}" > /dev/null 2>&1; then
           printf %s "echo -markup '{Information}git $1 succeeded'"
         else
+          printf 'echo -debug Note: file paths are assumed to start in the `git_work_tree_top_level`\n' "$1"
+          printf 'echo -debug Note: mileage might vary when `git_work_tree_top_level` != kak workspace path\n' "$1"
           printf 'fail git %s failed\n' "$1"
         fi
     }
 
     update_diff() {
         (
-            cd_bufdir
             git --no-pager diff --no-ext-diff -U0 "$kak_buffile" | perl -e '
             use utf8;
             $flags = $ENV{"kak_timestamp"};
@@ -337,11 +345,12 @@ define-command -params 1.. \
 			$@
 		EOF
 
-        # fails, and generate COMMIT_EDITMSG
+        # Run and fail in order to generate a `COMMIT_EDITMSG` file
         GIT_EDITOR='' EDITOR='' git commit "$@" > /dev/null 2>&1
-        msgfile="$(git rev-parse --git-dir)/COMMIT_EDITMSG"
+        msgfile="$(git rev-parse --absolute-git-dir)/COMMIT_EDITMSG"
         printf %s "edit '$msgfile'
               hook buffer BufWritePost '.*\Q$msgfile\E' %{ evaluate-commands %sh{
+                  cd "$kak_opt_git_work_tree_top_level"
                   if git commit -F '$msgfile' --cleanup=strip $* > /dev/null; then
                      printf %s 'evaluate-commands -client $kak_client echo -markup %{{Information}Commit succeeded}; delete-buffer'
                   else
@@ -350,6 +359,10 @@ define-command -params 1.. \
               } }"
     }
 
+    cd "$kak_opt_git_work_tree_top_level" || {
+        printf 'fail Unable to set the work tree for git: %s\n' "$kak_opt_git_work_tree_top_level"
+        exit 1
+    }
     case "$1" in
         apply)
             shift
@@ -421,5 +434,5 @@ define-command -params 1.. \
 define-command git-diff-goto-source \
     -docstring 'Navigate to source by pressing the enter key in hunks when git diff is displayed. Works within :git diff and :git show' %{
     require-module diff
-    diff-jump %sh{ git rev-parse --show-toplevel }
+    diff-jump %opt{git_work_tree_top_level}
 }
