@@ -56,7 +56,8 @@ declare-option -hidden line-specs git_diff_flags
 declare-option -hidden int-list git_hunk_list
 declare-option -hidden \
     -docstring %{
-        Path of the top-level directory of the working tree relevant for the given file
+        Path of the top-level directory of the working tree currently
+        used in `git` operations from within the `kakoune`
     } \
     str git_work_tree_top_level
 
@@ -111,8 +112,8 @@ define-command -params 1.. \
             update-diff \
         ;
     else
-        # Try cd-ing into the git work tree if exists
-        cd "$kak_opt_git_work_tree_top_level" &> /dev/null
+        # Try cd-ing into the git work tree if exists to make autocompletion slightly more robust
+        cd "$kak_opt_git_work_tree_top_level" >/dev/null 2>&1
         case "$1" in
             commit) printf -- "--amend\n--no-edit\n--all\n--reset-author\n--fixup\n--squash\n"; git ls-files -m ;;
             add) git ls-files -dmo --exclude-standard ;;
@@ -123,9 +124,11 @@ define-command -params 1.. \
   } \
   git %{
   set-option global git_work_tree_top_level %sh{
-    # - try to find a toplevel for a given buffile
+    # - try to get the toplevel for the `cwd`
+    # - if failed, try to find a toplevel for a given buffile
     # - if failed, test the current toplevel variable and if it is a functional git repository
-    # - if failed, fallback to `pwd`
+    # - if failed, fallback to `cwd` ()
+    git rev-parse --show-toplevel 2>/dev/null || \
     ( cd "${kak_buffile%/*}" && git rev-parse --show-toplevel ) 2>/dev/null || \
     ( cd "${kak_opt_git_work_tree_top_level}" && git rev-parse --show-toplevel ) 2>/dev/null || \
     pwd
