@@ -16,7 +16,6 @@ public:
     explicit Regex(StringView re, RegexCompileFlags flags = RegexCompileFlags::None);
     bool empty() const { return m_str.empty(); }
     bool operator==(const Regex& other) const { return m_str == other.m_str; }
-    bool operator!=(const Regex& other) const { return m_str != other.m_str; }
 
     const String& str() const { return m_str; }
 
@@ -62,7 +61,6 @@ struct MatchResults
         SubMatch operator*() const { return {*m_it, *(m_it+1)}; }
 
         friend bool operator==(const iterator& lhs, const iterator& rhs) { return lhs.m_it == rhs.m_it; }
-        friend bool operator!=(const iterator& lhs, const iterator& rhs) { return lhs.m_it != rhs.m_it; }
     private:
 
         It m_it;
@@ -88,11 +86,6 @@ struct MatchResults
     friend bool operator==(const MatchResults& lhs, const MatchResults& rhs)
     {
         return lhs.m_values == rhs.m_values;
-    }
-
-    friend bool operator!=(const MatchResults& lhs, const MatchResults& rhs)
-    {
-        return not (lhs == rhs);
     }
 
     void swap(MatchResults& other)
@@ -192,7 +185,6 @@ struct RegexIterator
 
         It& operator++() { m_valid = m_base.next(); return *this; }
         bool operator==(Sentinel) const { return not m_valid; }
-        bool operator!=(Sentinel) const { return m_valid; }
 
         RegexIterator& m_base;
         bool m_valid;

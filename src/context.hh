@@ -33,8 +33,6 @@ struct JumpList
         return lhs.m_jumps == rhs.m_jumps and lhs.m_current == rhs.m_current;
     }
 
-    friend bool operator!=(const JumpList& lhs, const JumpList& rhs) { return not (lhs == rhs); }
-
     size_t current_index() const { return m_current; }
 
     ConstArrayView<SelectionList> get_as_list() const { return m_jumps; }

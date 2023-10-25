@@ -69,11 +69,6 @@ constexpr bool operator==(Color lhs, Color rhs)
            lhs.r == rhs.r and lhs.g == rhs.g and lhs.b == rhs.b;
 }
 
-constexpr bool operator!=(Color lhs, Color rhs)
-{
-    return not (lhs == rhs);
-}
-
 Color str_to_color(StringView color);
 String to_string(Color color);
 

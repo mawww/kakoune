@@ -145,11 +145,6 @@ struct FilterView
             return lhs.m_it == rhs.m_it;
         }
 
-        friend bool operator!=(const Iterator& lhs, const Iterator& rhs)
-        {
-            return not (lhs == rhs);
-        }
-
         const RangeIt& base() const { return m_it; }
 
     private:
@@ -203,11 +198,6 @@ struct EnumerateView
         friend bool operator==(const Iterator& lhs, const Iterator& rhs)
         {
             return lhs.m_it == rhs.m_it;
-        }
-
-        friend bool operator!=(const Iterator& lhs, const Iterator& rhs)
-        {
-            return not (lhs == rhs);
         }
 
         const RangeIt& base() const { return m_it; }
@@ -264,7 +254,6 @@ struct TransformView
         Iterator operator-(difference_type diff) const { return {*m_transform, m_it - diff}; }
 
         friend bool operator==(const Iterator& lhs, const Iterator& rhs) { return lhs.m_it == rhs.m_it; }
-        friend bool operator!=(const Iterator& lhs, const Iterator& rhs) { return not (lhs == rhs); }
         friend difference_type operator-(const Iterator& lhs, const Iterator& rhs) { return lhs.m_it - rhs.m_it; }
 
         RangeIt base() const { return m_it; }
@@ -350,7 +339,6 @@ struct SplitView
         Iterator operator++(int) { auto copy = *this; advance(); return copy; }
 
         bool operator==(const Iterator& other) const { return pos == other.pos and done == other.done; }
-        bool operator!=(const Iterator& other) const { return pos != other.pos or done != other.done; }
 
         ValueType operator*() { return {pos, (not include_separator or sep == end) ? sep : sep + 1}; }
 
@@ -526,11 +514,6 @@ struct ConcatView
         {
             return lhs.m_it1 == rhs.m_it1 and lhs.m_end1 == rhs.m_end1 and
                    lhs.m_it2 == rhs.m_it2;
-        }
-
-        friend bool operator!=(const Iterator& lhs, const Iterator& rhs)
-        {
-            return not (lhs == rhs);
         }
 
     private:

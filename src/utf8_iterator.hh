@@ -100,12 +100,12 @@ public:
     }
 
     bool operator==(const iterator& other) const noexcept { return m_it == other.m_it; }
-    auto operator<=> (const iterator& other) const noexcept { return m_it <=> other.m_it; }
+    auto operator<=>(const iterator& other) const noexcept { return m_it <=> other.m_it; }
 
     template<typename T>
         requires std::is_same_v<T, BaseIt> or std::is_same_v<T, Sentinel>
     bool operator==(const T& other) const noexcept { return m_it == other; }
-    auto operator<=> (const BaseIt& other) const noexcept { return m_it <=> other; }
+    auto operator<=>(const BaseIt& other) const noexcept { return m_it <=> other; }
 
     DifferenceType operator-(const iterator& other) const noexcept(noexcept_policy)
     {

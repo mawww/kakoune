@@ -103,11 +103,6 @@ constexpr bool operator==(const timespec& lhs, const timespec& rhs)
     return lhs.tv_sec == rhs.tv_sec and lhs.tv_nsec == rhs.tv_nsec;
 }
 
-constexpr bool operator!=(const timespec& lhs, const timespec& rhs)
-{
-    return not (lhs == rhs);
-}
-
 enum class FilenameFlags
 {
     None = 0,

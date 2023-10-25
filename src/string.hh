@@ -341,14 +341,10 @@ inline bool operator==(const StringView& lhs, const StringView& rhs)
        std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 
-[[gnu::always_inline]]
-inline bool operator!=(const StringView& lhs, const StringView& rhs)
-{ return not (lhs == rhs); }
-
-inline bool operator<(const StringView& lhs, const StringView& rhs)
+inline auto operator<=>(const StringView& lhs, const StringView& rhs)
 {
-    return std::lexicographical_compare(lhs.begin(), lhs.end(),
-                                        rhs.begin(), rhs.end());
+    return std::lexicographical_compare_three_way(lhs.begin(), lhs.end(),
+                                                  rhs.begin(), rhs.end());
 }
 
 inline String operator"" _str(const char* str, size_t)

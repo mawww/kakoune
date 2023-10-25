@@ -39,7 +39,6 @@ struct TestableFlags
     constexpr operator UnderlyingType<Flags>() const { return (UnderlyingType<Flags>)value; }
 
     constexpr bool operator==(const TestableFlags<Flags>& other) const { return value == other.value; }
-    constexpr bool operator!=(const TestableFlags<Flags>& other) const { return value != other.value; }
 };
 
 template<WithBitOps Flags>

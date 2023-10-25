@@ -354,12 +354,6 @@ struct HashMap
         return size() == other.size() and std::equal(begin(), end(), other.begin());
     }
 
-    template<MemoryDomain otherDomain>
-    constexpr bool operator!=(const HashMap<Key, Value, otherDomain, Container>& other) const
-    {
-        return not (*this == other);
-    }
-
 private:
     static auto& item_value(auto& item)
     {

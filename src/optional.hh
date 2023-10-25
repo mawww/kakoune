@@ -57,8 +57,6 @@ public:
                (not m_valid or m_value == other.m_value);
     }
 
-    bool operator!=(const Optional& other) const { return !(*this == other); }
-
     template<typename... Args>
     T& emplace(Args&&... args)
     {

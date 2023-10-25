@@ -15,10 +15,6 @@ struct Range
         return lhs.begin == rhs.begin and lhs.end == rhs.end;
     }
 
-    friend bool operator!=(const Range& lhs, const Range& rhs)
-    {
-        return not (lhs == rhs);
-    }
 
     friend size_t hash_value(const Range& range)
     {

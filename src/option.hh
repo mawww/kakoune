@@ -62,11 +62,6 @@ struct PrefixedList
     {
         return lhs.prefix == rhs.prefix and lhs.list == rhs.list;
     }
-
-    friend bool operator!=(const PrefixedList& lhs, const PrefixedList& rhs)
-    {
-        return not (lhs == rhs);
-    }
 };
 
 template<typename T>

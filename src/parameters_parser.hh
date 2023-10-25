@@ -117,11 +117,6 @@ struct ParametersParser
             return m_index == other.m_index;
         }
 
-        bool operator!=(const iterator& other) const
-        {
-            return not (*this == other);
-        }
-
     private:
         const ParametersParser& m_parser;
         size_t                  m_index;

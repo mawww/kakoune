@@ -28,9 +28,6 @@ struct InsertCompleterDesc
     bool operator==(const InsertCompleterDesc& other) const
     { return mode == other.mode and param == other.param; }
 
-    bool operator!=(const InsertCompleterDesc& other) const
-    { return not (*this == other); }
-
     Mode mode;
     Optional<String> param;
 };
@@ -62,7 +59,7 @@ struct InsertCompletion
         DisplayLine menu_entry;
 
         bool operator==(const Candidate& other) const { return completion == other.completion; }
-        bool operator<(const Candidate& other) const { return completion < other.completion; }
+        auto operator<=>(const Candidate& other) const { return completion <=> other.completion; }
     };
     using CandidateList = Vector<Candidate, MemoryDomain::Completion>;
 

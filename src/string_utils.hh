@@ -82,8 +82,6 @@ struct WrapView
         Iterator operator++(int) { auto copy = *this; ++(*this); return copy; }
 
         bool operator==(Iterator other) const { return m_remaining == other.m_remaining and m_current == other.m_current; }
-        bool operator!=(Iterator other) const { return not (*this == other); }
-
         StringView operator*() { return m_current; }
 
     private:

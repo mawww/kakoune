@@ -69,7 +69,6 @@ struct TerminalUI::Window::Line
         }
 
         friend bool operator==(const Atom& lhs, const Atom& rhs) { return lhs.text == rhs.text and lhs.skip == rhs.skip and lhs.face == rhs.face; }
-        friend bool operator!=(const Atom& lhs, const Atom& rhs) { return not (lhs == rhs); }
         friend size_t hash_value(const Atom& atom) { return hash_values(atom.text, atom.skip, atom.face); }
     };
 

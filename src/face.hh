@@ -41,11 +41,6 @@ struct Face
                lhs.attributes == rhs.attributes;
     }
 
-    friend constexpr bool operator!=(const Face& lhs, const Face& rhs)
-    {
-        return not (lhs == rhs);
-    }
-
     friend constexpr size_t hash_value(const Face& val)
     {
         return hash_values(val.fg, val.bg, val.underline, val.attributes);

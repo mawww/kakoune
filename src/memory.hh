@@ -132,13 +132,6 @@ constexpr bool operator==(const Allocator<T1, d1>&, const Allocator<T2, d2>&)
     return d1 == d2;
 }
 
-template<typename T1, MemoryDomain d1, typename T2, MemoryDomain d2>
-constexpr bool operator!=(const Allocator<T1, d1>&, const Allocator<T2, d2>&)
-{
-    return d1 != d2;
-}
-
-
 constexpr MemoryDomain memory_domain(Meta::AnyType) { return MemoryDomain::Undefined; }
 
 template<typename T>
