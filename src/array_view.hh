@@ -84,12 +84,6 @@ bool operator==(ArrayView<T> lhs, ArrayView<T> rhs)
     return true;
 }
 
-template<typename T>
-bool operator!=(ArrayView<T> lhs, ArrayView<T> rhs)
-{
-    return not (lhs == rhs);
-}
-
 }
 
 #endif // array_view_hh_INCLUDED
