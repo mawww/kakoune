@@ -178,6 +178,7 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
     if (buffer)
     {
         buffer->flags() |= Buffer::Flags::NoUndo | flags;
+        buffer->values().clear();
         buffer->reload({StringData::create({"\n"})}, ByteOrderMark::None, EolFormat::Lf, {InvalidTime, {}, {}});
     }
     else
