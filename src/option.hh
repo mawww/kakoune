@@ -58,10 +58,7 @@ struct PrefixedList
     P prefix;
     Vector<T, MemoryDomain::Options> list;
 
-    friend bool operator==(const PrefixedList& lhs, const PrefixedList& rhs)
-    {
-        return lhs.prefix == rhs.prefix and lhs.list == rhs.list;
-    }
+    friend bool operator==(const PrefixedList& lhs, const PrefixedList& rhs) = default;
 };
 
 template<typename T>

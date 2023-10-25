@@ -20,6 +20,8 @@ struct LineModification
     LineCount num_added; // number of lines added (including this one)
 
     LineCount diff() const { return new_line - old_line + num_added - num_removed; }
+
+    friend bool operator==(const LineModification& lhs, const LineModification& rhs) = default;
 };
 
 Vector<LineModification> compute_line_modifications(const Buffer& buffer, size_t timestamp);

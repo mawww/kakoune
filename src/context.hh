@@ -28,10 +28,7 @@ struct JumpList
     const SelectionList& backward(Context& context, int count);
     void forget_buffer(Buffer& buffer);
 
-    friend bool operator==(const JumpList& lhs, const JumpList& rhs)
-    {
-        return lhs.m_jumps == rhs.m_jumps and lhs.m_current == rhs.m_current;
-    }
+    friend bool operator==(const JumpList& lhs, const JumpList& rhs) = default;
 
     size_t current_index() const { return m_current; }
 

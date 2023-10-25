@@ -33,13 +33,7 @@ struct Face
     Attribute attributes = Attribute::Normal;
     Color underline = Color::Default;
 
-    friend constexpr bool operator==(const Face& lhs, const Face& rhs)
-    {
-        return lhs.fg == rhs.fg and
-               lhs.bg == rhs.bg and
-               lhs.underline == rhs.underline and
-               lhs.attributes == rhs.attributes;
-    }
+    friend constexpr bool operator==(const Face& lhs, const Face& rhs) = default;
 
     friend constexpr size_t hash_value(const Face& val)
     {

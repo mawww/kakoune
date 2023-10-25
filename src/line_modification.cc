@@ -88,12 +88,6 @@ Vector<LineModification> compute_line_modifications(const Buffer& buffer, size_t
     return res;
 }
 
-bool operator==(const LineModification& lhs, const LineModification& rhs)
-{
-    return lhs.old_line == rhs.old_line and lhs.new_line == rhs.new_line and
-           lhs.num_removed == rhs.num_removed and lhs.num_added == rhs.num_added;
-}
-
 void LineRangeSet::update(ConstArrayView<LineModification> modifs)
 {
     if (modifs.empty())

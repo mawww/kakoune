@@ -60,7 +60,7 @@ struct MatchResults
         iterator& operator++() { m_it += 2; return *this; }
         SubMatch operator*() const { return {*m_it, *(m_it+1)}; }
 
-        friend bool operator==(const iterator& lhs, const iterator& rhs) { return lhs.m_it == rhs.m_it; }
+        friend bool operator==(const iterator& lhs, const iterator& rhs) = default;
     private:
 
         It m_it;
@@ -83,10 +83,7 @@ struct MatchResults
             SubMatch{m_values[i*2], m_values[i*2+1]} : SubMatch{};
     }
 
-    friend bool operator==(const MatchResults& lhs, const MatchResults& rhs)
-    {
-        return lhs.m_values == rhs.m_values;
-    }
+    friend bool operator==(const MatchResults& lhs, const MatchResults& rhs) = default;
 
     void swap(MatchResults& other)
     {

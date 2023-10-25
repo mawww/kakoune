@@ -10,12 +10,12 @@ namespace Kakoune
 
 void register_highlighters();
 
-struct InclusiveBufferRange{ BufferCoord first, last; };
-
-inline bool operator==(const InclusiveBufferRange& lhs, const InclusiveBufferRange& rhs)
+struct InclusiveBufferRange
 {
-    return lhs.first == rhs.first and lhs.last == rhs.last;
-}
+    BufferCoord first, last;
+    friend bool operator==(const InclusiveBufferRange& lhs, const InclusiveBufferRange& rhs) = default;
+};
+
 String option_to_string(InclusiveBufferRange range);
 InclusiveBufferRange option_from_string(Meta::Type<InclusiveBufferRange>, StringView str);
 

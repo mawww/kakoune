@@ -25,8 +25,7 @@ struct InsertCompleterDesc
         Line
     };
 
-    bool operator==(const InsertCompleterDesc& other) const
-    { return mode == other.mode and param == other.param; }
+    bool operator==(const InsertCompleterDesc& other) const = default;
 
     Mode mode;
     Optional<String> param;

@@ -10,11 +10,7 @@ struct Range
     T begin;
     T end;
 
-    friend bool operator==(const Range& lhs, const Range& rhs)
-    {
-        return lhs.begin == rhs.begin and lhs.end == rhs.end;
-    }
-
+    friend bool operator==(const Range& lhs, const Range& rhs) = default;
 
     friend size_t hash_value(const Range& range)
     {

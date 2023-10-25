@@ -68,7 +68,7 @@ struct TerminalUI::Window::Line
             text.resize(it - text.begin(), 0);
         }
 
-        friend bool operator==(const Atom& lhs, const Atom& rhs) { return lhs.text == rhs.text and lhs.skip == rhs.skip and lhs.face == rhs.face; }
+        friend bool operator==(const Atom& lhs, const Atom& rhs) = default;
         friend size_t hash_value(const Atom& atom) { return hash_values(atom.text, atom.skip, atom.face); }
     };
 

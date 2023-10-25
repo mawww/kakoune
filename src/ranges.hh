@@ -510,11 +510,7 @@ struct ConcatView
         Iterator& operator++() { if (is2()) ++m_it2; else ++m_it1; return *this; }
         Iterator operator++(int) { auto copy = *this; ++*this; return copy; }
 
-        friend bool operator==(const Iterator& lhs, const Iterator& rhs)
-        {
-            return lhs.m_it1 == rhs.m_it1 and lhs.m_end1 == rhs.m_end1 and
-                   lhs.m_it2 == rhs.m_it2;
-        }
+        friend bool operator==(const Iterator& lhs, const Iterator& rhs) = default;
 
     private:
         bool is2() const { return m_it1 == m_end1; }
