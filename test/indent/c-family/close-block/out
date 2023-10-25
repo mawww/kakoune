@@ -1,6 +1,17 @@
-struct A
+template<typename T> struct A : B
 {
-    int i;
+    struct C
+    {
+        void foo() {
+            bar();
+        }
+    };
+};
+
+struct D {
+    void baz() {
+    }
+    int qux;
 };
 
 if (true) {

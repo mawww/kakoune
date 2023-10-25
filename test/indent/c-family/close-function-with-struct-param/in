@@ -6,3 +6,13 @@ void f(int i,
 void g(int i,
        struct S s) {
 %( )
+
+struct T {
+    void h(int i,
+           struct S s) const {
+    %( )
+
+    void i(int i,
+           struct S s) const final {
+    %( )
+};
