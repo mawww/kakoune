@@ -1,7 +1,7 @@
 declare-option -docstring "shell command run to build the project" \
     str makecmd make
 declare-option -docstring "pattern that describes lines containing information about errors in the output of the `makecmd` command" \
-    str make_error_pattern " (?:fatal )?error:"
+    str make_error_pattern "^(?:\w:)?[^:\n]+:\d+:(?:\d+:)? (?:fatal )?error:"
 
 declare-option -docstring "name of the client in which utilities display information" \
     str toolsclient
@@ -69,7 +69,7 @@ define-command -hidden make-jump %{
 define-command make-next-error -docstring 'Jump to the next make error' %{
     evaluate-commands -try-client %opt{jumpclient} %{
         buffer '*make*'
-        execute-keys "%opt{make_current_error_line}ggl" "/^(?:\w:)?[^:\n]+:\d+:(?:\d+:)?%opt{make_error_pattern}<ret>"
+        execute-keys "%opt{make_current_error_line}ggl" "/%opt{make_error_pattern}<ret>"
         make-jump
     }
     try %{
@@ -83,7 +83,7 @@ define-command make-next-error -docstring 'Jump to the next make error' %{
 define-command make-previous-error -docstring 'Jump to the previous make error' %{
     evaluate-commands -try-client %opt{jumpclient} %{
         buffer '*make*'
-        execute-keys "%opt{make_current_error_line}g" "<a-/>^(?:\w:)?[^:\n]+:\d+:(?:\d+:)?%opt{make_error_pattern}<ret>"
+        execute-keys "%opt{make_current_error_line}g" "<a-/>%opt{make_error_pattern}<ret>"
         make-jump
     }
     try %{
