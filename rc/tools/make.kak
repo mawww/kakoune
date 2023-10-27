@@ -67,9 +67,10 @@ define-command -hidden make-jump %{
 }
 
 define-command make-next-error -docstring 'Jump to the next make error' %{
-    evaluate-commands -try-client %opt{jumpclient} %{
+    evaluate-commands -try-client %opt{jumpclient} -save-regs / %{
         buffer '*make*'
-        execute-keys "%opt{make_current_error_line}ggl" "/%opt{make_error_pattern}<ret>"
+        set-register / %opt{make_error_pattern}
+        execute-keys "%opt{make_current_error_line}ggl" "/<ret>"
         make-jump
     }
     try %{
@@ -81,9 +82,10 @@ define-command make-next-error -docstring 'Jump to the next make error' %{
 }
 
 define-command make-previous-error -docstring 'Jump to the previous make error' %{
-    evaluate-commands -try-client %opt{jumpclient} %{
+    evaluate-commands -try-client %opt{jumpclient} -save-regs / %{
         buffer '*make*'
-        execute-keys "%opt{make_current_error_line}g" "<a-/>%opt{make_error_pattern}<ret>"
+        set-register / %opt{make_error_pattern}
+        execute-keys "%opt{make_current_error_line}g" "<a-/><ret>"
         make-jump
     }
     try %{
