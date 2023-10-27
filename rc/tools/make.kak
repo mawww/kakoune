@@ -54,7 +54,6 @@ define-command -hidden make-open-error -params 4 %{
 
 define-command -hidden make-jump %{
     evaluate-commands -save-regs / %{
-        set-register / %sh{ if [ -z "$kak_opt_make_error_line_pattern" ] ; then printf %s "^(?:\w:)?[^:\n]+:\d+:(?:\d+:)?$kak_opt_make_error_pattern" ; else printf %s "$kak_opt_make_error_line_pattern"; fi }
         try %{
             execute-keys gl<a-?> "Entering directory" <ret><a-:>
             # Try to parse the error into capture groups, failing on absolute paths
@@ -62,7 +61,8 @@ define-command -hidden make-jump %{
             set-option buffer make_current_error_line %val{cursor_line}
             make-open-error "%reg{1}/%reg{2}" "%reg{3}" "%reg{4}" "%reg{5}"
         } catch %{
-            execute-keys <a-h><a-l> s "%reg{/}([^\n]+)?\z" <ret>l
+            set-register / %sh{ if [ -z "$kak_opt_make_error_line_pattern" ] ; then printf %s "^(?:\w:)?[^:\n]+:\d+:(?:\d+:)?${kak_opt_make_error_pattern}([^\n]+)?\z" ; else printf %s "${kak_opt_make_error_line_pattern}([^\n]+)?\z"; fi }
+            execute-keys <a-h><a-l> s<ret>l
             set-option buffer make_current_error_line %val{cursor_line}
             make-open-error "%reg{1}" "%reg{2}" "%reg{3}" "%reg{4}"
         }
