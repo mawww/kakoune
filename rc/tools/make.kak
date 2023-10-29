@@ -1,9 +1,10 @@
 declare-option -docstring "shell command run to build the project" \
     str makecmd make
-declare-option -docstring "pattern that find lines containing information about errors in the output of the `makecmd` command" \
+declare-option -hidden -docstring "pattern that find lines containing information about errors in the output of the `makecmd` command" \
     str make_error_pattern " (?:fatal )?error:"
-declare-option -docstring "pattern that describes lines containing information about errors in the output of the `makecmd` command" \
-    str make_error_line_pattern ""
+declare-option -docstring "pattern that describes lines containing information about errors in the output of the `makecmd` command. Capture groups must be: 1: filename 2: line number 3: optional column 4: optional error description" \
+    regex make_error_line_pattern "^(?:\w:)?([^:\n]+):(\d+):(?:(\d+):)? (?:fatal )?error:([^\n]+)?"
+
 
 declare-option -docstring "name of the client in which utilities display information" \
     str toolsclient
@@ -61,7 +62,7 @@ define-command -hidden make-jump %{
             set-option buffer make_current_error_line %val{cursor_line}
             make-open-error "%reg{1}/%reg{2}" "%reg{3}" "%reg{4}" "%reg{5}"
         } catch %{
-            set-register / %sh{ if [ -z "$kak_opt_make_error_line_pattern" ] ; then printf %s "^(?:\w:)?[^:\n]+:\d+:(?:\d+:)?${kak_opt_make_error_pattern}([^\n]+)?\z" ; else printf %s "${kak_opt_make_error_line_pattern}([^\n]+)?\z"; fi }
+            set-register / %sh{ if [ "$kak_opt_make_error_pattern" != " (?:fatal )?error:" ] ; then printf %s "^(?:\w:)?([^:\n]+):(\d+):(?:(\d+):)?${kak_opt_make_error_pattern}([^\n]+)?\z" ; else printf %s "${kak_opt_make_error_line_pattern}"; fi }
             execute-keys <a-h><a-l> s<ret>l
             set-option buffer make_current_error_line %val{cursor_line}
             make-open-error "%reg{1}" "%reg{2}" "%reg{3}" "%reg{4}"
@@ -72,7 +73,7 @@ define-command -hidden make-jump %{
 define-command make-next-error -docstring 'Jump to the next make error' %{
     evaluate-commands -try-client %opt{jumpclient} -save-regs / %{
         buffer '*make*'
-        set-register / %sh{ if [ -z "$kak_opt_make_error_line_pattern" ] ; then printf %s "^(?:\w:)?[^:\n]+:\d+:(?:\d+:)?$kak_opt_make_error_pattern" ; else printf %s "$kak_opt_make_error_line_pattern"; fi }
+        set-register / %sh{ if [ "$kak_opt_make_error_pattern" != " (?:fatal )?error:" ] ; then printf %s "^(?:\w:)?[^:\n]+:\d+:(?:\d+:)?$kak_opt_make_error_pattern" ; else printf %s "$kak_opt_make_error_line_pattern"; fi }
         execute-keys "%opt{make_current_error_line}ggl" "/<ret>"
         make-jump
     }
@@ -87,7 +88,7 @@ define-command make-next-error -docstring 'Jump to the next make error' %{
 define-command make-previous-error -docstring 'Jump to the previous make error' %{
     evaluate-commands -try-client %opt{jumpclient} -save-regs / %{
         buffer '*make*'
-        set-register / %sh{ if [ -z "$kak_opt_make_error_line_pattern" ] ; then printf %s "^(?:\w:)?[^:\n]+:\d+:(?:\d+:)?$kak_opt_make_error_pattern" ; else printf %s "$kak_opt_make_error_line_pattern"; fi }
+        set-register / %sh{ if [ "$kak_opt_make_error_pattern" != " (?:fatal )?error:" ] ; then printf %s "^(?:\w:)?[^:\n]+:\d+:(?:\d+:)?$kak_opt_make_error_pattern" ; else printf %s "$kak_opt_make_error_line_pattern"; fi }
         execute-keys "%opt{make_current_error_line}g" "<a-/><ret>"
         make-jump
     }
