@@ -33,8 +33,8 @@ A shell command is appended to the one set in this option at runtime} \
     done
 }
 
-define-command x11-terminal -params 1.. -docstring '
-x11-terminal <program> [<arguments>]: create a new terminal as an X11 window
+define-command x11-terminal-window -params 1.. -docstring '
+x11-terminal-window <program> [<arguments>]: create a new terminal as an X11 window
 The program passed as argument will be executed in the new terminal' \
 %{
     evaluate-commands -save-regs 'a' %{
@@ -51,7 +51,7 @@ The program passed as argument will be executed in the new terminal' \
         }
     }
 }
-complete-command x11-terminal shell 
+complete-command x11-terminal-window shell 
 
 define-command x11-focus -params ..1 -docstring '
 x11-focus [<kakoune_client>]: focus a given client''s window
@@ -69,6 +69,10 @@ If no client is passed, then the current client is used' \
 complete-command -menu x11-focus client 
 
 alias global focus x11-focus
-alias global terminal x11-terminal
+
+# deprecated
+define-command -hidden x11-terminal -params 1.. %{
+    x11-terminal-window %arg{@}
+}
 
 }

@@ -120,6 +120,5 @@ If no client is passed then the current one is used' \
 complete-command -menu iterm-focus client
 
 alias global focus iterm-focus
-alias global terminal iterm-terminal-vertical
 
 }

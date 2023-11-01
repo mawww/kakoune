@@ -11,7 +11,7 @@ define-command -docstring %{
     All optional parameters are forwarded to the new window
 } \
     -params .. \
-    x11-repl %{ x11-terminal sh -c %{
+    x11-repl %{ x11-terminal-window sh -c %{
         winid="${WINDOWID:-$(xdotool search --pid ${PPID} | tail -1)}"
         printf "evaluate-commands -try-client $1 \
             'set-option current x11_repl_id ${winid}'" | kak -p "$2"

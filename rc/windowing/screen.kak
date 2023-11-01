@@ -71,6 +71,5 @@ If no client is passed then the current one is used' \
 complete-command -menu screen-focus client 
 
 alias global focus screen-focus
-alias global terminal screen-terminal-vertical
 
 }

@@ -66,6 +66,5 @@ If no client is passed then the current one is used' \
 complete-command -menu wezterm-focus client
 
 alias global focus wezterm-focus
-alias global terminal wezterm-terminal-vertical
 
 }

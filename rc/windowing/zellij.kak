@@ -17,10 +17,10 @@ define-command -hidden -params 2.. zellij-run %{ nop %sh{
     zellij --session "$kak_client_env_ZELLIJ_SESSION_NAME" run $zellij_run_options -- "$@"
 }}
 
-define-command -hidden -params 1.. zellij-terminal-impl %{
+define-command -hidden -params 1.. zellij-terminal-window %{
     zellij-run "--close-on-exit" %arg{@}
 }
-complete-command zellij-terminal-impl shell
+complete-command zellij-terminal-window shell
 
 define-command zellij-terminal-vertical -params 1.. -docstring '
 zellij-terminal-vertical <program> [<arguments>]: create a new terminal as a zellij pane
@@ -62,7 +62,6 @@ complete-command -menu zellij-focus client
 
 ## The default behaviour for the `new` command is to open an horizontal pane in a zellij session
 alias global focus zellij-focus
-alias global terminal zellij-terminal-impl
 
 }
 

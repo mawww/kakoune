@@ -9,6 +9,8 @@ evaluate-commands %sh{
 
 require-module 'wayland'
 
+alias global sway-terminal-window wayland-terminal-window
+
 define-command sway-terminal-vertical -params 1.. -docstring '
     sway-terminal-vertical <program> [<arguments>]: create a new terminal as a Sway window
     The current pane is split into two, top and bottom
