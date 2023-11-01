@@ -209,8 +209,9 @@ DisplaySetup Window::compute_display_setup(const Context& context) const
         if (cursor.line - offset.line < win_pos.line)
             win_pos.line = std::max(0_line, cursor.line - offset.line);
         if (cursor.line + offset.line >= win_pos.line + m_dimensions.line)
-            win_pos.line = std::min(buffer().line_count()-1, cursor.line + offset.line - m_dimensions.line + 1);
+            win_pos.line = cursor.line + offset.line - m_dimensions.line + 1;
     }
+    win_pos.line = std::min(win_pos.line, buffer().line_count()-1);
 
     DisplaySetup setup{
         win_pos.line,
