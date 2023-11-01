@@ -52,7 +52,7 @@ The program passed as argument will be executed in the new terminal' \
 complete-command tmux-terminal-horizontal shell
 
 define-command tmux-terminal-window -params 1.. -docstring '
-tmux-terminal-window <program> [<arguments>] [<arguments>]: create a new terminal as a tmux window
+tmux-terminal-window <program> [<arguments>]: create a new terminal as a tmux window
 The program passed as argument will be executed in the new terminal' \
 %{
     tmux-terminal-impl 'new-window' %arg{@}
