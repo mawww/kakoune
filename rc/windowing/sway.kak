@@ -9,6 +9,26 @@ evaluate-commands %sh{
 
 require-module 'wayland'
 
+define-command sway-terminal-vertical -params 1.. -docstring '
+    sway-terminal-vertical <program> [<arguments>]: create a new terminal as a Sway window
+    The current pane is split into two, top and bottom
+    The program passed as argument will be executed in the new terminal' \
+%{
+    nop %sh{swaymsg split vertical}
+    wayland-terminal-window %arg{@}
+}
+complete-command sway-terminal-vertical shell
+
+define-command sway-terminal-horizontal -params 1.. -docstring '
+    sway-terminal-horizontal <program> [<arguments>]: create a new terminal as a Sway window
+    The current pane is split into two, left and right
+    The program passed as argument will be executed in the new terminal' \
+%{
+    nop %sh{swaymsg split horizontal}
+    wayland-terminal-window %arg{@}
+}
+complete-command sway-terminal-horizontal shell
+
 define-command sway-focus-pid -hidden %{
     evaluate-commands %sh{
         pid=$kak_client_pid
@@ -45,7 +65,6 @@ If no client is passed, then the current client is used' \
 }
 complete-command -menu sway-focus client
 
-unalias global focus
 alias global focus sway-focus
 
 }
