@@ -853,23 +853,22 @@ void regex_prompt(Context& context, String prompt, char reg, T func)
                         context.window().set_position(position);
 
                     context.input_handler().set_prompt_face(context.faces()["Prompt"]);
+                    RegisterManager::instance()[reg].restore(context, saved_reg);
                 }
+
                 switch (event)
                 {
-                    case PromptEvent::Change:
-                        if (not incsearch or str.empty())
-                            return;
+                case PromptEvent::Abort: return;
+                case PromptEvent::Change:
+                    if (incsearch and not str.empty())
                         RegisterManager::instance()[reg].set(context, str.str());
-                        func(Regex{str, direction_flags(mode)}, event, context);
-                        return;
-                    case PromptEvent::Abort:
-                        RegisterManager::instance()[reg].restore(context, saved_reg);
-                        return;
-                    case PromptEvent::Validate:
-                        context.push_jump();
-                        func(Regex{str.empty() ? default_regex : str, direction_flags(mode)}, event, context);
-                        return;
+                    break;
+                case PromptEvent::Validate:
+                    RegisterManager::instance()[reg].set(context, str.str());
+                    context.push_jump();
+                    break;
                 }
+                func(Regex{str.empty() ? default_regex : str, direction_flags(mode)}, event, context);
             }
             catch (regex_error& err)
             {

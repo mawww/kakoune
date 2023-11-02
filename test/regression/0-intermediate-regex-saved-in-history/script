@@ -1,0 +1,5 @@
+ui_out -ignore 4
+ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "/foo<ret>/b" ] }'
+sleep 0.1
+ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "ar<ret>/<up><up><ret>" ] }'
+ui_out -ignore 1
