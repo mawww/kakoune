@@ -4,13 +4,9 @@
 #include "buffer_utils.hh"
 #include "exception.hh"
 
-#if defined(__CYGWIN__)
-#include <windows.h>
-#endif
-
 #include <sys/types.h>
 #include <unistd.h>
-#include <cstdlib>
+#include <signal.h>
 
 namespace Kakoune
 {
@@ -27,16 +23,17 @@ private:
 
 bool notify_fatal_error(StringView msg)
 {
-#if defined(__CYGWIN__)
-    return MessageBox(NULL, msg.zstr(), "Kakoune: fatal error",
-                      MB_OKCANCEL | MB_ICONERROR) == IDOK;
-#elif defined(__linux__)
-    auto cmd = format("xmessage -buttons 'quit:0,ignore:1' '{}'", replace(msg, "'", "'\\''"));
-    int status = system(cmd.c_str());
-    return (WIFEXITED(status)) ? (WEXITSTATUS(status)) == 1 : false;
-#else
-    return false;
-#endif
+    if (not isatty(STDOUT_FILENO) or not isatty(STDIN_FILENO))
+        return false;
+
+    write(STDOUT_FILENO, format("\033[;31;5;1mKakoune fatal error, q: exit, i: ignore or debug pid {}\033[0m", getpid()));
+    while (true)
+    {
+        if (unsigned char c = 0; read(STDIN_FILENO, &c, 1) < 0 or c == 'q')
+            return false;
+        else if (c == 'i')
+            return true;
+    }
 }
 
 void on_assert_failed(const char* message)
