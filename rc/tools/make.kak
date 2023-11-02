@@ -1,7 +1,8 @@
 declare-option -docstring "shell command run to build the project" \
     str makecmd make
-declare-option -docstring "pattern that describes lines containing information about errors in the output of the `makecmd` command" \
-    str make_error_pattern " (?:fatal )?error:"
+declare-option -docstring "pattern that describes lines containing information about errors in the output of the `makecmd` command. Capture groups must be: 1: filename 2: line number 3: optional column 4: optional error description" \
+    regex make_error_pattern "^(?:\w:)?([^:\n]+):(\d+):(?:(\d+):)? (?:fatal )?error:([^\n]+)?"
+
 
 declare-option -docstring "name of the client in which utilities display information" \
     str toolsclient
@@ -51,7 +52,7 @@ define-command -hidden make-open-error -params 4 %{
 }
 
 define-command -hidden make-jump %{
-    evaluate-commands %{
+    evaluate-commands -save-regs / %{
         try %{
             execute-keys gl<a-?> "Entering directory" <ret><a-:>
             # Try to parse the error into capture groups, failing on absolute paths
@@ -59,7 +60,8 @@ define-command -hidden make-jump %{
             set-option buffer make_current_error_line %val{cursor_line}
             make-open-error "%reg{1}/%reg{2}" "%reg{3}" "%reg{4}" "%reg{5}"
         } catch %{
-            execute-keys <a-h><a-l> s "((?:\w:)?[^:]+):(\d+):(?:(\d+):)?([^\n]+)\z" <ret>l
+            set-register / %opt{make_error_pattern}
+            execute-keys <a-h><a-l> s<ret>l
             set-option buffer make_current_error_line %val{cursor_line}
             make-open-error "%reg{1}" "%reg{2}" "%reg{3}" "%reg{4}"
         }
@@ -67,9 +69,10 @@ define-command -hidden make-jump %{
 }
 
 define-command make-next-error -docstring 'Jump to the next make error' %{
-    evaluate-commands -try-client %opt{jumpclient} %{
+    evaluate-commands -try-client %opt{jumpclient} -save-regs / %{
         buffer '*make*'
-        execute-keys "%opt{make_current_error_line}ggl" "/^(?:\w:)?[^:\n]+:\d+:(?:\d+:)?%opt{make_error_pattern}<ret>"
+        set-register / %opt{make_error_pattern}
+        execute-keys "%opt{make_current_error_line}ggl" "/<ret>"
         make-jump
     }
     try %{
@@ -81,9 +84,10 @@ define-command make-next-error -docstring 'Jump to the next make error' %{
 }
 
 define-command make-previous-error -docstring 'Jump to the previous make error' %{
-    evaluate-commands -try-client %opt{jumpclient} %{
+    evaluate-commands -try-client %opt{jumpclient} -save-regs / %{
         buffer '*make*'
-        execute-keys "%opt{make_current_error_line}g" "<a-/>^(?:\w:)?[^:\n]+:\d+:(?:\d+:)?%opt{make_error_pattern}<ret>"
+        set-register / %opt{make_error_pattern}
+        execute-keys "%opt{make_current_error_line}g" "<a-/><ret>"
         make-jump
     }
     try %{
