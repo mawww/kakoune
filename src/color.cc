@@ -71,9 +71,9 @@ String to_string(Color color)
     {
         char buffer[14];
         if (color.a == 255)
-            sprintf(buffer, "rgb:%02x%02x%02x", color.r, color.g, color.b);
+            format_to(buffer, "rgb:{:02}{:02}{:02}", hex(color.r), hex(color.g), hex(color.b));
         else
-            sprintf(buffer, "rgba:%02x%02x%02x%02x", color.r, color.g, color.b, color.a);
+            format_to(buffer, "rgba:{:02}{:02}{:02}{:02}", hex(color.r), hex(color.g), hex(color.b), hex(color.a));
         return buffer;
     }
     else

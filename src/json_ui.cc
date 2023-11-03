@@ -27,7 +27,7 @@ String to_json(Color color)
     if (color.color == Kakoune::Color::RGB)
     {
         char buffer[10];
-        sprintf(buffer, R"("#%02x%02x%02x")", color.r, color.g, color.b);
+        format_to(buffer, R"("#{:02}{:02}{:02}")", hex(color.r), hex(color.g), hex(color.b));
         return buffer;
     }
     return to_json(to_string(color));

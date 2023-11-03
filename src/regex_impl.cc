@@ -1080,7 +1080,7 @@ String dump_regex(const CompiledRegex& program)
     for (auto& inst : program.instructions)
     {
         char buf[20];
-        sprintf(buf, " %03d     ", count++);
+        format_to(buf, " {:03}     ", count++);
         res += buf;
         switch (inst.op)
         {
@@ -1148,7 +1148,7 @@ String dump_regex(const CompiledRegex& program)
             if (desc.map[c])
             {
                 if (c < 32)
-                    res += format("<0x{}>", Hex{c});
+                    res += format("<0x{}>", hex(c));
                 else
                     res += (char)c;
             }

@@ -11,6 +11,10 @@ namespace Kakoune
 using JsonArray = Vector<Value>;
 using JsonObject = HashMap<String, Value>;
 
+String to_json(int i);
+String to_json(bool b);
+String to_json(StringView str);
+
 template<typename T>
 String to_json(ArrayView<const T> array)
 {
@@ -26,10 +30,6 @@ String to_json(const HashMap<K, V, D>& map)
     return "{" + join(map | transform([](auto&& i) { return format("{}: {}", to_json(i.key), to_json(i.value)); }),
                       ',', false) + "}";
 }
-
-String to_json(int i);
-String to_json(bool b);
-String to_json(StringView str);
 
 struct JsonResult { Value value; const char* new_pos; };
 

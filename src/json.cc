@@ -29,7 +29,7 @@ String to_json(StringView str)
 
         char buf[7] = {'\\', *next, 0};
         if (*next >= 0 and *next <= 0x1F)
-            sprintf(buf, "\\u%04x", *next);
+            format_to(buf, "\\u{:04}", hex(*next));
 
         res += buf;
         it = next+1;
@@ -186,6 +186,13 @@ UnitTest test_json_parser{[]()
         }
         kak_expect_throw(runtime_error, parse_json(big_nested_array));
     }
+}};
+
+UnitTest test_to_json{[]()
+{
+    kak_assert(to_json(true) == "true");
+    kak_assert(to_json(false) == "false");
+    kak_assert(to_json(HashMap<String, Vector<int>>{{"foo", {1,2,3}}, {"\033", {3, 4, 5}}}) == R"({"foo": [1, 2, 3],"\u001b": [3, 4, 5]})");
 }};
 
 }
