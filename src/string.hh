@@ -343,8 +343,15 @@ inline bool operator==(const StringView& lhs, const StringView& rhs)
 
 inline auto operator<=>(const StringView& lhs, const StringView& rhs)
 {
-    return std::lexicographical_compare_three_way(lhs.begin(), lhs.end(),
-                                                  rhs.begin(), rhs.end());
+    auto lit = lhs.begin(), lend = lhs.end(), rit = rhs.begin(), rend = rhs.end();
+    while (lit != lend and rit != rend) {
+         if (auto cmp = *lit++ <=> *rit++; cmp != 0)
+             return cmp;
+    }
+    if (lit == lend and rit == rend)
+        return std::strong_ordering::equal;
+    return lit == lend ? std::strong_ordering::less : std::strong_ordering::greater;
+
 }
 
 inline String operator"" _str(const char* str, size_t)
