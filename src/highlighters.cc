@@ -197,7 +197,7 @@ public:
 
         const auto faces = m_faces | transform([&faces = context.context.faces()](auto&& spec) {
                 return faces[spec.second];
-            }) | gather<Vector>();
+            }) | gather<Vector<Face>>();
 
         const auto& matches = get_matches(context.context.buffer(), display_buffer.range(), range);
         kak_assert(matches.size() % m_faces.size() == 0);

@@ -438,7 +438,7 @@ UnitTest test_string{[]()
     kak_assert(StringView{"youpi"}.ends_with("youpi"));
     kak_assert(not StringView{"youpi"}.ends_with("oup"));
 
-    auto wrapped = "wrap this paragraph\n respecting whitespaces and much_too_long_words" | wrap_at(16) | gather<Vector>();
+    auto wrapped = "wrap this paragraph\n respecting whitespaces and much_too_long_words" | wrap_at(16) | gather<Vector<String>>();
     kak_assert(wrapped.size() == 6);
     kak_assert(wrapped[0] == "wrap this");
     kak_assert(wrapped[1] == "paragraph");
@@ -447,7 +447,7 @@ UnitTest test_string{[]()
     kak_assert(wrapped[4] == "much_too_long_wo");
     kak_assert(wrapped[5] == "rds");
 
-    auto wrapped2 = "error: unknown type" | wrap_at(7) | gather<Vector>();
+    auto wrapped2 = "error: unknown type" | wrap_at(7) | gather<Vector<String>>();
     kak_assert(wrapped2.size() == 3);
     kak_assert(wrapped2[0] == "error:");
     kak_assert(wrapped2[1] == "unknown");

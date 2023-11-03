@@ -226,7 +226,7 @@ static const EnvVarDesc builtin_env_vars[] = { {
     }, {
         "buflist", false,
         [](StringView name, const Context& context) -> Vector<String>
-        { return BufferManager::instance() | transform(&Buffer::display_name) | gather<Vector>(); }
+        { return BufferManager::instance() | transform(&Buffer::display_name) | gather<Vector<String>>(); }
     }, {
         "buf_line_count", false,
         [](StringView name, const Context& context) -> Vector<String>
@@ -294,7 +294,7 @@ static const EnvVarDesc builtin_env_vars[] = { {
         [](StringView name, const Context& context) -> Vector<String>
         { return ClientManager::instance() |
                       transform([](const std::unique_ptr<Client>& c) -> const String&
-                                { return c->context().name(); }) | gather<Vector>(); }
+                                { return c->context().name(); }) | gather<Vector<String>>(); }
     }, {
         "modified", false,
         [](StringView name, const Context& context) -> Vector<String>
@@ -340,21 +340,21 @@ static const EnvVarDesc builtin_env_vars[] = { {
         { return main_sel_first(context.selections()) |
                      transform([&buffer=context.buffer()](const Selection& sel) {
                          return selection_to_string(ColumnType::Byte, buffer, sel);
-                     }) | gather<Vector>(); }
+                     }) | gather<Vector<String>>(); }
     }, {
         "selections_char_desc", false,
         [](StringView name, const Context& context) -> Vector<String>
         { return main_sel_first(context.selections()) |
                      transform([&buffer=context.buffer()](const Selection& sel) {
                          return selection_to_string(ColumnType::Codepoint, buffer, sel);
-                     }) | gather<Vector>(); }
+                     }) | gather<Vector<String>>(); }
     }, {
         "selections_display_column_desc", false,
         [](StringView name, const Context& context) -> Vector<String>
         { return main_sel_first(context.selections()) |
                      transform([&buffer=context.buffer(), tabstop=context.options()["tabstop"].get<int>()](const Selection& sel) {
                          return selection_to_string(ColumnType::DisplayColumn, buffer, sel, tabstop);
-                     }) | gather<Vector>(); }
+                     }) | gather<Vector<String>>(); }
     }, {
         "selection_length", false,
         [](StringView name, const Context& context) -> Vector<String>

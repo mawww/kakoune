@@ -95,7 +95,7 @@ HashSet<String> CommandManager::loaded_modules() const
 {
     return m_modules | filter([](auto&& elem) { return elem.value.state == Module::State::Loaded; })
                      | transform([](auto&& elem) { return elem.key; })
-                     | gather<HashSet>();
+                     | gather<HashSet<String>>();
 }
 
 struct parse_error : runtime_error

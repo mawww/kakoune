@@ -998,7 +998,7 @@ void use_selection_as_search_pattern(Context& context, NormalParams params)
                       smart and is_bow(buffer, beg) ? "\\b" : "",
                       escape(buffer.string(beg, end), "^$\\.*+?()[]{}|", '\\'),
                       smart and is_eow(buffer, end) ? "\\b" : "");
-    }) | gather<HashSet>();
+    }) | gather<HashSet<String>>();
     String pattern = join(patterns, '|', false);
 
     const char reg = to_lower(params.reg ? params.reg : '/');

@@ -2161,7 +2161,7 @@ const CommandDesc evaluate_commands_cmd = {
             ScopedSetBool disable_hooks(context.hooks_disabled(), no_hooks);
 
             if (parser.get_switch("verbatim"))
-                CommandManager::instance().execute_single_command(parser | gather<Vector>(), context, shell_context);
+                CommandManager::instance().execute_single_command(parser | gather<Vector<String>>(), context, shell_context);
             else
                 CommandManager::instance().execute(join(parser, ' ', false), context, shell_context);
         });
