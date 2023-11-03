@@ -377,7 +377,7 @@ void expand_token(Token&& token, const Context& context, const ShellContext& she
 
         auto val = ShellManager::instance().get_val(content, context);
         if constexpr (single)
-            return set_target(join(val, false, ' '));
+            return set_target(join(val, ' ', false));
         else
             return set_target(std::move(val));
     }

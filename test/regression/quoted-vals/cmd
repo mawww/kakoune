@@ -1,0 +1,1 @@
+:exec "%%c%val{selections_desc}<lt>esc>"<ret>
