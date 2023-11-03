@@ -539,8 +539,10 @@ Changes
 
  * `u`: undo last change
  * `<c-k>`: move backward in history
+ * `<a-u>`: undo selection changes. Introduced in v2023.07.29
  * `U`: redo last change
  * `<c-j>`: move forward in history
+ * `<a-U>`: redo selection changes. Introduced in v2023.07.29
 
  * `&`: align selections, align the cursor of selections by inserting
         spaces before the first character of the selection
