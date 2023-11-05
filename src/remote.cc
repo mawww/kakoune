@@ -776,7 +776,7 @@ class Server::Accepter
 {
 public:
     Accepter(int socket)
-        : m_socket_watcher(socket, FdEvents::Read, EventMode::Urgent,
+        : m_socket_watcher(socket, FdEvents::Read, EventMode::Normal,
                            [this](FDWatcher&, FdEvents, EventMode mode) {
                                handle_available_input(mode);
                            })
