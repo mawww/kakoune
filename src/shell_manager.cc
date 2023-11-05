@@ -85,32 +85,30 @@ ShellManager::ShellManager(ConstArrayView<EnvVarDesc> builtin_env_vars)
 namespace
 {
 
-struct Pipe
+struct UniqueFd
 {
-    Pipe(bool create = true)
-        : m_fd{-1, -1}
-    {
-        if (create and ::pipe(m_fd) < 0)
-            throw runtime_error(format("unable to create pipe (fds: {}/{}; errno: {})", m_fd[0], m_fd[1], ::strerror(errno)));
-    }
-    ~Pipe() { close_read_fd(); close_write_fd(); }
+    UniqueFd(int fd = -1) : fd{fd} {}
+    UniqueFd(UniqueFd&& other) : fd{other.fd} { other.fd = -1; }
+    UniqueFd& operator=(UniqueFd&& other) { std::swap(fd, other.fd); other.close(); return *this; }
+    ~UniqueFd() { close(); }
 
-    int read_fd() const { return m_fd[0]; }
-    int write_fd() const { return m_fd[1]; }
-
-    void close_read_fd() { close_fd(m_fd[0]); }
-    void close_write_fd() { close_fd(m_fd[1]); }
-
-private:
-    void close_fd(int& fd) { if (fd != -1) { close(fd); fd = -1; } }
-    int m_fd[2];
+    explicit operator bool() const { return fd != -1; }
+    void close() { if (fd != -1) { ::close(fd); fd = -1; } }
+    int fd;
 };
 
-template<typename Func>
-pid_t spawn_shell(const char* shell, StringView cmdline,
+struct Shell
+{
+    pid_t pid;
+    UniqueFd stdin;
+    UniqueFd stdout;
+    UniqueFd stderr;
+};
+
+Shell spawn_shell(const char* shell, StringView cmdline,
                   ConstArrayView<String> params,
                   ConstArrayView<String> kak_env,
-                  Func setup_child) noexcept
+                  bool open_stdin) noexcept
 {
     Vector<const char*> envptrs;
     for (char** envp = environ; *envp; ++envp)
@@ -127,16 +125,38 @@ pid_t spawn_shell(const char* shell, StringView cmdline,
         execparams.push_back(param.c_str());
     execparams.push_back(nullptr);
 
-    if (pid_t pid = vfork())
-        return pid;
+    auto make_pipe = []() -> std::array<UniqueFd, 2> {
+        if (int pipefd[2] = {-1, -1}; ::pipe(pipefd) == 0)
+            return {UniqueFd{pipefd[0]}, UniqueFd{pipefd[1]}};
+        throw runtime_error(format("unable to create pipe, errno: {}", ::strerror(errno)));
+    };
 
-    setup_child();
+    auto stdin_pipe = open_stdin ? make_pipe() : std::array{UniqueFd{open("/dev/null", O_RDONLY)}, UniqueFd{}};
+    auto stdout_pipe = make_pipe();
+    auto stderr_pipe = make_pipe();
+    if (pid_t pid = vfork())
+        return {pid, std::move(stdin_pipe[1]), std::move(stdout_pipe[0]), std::move(stderr_pipe[0])};
+
+    auto renamefd = [](int oldfd, int newfd) {
+        if (oldfd == newfd)
+            return;
+        dup2(oldfd, newfd);
+        close(oldfd);
+    };
+
+    renamefd(stdin_pipe[0].fd, 0);
+    renamefd(stdout_pipe[1].fd, 1);
+    renamefd(stderr_pipe[1].fd, 2);
+
+    close(stdin_pipe[1].fd);
+    close(stdout_pipe[0].fd);
+    close(stderr_pipe[0].fd);
 
     execve(shell, (char* const*)execparams.data(), (char* const*)envptrs.data());
     char buffer[1024];
     write(STDERR_FILENO, format_to(buffer, "execve failed: {}\n", strerror(errno)));
     _exit(-1);
-    return -1;
+    return {-1, {}, {}, {}};
 }
 
 template<typename GetValue>
@@ -192,15 +212,15 @@ FDWatcher make_reader(int fd, String& contents, OnClose&& on_close)
     }};
 }
 
-FDWatcher make_pipe_writer(Pipe& pipe, StringView contents)
+FDWatcher make_pipe_writer(UniqueFd& fd, StringView contents)
 {
-    int flags = fcntl(pipe.write_fd(), F_GETFL, 0);
-    fcntl(pipe.write_fd(), F_SETFL, flags | O_NONBLOCK);
-    return {pipe.write_fd(), FdEvents::Write, EventMode::Urgent,
-            [contents, &pipe](FDWatcher& watcher, FdEvents, EventMode) mutable {
-        while (fd_writable(pipe.write_fd()))
+    int flags = fcntl(fd.fd, F_GETFL, 0);
+    fcntl(fd.fd, F_SETFL, flags | O_NONBLOCK);
+    return {fd.fd, FdEvents::Write, EventMode::Urgent,
+            [contents, &fd](FDWatcher& watcher, FdEvents, EventMode) mutable {
+        while (fd_writable(fd.fd))
         {
-            ssize_t size = ::write(pipe.write_fd(), contents.begin(),
+            ssize_t size = ::write(fd.fd, contents.begin(),
                                    (size_t)contents.length());
             if (size > 0)
                 contents = contents.substr(ByteCount{(int)size});
@@ -208,7 +228,7 @@ FDWatcher make_pipe_writer(Pipe& pipe, StringView contents)
                 return;
             if (size < 0 or contents.empty())
             {
-                pipe.close_write_fd();
+                fd.close();
                 watcher.disable();
                 return;
             }
@@ -285,42 +305,13 @@ std::pair<String, int> ShellManager::eval(
     });
 
     auto spawn_time = profile ? Clock::now() : Clock::time_point{};
-
-    Pipe child_stdin{not input.empty()}, child_stdout, child_stderr;
-    pid_t pid = spawn_shell(m_shell.c_str(), cmdline, shell_context.params, kak_env,
-                            [&child_stdin, &child_stdout, &child_stderr] {
-        auto move = [](int oldfd, int newfd)
-        {
-            if (oldfd == newfd)
-                return;
-            dup2(oldfd, newfd); close(oldfd);
-        };
-
-        if (child_stdin.read_fd() != -1)
-        {
-            close(child_stdin.write_fd());
-            move(child_stdin.read_fd(), 0);
-        }
-        else
-            move(open("/dev/null", O_RDONLY), 0);
-
-        close(child_stdout.read_fd());
-        move(child_stdout.write_fd(), 1);
-
-        close(child_stderr.read_fd());
-        move(child_stderr.write_fd(), 2);
-    });
-
-    child_stdin.close_read_fd();
-    child_stdout.close_write_fd();
-    child_stderr.close_write_fd();
-
+    auto shell = spawn_shell(m_shell.c_str(), cmdline, shell_context.params, kak_env, not input.empty());
     auto wait_time = Clock::now();
 
     String stdout_contents, stderr_contents;
-    auto stdout_reader = make_reader(child_stdout.read_fd(), stdout_contents, [&](bool){ child_stdout.close_read_fd(); });
-    auto stderr_reader = make_reader(child_stderr.read_fd(), stderr_contents, [&](bool){ child_stderr.close_read_fd(); });
-    auto stdin_writer = make_pipe_writer(child_stdin, input);
+    auto stdout_reader = make_reader(shell.stdout.fd, stdout_contents, [&](bool){ shell.stdout.close(); });
+    auto stderr_reader = make_reader(shell.stderr.fd, stderr_contents, [&](bool){ shell.stderr.close(); });
+    auto stdin_writer = make_pipe_writer(shell.stdin, input);
 
     // block SIGCHLD to make sure we wont receive it before
     // our call to pselect, that will end up blocking indefinitly.
@@ -332,7 +323,7 @@ std::pair<String, int> ShellManager::eval(
 
     int status = 0;
     // check for termination now that SIGCHLD is blocked
-    bool terminated = waitpid(pid, &status, WNOHANG) != 0;
+    bool terminated = waitpid(shell.pid, &status, WNOHANG) != 0;
     bool failed = false;
 
     using namespace std::chrono;
@@ -356,9 +347,8 @@ std::pair<String, int> ShellManager::eval(
     }, EventMode::Urgent};
 
     bool cancelling = false;
-    while (not terminated or child_stdin.write_fd() != -1 or
-           ((flags & Flags::WaitForStdout) and
-            (child_stdout.read_fd() != -1 or child_stderr.read_fd() != -1)))
+    while (not terminated or shell.stdin or
+           ((flags & Flags::WaitForStdout) and (shell.stdout or shell.stderr)))
     {
         try
         {
@@ -366,7 +356,7 @@ std::pair<String, int> ShellManager::eval(
         }
         catch (cancel&)
         {
-            kill(pid, SIGINT);
+            kill(shell.pid, SIGINT);
             cancelling = true;
         }
         catch (runtime_error& error)
@@ -375,7 +365,7 @@ std::pair<String, int> ShellManager::eval(
             failed = true;
         }
         if (not terminated)
-            terminated = waitpid(pid, &status, WNOHANG) == pid;
+            terminated = waitpid(shell.pid, &status, WNOHANG) == shell.pid;
     }
 
     if (not stderr_contents.empty())
