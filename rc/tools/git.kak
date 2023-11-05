@@ -61,6 +61,7 @@ define-command -params 1.. \
         All the optional arguments are forwarded to the git utility
         Available commands:
             add
+            apply (alias for "patch git apply")
             rm
             reset
             blame
@@ -81,11 +82,12 @@ define-command -params 1.. \
             grep
     } -shell-script-candidates %{
     if [ $kak_token_to_complete -eq 0 ]; then
-        printf "add\nrm\nreset\nblame\ncommit\ncheckout\ndiff\nhide-blame\nhide-diff\nlog\nnext-hunk\nprev-hunk\nshow\nshow-branch\nshow-diff\ninit\nstatus\nupdate-diff\ngrep\n"
+        printf "add\napply\nrm\nreset\nblame\ncommit\ncheckout\ndiff\nhide-blame\nhide-diff\nlog\nnext-hunk\nprev-hunk\nshow\nshow-branch\nshow-diff\ninit\nstatus\nupdate-diff\ngrep\n"
     else
         case "$1" in
             commit) printf -- "--amend\n--no-edit\n--all\n--reset-author\n--fixup\n--squash\n"; git ls-files -m ;;
             add) git ls-files -dmo --exclude-standard ;;
+            apply) printf -- "--reverse\n--cached\n--index\n" ;;
             rm|grep) git ls-files -c ;;
         esac
     fi
@@ -326,6 +328,12 @@ define-command -params 1.. \
     }
 
     case "$1" in
+        apply)
+            shift
+            enquoted="$(printf '"%s" ' "$@")"
+            echo "require-module patch"
+            echo "patch git apply $enquoted"
+            ;;
         show|show-branch|log|diff|status)
             show_git_cmd_output "$@"
             ;;
