@@ -82,13 +82,13 @@ define-command -params 1.. \
             grep
     } -shell-script-candidates %{
     if [ $kak_token_to_complete -eq 0 ]; then
-        printf "add\napply\nrm\nreset\nblame\ncommit\ncheckout\ndiff\nhide-blame\nhide-diff\nlog\nnext-hunk\nprev-hunk\nshow\nshow-branch\nshow-diff\ninit\nstatus\nupdate-diff\ngrep\n"
+        printf "add\napply\nrm\nreset\nblame\ncommit\ncheckout\ndiff\nhide-blame\nhide-diff\nlog\nnext-hunk\nprev-hunk\nshow\nshow-branch\nshow-diff\ninit\nstatus\nupdate-diff\ngrep\nedit\n"
     else
         case "$1" in
             commit) printf -- "--amend\n--no-edit\n--all\n--reset-author\n--fixup\n--squash\n"; git ls-files -m ;;
             add) git ls-files -dmo --exclude-standard ;;
             apply) printf -- "--reverse\n--cached\n--index\n" ;;
-            rm|grep) git ls-files -c ;;
+            grep|edit) git ls-files -c --recurse-submodules ;;
         esac
     fi
   } \
@@ -381,6 +381,11 @@ define-command -params 1.. \
                 grep $enquoted
                 set-option current grepcmd '$kak_opt_grepcmd'
             }"
+            ;;
+        edit)
+            shift
+            enquoted="$(printf '"%s" ' "$@")"
+            printf %s "edit -existing -- $enquoted"
             ;;
         *)
             printf "fail unknown git command '%s'\n" "$1"
