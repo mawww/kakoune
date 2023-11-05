@@ -1,6 +1,7 @@
 #include "backtrace.hh"
 
 #include "string.hh"
+#include "string_utils.hh"
 
 #if defined(__GLIBC__) || defined(__APPLE__)
 # include <execinfo.h>
@@ -62,7 +63,7 @@ String Backtrace::desc() const
     {
         SymFromAddr(process, (DWORD64)stackframes[i], 0, symbol_info);
         char desc[276];
-        snprintf(desc, 276, "0x%0llx (%s)\n", symbol_info->Address, symbol_info->Name);
+        format_to(desc, "0x{} ({})\n", hex(symbol_info->Address), symbol_info->Name);
         res += desc;
     }
     return res;
