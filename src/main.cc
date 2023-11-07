@@ -46,6 +46,7 @@ struct {
     StringView notes;
 } constexpr version_notes[] = { {
         0,
+        "» asynchronous {+u}shell-script-candidates{} completion\n"
         "» {+b}%val{window_range}{} is now emitted as separate strings\n"
         "» {+b}+{} only duplicates identical selections a single time\n"
         "» {+u}daemonize-session{} command\n"

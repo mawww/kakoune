@@ -86,26 +86,6 @@ ShellManager::ShellManager(ConstArrayView<EnvVarDesc> builtin_env_vars)
 namespace
 {
 
-struct UniqueFd
-{
-    UniqueFd(int fd = -1) : fd{fd} {}
-    UniqueFd(UniqueFd&& other) : fd{other.fd} { other.fd = -1; }
-    UniqueFd& operator=(UniqueFd&& other) { std::swap(fd, other.fd); other.close(); return *this; }
-    ~UniqueFd() { close(); }
-
-    explicit operator bool() const { return fd != -1; }
-    void close() { if (fd != -1) { ::close(fd); fd = -1; } }
-    int fd;
-};
-
-struct Shell
-{
-    pid_t pid;
-    UniqueFd in;
-    UniqueFd out;
-    UniqueFd err;
-};
-
 Shell spawn_shell(const char* shell, StringView cmdline,
                   ConstArrayView<String> params,
                   ConstArrayView<String> kak_env,
@@ -145,13 +125,13 @@ Shell spawn_shell(const char* shell, StringView cmdline,
         close(oldfd);
     };
 
-    renamefd(stdin_pipe[0].fd, 0);
-    renamefd(stdout_pipe[1].fd, 1);
-    renamefd(stderr_pipe[1].fd, 2);
+    renamefd((int)stdin_pipe[0], 0);
+    renamefd((int)stdout_pipe[1], 1);
+    renamefd((int)stderr_pipe[1], 2);
 
-    close(stdin_pipe[1].fd);
-    close(stdout_pipe[0].fd);
-    close(stderr_pipe[0].fd);
+    close((int)stdin_pipe[1]);
+    close((int)stdout_pipe[0]);
+    close((int)stderr_pipe[0]);
 
     execve(shell, (char* const*)execparams.data(), (char* const*)envptrs.data());
     char buffer[1024];
@@ -215,13 +195,13 @@ FDWatcher make_reader(int fd, String& contents, OnClose&& on_close)
 
 FDWatcher make_pipe_writer(UniqueFd& fd, StringView contents)
 {
-    int flags = fcntl(fd.fd, F_GETFL, 0);
-    fcntl(fd.fd, F_SETFL, flags | O_NONBLOCK);
-    return {fd.fd, FdEvents::Write, EventMode::Urgent,
+    int flags = fcntl((int)fd, F_GETFL, 0);
+    fcntl((int)fd, F_SETFL, flags | O_NONBLOCK);
+    return {(int)fd, FdEvents::Write, EventMode::Urgent,
             [contents, &fd](FDWatcher& watcher, FdEvents, EventMode) mutable {
-        while (fd_writable(fd.fd))
+        while (fd_writable((int)fd))
         {
-            ssize_t size = ::write(fd.fd, contents.begin(),
+            ssize_t size = ::write((int)fd, contents.begin(),
                                    (size_t)contents.length());
             if (size > 0)
                 contents = contents.substr(ByteCount{(int)size});
@@ -310,8 +290,8 @@ std::pair<String, int> ShellManager::eval(
     auto wait_time = Clock::now();
 
     String stdout_contents, stderr_contents;
-    auto stdout_reader = make_reader(shell.out.fd, stdout_contents, [&](bool){ shell.out.close(); });
-    auto stderr_reader = make_reader(shell.err.fd, stderr_contents, [&](bool){ shell.err.close(); });
+    auto stdout_reader = make_reader((int)shell.out, stdout_contents, [&](bool){ shell.out.close(); });
+    auto stderr_reader = make_reader((int)shell.err, stderr_contents, [&](bool){ shell.err.close(); });
     auto stdin_writer = make_pipe_writer(shell.in, input);
 
     // block SIGCHLD to make sure we wont receive it before
@@ -324,7 +304,7 @@ std::pair<String, int> ShellManager::eval(
 
     int status = 0;
     // check for termination now that SIGCHLD is blocked
-    bool terminated = waitpid(shell.pid, &status, WNOHANG) != 0;
+    bool terminated = waitpid((int)shell.pid, &status, WNOHANG) != 0;
     bool failed = false;
 
     using namespace std::chrono;
@@ -357,7 +337,7 @@ std::pair<String, int> ShellManager::eval(
         }
         catch (cancel&)
         {
-            kill(shell.pid, SIGINT);
+            kill((int)shell.pid, SIGINT);
             cancelling = true;
         }
         catch (runtime_error& error)
@@ -366,7 +346,7 @@ std::pair<String, int> ShellManager::eval(
             failed = true;
         }
         if (not terminated)
-            terminated = waitpid(shell.pid, &status, WNOHANG) == shell.pid;
+            terminated = waitpid((int)shell.pid, &status, WNOHANG) == (int)shell.pid;
     }
 
     if (not stderr_contents.empty())
@@ -392,6 +372,18 @@ std::pair<String, int> ShellManager::eval(
     }
 
     return { std::move(stdout_contents), WIFEXITED(status) ? WEXITSTATUS(status) : -1 };
+}
+
+Shell ShellManager::spawn(StringView cmdline, const Context& context,
+                          bool open_stdin, const ShellContext& shell_context)
+{
+    auto kak_env = generate_env(cmdline, context, [&](StringView name, Quoting quoting) {
+        if (auto it = shell_context.env_vars.find(name); it != shell_context.env_vars.end())
+            return it->value;
+        return join(get_val(name, context) | transform(quoter(quoting)), ' ', false);
+    });
+
+    return spawn_shell(m_shell.c_str(), cmdline, shell_context.params, kak_env, open_stdin);
 }
 
 Vector<String> ShellManager::get_val(StringView name, const Context& context) const

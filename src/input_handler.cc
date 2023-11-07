@@ -37,6 +37,8 @@ public:
     virtual void on_enabled(bool from_pop) {}
     virtual void on_disabled(bool from_push) {}
 
+    virtual void refresh_ifn() {}
+
     bool enabled() const { return &m_input_handler.current_mode() == this; }
     Context& context() const { return m_input_handler.context(); }
 
@@ -1048,6 +1050,19 @@ public:
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
+    void refresh_ifn()
+    {
+        bool explicit_completion_selected = m_current_completion != -1 and
+            (not m_prefix_in_completions or m_current_completion != m_completions.candidates.size() - 1);
+        if (not enabled() or (context().flags() & Context::Flags::Draft) or explicit_completion_selected)
+            return;
+
+        if (auto next_date = Clock::now() + get_idle_timeout(context());
+            next_date < m_idle_timer.next_date())
+            m_idle_timer.set_next_date(next_date);
+        m_refresh_completion_pending = true;
+    }
+
     void paste(StringView content) override
     {
         m_line_editor.insert(content);
@@ -1122,14 +1137,12 @@ private:
             if (menu)
                 context().client().menu_select(0);
             auto prefix = line.substr(m_completions.start, m_completions.end - m_completions.start);
-            if (not menu and not contains(m_completions.candidates, prefix))
+            m_prefix_in_completions = not menu and not contains(m_completions.candidates, prefix);
+            if (m_prefix_in_completions)
             {
                 m_current_completion = m_completions.candidates.size();
                 m_completions.candidates.push_back(prefix.str());
-                m_prefix_in_completions = true;
             }
-            else
-                m_prefix_in_completions = false;
         } catch (runtime_error&) {}
     }
 
@@ -1812,6 +1825,11 @@ void InputHandler::handle_key(Key key)
         m_recording_reg = 0;
         m_recording_level = -1;
     }
+}
+
+void InputHandler::refresh_ifn()
+{
+    current_mode().refresh_ifn();
 }
 
 void InputHandler::start_recording(char reg)

@@ -280,53 +280,85 @@ struct ShellCandidatesCompleter
                              Completions::Flags flags = Completions::Flags::None)
       : m_shell_script{std::move(shell_script)}, m_flags(flags) {}
 
+    ShellCandidatesCompleter(const ShellCandidatesCompleter& other) : m_shell_script{other.m_shell_script}, m_flags(other.m_flags) {}
+    ShellCandidatesCompleter& operator=(const ShellCandidatesCompleter& other) {  m_shell_script = other.m_shell_script; m_flags = other.m_flags; return *this; }
+
     Completions operator()(const Context& context, CompletionFlags flags,
                            CommandParameters params, size_t token_to_complete,
                            ByteCount pos_in_token)
     {
-        if (m_token != token_to_complete)
+        if (m_last_token != token_to_complete)
         {
             ShellContext shell_context{
                 params,
                 { { "token_to_complete", to_string(token_to_complete) } }
             };
-            String output = ShellManager::instance().eval(m_shell_script, context, {},
-                                                          ShellManager::Flags::WaitForStdout,
-                                                          shell_context).first;
+            m_running_script.emplace(ShellManager::instance().spawn(m_shell_script, context, false, shell_context));
+            m_watcher.emplace((int)m_running_script->out, FdEvents::Read, EventMode::Urgent,
+                              [this, &input_handler=context.input_handler()](auto&&... args) { read_candidates(input_handler); });
             m_candidates.clear();
-            for (auto c : output | split<StringView>('\n')
-                                 | filter([](auto s) { return not s.empty(); }))
-                m_candidates.emplace_back(c.str(), used_letters(c));
-            m_token = token_to_complete;
+            m_last_token = token_to_complete;
+        }
+        return rank_candidates(params[token_to_complete].substr(0, pos_in_token));
+    }
+
+private:
+    void read_candidates(InputHandler& input_handler)
+    {
+        char buffer[2048];
+        bool closed = false;
+        int fd = (int)m_running_script->out;
+        while (fd_readable(fd))
+        {
+            int size = read(fd, buffer, sizeof(buffer));
+            if (size == 0)
+            {
+                closed = true;
+                break;
+            }
+            m_stdout_buffer.insert(m_stdout_buffer.end(), buffer, buffer + size);
         }
 
-        StringView query = params[token_to_complete].substr(0, pos_in_token);
+        auto end = closed ? m_stdout_buffer.end() : find(m_stdout_buffer | reverse(), '\n').base();
+        for (auto c : ArrayView(m_stdout_buffer.begin(), end) | split<StringView>('\n')
+                                                              | filter([](auto s) { return not s.empty(); }))
+            m_candidates.emplace_back(c.str(), used_letters(c));
+        m_stdout_buffer.erase(m_stdout_buffer.begin(), end);
+
+        input_handler.refresh_ifn();
+        if (not closed)
+            return;
+
+        m_running_script.reset();
+        m_watcher.reset();
+    }
+
+    Completions rank_candidates(StringView query)
+    {
         UsedLetters query_letters = used_letters(query);
-        Vector<RankedMatch> matches;
-        for (const auto& candidate : m_candidates)
-        {
-            if (RankedMatch match{candidate.first, candidate.second, query, query_letters})
-                matches.push_back(match);
-        }
+        auto matches = m_candidates | transform([&](const auto& c) { return RankedMatch{c.first, c.second, query, query_letters}; })
+                                    | filter([](const auto& m) { return (bool)m; })
+                                    | gather<Vector<RankedMatch>>();
 
         constexpr size_t max_count = 100;
         CandidateList res;
         // Gather best max_count matches
-        for_n_best(matches, max_count, [](auto& lhs, auto& rhs) { return rhs < lhs; },
-                   [&] (const RankedMatch& m) {
+        for_n_best(matches, max_count, [](auto& lhs, auto& rhs) { return rhs < lhs; }, [&] (const RankedMatch& m) {
             if (not res.empty() and res.back() == m.candidate())
                 return false;
             res.push_back(m.candidate().str());
             return true;
         });
 
-        return Completions{0_byte, pos_in_token, std::move(res), m_flags};
+        return Completions{0_byte, query.length(), std::move(res), m_flags};
     }
 
-private:
     String m_shell_script;
+    Vector<char, MemoryDomain::Completion> m_stdout_buffer;
+    Optional<Shell> m_running_script;
+    Optional<FDWatcher> m_watcher;
     Vector<std::pair<String, UsedLetters>, MemoryDomain::Completion> m_candidates;
-    int m_token = -1;
+    int m_last_token = -1;
     Completions::Flags m_flags;
 };
 

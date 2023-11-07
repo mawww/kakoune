@@ -99,6 +99,8 @@ public:
     // process the given key
     void handle_key(Key key);
 
+    void refresh_ifn();
+
     void start_recording(char reg);
     bool is_recording() const;
     void stop_recording();

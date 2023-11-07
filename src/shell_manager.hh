@@ -5,7 +5,12 @@
 #include "env_vars.hh"
 #include "string.hh"
 #include "utils.hh"
+#include "unique_descriptor.hh"
 #include "completion.hh"
+
+#include <signal.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 namespace Kakoune
 {
@@ -27,6 +32,19 @@ struct EnvVarDesc
     Retriever func;
 };
 
+inline void closepid(int pid){ kill(pid, SIGTERM); int status = 0; waitpid(pid, &status, 0); }
+
+using UniqueFd = UniqueDescriptor<::close>;
+using UniquePid = UniqueDescriptor<closepid>;
+
+struct Shell
+{
+    UniquePid pid;
+    UniqueFd in;
+    UniqueFd out;
+    UniqueFd err;
+};
+
 class ShellManager : public Singleton<ShellManager>
 {
 public:
@@ -43,6 +61,11 @@ public:
                                 StringView input = {},
                                 Flags flags = Flags::WaitForStdout,
                                 const ShellContext& shell_context = {});
+
+    Shell spawn(StringView cmdline,
+                const Context& context,
+                bool open_stdin,
+                const ShellContext& shell_complete = {});
 
     Vector<String> get_val(StringView name, const Context& context) const;
 
