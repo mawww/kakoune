@@ -14,7 +14,11 @@ released versions.
   and slow exponential growth in the number of selections.
 
 * `daemonize-session` command makes it possible to convert the current session
-  to a deamon one (which will not exit on last client disconnecting)
+  to a daemon one (which will not exit on last client disconnecting)
+
+* View mode commands and mouse scrolling no longer change selections when those go off-screen.
+
+* New commands `git apply`, `git edit`, `git grep`
 
 == Kakoune 2023.08.08
 

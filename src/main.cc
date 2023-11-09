@@ -50,6 +50,8 @@ struct {
         "» {+b}%val{window_range}{} is now emitted as separate strings\n"
         "» {+b}+{} only duplicates identical selections a single time\n"
         "» {+u}daemonize-session{} command\n"
+        "» view mode and mouse scrolling no longer change selections\n"
+        "» {+u}git apply/edit/grep{} commands\n"
     }, {
         20230805,
         "» Fix FreeBSD/MacOS clang compilation\n"
