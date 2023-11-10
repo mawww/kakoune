@@ -864,25 +864,20 @@ Completions CommandManager::complete(const Context& context,
                                      ByteCount pos_in_token)
 {
     StringView prefix = params[token_to_complete].substr(0, pos_in_token);
-
     if (token_to_complete == 0)
         return complete_command_name(context, prefix);
-    else
-    {
-        StringView command_name = params[0];
-        if (command_name != m_last_complete_command)
-        {
-            m_last_complete_command = command_name.str();
-            flags |= CompletionFlags::Start;
-        }
 
-        auto command_it = m_commands.find(resolve_alias(context, command_name));
-        if (command_it != m_commands.end() and command_it->value.completer)
-            return command_it->value.completer(
-                context, flags, params.subrange(1),
-                token_to_complete-1, pos_in_token);
+    StringView command_name = params[0];
+    if (command_name != m_last_complete_command)
+    {
+        m_last_complete_command = command_name.str();
+        flags |= CompletionFlags::Start;
     }
-    return Completions{};
+
+    auto it = m_commands.find(resolve_alias(context, command_name));
+    return (it != m_commands.end() and it->value.completer)
+        ? it->value.completer(context, flags, params.subrange(1), token_to_complete-1, pos_in_token)
+        : Completions{};
 }
 
 UnitTest test_command_parsing{[]
