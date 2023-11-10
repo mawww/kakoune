@@ -29,6 +29,15 @@ define-command sway-terminal-horizontal -params 1.. -docstring '
 }
 complete-command sway-terminal-horizontal shell
 
+define-command sway-terminal-tab -params 1.. -docstring '
+    sway-terminal-tab <program> [<arguments>]: create a new terminal as a Sway window
+    The program passed as argument will be executed in the new terminal' \
+%{
+    nop %sh{swaymsg 'split horizontal; layout tabbed'}
+    wayland-terminal-window %arg{@}
+}
+complete-command sway-terminal-tab shell
+
 define-command sway-focus-pid -hidden %{
     evaluate-commands %sh{
         pid=$kak_client_pid
