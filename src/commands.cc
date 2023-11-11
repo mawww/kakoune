@@ -80,7 +80,7 @@ struct PerArgumentCommandCompleter<Completer, Rest...> : PerArgumentCommandCompl
 
     Completions operator()(const Context& context, CompletionFlags flags,
                            CommandParameters params, size_t token_to_complete,
-                           ByteCount pos_in_token) const
+                           ByteCount pos_in_token)
     {
         if (token_to_complete == 0)
         {
@@ -284,9 +284,6 @@ struct ShellCandidatesCompleter
                            CommandParameters params, size_t token_to_complete,
                            ByteCount pos_in_token)
     {
-        if (flags & CompletionFlags::Start)
-            m_token = -1;
-
         if (m_token != token_to_complete)
         {
             ShellContext shell_context{
@@ -1140,11 +1137,7 @@ const CommandDesc add_hook_cmd = {
     },
     CommandFlags::None,
     CommandHelper{},
-    make_completer(menu(complete_scope), menu(complete_hooks), complete_nothing,
-                   [](const Context& context, CompletionFlags flags,
-                      StringView prefix, ByteCount cursor_pos)
-                   { return CommandManager::instance().complete(
-                         context, flags, prefix, cursor_pos); }),
+    make_completer(menu(complete_scope), menu(complete_hooks), complete_nothing, CommandManager::Completer{}),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         auto descs = enum_desc(Meta::Type<Hook>{});
@@ -1270,15 +1263,7 @@ CommandCompleter make_command_completer(StringView type, StringView param, Compl
         return ShellCandidatesCompleter{param.str(), completions_flags};
     }
     else if (type == "command")
-    {
-        return [](const Context& context, CompletionFlags flags,
-                  CommandParameters params,
-                  size_t token_to_complete, ByteCount pos_in_token)
-        {
-            return CommandManager::instance().complete(
-                context, flags, params, token_to_complete, pos_in_token);
-        };
-    }
+        return CommandManager::NestedCompleter{};
     else if (type == "shell")
     {
         return [=](const Context& context, CompletionFlags flags,

@@ -47,7 +47,6 @@ enum class CompletionFlags
 {
     None = 0,
     Fast = 1 << 0,
-    Start = 1 << 2,
 };
 
 constexpr bool with_bit_ops(Meta::Type<CompletionFlags>) { return true; }

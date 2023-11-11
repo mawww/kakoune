@@ -719,10 +719,34 @@ static Completions complete_expand(const Context& context, CompletionFlags flags
     return {};
 }
 
-Completions CommandManager::complete(const Context& context,
-                                     CompletionFlags flags,
-                                     StringView command_line,
-                                     ByteCount cursor_pos)
+
+static Completions requote(Completions completions, Token::Type token_type)
+{
+    if (completions.flags & Completions::Flags::Quoted)
+        return completions;
+
+    if (token_type == Token::Type::Raw)
+    {
+        const bool at_token_start = completions.start == 0;
+        for (auto& candidate : completions.candidates)
+        {
+            const StringView to_escape = ";\n \t";
+            if ((at_token_start and candidate.substr(0_byte, 1_byte) == "%") or
+                any_of(candidate, [&](auto c) { return contains(to_escape, c); }))
+                candidate = at_token_start ? quote(candidate) : escape(candidate, to_escape, '\\');
+        }
+    }
+    else if (token_type == Token::Type::RawQuoted)
+        completions.flags |= Completions::Flags::Quoted;
+    else
+        kak_assert(false);
+
+    return completions;
+}
+
+Completions CommandManager::Completer::operator()(
+    const Context& context, CompletionFlags flags,
+    StringView command_line, ByteCount cursor_pos)
 {
     auto prefix = command_line.substr(0_byte, cursor_pos);
     CommandParser parser{prefix};
@@ -754,29 +778,6 @@ Completions CommandManager::complete(const Context& context,
     if (token.terminated) // do not complete past explicit token close
         return Completions{};
 
-    auto requote = [](Completions completions, Token::Type token_type) {
-        if (completions.flags & Completions::Flags::Quoted)
-            return completions;
-
-        if (token_type == Token::Type::Raw)
-        {
-            const bool at_token_start = completions.start == 0;
-            for (auto& candidate : completions.candidates)
-            {
-                const StringView to_escape = ";\n \t";
-                if ((at_token_start and candidate.substr(0_byte, 1_byte) == "%") or
-                    any_of(candidate, [&](auto c) { return contains(to_escape, c); }))
-                    candidate = at_token_start ? quote(candidate) : escape(candidate, to_escape, '\\');
-            }
-        }
-        else if (token_type == Token::Type::RawQuoted)
-            completions.flags |= Completions::Flags::Quoted;
-        else
-            kak_assert(false);
-
-        return completions;
-    };
-
     const ByteCount start = token.pos;
     const ByteCount pos_in_token = cursor_pos - start;
 
@@ -784,8 +785,10 @@ Completions CommandManager::complete(const Context& context,
     if (tokens.size() == 1 and (token.type == Token::Type::Raw or
                                 token.type == Token::Type::RawQuoted))
     {
-        return offset_pos(requote(complete_command_name(context, prefix), token.type), start);
+        return offset_pos(requote(CommandManager::instance().complete_command_name(context, prefix), token.type), start);
     }
+
+    auto& commands = CommandManager::instance().m_commands;
 
     switch (token.type)
     {
@@ -800,17 +803,16 @@ Completions CommandManager::complete(const Context& context,
     case Token::Type::RawQuoted:
     {
         StringView command_name = tokens.front().content;
-        if (command_name != m_last_complete_command)
-        {
-            m_last_complete_command = command_name.str();
-            flags |= CompletionFlags::Start;
-        }
-
-        auto command_it = m_commands.find(resolve_alias(context, command_name));
-        if (command_it == m_commands.end())
+        auto command_it = commands.find(resolve_alias(context, command_name));
+        if (command_it == commands.end())
             return Completions{};
 
         auto& command = command_it->value;
+        if (command_name != m_last_complete_command)
+        {
+            m_last_complete_command = command_name.str();
+            m_command_completer = command.completer;
+        }
 
         auto raw_params = tokens | skip(1) | transform(&Token::content) | gather<Vector<String>>();
         ParametersParser parser{raw_params, command.param_desc, true};
@@ -841,13 +843,13 @@ Completions CommandManager::complete(const Context& context,
                 break;
         }
 
-        if (not command.completer)
+        if (not m_command_completer)
             return Completions{};
 
         Vector<String> params{parser.begin(), parser.end()};
         auto index = params.size() - 1;
 
-        return offset_pos(requote(command.completer(context, flags, params, index, pos_in_token), token.type), start);
+        return offset_pos(requote(m_command_completer(context, flags, params, index, pos_in_token), token.type), start);
     }
     case Token::Type::Expand:
         return complete_expand(context, flags, token.content, start, cursor_pos, pos_in_token);
@@ -857,26 +859,26 @@ Completions CommandManager::complete(const Context& context,
     return Completions{};
 }
 
-Completions CommandManager::complete(const Context& context,
-                                     CompletionFlags flags,
-                                     CommandParameters params,
-                                     size_t token_to_complete,
-                                     ByteCount pos_in_token)
+Completions CommandManager::NestedCompleter::operator()(
+    const Context& context, CompletionFlags flags, CommandParameters params,
+    size_t token_to_complete, ByteCount pos_in_token)
 {
     StringView prefix = params[token_to_complete].substr(0, pos_in_token);
     if (token_to_complete == 0)
-        return complete_command_name(context, prefix);
+        return CommandManager::instance().complete_command_name(context, prefix);
 
     StringView command_name = params[0];
+    auto& commands = CommandManager::instance().m_commands;
     if (command_name != m_last_complete_command)
     {
         m_last_complete_command = command_name.str();
-        flags |= CompletionFlags::Start;
+        auto it = commands.find(resolve_alias(context, command_name));
+        if (it != commands.end())
+            m_command_completer = it->value.completer;
     }
 
-    auto it = m_commands.find(resolve_alias(context, command_name));
-    return (it != m_commands.end() and it->value.completer)
-        ? it->value.completer(context, flags, params.subrange(1), token_to_complete-1, pos_in_token)
+    return m_command_completer
+        ? m_command_completer(context, flags, params.subrange(1), token_to_complete-1, pos_in_token)
         : Completions{};
 }
 

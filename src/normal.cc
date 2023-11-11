@@ -471,17 +471,15 @@ void command(const Context& context, EnvVarMap env_vars, char reg = 0)
     if (not CommandManager::has_instance())
         throw runtime_error{"commands are not supported"};
 
-    CommandManager::instance().clear_last_complete_command();
-
     String default_command = context.main_sel_register_value(reg ? reg : ':').str();
 
     context.input_handler().prompt(
         ":", {}, default_command,
         context.faces()["Prompt"], PromptFlags::DropHistoryEntriesWithBlankPrefix,
         ':',
-        [](const Context& context, CompletionFlags flags,
-           StringView cmd_line, ByteCount pos) {
-               return CommandManager::instance().complete(context, flags, cmd_line, pos);
+        [completer=CommandManager::Completer{}](const Context& context, CompletionFlags flags,
+           StringView cmd_line, ByteCount pos) mutable {
+               return completer(context, flags, cmd_line, pos);
         },
         [env_vars = std::move(env_vars), default_command](StringView cmdline, PromptEvent event, Context& context) {
             if (context.has_client())
