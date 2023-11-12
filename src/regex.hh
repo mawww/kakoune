@@ -162,7 +162,8 @@ bool backward_regex_search(It begin, It end, It subject_begin, It subject_end,
     return regex_search<It, RegexMode::Backward>(begin, end, subject_begin, subject_end, res, re, flags, idle_func);
 }
 
-String option_to_string(const Regex& re);
+enum class Quoting;
+String option_to_string(const Regex& re, Quoting quoting);
 Regex option_from_string(Meta::Type<Regex>, StringView str);
 
 template<typename Iterator, RegexMode mode = RegexMode::Forward,
