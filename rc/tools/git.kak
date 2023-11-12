@@ -138,34 +138,35 @@ define-command -params 1.. \
                       try %{ add-highlighter window/git-blame flag-lines Information git_blame_flags }
                       set-option buffer=$kak_bufname git_blame_flags '$kak_timestamp'
                   }" | kak -p ${kak_session}
-                  git blame "$@" --incremental ${kak_buffile} | awk '
-                  function send_flags(flush,    text, i) {
-                      if (line == "") { return; }
-                      text=substr(sha,1,8) " " dates[sha] " " authors[sha]
-                      # gsub("|", "\\|", text)
-                      gsub("~", "~~", text)
-                      for ( i=0; i < count; i++ ) {
-                          flags = flags " %~" line+i "|" text "~"
+                  git blame "$@" --incremental ${kak_buffile} | perl -wne '
+                  use POSIX qw(strftime);
+                  sub send_flags {
+                      my $flush = shift;
+                      if (not defined $line) { return; }
+                      my $text = substr($sha,1,8) . " " . $dates{$sha} . " " . $authors{$sha};
+                      $text =~ s/~/~~/g;
+                      for ( my $i = 0; $i < $count; $i++ ) {
+                          $flags .= " %~" . ($line+$i) . "|$text~";
                       }
-                      now = systime()
+                      $now = time();
                       # Send roughly one update per second, to avoid creating too many kak processes.
-                      if (!flush && now - last_sent < 1) {
+                      if (!$flush && defined $last_sent && $now - $last_sent < 1) {
                           return
                       }
-                      cmd = "kak -p " ENVIRON["kak_session"]
-                      print "set-option -add buffer=" ENVIRON["kak_bufname"] " git_blame_flags " flags | cmd
-                      close(cmd)
-                      flags = ""
-                      last_sent = now
+                      open CMD, "|-", "kak -p $ENV{kak_session}";
+                      print CMD "set-option -add buffer=$ENV{kak_bufname} git_blame_flags $flags";
+                      close(CMD);
+                      $flags = "";
+                      $last_sent = $now;
                   }
-                  /^([0-9a-f]+) ([0-9]+) ([0-9]+) ([0-9]+)/ {
-                      send_flags(0)
-                      sha=$1
-                      line=$3
-                      count=$4
+                  if (m/^([0-9a-f]+) ([0-9]+) ([0-9]+) ([0-9]+)/) {
+                      send_flags(0);
+                      $sha = $1;
+                      $line = $3;
+                      $count = $4;
                   }
-                  /^author / { authors[sha]=substr($0,8) }
-                  /^author-time ([0-9]*)/ { dates[sha]=strftime("%F %T", $2) }
+                  if (m/^author /) { $authors{$sha} = substr($_,7) }
+                  if (m/^author-time ([0-9]*)/) { $dates{$sha} = strftime("%F %T", localtime $1) }
                   END { send_flags(1); }'
         ) > /dev/null 2>&1 < /dev/null &
     }
