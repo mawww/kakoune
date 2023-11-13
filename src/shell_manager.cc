@@ -100,9 +100,9 @@ struct UniqueFd
 struct Shell
 {
     pid_t pid;
-    UniqueFd stdin;
-    UniqueFd stdout;
-    UniqueFd stderr;
+    UniqueFd in;
+    UniqueFd out;
+    UniqueFd err;
 };
 
 Shell spawn_shell(const char* shell, StringView cmdline,
@@ -309,9 +309,9 @@ std::pair<String, int> ShellManager::eval(
     auto wait_time = Clock::now();
 
     String stdout_contents, stderr_contents;
-    auto stdout_reader = make_reader(shell.stdout.fd, stdout_contents, [&](bool){ shell.stdout.close(); });
-    auto stderr_reader = make_reader(shell.stderr.fd, stderr_contents, [&](bool){ shell.stderr.close(); });
-    auto stdin_writer = make_pipe_writer(shell.stdin, input);
+    auto stdout_reader = make_reader(shell.out.fd, stdout_contents, [&](bool){ shell.out.close(); });
+    auto stderr_reader = make_reader(shell.err.fd, stderr_contents, [&](bool){ shell.err.close(); });
+    auto stdin_writer = make_pipe_writer(shell.in, input);
 
     // block SIGCHLD to make sure we wont receive it before
     // our call to pselect, that will end up blocking indefinitly.
@@ -347,8 +347,8 @@ std::pair<String, int> ShellManager::eval(
     }, EventMode::Urgent};
 
     bool cancelling = false;
-    while (not terminated or shell.stdin or
-           ((flags & Flags::WaitForStdout) and (shell.stdout or shell.stderr)))
+    while (not terminated or shell.in or
+           ((flags & Flags::WaitForStdout) and (shell.out or shell.err)))
     {
         try
         {
