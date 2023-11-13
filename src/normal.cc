@@ -860,7 +860,9 @@ void regex_prompt(Context& context, String prompt, char reg, T func)
                 {
                 case PromptEvent::Abort: return;
                 case PromptEvent::Change:
-                    if (incsearch and not str.empty())
+                    if (not incsearch)
+                        return;
+                    if (not str.empty())
                         RegisterManager::instance()[reg].set(context, str.str());
                     break;
                 case PromptEvent::Validate:
