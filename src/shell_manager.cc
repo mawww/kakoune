@@ -14,6 +14,7 @@
 #include "option_types.hh"
 #include "regex.hh"
 
+#include <array>
 #include <cstring>
 #include <sys/types.h>
 #include <sys/wait.h>
