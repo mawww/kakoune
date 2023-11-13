@@ -1115,32 +1115,32 @@ private:
             const String& line = m_line_editor.line();
             m_completions = completer(context(), flags, line,
                                       line.byte_count_to(m_line_editor.cursor_pos()));
+            if (not context().has_client())
+                return;
+
+            if (m_completions.candidates.empty())
+                return context().client().menu_hide();
+
+            Vector<DisplayLine> items;
+            for (auto& candidate : m_completions.candidates)
+                items.push_back({ candidate, {} });
+
+            const auto menu_style = (m_flags & PromptFlags::Search) ? MenuStyle::Search : MenuStyle::Prompt;
+            context().client().menu_show(items, {}, menu_style);
+
             const bool menu = (bool)(m_completions.flags & Completions::Flags::Menu);
-            if (context().has_client())
+            if (menu)
+                context().client().menu_select(0);
+
+            auto prefix = line.substr(m_completions.start, m_completions.end - m_completions.start);
+            if (not menu and not contains(m_completions.candidates, prefix))
             {
-                if (m_completions.candidates.empty())
-                    return context().client().menu_hide();
-
-                Vector<DisplayLine> items;
-                for (auto& candidate : m_completions.candidates)
-                    items.push_back({ candidate, {} });
-
-                const auto menu_style = (m_flags & PromptFlags::Search) ? MenuStyle::Search : MenuStyle::Prompt;
-                context().client().menu_show(items, {}, menu_style);
-
-                if (menu)
-                    context().client().menu_select(0);
-
-                auto prefix = line.substr(m_completions.start, m_completions.end - m_completions.start);
-                if (not menu and not contains(m_completions.candidates, prefix))
-                {
-                    m_current_completion = m_completions.candidates.size();
-                    m_completions.candidates.push_back(prefix.str());
-                    m_prefix_in_completions = true;
-                }
-                else
-                    m_prefix_in_completions = false;
+                m_current_completion = m_completions.candidates.size();
+                m_completions.candidates.push_back(prefix.str());
+                m_prefix_in_completions = true;
             }
+            else
+                m_prefix_in_completions = false;
         } catch (runtime_error&) {}
     }
 

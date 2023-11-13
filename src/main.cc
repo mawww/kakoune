@@ -46,6 +46,7 @@ struct {
     StringView notes;
 } constexpr version_notes[] = { {
         0,
+        "» {+b}%val{window_range}{} is now emitted as separate strings\n"
         "» {+b}+{} only duplicates identical selections a single time\n"
         "» {+u}daemonize-session{} command\n"
     }, {
@@ -387,8 +388,8 @@ static const EnvVarDesc builtin_env_vars[] = { {
         [](StringView name, const Context& context) -> Vector<String>
         {
             const auto& setup = context.window().last_display_setup();
-            return {format("{} {} {} {}", setup.first_line, setup.first_column,
-                                          setup.line_count, 0)};
+            return {to_string(setup.first_line), to_string(setup.first_column),
+                    to_string(setup.line_count), to_string(0)};
         }
     }, {
         "history", false,

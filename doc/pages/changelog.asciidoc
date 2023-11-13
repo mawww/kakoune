@@ -5,6 +5,8 @@ released versions.
 
 == Development version
 
+* `%val{window_range}` elements are now emitted as different strings
+
 * `+` only duplicates identical selections a single time to avoid surprising
   and slow exponential growth in the number of selections.
 
