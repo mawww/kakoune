@@ -1,5 +1,6 @@
 #include "regex.hh"
 #include "ranges.hh"
+#include "string_utils.hh"
 
 namespace Kakoune
 {
@@ -17,9 +18,9 @@ int Regex::named_capture_index(StringView name) const
     return it != m_impl->named_captures.end() ? it->index : -1;
 }
 
-String option_to_string(const Regex& re)
+String option_to_string(const Regex& re, Quoting quoting)
 {
-    return re.str();
+    return option_to_string(re.str(), quoting);
 }
 
 Regex option_from_string(Meta::Type<Regex>, StringView str)
