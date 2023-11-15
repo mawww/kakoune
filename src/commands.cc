@@ -336,9 +336,12 @@ private:
     Completions rank_candidates(StringView query)
     {
         UsedLetters query_letters = used_letters(query);
-        auto matches = m_candidates | transform([&](const auto& c) { return RankedMatch{c.first, c.second, query, query_letters}; })
-                                    | filter([](const auto& m) { return (bool)m; })
-                                    | gather<Vector<RankedMatch>>();
+        Vector<RankedMatch> matches;
+        for (auto&& candidate : m_candidates)
+        {
+            if (RankedMatch m{candidate.first, candidate.second, query, query_letters})
+                matches.push_back(m);
+        }
 
         constexpr size_t max_count = 100;
         CandidateList res;
