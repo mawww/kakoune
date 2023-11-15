@@ -183,8 +183,8 @@ RankedMatch::RankedMatch(StringView candidate, StringView query)
 
 static bool is_word_boundary(Codepoint prev, Codepoint c)
 {
-    return (iswalnum((wchar_t)prev)) != iswalnum((wchar_t)c) or
-           (iswlower((wchar_t)prev) != iswlower((wchar_t)c));
+    return (is_word(prev, {})) != is_word(c, {}) or
+           (is_lower(prev) != is_lower(c));
 }
 
 bool RankedMatch::operator<(const RankedMatch& other) const
@@ -236,8 +236,8 @@ bool RankedMatch::operator<(const RankedMatch& other) const
             if (is_wb1 != is_wb2)
                 return is_wb1;
 
-            const bool low1 = iswlower((wchar_t)cp1);
-            const bool low2 = iswlower((wchar_t)cp2);
+            const bool low1 = is_lower(cp1);
+            const bool low2 = is_lower(cp2);
             if (low1 != low2)
                 return low1;
 
