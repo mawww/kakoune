@@ -39,11 +39,11 @@ private:
     {
         None = 0,
         // Order is important, the highest bit has precedence for comparison
-        FirstCharMatch   = 1 << 0,
-        SingleWord       = 1 << 1,
-        Contiguous       = 1 << 2,
-        OnlyWordBoundary = 1 << 3,
-        Prefix           = 1 << 4,
+        SingleWord       = 1 << 0,
+        Contiguous       = 1 << 1,
+        OnlyWordBoundary = 1 << 2,
+        Prefix           = 1 << 3,
+        BaseName         = 1 << 4,
         SmartFullMatch   = 1 << 5,
         FullMatch        = 1 << 6,
     };

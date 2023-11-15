@@ -135,8 +135,14 @@ RankedMatch::RankedMatch(StringView candidate, StringView query, TestFunc func)
 
     if (res->single_word)
         m_flags |= Flags::SingleWord;
-    if (smartcase_eq(candidate[0], query[0]))
-        m_flags |= Flags::FirstCharMatch;
+
+    if (auto it = find(candidate | reverse(), '/').base();
+        it == candidate.begin() or subsequence_match_smart_case({it, candidate.end()}, query))
+    {
+        m_flags |= Flags::BaseName;
+        if (*it == query[0])
+            m_flags |= Flags::Prefix;
+    }
 
     auto it = std::search(candidate.begin(), candidate.end(),
                           query.begin(), query.end(), smartcase_eq);
@@ -190,8 +196,8 @@ bool RankedMatch::operator<(const RankedMatch& other) const
     if (diff != Flags::None)
         return (int)(m_flags & diff) > (int)(other.m_flags & diff);
 
-    // If we are SingleWord, FirstCharMatch will do the job, and we dont want to take
-    // other words boundaries into account.
+    // If we are SingleWord, we dont want to take word boundaries from other
+    // words into account.
     if (not (m_flags & (Flags::Prefix | Flags::SingleWord)) and
         m_word_boundary_match_count != other.m_word_boundary_match_count)
         return m_word_boundary_match_count > other.m_word_boundary_match_count;
@@ -268,6 +274,9 @@ UnitTest test_ranked_match{[] {
     kak_assert(preferred("", "a", "b"));
     kak_assert(preferred("expresins", "expresions", "expressionism's"));
     kak_assert(preferred("foo_b", "foo/bar/foo_bar.baz", "test/test_foo_bar.baz"));
+    kak_assert(preferred("foo_b", "bar/bar_qux/foo_bar.baz", "foo/test_foo_bar.baz"));
+    kak_assert(preferred("foo_bar", "bar/foo_bar.baz", "foo_bar/qux.baz"));
+    kak_assert(preferred("fb", "foo_bar/", "foo.bar"));
 }};
 
 UnitTest test_used_letters{[]()
