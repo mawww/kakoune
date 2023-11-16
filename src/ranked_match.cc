@@ -136,7 +136,7 @@ RankedMatch::RankedMatch(StringView candidate, StringView query, TestFunc func)
     if (res->single_word)
         m_flags |= Flags::SingleWord;
 
-    if (auto it = find(candidate | reverse(), '/').base();
+    if (auto it = find(candidate | reverse() | skip(1), '/').base();
         it == candidate.begin() or subsequence_match_smart_case({it, candidate.end()}, query))
     {
         m_flags |= Flags::BaseName;
