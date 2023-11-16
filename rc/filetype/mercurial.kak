@@ -4,7 +4,7 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate .*hg-editor-\w+\.txt$ %{
+hook global BufCreate .*hg-editor-.*\.txt$ %{
     set-option buffer filetype hg-commit
 }
 
