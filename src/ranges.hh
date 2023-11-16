@@ -533,6 +533,51 @@ ConcatView<DecayRange<Range1>, DecayRange<Range2>> concatenated(Range1&& range1,
     return {range1, range2};
 }
 
+template<typename Range1, typename Range2>
+struct ZipView
+{
+    using RangeIt1 = decltype(std::declval<Range1>().begin());
+    using RangeIt2 = decltype(std::declval<Range2>().begin());
+    using ValueType = typename std::tuple<
+        const typename std::iterator_traits<RangeIt1>::value_type*,
+        const typename std::iterator_traits<RangeIt2>::value_type*>;
+
+    struct Iterator
+    {
+        using difference_type = ptrdiff_t;
+        using value_type = ValueType;
+        using pointer = ValueType*;
+        using reference = ValueType&;
+        using iterator_category = std::forward_iterator_tag;
+
+        Iterator(RangeIt1 it1, RangeIt2 it2)
+            : m_it1(std::move(it1)), m_it2(std::move(it2)) {}
+
+        ValueType operator*() { return std::make_tuple(&*m_it1, &*m_it2); }
+        Iterator& operator++() { ++m_it1; ++m_it2; return *this; }
+        Iterator operator++(int) { auto copy = *this; ++*this; return copy; }
+
+        friend bool operator==(const Iterator& lhs, const Iterator& rhs)
+        { return lhs.m_it1 == rhs.m_it1 or lhs.m_it2 == rhs.m_it2; }
+
+    private:
+        RangeIt1 m_it1;
+        RangeIt2 m_it2;
+    };
+
+    Iterator begin() const { return {m_range1.begin(), m_range2.begin()}; }
+    Iterator end() const { return {m_range1.end(), m_range2.end()}; }
+
+    Range1 m_range1;
+    Range2 m_range2;
+};
+
+template<typename Range1, typename Range2>
+ZipView<DecayRange<Range1>, DecayRange<Range2>> zip(Range1&& range1, Range2&& range2)
+{
+    return {range1, range2};
+}
+
 template<typename Range, typename T>
 auto find(Range&& range, const T& value)
 {

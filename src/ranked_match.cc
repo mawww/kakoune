@@ -131,6 +131,39 @@ RankedMatch::RankedMatch(StringView candidate, StringView query, TestFunc func)
     if (not res)
         return;
 
+    if (contains(query, '/'))
+    {
+        auto c_component_begin = candidate.begin();
+        auto c_component_end = find(candidate, '/');;
+        for (StringView query_component : query | split('/') |
+                transform([](auto t) { auto &[begin, end] = t; return StringView{begin, end}; }))
+        {
+            if (c_component_end == candidate.end())
+            {
+                m_path_component_matches.clear();
+                break;
+            }
+            bool match = false;
+            while (not match)
+            {
+                StringView c_component{c_component_begin, c_component_end};
+                RankedMatch component_match{c_component, query_component};
+                match = (bool)component_match;
+                if (match)
+                    m_path_component_matches.push_back(std::move(component_match));
+                if (c_component_end == candidate.end())
+                    break;
+                c_component_begin = c_component_end + 1;
+                c_component_end = std::find(c_component_begin, candidate.end(), '/');
+            }
+            if (not match)
+            {
+                m_path_component_matches.clear();
+                break;
+            }
+        }
+    }
+
     m_candidate = candidate;
     m_matches = true;
     m_max_index = res->max_index;
@@ -198,6 +231,13 @@ bool RankedMatch::operator<(const RankedMatch& other) const
     // flags are different, use their ordering to return the first match
     if (diff != Flags::None)
         return (int)(m_flags & diff) > (int)(other.m_flags & diff);
+
+    if (m_path_component_matches.empty() ^ other.m_path_component_matches.empty())
+        return m_path_component_matches.size() > other.m_path_component_matches.size();
+    kak_assert(m_path_component_matches.size() == other.m_path_component_matches.size());
+    for (auto [lhs, rhs] : zip(m_path_component_matches, other.m_path_component_matches))
+        if (*lhs < *rhs)
+            return true;
 
     // If we are SingleWord, we dont want to take word boundaries from other
     // words into account.
@@ -292,6 +332,8 @@ UnitTest test_ranked_match{[] {
     kak_assert(preferred("codegen", "clang/test/CodeGen/asm.c", "clang/test/ASTMerge/codegen-body/test.c"));
     kak_assert(preferred("cho", "tchou kanaky", "tachou kanay")); // Prefer the leftmost match.
     kak_assert(preferred("clangd", "clang-tools-extra/clangd/README.md", "clang/docs/conf.py"));
+    kak_assert(preferred("lang/haystack/needle.c", "git.evilcorp.com/language/haystack/aaa/needle.c", "git.evilcorp.com/aaa/ng/wrong-haystack/needle.cpp"));
+    kak_assert(preferred("evilcorp-lint/bar.go", "scripts/evilcorp-lint/foo/bar.go", "src/evilcorp-client/foo/bar.go"));
 }};
 
 UnitTest test_used_letters{[]()
