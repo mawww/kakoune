@@ -392,6 +392,10 @@ are exclusively available to built-in options.
             if *yes* or *true*, use native terminal cursor visibility control
             instead of Kakoune's cursor management (defaults to *false*)
 
+        *terminal_info_inline_borders*:::
+            if *yes* or *true*, borders will be drawn around info boxes with the
+            *inline* style.
+
 [[startup-info]]
 *startup_info_version* `int`::
     _default_ 0 +
