@@ -50,6 +50,7 @@ public:
     public:
         void debug_stats() const;
         Ptr intern(StringView str);
+        Ptr intern(StringView str, size_t hash);
         void remove(StringView str);
 
     private:
@@ -62,10 +63,8 @@ public:
 using StringDataPtr = StringData::Ptr;
 using StringRegistry = StringData::Registry;
 
-inline StringDataPtr intern(StringView str)
-{
-    return StringRegistry::instance().intern(str);
-}
+inline StringDataPtr intern(StringView str) { return StringRegistry::instance().intern(str); }
+inline StringDataPtr intern(StringView str, size_t hash) { return StringRegistry::instance().intern(str, hash); }
 
 }
 

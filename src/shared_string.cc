@@ -25,16 +25,22 @@ StringDataPtr StringData::create(ArrayView<const StringView> strs)
     return RefPtr<StringData, PtrPolicy>{res};
 }
 
-StringDataPtr StringData::Registry::intern(StringView str)
+StringDataPtr StringData::Registry::intern(StringView str, size_t hash)
 {
-    auto it = m_strings.find(str);
-    if (it != m_strings.end())
-        return StringDataPtr{it->value};
+    kak_assert(hash_value(str) == hash);
+    auto index = m_strings.find_index(str, hash);
+    if (index >= 0)
+        return StringDataPtr{m_strings.item(index).value};
 
     auto data = StringData::create(str);
     data->refcount |= interned_flag;
-    m_strings.insert({data->strview(), data.get()});
+    m_strings.insert({data->strview(), data.get()}, hash);
     return data;
+}
+
+StringDataPtr StringData::Registry::intern(StringView str)
+{
+    return intern(str, hash_value(str));
 }
 
 void StringData::Registry::remove(StringView str)

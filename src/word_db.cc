@@ -71,14 +71,15 @@ void WordDB::add_words(StringView line, ConstArrayView<Codepoint> extra_word_cha
 {
     for (auto&& w : WordSplitter{line, extra_word_chars})
     {
-        auto it = m_words.find(w);
-        if (it != m_words.end())
-            ++it->value.refcount;
+        auto hash = hash_value(w);
+        auto index = m_words.find_index(w, hash);
+        if (index >= 0)
+            ++m_words.item(index).value.refcount;
         else
         {
-            auto word = intern(w);
+            auto word = intern(w, hash);
             auto view = word->strview();
-            m_words.insert({view, {std::move(word), used_letters(view), 1}});
+            m_words.insert({view, {std::move(word), used_letters(view), 1}}, hash);
         }
     }
 }
