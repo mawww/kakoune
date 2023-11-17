@@ -175,6 +175,7 @@ private:
 
     ColumnCount m_status_len = 0;
     ColumnCount m_info_max_width = 0;
+    bool m_info_inline_borders = false;
 };
 
 }
