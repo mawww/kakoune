@@ -298,10 +298,11 @@ InsertCompletion complete_option(const SelectionList& sels,
     StringView query = buffer.substr(coord, cursor_pos);
     Vector<RankedMatchAndInfo> matches;
 
-    for (auto& candidate : opt.list)
+    for (auto&& [i, candidate] : opt.list | enumerate())
     {
         if (RankedMatchAndInfo match{std::get<0>(candidate), query})
         {
+            match.set_input_sequence_number(i);
             match.on_select = std::get<1>(candidate);
             auto& menu = std::get<2>(candidate);
             match.menu_entry = not menu.empty() ?
