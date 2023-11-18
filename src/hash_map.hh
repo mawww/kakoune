@@ -214,7 +214,8 @@ struct HashMap
 
     constexpr EffectiveValue& insert(Item item)
     {
-        return insert(std::move(item), hash_value(item_key(item)));
+        const auto hash = hash_value(item_key(item));
+        return insert(std::move(item), hash);
     }
 
     template<typename KeyType> requires IsHashCompatible<Key, KeyType>
