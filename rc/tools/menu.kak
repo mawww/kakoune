@@ -11,11 +11,13 @@ define-command menu -params 1.. -docstring %{
         auto_single=false
         select_cmds=false
         stride=2
+        on_abort=
         while true
         do
             case "$1" in
                 (-auto-single) auto_single=true ;;
                 (-select-cmds) select_cmds=true; stride=3 ;;
+                (-on-abort) on_abort="$2"; shift ;;
                 (-markup) ;; # no longer supported
                 (*) break ;;
             esac
@@ -72,6 +74,9 @@ define-command menu -params 1.. -docstring %{
                             esac
                         ¶
                     §" "$select_cases"
+        fi
+        if [ -n "$on_abort" ]; then
+            printf " -on-abort '%s'" "$(printf %s "$on_abort" | sed "s/'/''/g")"
         fi
         printf ' -menu -shell-script-candidates %%§
                     printf %%s %s
