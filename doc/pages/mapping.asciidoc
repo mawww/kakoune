@@ -23,9 +23,6 @@ The *map* command makes *key* behave as if the *keys* sequence was typed.
     *prompt*::
         prompts, such as when entering a command through *:*, or a regex through */*
 
-    *menu*::
-        mode entered when a menu is displayed with the 'menu' command
-
     *user*::
         mode entered when the user prefix is hit (default: '<space>')
 

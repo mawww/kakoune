@@ -342,19 +342,6 @@ but not really useful in that context.
     so inside a draft context like `evaluate-commands -draft`, it only
     responds to an `execute-keys` command in the same context.
 
-*menu* [<switches>] <label1> <commands1> <label2> <commands2> ...::
-    display a menu using labels, the selected label’s commands are
-    executed. The *menu* command can take an *-auto-single* argument, to automatically
-    run commands when only one choice is provided, and a *-select-cmds*
-    argument, in which case menu takes three argument per item, the
-    last one being a command to execute when the item is selected (but
-    not validated)
-
-    NOTE: The menu is displayed in and receives input from the
-    current client context, so inside a draft context like
-    `evaluate-commands -draft`, it is invisible and only responds to
-    an `execute-keys` command in the same context.
-
 *info* [<switches>] <text>::
     display text in an information box with the following *switches*:
 

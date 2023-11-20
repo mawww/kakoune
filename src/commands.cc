@@ -2274,65 +2274,6 @@ const CommandDesc prompt_cmd = {
     }
 };
 
-const CommandDesc menu_cmd = {
-    "menu",
-    nullptr,
-    "menu [<switches>] <name1> <commands1> <name2> <commands2>...: display a "
-    "menu and execute commands for the selected item",
-    ParameterDesc{
-        { { "auto-single", { {}, "instantly validate if only one item is available" } },
-          { "select-cmds", { {}, "each item specify an additional command to run when selected" } },
-          { "markup", { {}, "parse menu entries as markup text" } } }
-    },
-    CommandFlags::None,
-    CommandHelper{},
-    CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
-    {
-        const bool with_select_cmds = (bool)parser.get_switch("select-cmds");
-        const bool markup = (bool)parser.get_switch("markup");
-        const size_t modulo = with_select_cmds ? 3 : 2;
-
-        const size_t count = parser.positional_count();
-        if (count == 0 or (count % modulo) != 0)
-            throw wrong_argument_count();
-
-        if (count == modulo and parser.get_switch("auto-single"))
-        {
-            ScopedSetBool noninteractive{context.noninteractive()};
-
-            CommandManager::instance().execute(parser[1], context);
-            return;
-        }
-
-        Vector<DisplayLine> choices;
-        Vector<String> commands;
-        Vector<String> select_cmds;
-        for (int i = 0; i < count; i += modulo)
-        {
-            if (parser[i].empty())
-                throw runtime_error(format("entry #{} is empty", i+1));
-
-            choices.push_back(markup ? parse_display_line(parser[i], context.faces())
-                                     : DisplayLine{ parser[i], {} });
-            commands.push_back(parser[i+1]);
-            if (with_select_cmds)
-                select_cmds.push_back(parser[i+2]);
-        }
-
-        CapturedShellContext sc{shell_context};
-        context.input_handler().menu(std::move(choices),
-            [=](int choice, MenuEvent event, Context& context) {
-                ScopedSetBool noninteractive{context.noninteractive()};
-
-                if (event == MenuEvent::Validate and choice >= 0 and choice < commands.size())
-                  CommandManager::instance().execute(commands[choice], context, sc);
-                if (event == MenuEvent::Select and choice >= 0 and choice < select_cmds.size())
-                  CommandManager::instance().execute(select_cmds[choice], context, sc);
-            });
-    }
-};
-
 const CommandDesc on_key_cmd = {
     "on-key",
     nullptr,
@@ -2820,7 +2761,6 @@ void register_commands()
     register_command(execute_keys_cmd);
     register_command(evaluate_commands_cmd);
     register_command(prompt_cmd);
-    register_command(menu_cmd);
     register_command(on_key_cmd);
     register_command(info_cmd);
     register_command(try_catch_cmd);

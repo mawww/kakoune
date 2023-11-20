@@ -879,15 +879,6 @@ progressively displaying their result in Kakoune.
 
 See <<doc/pages/buffers#fifo-buffers,`:doc buffers fifo-buffers`>>.
 
-Menus
-~~~~~
-
-When a menu is displayed, you can use `j`, `<c-n>` or `<tab>` to select the next
-entry, and `k`, `<c-p>` or `<shift-tab>` to select the previous one.
-
-Using the `/` key, you can enter some regex in order to restrict available choices
-to the matching ones.
-
 Credits
 -------
 

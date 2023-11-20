@@ -16,14 +16,6 @@
 namespace Kakoune
 {
 
-enum class MenuEvent
-{
-    Select,
-    Abort,
-    Validate
-};
-using MenuCallback = std::function<void (int, MenuEvent, Context&)>;
-
 enum class PromptEvent
 {
     Change,
@@ -84,12 +76,6 @@ public:
                 PromptCompleter completer, PromptCallback callback);
     void set_prompt_face(Face prompt_face);
     bool history_enabled() const;
-
-    // enter menu mode, callback is called on each selection change,
-    // abort or validation with corresponding MenuEvent value
-    // returns to normal mode after validation if callback does
-    // not change the mode itself
-    void menu(Vector<DisplayLine> choices, MenuCallback callback);
 
     // execute callback on next keypress and returns to normal mode
     // if callback does not change the mode itself
