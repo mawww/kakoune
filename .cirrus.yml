@@ -22,7 +22,7 @@ linux_task:
     matrix:
         - name: linux_clang
           container:
-              image: silkeh/clang:11
+              image: silkeh/clang:13
           env:
               CXX: clang++
         - name: linux_gcc
@@ -37,9 +37,9 @@ macos_task:
         image: ghcr.io/cirruslabs/macos-ventura-base:latest
     matrix:
         - name: macos_clang
-          clang_script: brew install llvm@11
+          clang_script: brew install llvm@13
           env:
-              CXX: /opt/homebrew/opt/llvm@11/bin/clang++
+              CXX: /opt/homebrew/opt/llvm@13/bin/clang++
         - name: macos_gcc
           gcc_script:
             - /usr/sbin/softwareupdate --install-rosetta --agree-to-license
