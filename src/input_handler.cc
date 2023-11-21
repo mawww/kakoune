@@ -1132,6 +1132,9 @@ private:
                                       line.byte_count_to(m_line_editor.cursor_pos()));
             if (not context().has_client())
                 return;
+            if (m_completions.candidates.empty())
+                return context().client().menu_hide();
+
             show_completions();
             const bool menu = (bool)(m_completions.flags & Completions::Flags::Menu);
             if (menu)
@@ -1148,9 +1151,6 @@ private:
 
     void show_completions()
     {
-        if (m_completions.candidates.empty())
-            return context().client().menu_hide();
-
         Vector<DisplayLine> items;
         for (auto& candidate : m_completions.candidates)
             items.push_back({ candidate, {} });
@@ -1183,7 +1183,7 @@ private:
         display();
         if (from_pop)
         {
-            if (context().has_client())
+            if (context().has_client() and not m_completions.candidates.empty())
             {
                 show_completions();
                 const bool menu = (bool)(m_completions.flags & Completions::Flags::Menu);
