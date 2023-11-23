@@ -140,7 +140,8 @@ RankedMatch::RankedMatch(StringView candidate, StringView query, TestFunc func)
         it == candidate.begin() or subsequence_match_smart_case({it, candidate.end()}, query))
     {
         m_flags |= Flags::BaseName;
-        if (*it == query[0])
+        if ((candidate.end() - it) >= query.length() and
+            std::equal(query.begin(), query.end(), it))
             m_flags |= Flags::Prefix;
     }
 
@@ -277,6 +278,7 @@ UnitTest test_ranked_match{[] {
     kak_assert(preferred("foo_b", "bar/bar_qux/foo_bar.baz", "foo/test_foo_bar.baz"));
     kak_assert(preferred("foo_bar", "bar/foo_bar.baz", "foo_bar/qux.baz"));
     kak_assert(preferred("fb", "foo_bar/", "foo.bar"));
+    kak_assert(preferred("foo_bar", "test_foo_bar", "foo_test_bar"));
 }};
 
 UnitTest test_used_letters{[]()
