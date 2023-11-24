@@ -2282,7 +2282,8 @@ const CommandDesc menu_cmd = {
     ParameterDesc{
         { { "auto-single", { {}, "instantly validate if only one item is available" } },
           { "select-cmds", { {}, "each item specify an additional command to run when selected" } },
-          { "markup", { {}, "parse menu entries as markup text" } } }
+          { "markup", { {}, "parse menu entries as markup text" } },
+          { "on-abort", { ArgCompleter{}, "command to execute whenever the menu is canceled" } } },
     },
     CommandFlags::None,
     CommandHelper{},
@@ -2320,6 +2321,8 @@ const CommandDesc menu_cmd = {
                 select_cmds.push_back(parser[i+2]);
         }
 
+        auto on_abort = parser.get_switch("on-abort").value_or("").str();
+
         CapturedShellContext sc{shell_context};
         context.input_handler().menu(std::move(choices),
             [=](int choice, MenuEvent event, Context& context) {
@@ -2329,6 +2332,17 @@ const CommandDesc menu_cmd = {
                   CommandManager::instance().execute(commands[choice], context, sc);
                 if (event == MenuEvent::Select and choice >= 0 and choice < select_cmds.size())
                   CommandManager::instance().execute(select_cmds[choice], context, sc);
+
+                if (event == MenuEvent::Abort and not on_abort.empty())
+                  try
+                  {
+                      CommandManager::instance().execute(on_abort, context, sc);
+                  }
+                  catch (Kakoune::runtime_error& error)
+                  {
+                      context.print_status({error.what().str(), context.faces()["Error"]});
+                      context.hooks().run_hook(Hook::RuntimeError, error.what(), context);
+                  }
             });
     }
 };
