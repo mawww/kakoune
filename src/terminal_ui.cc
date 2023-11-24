@@ -1472,7 +1472,6 @@ void TerminalUI::setup_terminal()
         "\033[22t"    // save the current window title
         "\033[?25l"   // hide cursor
         "\033="       // set application keypad mode, so the keypad keys send unique codes
-        "\033[?2026$p" // query support for synchronize output
         "\033[?2004h" // force enable bracketed-paste events
     );
 }
@@ -1542,6 +1541,10 @@ void TerminalUI::set_ui_options(const Options& options)
     auto synchronized = find("terminal_synchronized").map(to_bool);
     m_synchronized.set = (bool)synchronized;
     m_synchronized.requested = synchronized.value_or(false);
+    if (not m_synchronized.queried and not m_synchronized.set) {
+        write(STDOUT_FILENO, "\033[?2026$p");
+        m_synchronized.queried = true;
+    }
 
     m_shift_function_key = find("terminal_shift_function_key").map(str_to_int_ifp).value_or(default_shift_function_key);
 
