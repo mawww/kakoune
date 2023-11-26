@@ -376,6 +376,8 @@ void write_buffer_to_file(Buffer& buffer, StringView filename,
         throw runtime_error("replacing file failed");
     }
 
+    if (replace and geteuid() == 0 and ::chown(zfilename, st.st_uid, st.st_gid) < 0)
+        throw runtime_error(format("unable to restore file ownership: {}", strerror(errno)));
     if ((force or replace) and ::chmod(zfilename, st.st_mode) < 0)
         throw runtime_error(format("unable to restore file permissions: {}", strerror(errno)));
 
