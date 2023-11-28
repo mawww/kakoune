@@ -369,17 +369,19 @@ void write_buffer_to_file(Buffer& buffer, StringView filename,
             ::fsync(fd);
     }
 
+    if (replace and geteuid() == 0 and ::chown(temp_filename, st.st_uid, st.st_gid) < 0)
+        throw runtime_error(format("unable to set replacement file ownership: {}", strerror(errno)));
+    if (replace and ::chmod(temp_filename, st.st_mode) < 0)
+        throw runtime_error(format("unable to set replacement file permissions: {}", strerror(errno)));
+    if (force and not replace and ::chmod(zfilename, st.st_mode) < 0)
+        throw runtime_error(format("unable to restore file permissions: {}", strerror(errno)));
+
     if (replace and rename(temp_filename, zfilename) != 0)
     {
         if (force)
             ::chmod(zfilename, st.st_mode);
         throw runtime_error("replacing file failed");
     }
-
-    if (replace and geteuid() == 0 and ::chown(zfilename, st.st_uid, st.st_gid) < 0)
-        throw runtime_error(format("unable to restore file ownership: {}", strerror(errno)));
-    if ((force or replace) and ::chmod(zfilename, st.st_mode) < 0)
-        throw runtime_error(format("unable to restore file permissions: {}", strerror(errno)));
 
     if ((buffer.flags() & Buffer::Flags::File) and
         real_path(filename) == real_path(buffer.name()))
