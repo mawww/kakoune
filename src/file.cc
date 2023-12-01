@@ -351,16 +351,16 @@ void write_buffer_to_file(Buffer& buffer, StringView filename,
     if (force and ::chmod(zfilename, st.st_mode | S_IWUSR) < 0)
         throw runtime_error(format("unable to change file permissions: {}", strerror(errno)));
 
-    auto restore_mode = on_scope_end([&]{
-        if ((force or replace) and ::chmod(zfilename, st.st_mode) < 0)
-            throw runtime_error(format("unable to restore file permissions: {}", strerror(errno)));
-    });
-
     char temp_filename[PATH_MAX];
     const int fd = replace ? open_temp_file(filename, temp_filename)
                            : open(zfilename, O_CREAT | O_WRONLY | O_TRUNC, 0644);
     if (fd == -1)
-        throw file_access_error(filename, strerror(errno));
+    {
+        auto saved_errno = errno;
+        if (force)
+            ::chmod(zfilename, st.st_mode);
+        throw file_access_error(filename, strerror(saved_errno));
+    }
 
     {
         auto close_fd = on_scope_end([fd]{ close(fd); });
@@ -369,8 +369,19 @@ void write_buffer_to_file(Buffer& buffer, StringView filename,
             ::fsync(fd);
     }
 
+    if (replace and geteuid() == 0 and ::chown(temp_filename, st.st_uid, st.st_gid) < 0)
+        throw runtime_error(format("unable to set replacement file ownership: {}", strerror(errno)));
+    if (replace and ::chmod(temp_filename, st.st_mode) < 0)
+        throw runtime_error(format("unable to set replacement file permissions: {}", strerror(errno)));
+    if (force and not replace and ::chmod(zfilename, st.st_mode) < 0)
+        throw runtime_error(format("unable to restore file permissions: {}", strerror(errno)));
+
     if (replace and rename(temp_filename, zfilename) != 0)
+    {
+        if (force)
+            ::chmod(zfilename, st.st_mode);
         throw runtime_error("replacing file failed");
+    }
 
     if ((buffer.flags() & Buffer::Flags::File) and
         real_path(filename) == real_path(buffer.name()))
