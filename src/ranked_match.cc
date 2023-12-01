@@ -91,6 +91,8 @@ static Optional<SubseqRes> subsequence_match_smart_case(StringView str, StringVi
         if (it == str.end())
             return {};
         const Codepoint c = utf8::read_codepoint(subseq_it, subseq.end());
+        if (single_word and not is_word(c))
+            single_word = false;
         while (true)
         {
             auto str_c = utf8::read_codepoint(it, str.end());
@@ -279,6 +281,7 @@ UnitTest test_ranked_match{[] {
     kak_assert(preferred("foo_bar", "bar/foo_bar.baz", "foo_bar/qux.baz"));
     kak_assert(preferred("fb", "foo_bar/", "foo.bar"));
     kak_assert(preferred("foo_bar", "test_foo_bar", "foo_test_bar"));
+    kak_assert(preferred("rm.cc", "src/ranked_match.cc", "test/README.asciidoc"));
 }};
 
 UnitTest test_used_letters{[]()
