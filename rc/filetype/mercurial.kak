@@ -4,7 +4,7 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate .*hg-editor-\w+\.txt$ %{
+hook global BufCreate .*hg-editor-.*\.txt$ %{
     set-option buffer filetype hg-commit
 }
 
@@ -27,7 +27,11 @@ set-face global MercurialCommitComment cyan
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter shared/hg-commit group
-add-highlighter shared/hg-commit/ regex '^HG:[^\n]*' 0:comment
+add-highlighter shared/hg-commit regions
+add-highlighter shared/hg-commit/comments region ^HG:\  $ group
+add-highlighter shared/hg-commit/comments/ fill comment
+add-highlighter shared/hg-commit/comments/ regex \
+	"\b(?:(changed)|(removed)|(added)|(bookmark)|(branch)|(user:)) ([^\n]*)$" \
+	      1:yellow  2:red     3:green 4:blue     5:magenta 6:white
 
 }
