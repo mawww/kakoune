@@ -54,7 +54,7 @@ define-command patch -params .. -docstring %{
                 # a shell where it expands to nothing.
                 eval set -- $kak_quoted_reg_a
 
-                "${kak_reg_f%/*}/patch-range.pl" $min_line $max_line "$@" ||
+                perl "${kak_reg_f%/*}/patch-range.pl" $min_line $max_line "$@" ||
                     echo >$kak_command_fifo "set-register e fail 'patch: failed to apply selections, see *debug* buffer'"
             }
             execute-keys |<ret>
