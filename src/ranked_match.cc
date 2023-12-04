@@ -143,7 +143,8 @@ RankedMatch::RankedMatch(StringView candidate, StringView query, TestFunc func)
     {
         m_flags |= Flags::BaseName;
         if ((candidate.end() - it) >= query.length() and
-            std::equal(query.begin(), query.end(), it))
+            std::equal(Utf8It{query.begin(), query}, Utf8It{query.end(), query}, Utf8It{it, candidate},
+                       [](Codepoint query, Codepoint candidate) { return smartcase_eq(candidate, query); }))
             m_flags |= Flags::Prefix;
     }
 
@@ -282,6 +283,7 @@ UnitTest test_ranked_match{[] {
     kak_assert(preferred("fb", "foo_bar/", "foo.bar"));
     kak_assert(preferred("foo_bar", "test_foo_bar", "foo_test_bar"));
     kak_assert(preferred("rm.cc", "src/ranked_match.cc", "test/README.asciidoc"));
+    kak_assert(preferred("luaremote", "src/script/LuaRemote.cpp", "tests/TestLuaRemote.cpp"));
 }};
 
 UnitTest test_used_letters{[]()
