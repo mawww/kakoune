@@ -913,7 +913,7 @@ public:
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
-    void refresh_ifn()
+    void refresh_ifn() override
     {
         bool explicit_completion_selected = m_current_completion != -1 and
             (not m_prefix_in_completions or m_current_completion != m_completions.candidates.size() - 1);
