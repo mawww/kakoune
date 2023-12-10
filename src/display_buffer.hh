@@ -141,7 +141,7 @@ public:
         if (auto first = std::find_if(beg, end, has_buffer_range); first != end)
         {
             auto& last = *std::find_if(std::reverse_iterator(end), std::reverse_iterator(first), has_buffer_range);
-            m_range.begin = std::min(m_range.begin, first->begin());
+            m_range.begin = std::min(m_range.begin, (*first).begin());
             m_range.end = std::max(m_range.end, last.end());
         }
         return m_atoms.insert(pos, beg, end);
