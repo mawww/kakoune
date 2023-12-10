@@ -30,8 +30,8 @@ static String fix_atom_text(StringView str)
     auto pos = str.begin();
     for (auto it = str.begin(), end = str.end(); it != end; ++it)
     {
-        char c = *it;
-        if (c >= 0 and c <= 0x1F)
+        unsigned char c = *it;
+        if (c <= 0x1F)
         {
             res += StringView{pos, it};
             res += String{Codepoint{(uint32_t)(0x2400 + c)}};
