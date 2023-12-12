@@ -59,7 +59,7 @@ declare-option -hidden \
         Path of the top-level directory of the working tree currently
         used in `git` operations from within the `kakoune`
     } \
-    str git_work_tree_top_level
+    str git_work_tree
 
 define-command -params 1.. \
     -docstring %{
@@ -112,28 +112,32 @@ define-command -params 1.. \
             update-diff \
         ;
     else
-        # Try cd-ing into the git work tree if exists to make autocompletion slightly more robust
-        cd "$kak_opt_git_work_tree_top_level" >/dev/null 2>&1
+        # Without maintaining the state we cannot know the work tree.
+        # Autocompletion will work only for the default case when git work tree is at `cwd`
+        # Piping to /dev/null to silent noisy git errors
         case "$1" in
-            commit) printf -- "--amend\n--no-edit\n--all\n--reset-author\n--fixup\n--squash\n"; git ls-files -m ;;
-            add) git ls-files -dmo --exclude-standard ;;
+            commit) printf -- "--amend\n--no-edit\n--all\n--reset-author\n--fixup\n--squash\n"; git ls-files -m 2>/dev/null ;;
+            add) git ls-files -dmo --exclude-standard 2>/dev/null ;;
             apply) printf -- "--reverse\n--cached\n--index\n" ;;
-            grep|edit) git ls-files -c --recurse-submodules ;;
+            grep|edit) git ls-files -c --recurse-submodules 2>/dev/null ;;
         esac
     fi
   } \
   git %{
-  set-option global git_work_tree_top_level %sh{
+  set-option buffer git_work_tree %sh{
     # - try to get the toplevel for the `cwd`
     # - if failed, try to find a toplevel for a given buffile
     # - if failed, test the current toplevel variable and if it is a functional git repository
     # - if failed, fallback to `cwd` ()
-    git rev-parse --show-toplevel 2>/dev/null || \
-    ( cd "${kak_buffile%/*}" && git rev-parse --show-toplevel ) 2>/dev/null || \
-    ( cd "${kak_opt_git_work_tree_top_level}" && git rev-parse --show-toplevel ) 2>/dev/null || \
+    git rev-parse --show-toplevel 2>/dev/null ||
+    git -C "${kak_buffile%/*}" rev-parse --show-toplevel 2>/dev/null ||
+    git -C "${kak_opt_git_work_tree}" rev-parse --show-toplevel 2>/dev/null ||
     pwd
   }
   evaluate-commands %sh{
+    export GIT_WORK_TREE="$kak_opt_git_work_tree"
+    export GIT_DIR="$kak_opt_git_work_tree/.git"
+
     show_git_cmd_output() {
         local filetype
         local map_diff_goto_source
@@ -159,6 +163,7 @@ define-command -params 1.. \
         printf %s "evaluate-commands -try-client '$kak_opt_docsclient' %{
                   edit! -fifo ${output} *git*
                   set-option buffer filetype '${filetype}'
+                  set-option buffer git_work_tree '${kak_opt_git_work_tree}'
                   hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname ${output}) } }
                   ${map_diff_goto_source}
               }"
@@ -207,9 +212,12 @@ define-command -params 1.. \
         if git "${@}" > /dev/null 2>&1; then
           printf %s "echo -markup '{Information}git $1 succeeded'"
         else
-          printf 'echo -debug Note: file paths are assumed to start in the `git_work_tree_top_level`\n' "$1"
-          printf 'echo -debug Note: mileage might vary when `git_work_tree_top_level` != kak workspace path\n' "$1"
-          printf 'fail git %s failed\n' "$1"
+          local extra_warning
+          if [ "$kak_opt_git_work_tree" != "$(pwd)" ]
+          then
+            extra_warning=" $(printf '(autocompletion unavailable, relative paths resolved against `%s`)' "$kak_opt_git_work_tree")"
+          fi
+          printf 'fail "failed to run `git%s`%s"' "$(printf ' %s' "$@")" "$extra_warning"
         fi
     }
 
@@ -353,7 +361,7 @@ define-command -params 1.. \
         msgfile="$(git rev-parse --absolute-git-dir)/COMMIT_EDITMSG"
         printf %s "edit '$msgfile'
               hook buffer BufWritePost '.*\Q$msgfile\E' %{ evaluate-commands %sh{
-                  cd "$kak_opt_git_work_tree_top_level"
+                  cd "$kak_opt_git_work_tree"
                   if git commit -F '$msgfile' --cleanup=strip $* > /dev/null; then
                      printf %s 'evaluate-commands -client $kak_client echo -markup %{{Information}Commit succeeded}; delete-buffer'
                   else
@@ -362,10 +370,6 @@ define-command -params 1.. \
               } }"
     }
 
-    cd "$kak_opt_git_work_tree_top_level" || {
-        printf 'fail Unable to set the work tree for git: %s\n' "$kak_opt_git_work_tree_top_level"
-        exit 1
-    }
     case "$1" in
         apply)
             shift
@@ -437,5 +441,5 @@ define-command -params 1.. \
 define-command git-diff-goto-source \
     -docstring 'Navigate to source by pressing the enter key in hunks when git diff is displayed. Works within :git diff and :git show' %{
     require-module diff
-    diff-jump %opt{git_work_tree_top_level}
+    diff-jump %opt{git_work_tree}
 }
