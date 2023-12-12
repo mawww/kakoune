@@ -193,6 +193,8 @@ String build_autoinfo_for_mapping(const Context& context, KeymapMode mode,
     for (auto& key : keymaps.get_mapped_keys(mode))
     {
         const String& docstring = keymaps.get_mapping_docstring(key, mode);
+        if (keymaps.get_mapping_keys(key, mode).empty() and docstring.empty())
+            continue;
         if (auto it = find_if(descs, [&](auto& elem) { return elem.second == docstring; });
             it != descs.end())
             it->first += ',' + to_string(key);
