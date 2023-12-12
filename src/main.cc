@@ -52,6 +52,8 @@ struct {
         "» {+u}daemonize-session{} command\n"
         "» view mode and mouse scrolling no longer change selections\n"
         "» {+u}git apply/edit/grep{} commands\n"
+        "» custom completions are no longer sorted if the typed text is empty\n"
+        "» {+u}terminal{} now selects implementation based on windowing options\n"
     }, {
         20230805,
         "» Fix FreeBSD/MacOS clang compilation\n"
