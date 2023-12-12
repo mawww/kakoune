@@ -62,27 +62,49 @@ define-command -params 1.. \
         Available commands:
             add
             apply (alias for "patch git apply")
-            rm
-            reset
             blame
-            commit
             checkout
+            commit
             diff
+            edit
+            grep
             hide-blame
             hide-diff
             init
             log
             next-hunk
             prev-hunk
+            reset
+            rm
             show
             show-branch
             show-diff
             status
             update-diff
-            grep
     } -shell-script-candidates %{
     if [ $kak_token_to_complete -eq 0 ]; then
-        printf "add\napply\nrm\nreset\nblame\ncommit\ncheckout\ndiff\nhide-blame\nhide-diff\nlog\nnext-hunk\nprev-hunk\nshow\nshow-branch\nshow-diff\ninit\nstatus\nupdate-diff\ngrep\nedit\n"
+        printf %s\\n \
+            apply \
+            blame \
+            checkout \
+            commit \
+            diff \
+            edit \
+            grep \
+            hide-blame \
+            hide-diff \
+            init \
+            log \
+            next-hunk \
+            prev-hunk \
+            reset \
+            rm \
+            show \
+            show-branch \
+            show-diff \
+            status \
+            update-diff \
+        ;
     else
         case "$1" in
             commit) printf -- "--amend\n--no-edit\n--all\n--reset-author\n--fixup\n--squash\n"; git ls-files -m ;;

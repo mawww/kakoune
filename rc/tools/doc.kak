@@ -189,7 +189,7 @@ complete-command doc shell-script-candidates %{
                     /^\[\[[^\]]+\]\]/ { sub(/^\[\[/, ""); sub(/\]\].*/, ""); print }
                 ' < $page | tr '[A-Z ]' '[a-z-]'
             fi;;
-    esac
+    esac | sort
 }
 
 alias global help doc

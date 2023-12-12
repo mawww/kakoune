@@ -209,6 +209,9 @@ bool RankedMatch::operator<(const RankedMatch& other) const
     if (m_max_index != other.m_max_index)
         return m_max_index < other.m_max_index;
 
+    if (m_input_sequence_number != other.m_input_sequence_number)
+        return m_input_sequence_number < other.m_input_sequence_number;
+
     // Reorder codepoints to improve matching behaviour
     auto order = [](Codepoint cp) { return cp == '/' ? 0 : cp; };
 

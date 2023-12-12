@@ -164,7 +164,7 @@ InsertCompletion complete_word(const SelectionList& sels,
     constexpr size_t max_count = 100;
     // Gather best max_count matches
     InsertCompletion::CandidateList candidates;
-    candidates.reserve(std::min(matches.size(), max_count));
+    candidates.reserve(std::min(matches.size(), max_count) + 1);
 
     for_n_best(matches, max_count, [](auto& lhs, auto& rhs) { return rhs < lhs; },
                [&](RankedMatchAndBuffer& m) {
@@ -298,10 +298,11 @@ InsertCompletion complete_option(const SelectionList& sels,
     StringView query = buffer.substr(coord, cursor_pos);
     Vector<RankedMatchAndInfo> matches;
 
-    for (auto& candidate : opt.list)
+    for (auto&& [i, candidate] : opt.list | enumerate())
     {
         if (RankedMatchAndInfo match{std::get<0>(candidate), query})
         {
+            match.set_input_sequence_number(i);
             match.on_select = std::get<1>(candidate);
             auto& menu = std::get<2>(candidate);
             match.menu_entry = not menu.empty() ?
@@ -314,20 +315,19 @@ InsertCompletion complete_option(const SelectionList& sels,
 
     constexpr size_t max_count = 100;
     // Gather best max_count matches
-    auto greater = [](auto& lhs, auto& rhs) { return rhs < lhs; };
-    auto first = matches.begin(), last = matches.end();
-    std::make_heap(first, last, greater);
     InsertCompletion::CandidateList candidates;
-    candidates.reserve(std::min(matches.size(), max_count));
-    candidates.reserve(matches.size());
-    while (candidates.size() < max_count and first != last)
-    {
-        if (candidates.empty() or candidates.back().completion != first->candidate()
-            or candidates.back().on_select != first->on_select)
-            candidates.push_back({ first->candidate().str(), first->on_select.str(),
-                                   std::move(first->menu_entry) });
-        std::pop_heap(first, last--, greater);
-    }
+    candidates.reserve(std::min(matches.size(), max_count) + 1);
+
+    for_n_best(matches, max_count, [](auto& lhs, auto& rhs) { return rhs < lhs; },
+               [&](RankedMatchAndInfo& m) {
+        if (not candidates.empty()
+            and candidates.back().completion == m.candidate()
+            and candidates.back().on_select == m.on_select)
+            return false;
+        candidates.push_back({ m.candidate().str(), m.on_select.str(),
+                               std::move(m.menu_entry) });
+        return true;
+    });
 
     auto end = cursor_pos;
     if (match[3].matched)

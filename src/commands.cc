@@ -337,10 +337,13 @@ private:
     {
         UsedLetters query_letters = used_letters(query);
         Vector<RankedMatch> matches;
-        for (auto&& candidate : m_candidates)
+        for (auto&& [i, candidate] : m_candidates | enumerate())
         {
             if (RankedMatch m{candidate.first, candidate.second, query, query_letters})
+            {
+                m.set_input_sequence_number(i);
                 matches.push_back(m);
+            }
         }
 
         constexpr size_t max_count = 100;

@@ -25,7 +25,7 @@ define-command -params ..1 \
                 cut -f 1 "$tags" | grep -v '^!' | uniq > "$namecache"
             fi
             cat "$namecache"
-        done} \
+        done | sort } \
     -docstring %{
         ctags-search [<symbol>]: jump to a symbol's definition
         If no symbol is passed then the current selection is used as symbol name
