@@ -10,8 +10,8 @@ evaluate-commands %sh{
 
 declare-option -docstring %{window type that kitty creates on new and repl calls (window|os-window)} str kitty_window_type window
 
-define-command kitty-terminal -params 1.. -docstring '
-kitty-terminal <program> [<arguments>]: create a new terminal as a kitty window
+define-command kitty-terminal-window -params 1.. -docstring '
+kitty-terminal-window <program> [<arguments>]: create a new terminal as a kitty window
 The program passed as argument will be executed in the new terminal' \
 %{
     nop %sh{
@@ -28,7 +28,7 @@ The program passed as argument will be executed in the new terminal' \
         kitty @ $listen launch --no-response --type="$kak_opt_kitty_window_type" --cwd="$PWD" $match "$@"
     }
 }
-complete-command kitty-terminal shell
+complete-command kitty-terminal-window shell
 
 define-command kitty-terminal-tab -params 1.. -docstring '
 kitty-terminal-tab <program> [<arguments>]: create a new terminal as kitty tab
@@ -74,8 +74,11 @@ If no client is passed then the current one is used' \
 }
 complete-command -menu kitty-focus client
 
-alias global terminal kitty-terminal
-alias global terminal-tab kitty-terminal-tab
 alias global focus kitty-focus
+
+# deprecated
+define-command -hidden kitty-terminal -params 1.. %{
+    kitty-terminal-window %arg{@}
+}
 
 }
