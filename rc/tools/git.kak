@@ -197,7 +197,8 @@ define-command -params 1.. \
         if git "${@}" > /dev/null 2>&1; then
           printf %s "echo -markup '{Information}git $1 succeeded'"
         else
-          printf 'fail git %s failed\n' "$1"
+          printf "fail '%s'\n" \
+            "$(printf 'failed to run git %s' "$(printf ' %s' "$@")" | sed "s/'/''/g")"
         fi
     }
 
