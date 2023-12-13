@@ -403,6 +403,13 @@ The following expansions are supported (with required context _in italics_):
     `%val{cursor_column}`), and _text_ is the content of the insertion or
     deletion (see also `%val{history}`)
 
+*%val{eol_at_eof}*::
+   _in buffer scope_ +
+   a bool indicating whether Kakoune will include the last line's newline
+   character when writing the buffer. This is inferred from whether the file
+   had a trailing newline when it was loaded. The default for new files is
+   `true`.
+
 *%val{user_modes}*::
     unquoted list of user modes.
 

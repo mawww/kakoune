@@ -298,6 +298,7 @@ void write_buffer_to_fd(Buffer& buffer, int fd)
     else
         eoldata = "\n";
 
+    const bool buffer_is_empty = buffer.line_count() == 1 and buffer[0] == "\n";
 
     BufferedWriter<false> writer{fd};
     if (buffer.options()["BOM"].get<ByteOrderMark>() == ByteOrderMark::Utf8)
@@ -309,7 +310,12 @@ void write_buffer_to_fd(Buffer& buffer, int fd)
         // stored as \n
         StringView linedata = buffer[i];
         writer.write(linedata.substr(0, linedata.length()-1));
-        writer.write(eoldata);
+        if (i != buffer.line_count() - 1 or
+            buffer.eol_at_eof() == EolAtEof::Present or
+            (buffer.eol_at_eof() == EolAtEof::EmptyFile and not buffer_is_empty))
+        {
+            writer.write(eoldata);
+        }
     }
 }
 

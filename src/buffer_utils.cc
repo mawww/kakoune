@@ -111,9 +111,7 @@ Buffer* create_buffer_from_string(String name, Buffer::Flags flags, StringView d
 {
     return BufferManager::instance().create_buffer(
         std::move(name), flags,
-        parse_lines(data.begin(), data.end(), EolFormat::Lf),
-        ByteOrderMark::None, EolFormat::Lf,
-        FsStatus{InvalidTime, {}, {}});
+        parse_lines(data.begin(), data.end(), EolFormat::Lf));
 }
 
 template<typename Func>
@@ -141,14 +139,19 @@ decltype(auto) parse_file(StringView filename, Func&& func)
     auto eolformat = crlf ? EolFormat::Crlf : EolFormat::Lf;
 
     FsStatus fs_status{file.st.st_mtim, file.st.st_size, hash_data(file.data, file.st.st_size)};
-    return func(parse_lines(pos, end, eolformat), bom, eolformat, fs_status);
+    EolAtEof eol_at_eof = file.st.st_size == 0
+                            ? EolAtEof::EmptyFile
+                            : *(end-1) == '\n'
+                                ? EolAtEof::Present
+                                : EolAtEof::Missing;
+    return func({ parse_lines(pos, end, eolformat), bom, eolformat, eol_at_eof, fs_status });
 }
 
 Buffer* open_file_buffer(StringView filename, Buffer::Flags flags)
 {
-    return parse_file(filename, [&](BufferLines&& lines, ByteOrderMark bom, EolFormat eolformat, FsStatus fs_status)  {
+    return parse_file(filename, [&](ParsedBuffer data)  {
         return BufferManager::instance().create_buffer(filename.str(), Buffer::Flags::File | flags,
-                                                       std::move(lines), bom, eolformat, fs_status);
+                                                       std::move(data));
     });
 }
 
@@ -163,8 +166,8 @@ Buffer* open_or_create_file_buffer(StringView filename, Buffer::Flags flags)
 void reload_file_buffer(Buffer& buffer)
 {
     kak_assert(buffer.flags() & Buffer::Flags::File);
-    parse_file(buffer.name(), [&](auto&&... params) {
-        buffer.reload(std::forward<decltype(params)>(params)...);
+    parse_file(buffer.name(), [&](ParsedBuffer data) {
+        buffer.reload(std::move(data));
     });
     buffer.flags() &= ~Buffer::Flags::New;
 }
@@ -179,12 +182,12 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
     {
         buffer->flags() |= Buffer::Flags::NoUndo | flags;
         buffer->values().clear();
-        buffer->reload({StringData::create({"\n"})}, ByteOrderMark::None, EolFormat::Lf, {InvalidTime, {}, {}});
+        buffer->reload({StringData::create({"\n"})});
     }
     else
         buffer = buffer_manager.create_buffer(
             std::move(name), flags | Buffer::Flags::Fifo | Buffer::Flags::NoUndo,
-            {StringData::create({"\n"})}, ByteOrderMark::None, EolFormat::Lf, {InvalidTime, {}, {}});
+            {StringData::create({"\n"})});
 
     struct FifoWatcher : FDWatcher
     {

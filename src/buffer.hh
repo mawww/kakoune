@@ -48,9 +48,35 @@ constexpr auto enum_desc(Meta::Type<ByteOrderMark>)
     });
 }
 
-class Buffer;
+enum class EolAtEof
+{
+    Present,
+    Missing,
+    EmptyFile,
+};
+
+using BufferLines = Vector<StringDataPtr, MemoryDomain::BufferContent>;
 
 constexpr timespec InvalidTime = { -1, -1 };
+
+struct ParsedBuffer {
+    BufferLines lines;
+    ByteOrderMark bom;
+    EolFormat eolformat;
+    EolAtEof eol_at_eof;
+    FsStatus fs_status;
+
+    ParsedBuffer(BufferLines lines,
+                 ByteOrderMark bom = ByteOrderMark::None,
+                 EolFormat eolformat = EolFormat::Lf,
+                 EolAtEof eol_at_eof = EolAtEof::Present,
+                 FsStatus fs_status = {InvalidTime, {}, {}})
+        : lines(std::move(lines)), bom(bom), eolformat(eolformat), eol_at_eof(eol_at_eof),
+          fs_status(fs_status) {}
+    ParsedBuffer(std::initializer_list<StringDataPtr>&& lines) : ParsedBuffer(BufferLines{lines}) {}
+};
+
+class Buffer;
 
 // A BufferIterator permits to iterate over the characters of a buffer
 class BufferIterator
@@ -99,7 +125,6 @@ private:
     StringView m_line;
 };
 
-using BufferLines = Vector<StringDataPtr, MemoryDomain::BufferContent>;
 using BufferRange = Range<BufferCoord>;
 
 // A Buffer is a in-memory representation of a file
@@ -125,10 +150,7 @@ public:
 
     enum class HistoryId : size_t { First = 0, Invalid = (size_t)-1 };
 
-    Buffer(String name, Flags flags, BufferLines lines,
-           ByteOrderMark bom = ByteOrderMark::None,
-           EolFormat eolformat = EolFormat::Lf,
-           FsStatus fs_status = {InvalidTime, {}, {}});
+    Buffer(String name, Flags flags, ParsedBuffer data);
     Buffer(const Buffer&) = delete;
     Buffer& operator= (const Buffer&) = delete;
     ~Buffer();
@@ -208,7 +230,7 @@ public:
     void run_hook_in_own_context(Hook hook, StringView param,
                                  String client_name = {});
 
-    void reload(BufferLines lines, ByteOrderMark bom, EolFormat eolformat, FsStatus status);
+    void reload(ParsedBuffer new_data);
 
     void check_invariant() const;
 
@@ -256,6 +278,8 @@ public:
     const Vector<HistoryNode>& history() const { return m_history; }
     const UndoGroup& current_undo_group() const { return m_current_undo_group; }
 
+    EolAtEof eol_at_eof() const { return m_eol_at_eof; }
+
 private:
     void on_option_changed(const Option& option) override;
 
@@ -300,6 +324,7 @@ private:
 
     Vector<Change, MemoryDomain::BufferMeta> m_changes;
 
+    EolAtEof m_eol_at_eof;
     FsStatus m_fs_status;
 
     // Values are just data holding by the buffer, they are not part of its

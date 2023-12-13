@@ -1,0 +1,1 @@
+insertion makes the buffer non-empty, so we add an EOL at EOF

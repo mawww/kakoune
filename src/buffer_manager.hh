@@ -17,7 +17,7 @@ public:
 
     ~BufferManager();
 
-    Buffer* create_buffer(String name, Buffer::Flags flags, BufferLines lines, ByteOrderMark bom, EolFormat eolformat, FsStatus fs_status);
+    Buffer* create_buffer(String name, Buffer::Flags flags, ParsedBuffer data);
 
     void delete_buffer(Buffer& buffer);
 
