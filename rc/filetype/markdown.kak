@@ -93,7 +93,7 @@ add-highlighter shared/markdown/inline/text/ regex "\H( {2,})$" 1:+r@meta
 
 define-command markdown-load-languages -params 1 %{
     evaluate-commands -draft %{ try %{
-        execute-keys "%arg{1}s```\h*\{?[.=]?\K\w+<ret>" # }
+        execute-keys "%arg{1}1s```\h*\{?[.=]?(\w+)\}?<ret>"
         evaluate-commands -itersel %{ try %{
             require-module %val{selection}
             add-highlighter "shared/markdown/codeblock/%val{selection}" region -match-capture "^(\h*)```\h*(%val{selection}\b|\{[.=]?%val{selection}\})" ^(\h*)``` regions

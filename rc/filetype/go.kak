@@ -105,20 +105,20 @@ define-command -hidden go-indent-on-new-line %~
         try %{ execute-keys -draft <semicolon>K<a-&> }
         # cleanup trailing white spaces on the previous line
         try %{ execute-keys -draft kx s \h+$ <ret>d }
-        try %{
+        try %<
             try %{ # line comment
                 execute-keys -draft kx s ^\h*// <ret>
             } catch %{ # block comment
                 execute-keys -draft <a-?> /\* <ret> <a-K>\*/<ret>
             }
-        } catch %{
+        > catch %<
             # indent after lines with an unclosed { or (
             try %< execute-keys -draft [c[({],[)}] <ret> <a-k> \A[({][^\n]*\n[^\n]*\n?\z <ret> j<a-gt> >
             # indent after a switch's case/default statements
             try %[ execute-keys -draft kx <a-k> ^\h*(case|default).*:$ <ret> j<a-gt> ]
             # deindent closing brace(s) when after cursor
             try %[ execute-keys -draft x <a-k> ^\h*[})] <ret> gh / [})] <ret> m <a-S> 1<a-&> ]
-        }
+        >
     =
 ~
 
