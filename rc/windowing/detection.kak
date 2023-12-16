@@ -63,12 +63,17 @@ define-command with-option -params 3.. -docstring %{
     evaluate-commands -save-regs s %{
         evaluate-commands set-register s %exp{%%opt{%arg{1}}}
         set-option current %arg{1} %arg{2}
-        evaluate-commands %sh{
-            shift 2
-            for arg
-            do
-                printf "'%s' " "$(printf %s "$arg" | sed "s/'/''/g")"
-            done
+        try %{
+            evaluate-commands %sh{
+                shift 2
+                for arg
+                do
+                    printf "'%s' " "$(printf %s "$arg" | sed "s/'/''/g")"
+                done
+            }
+        } catch %{
+            set-option current %arg{1} %reg{s}
+            fail "with-option: %val{error}"
         }
         set-option current %arg{1} %reg{s}
     }
