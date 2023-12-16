@@ -49,7 +49,6 @@ private:
     BufferCoord m_anchor;
     BufferCoordAndTarget m_cursor;
 };
-;
 
 struct Selection : BasicSelection
 {

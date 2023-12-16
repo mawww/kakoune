@@ -16,7 +16,7 @@ define-command wezterm-terminal-impl -hidden -params 2.. %{
 }
 
 define-command wezterm-terminal-vertical -params 1.. -docstring '
-wezterm-terminal-vertical <program> [<arguments>] [<arguments>]: create a new terminal as a wezterm pane
+wezterm-terminal-vertical <program> [<arguments>]: create a new terminal as a wezterm pane
 The current pane is split into two, top and bottom
 The program passed as argument will be executed in the new terminal' \
 %{
@@ -66,6 +66,5 @@ If no client is passed then the current one is used' \
 complete-command -menu wezterm-focus client
 
 alias global focus wezterm-focus
-alias global terminal wezterm-terminal-vertical
 
 }

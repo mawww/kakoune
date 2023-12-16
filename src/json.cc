@@ -20,7 +20,7 @@ String to_json(StringView str)
     for (auto it = str.begin(), end = str.end(); it != end; )
     {
         auto next = std::find_if(it, end, [](char c) {
-            return c == '\\' or c == '"' or (c >= 0 and c <= 0x1F);
+            return c == '\\' or c == '"' or (unsigned char) c <= 0x1F;
         });
 
         res += StringView{it, next};
@@ -28,7 +28,7 @@ String to_json(StringView str)
             break;
 
         char buf[7] = {'\\', *next, 0};
-        if (*next >= 0 and *next <= 0x1F)
+        if ((unsigned char) *next <= 0x1F)
             format_to(buf, "\\u{:04}", hex(*next));
 
         res += buf;

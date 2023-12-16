@@ -87,7 +87,7 @@ compiler := $(shell $(CXX) --version)
 ifneq (,$(findstring clang,$(compiler)))
     CXXFLAGS += -frelaxed-template-template-args -Wno-ambiguous-reversed-operator
 else ifneq (,$(findstring g++,$(compiler)))
-    CXXFLAGS += -Wno-init-list-lifetime
+    CXXFLAGS += -Wno-init-list-lifetime -Wno-stringop-overflow
 endif
 
 all : kak

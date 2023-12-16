@@ -25,7 +25,7 @@ define-command screen-terminal-impl -hidden -params 3.. %{
 }
 
 define-command screen-terminal-vertical -params 1.. -docstring '
-screen-terminal-vertical <program> [<arguments>] [<arguments>]: create a new terminal as a screen pane
+screen-terminal-vertical <program> [<arguments>]: create a new terminal as a screen pane
 The current pane is split into two, left and right
 The program passed as argument will be executed in the new terminal' \
 %{
@@ -71,6 +71,5 @@ If no client is passed then the current one is used' \
 complete-command -menu screen-focus client 
 
 alias global focus screen-focus
-alias global terminal screen-terminal-vertical
 
 }

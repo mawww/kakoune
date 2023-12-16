@@ -31,6 +31,8 @@ struct RankedMatch
 
     explicit operator bool() const { return m_matches; }
 
+    void set_input_sequence_number(size_t i) { m_input_sequence_number = i; }
+
 private:
     template<typename TestFunc>
     RankedMatch(StringView candidate, StringView query, TestFunc test);
@@ -54,6 +56,7 @@ private:
     Flags m_flags = Flags::None;
     int m_word_boundary_match_count = 0;
     int m_max_index = 0;
+    size_t m_input_sequence_number = 0;
 };
 
 }

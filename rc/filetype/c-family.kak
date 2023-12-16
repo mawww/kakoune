@@ -213,10 +213,10 @@ evaluate-commands %sh{
             add-highlighter shared/$ft/comment region /\\* \\*/ fill comment
             add-highlighter shared/$ft/line_comment region // (?<!\\\\)(?=\\n) fill comment
             add-highlighter shared/$ft/disabled region -recurse "#\\h*if(?:def)?" ^\\h*?#\\h*if\\h+(?:0|FALSE)\\b "#\\h*(?:else|elif|endif)" fill comment
-            add-highlighter shared/$ft/macro region %{^\\h*?\\K#} %{(?<!\\\\)(?=\\n)|(?=//)} group
-
-            add-highlighter shared/$ft/macro/ fill meta
-            add-highlighter shared/$ft/macro/ regex ^\\h*#\\h*include\\h+(\\S*) 1:module
+            add-highlighter shared/$ft/ifdef region %{^\\h*\\K#\\h*(?:define|elif|if)(?=\\h)} %{(?<!\\\\)(?=\\s)|(?=//)} fill meta
+            add-highlighter shared/$ft/macro region %{^\\h*#} %{(?<!\\\\)(?=\\n)|(?=//)} group
+            add-highlighter shared/$ft/macro/ regex ^\\h*(#\\h*\\S*) 1:meta
+            add-highlighter shared/$ft/macro/ regex ^\\h*#\\h*include\\h+(<[^>]*>|"(?:[^"\\\\]|\\\\.)*") 1:module
             add-highlighter shared/$ft/macro/ regex /\\*.*?\\*/ 0:comment
 	EOF
     done

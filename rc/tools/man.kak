@@ -63,7 +63,10 @@ define-command -hidden -params ..3 man-impl %{ evaluate-commands %sh{
 
 define-command -params ..1 \
     -shell-script-candidates %{
-        find /usr/share/man/ $(printf %s "${MANPATH}" | sed 's/:/ /') -name '*.[1-8]*' | sed 's,^.*/\(.*\)\.\([1-8][a-zA-Z]*\).*$,\1(\2),'
+        find /usr/share/man/ $(printf %s "${MANPATH}" |
+            sed 's/:/ /') -name '*.[1-8]*' |
+            sed 's,^.*/\(.*\)\.\([1-8][a-zA-Z]*\).*$,\1(\2),' |
+            sort
     } \
     -docstring %{
         man [<page>]: manpage viewer wrapper

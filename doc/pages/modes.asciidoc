@@ -67,11 +67,6 @@ as scrolling or centering the main selection cursor.
 
 See view commands <<keys#view-commands,`:doc keys view-commands`>>.
 
-=== Menu mode
-
-Menu mode is entered when a menu is displayed with the `menu` command.
-Mappings are used to filter and select intended items.
-
 === Prompt mode
 
 Mode entered with `:`, `/` or the `prompt` command. During prompt mode a
