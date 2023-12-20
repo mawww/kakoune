@@ -322,8 +322,8 @@ using the built-in `:doc` command.
    | " |_. .---,    temporary search, one could make this primitive save the
    `---'  `| _ |    pattern to a different register, to preserve the default one,
            `---'    e.g., `"m*` to save the pattern to the `m` register, or even
-                    `"_*` to save the pattern to a "null" register, which not
-                    store anything written to it.
+                    `"_*` to save the pattern to a "null" register, which does 
+                    not store anything written to it.
 
                     ==[ CAPTURE GROUPS
 
