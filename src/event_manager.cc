@@ -84,17 +84,17 @@ bool EventManager::handle_next_events(EventMode mode, sigset_t* sigmask, bool bl
             continue;
 
         const int fd = watcher->fd();
-        if (fd != -1)
-        {
-            max_fd = std::max(fd, max_fd);
-            auto events = watcher->events();
-            if (events & FdEvents::Read)
-                FD_SET(fd, &rfds);
-            if (events & FdEvents::Write)
-                FD_SET(fd, &wfds);
-            if (events & FdEvents::Except)
-                FD_SET(fd, &efds);
-        }
+        if (fd == -1)
+            continue;
+
+        max_fd = std::max(fd, max_fd);
+        auto events = watcher->events();
+        if (events & FdEvents::Read)
+            FD_SET(fd, &rfds);
+        if (events & FdEvents::Write)
+            FD_SET(fd, &wfds);
+        if (events & FdEvents::Except)
+            FD_SET(fd, &efds);
     }
 
     bool with_timeout = false;
