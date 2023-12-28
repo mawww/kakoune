@@ -4,35 +4,39 @@
 # by parsing the `**/*.asiidoc` files from the repository.
 #
 # Dependencies:
-# * Relatively recent Python 3 - must support `typing.Optional`.
+# * Python 3
 # * `xdg-open` for opening the final result in a web browser.
 # * `antora` - a static documentation web site generator,
-#     see: https://antora.org
+#     https://docs.antora.org/antora/latest
 #
 # Usage:
 # ```console
 # $ ./contrib/gendocs.py
 # ```
 #
-# It should open the generated web site in a browser.
+# After running it should open the generated web site in a browser.
+#
 
 
+from dataclasses import dataclass
+from typing import Optional
 import atexit
 import glob
-import linksfixer
+import itertools
 import os
 import pathlib
+import re
 import shutil
 import subprocess
 
-# Get the script directory
+# Get the script directory.
 script_dir = os.path.dirname(os.path.realpath(__file__))
 
-# Switch to the projects root dir
+# Switch to the projects root dir.
 os.chdir(os.path.join(script_dir, ".."))
 
 
-# Idempotency
+# Revert the changes upon script exit.
 def cleanup():
     try:
         shutil.move("test/tests.asciidoc", "test/README.asciidoc")
@@ -48,55 +52,129 @@ def cleanup():
         pass
 
 
-# Set up cleanup to be executed on script exit
 atexit.register(cleanup)
 
-# Antora does not like missing links
+
+# Antora fails if the repo contains broken symbolic links.
 shutil.rmtree("libexec", ignore_errors=True)
 
-# Canonical Antora paths
+# Canonical Antora paths.
+# See: https://docs.antora.org/antora/latest/standard-directories.
+#      https://docs.antora.org/antora/latest/root-module-directory.
 os.makedirs("modules/ROOT/images", exist_ok=True)
 os.makedirs("modules/ROOT/pages", exist_ok=True)
 
-# Better naming
+# The file name is used for navigation links.
+# Update so it reflects the content.
 shutil.move("test/README.asciidoc", "test/tests.asciidoc")
 
-# The main page
+# Update the filename so it reflects the content.
+# The filename is used for navigation links.
 shutil.move("README.asciidoc", "index.asciidoc")
 
-# We want this in the documentation as well
+# A useful documentation page.
+# Add the `.asciidoc` extension to include it into the result.
 shutil.move("VIMTOKAK", "VIMTOKAK.asciidoc")
 
-# Put necessary images to the Antora canonical directory
+# Put necessary images to the Antora canonical directory.
+# See: https://docs.antora.org/antora/latest/images-directory.
 for gif_file in glob.glob("doc/*.gif"):
     shutil.copy(gif_file, "modules/ROOT/images/")
 
-# Create directories structure matching the project's original structure
-for asciidoc_file in glob.glob("**/*.asciidoc", recursive=True):
-    file_dir = os.path.dirname(asciidoc_file)
-    page_dir = os.path.join("modules/ROOT/pages", file_dir)
+
+# Fix links according to the Antora specification.
+# See: https://docs.antora.org/antora/latest/page/xref.
+def fix_links(path):
+    @dataclass
+    class Link:
+        path: Optional[str]
+        file: Optional[str]
+        fragment: Optional[str]
+        title: str
+
+        def __init__(self, path, file, fragment, title):
+            self.path = path
+            self.file = file
+            self.fragment = fragment
+            self.title = title
+
+    def dropwhile(predicate, string):
+        return "".join(itertools.dropwhile(predicate, string))
+
+    def dropwhileright(predicate, string):
+        return "".join(reversed(list(itertools.dropwhile(predicate, reversed(string)))))
+
+    def takewhile(predicate, string):
+        return "".join(itertools.takewhile(predicate, string))
+
+    def untag(string):
+        no_opening = dropwhile(lambda c: c == "<", string)
+        no_closing = dropwhileright(lambda c: c == ">", no_opening)
+        return no_closing
+
+    def parse(string):
+        untagged = untag(string)
+        prefix, title = untagged.split(",", 1)
+        title = title.strip()
+        fragment = dropwhile(lambda c: c != "#", prefix)
+        fragment = fragment if fragment else None
+        fragmentless = takewhile(lambda c: c != "#", prefix)
+        segments = fragmentless.split("/")
+        path, file = (
+            ("/".join(segments[:-1]), segments[-1])
+            if "/" in fragmentless
+            else (None, fragmentless)
+        )
+        return Link(path, file, fragment, title)
+
+    def render(link):
+        if link.path and link.file and link.fragment == "#":
+            return f"xref:{link.path}/{link.file}.adoc[{link.title}]"
+        elif link.path and link.file and link.fragment:
+            return f"xref:{link.path}/{link.file}.adoc{link.fragment}[{link.title}]"
+        elif not link.path and link.file and link.fragment == "#":
+            return f"xref:./{link.file}.adoc[{link.title}]"
+        elif not link.path and link.file and link.fragment:
+            return f"xref:./{link.file}.adoc{link.fragment}[{link.title}]"
+        elif not link.path and link.file and not link.fragment:
+            return f"<<{link.file},{link.title}>>"
+        else:
+            raise RuntimeError(f"Failed to render link: {link}")
+
+    def process(m):
+        string = m.group(0)
+        return render(parse(string)) if "," in string else string
+
+    content = None
+
+    with open(path, "r") as file:
+        content = file.read()
+
+    # Fix image links according the Antora specification.
+    # See: https://docs.antora.org/antora/latest/page/image-resource-id-examples.
+    content = content.replace("image::doc/", "image::")
+
+    with open(path, "w") as file:
+        file.write(re.sub(r"<<[^>]+>>", process, content))
+
+
+for source in glob.glob("**/*.asciidoc", recursive=True):
+    # Create directories structure matching the project's original structure.
+    # See: https://docs.antora.org/antora/latest/pages-directory.
+    page_dir = os.path.join("modules/ROOT/pages", os.path.dirname(source))
     os.makedirs(page_dir, exist_ok=True)
 
-    # Take all `.asciidoc` files and put them into Antora's canonical directory
-    # with the canonical `.adoc` file extension
-    adoc = pathlib.Path(asciidoc_file).stem + ".adoc"
-    dest = os.path.join(page_dir, adoc)
-    shutil.copy(asciidoc_file, dest)
+    # Copy the `asciidoc` file into the Antora `pages` directory
+    # with the mandatory `.adoc` filename extension.
+    adoc = os.path.join(page_dir, pathlib.Path(source).stem + ".adoc")
+    shutil.copy(source, adoc)
 
-# Fix images
-for adoc_file in glob.glob("modules/ROOT/pages/**/*.adoc", recursive=True):
-    with open(adoc_file, "r") as f:
-        content = f.read()
-    content = content.replace("image::doc/", "image::")
-    with open(adoc_file, "w") as f:
-        f.write(content)
-
-# Fix links using another Python script.
-for adoc in glob.glob("modules/ROOT/pages/**/*.adoc", recursive=True):
-    linksfixer.fix_file(adoc)
+    fix_links(adoc)
 
 
-# Crafted manually from all the files at the time of writing the script.
+# A navigation file for the sidebar.
+# See: https://docs.antora.org/antora/latest/navigation/single-list.
+#
 # TODO: Generate automatically.
 nav_content = """
 * xref:index.adoc[Getting Started]
@@ -134,7 +212,8 @@ nav_content = """
 with open("modules/ROOT/nav.adoc", "w") as f:
     f.write(nav_content)
 
-# Antora's component description file
+# Antora component description file.
+# See: https://docs.antora.org/antora/latest/component-version-descriptor.
 antora_yml_content = """
 name: Kakoune
 nav:
@@ -146,7 +225,8 @@ version: latest
 with open("antora.yml", "w") as f:
     f.write(antora_yml_content)
 
-# Antora playbook file
+# Antora playbook file.
+# See: https://docs.antora.org/antora/latest/playbook.
 antora_playbook_content = """
 asciidoc:
   attributes:
@@ -210,6 +290,8 @@ with open("antora-playbook.yml", "w") as f:
     f.write(antora_playbook_content)
 
 # Finally, generate the documentation,
-# will saved to the output directory specified in the antora-playbook.yml
+# results will be saved to the output directory
+# as specified in the `antora-playbook.yml`.
 subprocess.run(["antora", "generate", "antora-playbook.yml"])
+
 subprocess.run(["xdg-open", "./build/Kakoune/latest/index.html"])
