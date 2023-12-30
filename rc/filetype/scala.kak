@@ -4,7 +4,7 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate .*[.](scala) %{
+hook global BufCreate .*[.](scala|sbt|sc) %{
     set-option buffer filetype scala
 }
 
