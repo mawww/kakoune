@@ -1,10 +1,10 @@
-ui_out -ignore 4
+ui_out -ignore 7
 ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "i" ] }'
 ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "a" ] }'
-ui_out -ignore 4
+ui_out -ignore 8
 ui_in '{ "jsonrpc": "2.0", "method": "mouse_press", "params": [ "left", 0, 2 ] }'
 ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "b" ] }'
-ui_out -ignore 4
+ui_out -ignore 8
 ui_in '{ "jsonrpc": "2.0", "method": "mouse_release", "params": [ "left", 0, 4 ] }'
 ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "c<esc>" ] }'
 ui_out -ignore 1
