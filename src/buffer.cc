@@ -219,40 +219,55 @@ void Buffer::reload(BufferLines lines, ByteOrderMark bom, EolFormat eolformat, F
                       [](const StringDataPtr& lhs, const StringDataPtr& rhs)
                       { return lhs->strview() == rhs->strview(); });
 
-        auto it = m_lines.begin();
+        auto read_it = m_lines.begin();
+        auto write_it = m_lines.begin();
         auto new_it = lines.begin();
-        for (auto& [op, len] : diff)
+        for (auto [op, len] : diff)
         {
+            kak_assert(read_it >= write_it);
             if (op == DiffOp::Keep)
             {
-                it += len;
+                if (read_it != write_it)
+                    std::move(read_it, read_it + len, write_it);
+                write_it += len;
+                read_it += len;
                 new_it += len;
             }
             else if (op == DiffOp::Add)
             {
-                const LineCount cur_line = (int)(it - m_lines.begin());
-
+                const LineCount cur_line = (int)(write_it - m_lines.begin());
                 for (LineCount line = 0; line < len; ++line)
                     m_current_undo_group.push_back({Modification::Insert, cur_line + line, *(new_it + (int)line)});
-
                 m_changes.push_back({Change::Insert, cur_line, cur_line + len});
-                m_lines.insert(it, new_it, new_it + len);
-                it = m_lines.begin() + (int)(cur_line + len);
+
+                if (read_it != write_it)
+                {
+                    auto count = std::min(len, static_cast<int>(read_it - write_it));
+                    write_it = std::copy(new_it, new_it + count, write_it);
+                    new_it += count;
+                    if (len == count)
+                        continue;
+                    len -= count;
+                }
+
+                auto read_pos = read_it - m_lines.begin();
+                write_it = m_lines.insert(write_it, new_it, new_it + len) + len;
+                read_it = m_lines.begin() + read_pos + len;
                 new_it += len;
             }
             else if (op == DiffOp::Remove)
             {
-                const LineCount cur_line = (int)(it - m_lines.begin());
-
+                const LineCount cur_line = (int)(write_it - m_lines.begin());
                 for (LineCount line = len-1; line >= 0; --line)
                     m_current_undo_group.push_back({
                         Modification::Erase, cur_line + line,
                         m_lines.get_storage(cur_line + line)});
 
-                it = m_lines.erase(it, it + len);
+                read_it += len;
                 m_changes.push_back({ Change::Erase, cur_line, cur_line + len });
             }
         }
+        m_lines.erase(write_it, m_lines.end());
     }
 
     commit_undo_group();

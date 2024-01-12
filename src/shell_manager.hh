@@ -65,7 +65,7 @@ public:
     Shell spawn(StringView cmdline,
                 const Context& context,
                 bool open_stdin,
-                const ShellContext& shell_complete = {});
+                const ShellContext& shell_context = {});
 
     Vector<String> get_val(StringView name, const Context& context) const;
 

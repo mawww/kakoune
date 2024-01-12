@@ -165,7 +165,7 @@ define-command -params 1.. \
                   sub send_flags {
                       my $flush = shift;
                       if (not defined $line) { return; }
-                      my $text = substr($sha,1,8) . " " . $dates{$sha} . " " . $authors{$sha};
+                      my $text = substr($sha,0,7) . " " . $dates{$sha} . " " . $authors{$sha};
                       $text =~ s/~/~~/g;
                       for ( my $i = 0; $i < $count; $i++ ) {
                           $flags .= " %~" . ($line+$i) . "|$text~";
