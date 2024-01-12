@@ -1,8 +1,9 @@
 *.o
-.*.d
+*.d
 *.pyc
 *.1-r
 .*.kak.*
+*.tar*
 src/kak
 src/kak.debug
 src/kak.debug.san_*
