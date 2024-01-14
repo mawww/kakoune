@@ -52,7 +52,7 @@ define-command patch -params .. -docstring %{
                 # Since registers are never empty, we get an empty arg even if
                 # there were no args. This does no harm because we pass it to
                 # a shell where it expands to nothing.
-                eval set -- $kak_quoted_reg_a
+                eval set -- "$kak_quoted_reg_a"
 
                 perl "${kak_reg_f%/*}/patch-range.pl" $min_line $max_line "$@" ||
                     echo >$kak_command_fifo "set-register e fail 'patch: failed to apply selections, see *debug* buffer'"
