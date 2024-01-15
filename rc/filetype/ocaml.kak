@@ -14,6 +14,7 @@ hook global BufCreate .*\.(ml|mli|mll|mly)$ %{
 hook global WinSetOption filetype=ocaml %{
     require-module ocaml
     set-option window static_words %opt{ocaml_static_words}
+    hook window InsertChar -group ocaml-insert '\*' ocaml-insert-closing-comment-bracket
 }
 
 hook -group ocaml-highlight global WinSetOption filetype=ocaml %{
@@ -102,11 +103,9 @@ define-command ocaml-alternative-file -docstring 'Switch between .ml and .mli fi
 #
 # Recognize when the user is trying to commence a comment when they type `(*` and
 # then automatically insert `*)` on behalf of the user. A small convenience.
-hook global WinSetOption filetype=ocaml %{
-    hook window InsertChar '\*' %{
-        try %{
-            execute-keys -draft 'HH<a-k>\(\*<ret>'
-            execute-keys '  *)<left><left><left>'
-        }
+define-command -hidden ocaml-insert-closing-comment-bracket %{
+    try %{
+        execute-keys -draft 'HH<a-k>\(\*<ret>'
+        execute-keys '  *)<left><left><left>'
     }
 }
