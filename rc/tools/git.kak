@@ -52,6 +52,7 @@ hook -group git-show-branch-highlight global WinSetOption filetype=git-show-bran
 }
 
 declare-option -hidden line-specs git_blame_flags
+declare-option -hidden str git_blame
 declare-option -hidden line-specs git_diff_flags
 declare-option -hidden int-list git_hunk_list
 
@@ -61,8 +62,8 @@ define-command -params 1.. \
         All the optional arguments are forwarded to the git utility
         Available commands:
             add
-            apply (alias for "patch git apply")
-            blame (toggle blame annotations)
+            apply       - alias for "patch git apply"
+            blame       - toggle blame annotations
             checkout
             commit
             diff
@@ -76,6 +77,7 @@ define-command -params 1.. \
             reset
             rm
             show
+            show-blamed - show the commit that added the line at cursor
             show-branch
             show-diff
             status
@@ -98,6 +100,7 @@ define-command -params 1.. \
             reset \
             rm \
             show \
+            show-blamed \
             show-branch \
             show-diff \
             status \
@@ -146,7 +149,10 @@ define-command -params 1.. \
         printf %s "evaluate-commands -try-client '$kak_opt_docsclient' %{
                   edit! -fifo ${output} *git*
                   set-option buffer filetype '${filetype}'
-                  hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname ${output}) } }
+                  hook -always -once buffer BufCloseFifo .* %{
+                      nop %sh{ rm -r $(dirname ${output}) }
+                      ${on_close_fifo}
+                  }
                   ${map_diff_goto_source}
               }"
     }
@@ -154,6 +160,7 @@ define-command -params 1.. \
     hide_blame() {
         printf %s "
             set-option buffer=$kak_bufname git_blame_flags $kak_timestamp
+            set-option buffer=$kak_bufname git_blame ''
             remove-highlighter window/git-blame
         "
     }
@@ -168,9 +175,16 @@ define-command -params 1.. \
             printf %s "evaluate-commands -client '$kak_client' %{
                       try %{ add-highlighter window/git-blame flag-lines Information git_blame_flags }
                       set-option buffer=$kak_bufname git_blame_flags '$kak_timestamp'
+                      set-option buffer=$kak_bufname git_blame ''
                   }" | kak -p ${kak_session}
                   git blame "$@" --incremental ${kak_buffile} | perl -wne '
                   use POSIX qw(strftime);
+                  sub quote {
+                      my $SQ = "'\''";
+                      my $token = shift;
+                      $token =~ s/$SQ/$SQ$SQ/g;
+                      return "$SQ$token$SQ";
+                  }
                   sub send_flags {
                       my $flush = shift;
                       if (not defined $line) { return; }
@@ -185,9 +199,11 @@ define-command -params 1.. \
                           return
                       }
                       open CMD, "|-", "kak -p $ENV{kak_session}";
-                      print CMD "set-option -add buffer=$ENV{kak_bufname} git_blame_flags $flags";
+                      print CMD "set-option -add buffer=$ENV{kak_bufname} git_blame_flags $flags;";
+                      print CMD "set-option -add buffer=$ENV{kak_bufname} git_blame " . quote $raw_blame;
                       close(CMD);
                       $flags = "";
+                      $raw_blame = "";
                       $last_sent = $now;
                   }
                   if (m/^([0-9a-f]+) ([0-9]+) ([0-9]+) ([0-9]+)/) {
@@ -198,8 +214,9 @@ define-command -params 1.. \
                   }
                   if (m/^author /) { $authors{$sha} = substr($_,7) }
                   if (m/^author-time ([0-9]*)/) { $dates{$sha} = strftime("%F", localtime $1) }
+                  $raw_blame .= $_;
                   END { send_flags(1); }'
-        ) > /dev/null 2>&1 < /dev/null &
+          ) > /dev/null 2>&1 < /dev/null &
     }
 
     run_git_cmd() {
@@ -359,6 +376,140 @@ define-command -params 1.. \
               } }"
     }
 
+    show_blamed() {
+        echo >${kak_command_fifo} "echo -to-file ${kak_response_fifo} -- %opt{git_blame}"
+        blame_info=$(cat < ${kak_response_fifo})
+        cursor_column=${kak_cursor_column}
+        cursor_line=${kak_cursor_line}
+        if [ -z "$blame_info" ] && [ "${kak_opt_filetype%%-*}" = git ]; then {
+            printf >${kak_command_fifo} %s '
+                evaluate-commands -draft %{
+                    try %{
+                        execute-keys <a-l><semicolon><a-?>^commit<ret><a-semicolon>
+                    } catch %{
+                        # Missing commit line, assume it is an uncommitted change.
+                        execute-keys <a-l><semicolon><a-?>\A<ret><a-semicolon>
+                    }
+                    try %{
+                        diff-parse BEGIN %{
+                            $version = "-";
+                        } END %{
+                            if ($diff_line_text !~ m{^[ -]}) {
+                                print "set-register e fail recursive blame only works on context or deleted lines";
+                            } else {
+                                if (not defined $commit) {
+                                    $commit = "HEAD";
+                                } else {
+                                    $commit = "$commit~" if $diff_line_text =~ m{^[- ]};
+                                }
+                                printf "echo -to-file '${kak_response_fifo}' -quoting shell %s %s %d %d",
+                                        $commit, quote($file), $file_line, ('$cursor_column' - 1);
+                            }
+                        }
+                    } catch %{
+                        echo -to-file '${kak_response_fifo}' -quoting shell -- %val{error}
+                    }
+                }
+            '
+            eval set -- "$(cat ${kak_response_fifo})"
+            if [ $# -eq 1 ]; then
+                echo fail -- "$(kakquote "$1")"
+                exit
+            fi
+            starting_commit=$1
+            file=$2
+            cursor_line=$3
+            cursor_column=$4
+            blame_info=$(git blame --porcelain $starting_commit -L"$cursor_line,$cursor_line" -- "$file")
+        } elif [ -z "$blame_info" ]; then {
+            blame_info=$(git blame --porcelain -L"$cursor_line,$cursor_line" -- "${kak_buffile}")
+        } fi
+        eval "$(printf %s "$blame_info" | buffile="$kak_buffile" cursor_line=$cursor_line cursor_column=$cursor_column perl -wne '
+            BEGIN {
+                use POSIX qw(strftime);
+                my $SQ = "'\''";
+                sub quote {
+                    my $token = shift;
+                    $token =~ s/$SQ/$SQ$SQ/g;
+                    return "$SQ$token$SQ";
+                }
+                sub shellquote {
+                    my $token = shift;
+                    $token =~ s/$SQ/$SQ\\$SQ$SQ/g;
+                    return "$SQ$token$SQ";
+                }
+                sub perlquote {
+                    my $token = shift;
+                    $token =~ s/\\/\\\\/g;
+                    $token =~ s/$SQ/\\$SQ/g;
+                    return "$SQ$token$SQ";
+                }
+                $target = $ENV{"cursor_line"};
+            }
+            chomp;
+            if (m/^([0-9a-f]+) ([0-9]+) ([0-9]+) ([0-9]+)/) {
+                if ($done) {
+                    last;
+                }
+                $sha = $1;
+                $old_line = $2;
+                $new_line = $3;
+                $count = $4;
+                if ($new_line <= $target and $target < $new_line + $count) {
+                    $old_line += $target - $new_line;
+                    $done = 1;
+                }
+            }
+            if (m/^filename /) { $old_filenames{$sha} = substr($_,9) }
+            if (m/^author /) { $authors{$sha} = substr($_,7) }
+            if (m/^author-time ([0-9]*)/) { $dates{$sha} = strftime("%F", localtime $1) }
+            if (m/^summary /) { $summaries{$sha} = substr($_,8) }
+            END {
+                if (not defined $sha) {
+                    print "echo fail missing blame info";
+                    exit;
+                }
+                if (not $done) {
+                    print "echo \"fail failed to line in blame annotations (blame still loading?)\"";
+                    exit;
+                }
+                $info = "{Information}{\\}";
+                if ($sha =~ m{^0+$}) {
+                    $old_filename = $ENV{"buffile"};
+                    $old_filename = substr $old_filename, length($ENV{"PWD"}) + 1;
+                    $show_diff = "diff HEAD";
+                    $info .= "Not committed yet";
+                } else {
+                    $old_filename = $old_filenames{$sha};
+                    $author = $authors{$sha};
+                    $date = $dates{$sha};
+                    $summary = $summaries{$sha};
+                    $show_diff = "show $sha";
+                    $info .= "$date $author \"$summary\"";
+                }
+                $on_close_fifo = "
+                    evaluate-commands -save-regs c -draft %{
+                        execute-keys <percent>
+                        diff-parse BEGIN %{
+                            \$in_file = " . perlquote($old_filename) . ";
+                            \$in_file_line = $old_line;
+                        } END %{
+                            print \"execute-keys -client $ENV{kak_client} \${diff_line}g<a-h>$ENV{cursor_column}l;\";
+                            printf qq(evaluate-commands -client $ENV{kak_client} %%{
+                                hook -once window NormalIdle .* %%{
+                                    execute-keys vv
+                                    echo -markup -- %s
+                                }
+                            };), " . perlquote(quote($info)) . ";
+                        }
+                    }
+                ";
+                printf "on_close_fifo=%s show_git_cmd_output %s",
+                    shellquote($on_close_fifo), $show_diff;
+            }
+        ')"
+    }
+
     case "$1" in
         apply)
             shift
@@ -375,6 +526,10 @@ define-command -params 1.. \
             ;;
         hide-blame)
             hide_blame
+            ;;
+        show-blamed)
+            shift
+            show_blamed
             ;;
         show-diff)
             echo 'try %{ add-highlighter window/git-diff flag-lines Default git_diff_flags }'
