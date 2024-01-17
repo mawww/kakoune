@@ -16,22 +16,17 @@ define-command -params ..1 \
     -shell-script-candidates %{
         realpath() { ( cd "$(dirname "$1")"; printf "%s/%s\n" "$(pwd -P)" "$(basename "$1")" ) }
         eval "set -- $kak_quoted_opt_ctagsfiles"
-        files=$(
-            for candidate in "$@"; do
-                [ -f "$candidate" ] && realpath "$candidate"
-            done |
-                awk '!x[$0]++; # remove duplicates
-                     END { if (length(x) == 1) { exit 1; } }'
-        )
-        [ $? -eq 1 ] && sort=cat || sort=sort
-        printf %s\\n "$files" |
+        for candidate in "$@"; do
+            [ -f "$candidate" ] && realpath "$candidate"
+        done | awk '!x[$0]++;' | # remove duplicates
         while read -r tags; do
             namecache="${tags%/*}/.kak.${tags##*/}.namecache"
             if [ -z "$(find "$namecache" -prune -newer "$tags")" ]; then
                 cut -f 1 "$tags" | grep -v '^!' | uniq > "$namecache"
             fi
             cat "$namecache"
-        done | "$sort" } \
+        done
+    } \
     -docstring %{
         ctags-search [<symbol>]: jump to a symbol's definition
         If no symbol is passed then the current selection is used as symbol name
