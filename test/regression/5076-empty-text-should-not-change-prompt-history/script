@@ -1,0 +1,7 @@
+ui_out -ignore 7
+ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "xsa<ret>" ] }'
+ui_out -ignore 6
+ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "xs<ret>" ] }'
+ui_out -ignore 5
+ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "xs<ret>" ] }'
+ui_out -ignore 5

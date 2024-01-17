@@ -866,7 +866,8 @@ void regex_prompt(Context& context, String prompt, char reg, T func)
                         RegisterManager::instance()[reg].set(context, str.str());
                     break;
                 case PromptEvent::Validate:
-                    RegisterManager::instance()[reg].set(context, str.str());
+                    if (not str.empty())
+                        RegisterManager::instance()[reg].set(context, str.str());
                     context.push_jump();
                     break;
                 }

@@ -18,14 +18,15 @@ define-command -params ..1 \
         eval "set -- $kak_quoted_opt_ctagsfiles"
         for candidate in "$@"; do
             [ -f "$candidate" ] && realpath "$candidate"
-        done | awk '!x[$0]++' | # remove duplicates
+        done | awk '!x[$0]++;' | # remove duplicates
         while read -r tags; do
             namecache="${tags%/*}/.kak.${tags##*/}.namecache"
             if [ -z "$(find "$namecache" -prune -newer "$tags")" ]; then
                 cut -f 1 "$tags" | grep -v '^!' | uniq > "$namecache"
             fi
             cat "$namecache"
-        done | sort } \
+        done
+    } \
     -docstring %{
         ctags-search [<symbol>]: jump to a symbol's definition
         If no symbol is passed then the current selection is used as symbol name
