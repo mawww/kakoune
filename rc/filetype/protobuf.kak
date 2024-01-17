@@ -76,7 +76,7 @@ define-command -hidden protobuf-trim-indent %{
     }
 }
 
-define-command -hidden protobuf-insert-on-new-line %{
+define-command -hidden protobuf-insert-on-newline %{
     evaluate-commands -draft -itersel %[
         # copy // comments prefix
         try %{ execute-keys -draft <semicolon><c-s>kx s ^\h*\K/{2,}(\h*(?=\S))? <ret> y<c-o>P<esc> }
