@@ -149,6 +149,7 @@ define-command -params 1.. \
         printf %s "evaluate-commands -try-client '$kak_opt_docsclient' %{
                   edit! -fifo ${output} *git*
                   set-option buffer filetype '${filetype}'
+                  $(hide_blame)
                   hook -always -once buffer BufCloseFifo .* %{
                       nop %sh{ rm -r $(dirname ${output}) }
                       ${on_close_fifo}
@@ -159,9 +160,10 @@ define-command -params 1.. \
 
     hide_blame() {
         printf %s "
-            set-option buffer=$kak_bufname git_blame_flags $kak_timestamp
-            set-option buffer=$kak_bufname git_blame ''
+            set-option buffer git_blame_flags $kak_timestamp
+            set-option buffer git_blame ''
             remove-highlighter window/git-blame
+            unmap window normal <ret> %{:git show-blamed<ret>}
         "
     }
 
@@ -170,6 +172,7 @@ define-command -params 1.. \
             hide_blame
             exit
         fi
+        echo 'map window normal <ret> %{:git show-blamed<ret>}'
         (
             cd_bufdir
             printf %s "evaluate-commands -client '$kak_client' %{
@@ -177,7 +180,7 @@ define-command -params 1.. \
                       set-option buffer=$kak_bufname git_blame_flags '$kak_timestamp'
                       set-option buffer=$kak_bufname git_blame ''
                   }" | kak -p ${kak_session}
-                  git blame "$@" --incremental ${kak_buffile} | perl -wne '
+            git blame "$@" --incremental ${kak_buffile} | perl -wne '
                   use POSIX qw(strftime);
                   sub quote {
                       my $SQ = "'\''";
