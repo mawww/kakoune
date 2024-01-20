@@ -261,7 +261,7 @@ void Buffer::reload(BufferLines lines, ByteOrderMark bom, EolFormat eolformat, F
                 for (LineCount line = len-1; line >= 0; --line)
                     m_current_undo_group.push_back({
                         Modification::Erase, cur_line + line,
-                        m_lines.get_storage(cur_line + line)});
+                        *(read_it + (size_t)line)});
 
                 read_it += len;
                 m_changes.push_back({ Change::Erase, cur_line, cur_line + len });
