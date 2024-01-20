@@ -53,6 +53,7 @@ hook -group git-show-branch-highlight global WinSetOption filetype=git-show-bran
 
 declare-option -hidden line-specs git_blame_flags
 declare-option -hidden str git_blame
+declare-option -hidden str git_blob
 declare-option -hidden line-specs git_diff_flags
 declare-option -hidden int-list git_hunk_list
 
@@ -150,6 +151,7 @@ define-command -params 1.. \
                   edit! -fifo ${output} *git*
                   set-option buffer filetype '${filetype}'
                   $(hide_blame)
+                  set-option buffer git_blob %{}
                   hook -always -once buffer BufCloseFifo .* %{
                       nop %sh{ rm -r $(dirname ${output}) }
                       ${on_close_fifo}
@@ -172,6 +174,61 @@ define-command -params 1.. \
             hide_blame
             exit
         fi
+        if [ -n "${kak_opt_git_blob}" ]; then {
+            set -- "${kak_opt_git_blob%%:*}" "$@" -- "${kak_opt_git_blob#*:}"
+        } elif [ "${kak_opt_filetype%%-*}" != git ]; then {
+            set -- "$@" -- "${kak_buffile}"
+        } else {
+            printf >${kak_command_fifo} %s '
+                evaluate-commands -client '${kak_client}' -draft %{
+                    try %{
+                        execute-keys <a-l><semicolon><a-?>^commit<ret><a-semicolon>
+                        try %{
+                            diff-parse END %{
+                                $commit = "$commit~" if $diff_line_text =~ m{^[-]};
+                                printf "echo -to-file '${kak_response_fifo}' -quoting shell %s %s %d %d",
+                                    $commit, quote($file), $file_line, ('${kak_cursor_column}' - 1);
+                            }
+                        } catch %{
+                            echo -to-file '${kak_response_fifo}' -quoting shell -- %val{error}
+                        }
+                    } catch %{
+                        # Missing commit line, assume it is an uncommitted change.
+                        echo -to-file '${kak_response_fifo}' -quoting shell -- nop fallback-to-show-blamed
+                    }
+                }
+            '
+            n=$#
+            eval set -- "$(cat ${kak_response_fifo})" "$@"
+            if [ $# -eq $((n+1)) ]; then
+                echo fail -- "$(kakquote "$1")"
+                exit
+            fi
+            if [ "$2" = fallback-to-show-blamed ]; then
+                show_blamed
+                exit
+            fi
+            commit=$1
+            file=${2#"$PWD/"}
+            cursor_line=$3
+            cursor_column=$4
+            shift 4
+            # Log commit and file name because they are only echoed briefly
+            # and not shown elsewhere (we don't have a :messages buffer).
+            echo "echo -debug -- $(kakquote "Showing blame for blob $commit:$file")"
+            on_close_fifo="
+                execute-keys -client ${kak_client} ${cursor_line}g<a-h>${cursor_column}l
+                evaluate-commands -client ${kak_client} %{
+                    set-option buffer git_blob $(kakquote "$commit:$file")
+                    git blame $(for arg; do kakquote "$arg"; printf " "; done)
+                    hook -once window NormalIdle .* %{
+                        execute-keys vv
+                        echo -markup -- $(kakquote "{Information}{\\}Showing blame for blob $commit:$file")
+                    }
+                }
+            " show_git_cmd_output show "$commit:$file"
+            exit
+        } fi
         echo 'map window normal <ret> %{:git show-blamed<ret>}'
         (
             cd_bufdir
@@ -180,7 +237,7 @@ define-command -params 1.. \
                       set-option buffer=$kak_bufname git_blame_flags '$kak_timestamp'
                       set-option buffer=$kak_bufname git_blame ''
                   }" | kak -p ${kak_session}
-            git blame "$@" --incremental ${kak_buffile} | perl -wne '
+            git blame --incremental "$@" | perl -wne '
                   use POSIX qw(strftime);
                   sub quote {
                       my $SQ = "'\''";
