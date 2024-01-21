@@ -52,6 +52,7 @@ hook -group git-show-branch-highlight global WinSetOption filetype=git-show-bran
 }
 
 declare-option -hidden line-specs git_blame_flags
+declare-option -hidden line-specs git_blame_index
 declare-option -hidden str git_blame
 declare-option -hidden str git_blob
 declare-option -hidden line-specs git_diff_flags
@@ -163,6 +164,7 @@ define-command -params 1.. \
     hide_blame() {
         printf %s "
             set-option buffer git_blame_flags $kak_timestamp
+            set-option buffer git_blame_index $kak_timestamp
             set-option buffer git_blame ''
             remove-highlighter window/git-blame
             unmap window normal <ret> %{:git show-blamed<ret>}
@@ -235,6 +237,7 @@ define-command -params 1.. \
             printf %s "evaluate-commands -client '$kak_client' %{
                       try %{ add-highlighter window/git-blame flag-lines Information git_blame_flags }
                       set-option buffer=$kak_bufname git_blame_flags '$kak_timestamp'
+                      set-option buffer=$kak_bufname git_blame_index '$kak_timestamp'
                       set-option buffer=$kak_bufname git_blame ''
                   }" | kak -p ${kak_session}
             git blame --incremental "$@" | perl -wne '
@@ -260,9 +263,11 @@ define-command -params 1.. \
                       }
                       open CMD, "|-", "kak -p $ENV{kak_session}";
                       print CMD "set-option -add buffer=$ENV{kak_bufname} git_blame_flags $flags;";
+                      print CMD "set-option -add buffer=$ENV{kak_bufname} git_blame_index $index;";
                       print CMD "set-option -add buffer=$ENV{kak_bufname} git_blame " . quote $raw_blame;
                       close(CMD);
                       $flags = "";
+                      $index = "";
                       $raw_blame = "";
                       $last_sent = $now;
                   }
@@ -271,6 +276,9 @@ define-command -params 1.. \
                       $sha = $1;
                       $line = $3;
                       $count = $4;
+                      for ( my $i = 0; $i < $count; $i++ ) {
+                          $index .= " " . ($line+$i) . "|$.,$i";
+                      }
                   }
                   if (m/^author /) { $authors{$sha} = substr($_,7) }
                   if (m/^author-time ([0-9]*)/) { $dates{$sha} = strftime("%F", localtime $1) }
@@ -439,9 +447,16 @@ define-command -params 1.. \
     show_blamed() {
         echo >${kak_command_fifo} "echo -to-file ${kak_response_fifo} -- %opt{git_blame}"
         blame_info=$(cat < ${kak_response_fifo})
+        blame_index=
         cursor_column=${kak_cursor_column}
         cursor_line=${kak_cursor_line}
-        if [ -z "$blame_info" ] && [ "${kak_opt_filetype%%-*}" = git ]; then {
+        if [ -n "$blame_info" ]; then
+            echo >${kak_command_fifo} "
+                update-option buffer git_blame_index
+                echo -to-file ${kak_response_fifo} -- %opt{git_blame_index}
+            "
+            blame_index=$(cat < ${kak_response_fifo})
+        elif [ "${kak_opt_filetype%%-*}" = git ]; then {
             printf >${kak_command_fifo} %s '
                 evaluate-commands -draft %{
                     try %{
@@ -455,7 +470,7 @@ define-command -params 1.. \
                             $version = "-";
                         } END %{
                             if ($diff_line_text !~ m{^[ -]}) {
-                                print "set-register e fail recursive blame only works on context or deleted lines";
+                                print "set-register e fail git show-blamed: recursive blame only works on context or deleted lines";
                             } else {
                                 if (not defined $commit) {
                                     $commit = "HEAD";
@@ -481,10 +496,11 @@ define-command -params 1.. \
             cursor_line=$3
             cursor_column=$4
             blame_info=$(git blame --porcelain $starting_commit -L"$cursor_line,$cursor_line" -- "$file")
-        } elif [ -z "$blame_info" ]; then {
+        } else {
             blame_info=$(git blame --porcelain -L"$cursor_line,$cursor_line" -- "${kak_buffile}")
         } fi
-        eval "$(printf %s "$blame_info" | buffile="$kak_buffile" cursor_line=$cursor_line cursor_column=$cursor_column perl -wne '
+        set -x
+        eval "$(printf '%s\n---\n%s' "$blame_index" "$blame_info" | buffile="$kak_buffile" cursor_line=$cursor_line cursor_column=$cursor_column perl -wne '
             BEGIN {
                 use POSIX qw(strftime);
                 my $SQ = "'\''";
@@ -505,8 +521,28 @@ define-command -params 1.. \
                     return "$SQ$token$SQ";
                 }
                 $target = $ENV{"cursor_line"};
+                $state = "index";
             }
             chomp;
+            if ($state eq "index") {
+                if ($_ eq "---") {
+                    $state = "blame";
+                    next;
+                }
+                @blame_index = split;
+                next unless @blame_index;
+                shift @blame_index;
+                foreach (@blame_index) {
+                    $_ =~ m{(\d+)\|(\d+),(\d+)} or die "bad blame index flag: $_";
+                    my $buffer_line = $1;
+                    if ($buffer_line == $target) {
+                        $target_in_blame = $2;
+                        $target_offset = $3;
+                        last;
+                    }
+                }
+                defined $target_in_blame and next, or last;
+            }
             if (m/^([0-9a-f]+) ([0-9]+) ([0-9]+) ([0-9]+)/) {
                 if ($done) {
                     last;
@@ -515,9 +551,16 @@ define-command -params 1.. \
                 $old_line = $2;
                 $new_line = $3;
                 $count = $4;
-                if ($new_line <= $target and $target < $new_line + $count) {
-                    $old_line += $target - $new_line;
-                    $done = 1;
+                if (defined $target_in_blame) {
+                    if ($target_in_blame == $. - 2) {
+                        $old_line += $target_offset;
+                        $done = 1;
+                    }
+                } else {
+                    if ($new_line <= $target and $target < $new_line + $count) {
+                        $old_line += $target - $new_line;
+                        $done = 1;
+                    }
                 }
             }
             if (m/^filename /) { $old_filenames{$sha} = substr($_,9) }
@@ -525,12 +568,16 @@ define-command -params 1.. \
             if (m/^author-time ([0-9]*)/) { $dates{$sha} = strftime("%F", localtime $1) }
             if (m/^summary /) { $summaries{$sha} = substr($_,8) }
             END {
+                if (@blame_index and not defined $target_in_blame) {
+                    print "echo fail git show-blamed: line has no blame information;";
+                    exit;
+                }
                 if (not defined $sha) {
-                    print "echo fail missing blame info";
+                    print "echo fail git show-blamed: missing blame info";
                     exit;
                 }
                 if (not $done) {
-                    print "echo \"fail failed to line in blame annotations (blame still loading?)\"";
+                    print "echo \"fail git show-blamed: line not found in annotations (blame still loading?)\"";
                     exit;
                 }
                 $info = "{Information}{\\}";
