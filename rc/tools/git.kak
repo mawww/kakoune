@@ -365,10 +365,10 @@ define-command -params 1.. \
             run_git_blame "$@"
             ;;
         hide-blame)
-            printf %s "try %{
+            printf %s "
                 set-option buffer=$kak_bufname git_blame_flags $kak_timestamp
                 remove-highlighter window/git-blame
-            }"
+            "
             ;;
         show-diff)
             echo 'try %{ add-highlighter window/git-diff flag-lines Default git_diff_flags }'
