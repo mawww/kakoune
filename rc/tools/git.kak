@@ -159,14 +159,16 @@ define-command -params 1.. \
     }
 
     run_git_blame() {
-        if [ "${kak_opt_git_blame_flags#* *}" != "${kak_opt_git_blame_flags}" ]; then
-            hide_blame
-            exit
-        fi
+        echo >${kak_command_fifo} "try %{
+            add-highlighter window/git-blame flag-lines Information git_blame_flags
+            echo -to-file ${kak_response_fifo}
+        } catch %{
+            echo -to-file ${kak_response_fifo} 'hide_blame; exit'
+        }"
+        eval $(cat ${kak_response_fifo})
         (
             cd_bufdir
             printf %s "evaluate-commands -client '$kak_client' %{
-                      try %{ add-highlighter window/git-blame flag-lines Information git_blame_flags }
                       set-option buffer=$kak_bufname git_blame_flags '$kak_timestamp'
                   }" | kak -p ${kak_session}
                   git blame "$@" --incremental ${kak_buffile} | perl -wne '
