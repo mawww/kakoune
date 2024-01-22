@@ -18,6 +18,7 @@ my $reverse = grep /^(--reverse|-R)$/, @ARGV;
 
 my $lineno = 0;
 my $original = "";
+my $diff_header = "";
 my $wheat = "";
 my $chaff = "";
 my $state = undef;
@@ -41,6 +42,10 @@ sub compute_hunk_header {
 sub finish_hunk {
     return unless defined $hunk_header;
     if ($hunk_wheat =~ m{^[-+]}m) {
+        if ($diff_header) {
+            $wheat .= $diff_header;
+            $diff_header = "";
+        }
         $wheat .= (compute_hunk_header $hunk_header, $hunk_wheat). $hunk_wheat;
     }
     $chaff .= (compute_hunk_header $hunk_header, $hunk_chaff) . $hunk_chaff;
@@ -53,6 +58,7 @@ while (<STDIN>) {
     if (m{^diff}) {
         finish_hunk();
         $state = "diff header";
+        $diff_header = "";
     }
     if (m{^@@}) {
         finish_hunk();
@@ -63,7 +69,7 @@ while (<STDIN>) {
         next;
     }
     if ($state eq "diff header") {
-        $wheat .= $_;
+        $diff_header .= $_;
         $chaff .= $_;
         next;
     }
