@@ -1,0 +1,1 @@
+%:patch tee applied.diff<ret><ret>!echo Applied:; cat applied.diff; echo; echo Updated buffer:<ret>
