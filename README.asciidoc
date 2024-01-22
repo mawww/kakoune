@@ -1,4 +1,4 @@
-= image:{logo}[K,30,30,link="{website}",title="Kakoune logo by p0nce"] Kakoune image:{cirrus-img}[link="{cirrus-url}"] {srht-img}[link="{srht-url}"] image:{irc-img}[link="{irc-url}"]
+= image:{logo}[K,30,30,link="{website}",title="Kakoune logo by p0nce"] Kakoune image:{cirrus-img}[link="{cirrus-url}"] image:{srht-img}[link="{srht-url}"] image:{irc-img}[link="{irc-url}"]
 ifdef::env-github,env-browser[:outfilesuffix: .asciidoc]
 :logo: https://rawgit.com/mawww/kakoune/master/doc/kakoune_logo.svg
 :website: https://kakoune.org
