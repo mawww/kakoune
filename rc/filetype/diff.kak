@@ -43,7 +43,7 @@ define-command diff-jump -params .. -docstring %{
         }
         set-register a %arg{@}
         set-register | %{
-            [ -n "$kak_reg_a" ] && eval set -- $kak_quoted_reg_a
+            [ -n "$kak_reg_a" ] && eval set -- "$kak_quoted_reg_a"
             cmd=$(column=$kak_reg_c perl -we '
                 sub quote {
                     $SQ = "'\''";
