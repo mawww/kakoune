@@ -25,6 +25,8 @@ my $state = undef;
 my $hunk_wheat = undef;
 my $hunk_chaff = undef;
 my $hunk_header = undef;
+my $hunk_remaining_lines = undef;
+my $signature = "";
 
 sub compute_hunk_header {
     my $original_header = shift;
@@ -48,7 +50,7 @@ sub finish_hunk {
         }
         $wheat .= (compute_hunk_header $hunk_header, $hunk_wheat). $hunk_wheat;
     }
-    $chaff .= (compute_hunk_header $hunk_header, $hunk_chaff) . $hunk_chaff;
+    $chaff .= (compute_hunk_header $hunk_header, $hunk_chaff) . $hunk_chaff . $signature;
     $hunk_header = undef;
 }
 
@@ -60,12 +62,18 @@ while (<STDIN>) {
         $state = "diff header";
         $diff_header = "";
     }
-    if (m{^@@}) {
+    if ($state eq "signature") {
+        $signature .= $_;
+        next;
+    }
+    if (m{^@@ -\d+(?:,(\d)+)? \+\d+(?:,\d+)? @@}) {
+        $hunk_remaining_lines = $1 or 1;
         finish_hunk();
         $state = "diff hunk";
         $hunk_header = $_;
         $hunk_wheat = "";
         $hunk_chaff = "";
+        $signature = "";
         next;
     }
     if ($state eq "diff header") {
@@ -73,6 +81,12 @@ while (<STDIN>) {
         $chaff .= $_;
         next;
     }
+    if ($hunk_remaining_lines == 0 and m{^-- $}) {
+        $state = "signature";
+        $signature .= $_;
+        next;
+    }
+    --$hunk_remaining_lines if m{^[ -]};
     my $include = m{^ } || ($lineno >= $min_line && $lineno <= $max_line);
     if ($include) {
         $hunk_wheat .= $_;
