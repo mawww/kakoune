@@ -107,7 +107,7 @@ define-command -params 1.. \
         case "$1" in
             commit) printf -- "--amend\n--no-edit\n--all\n--reset-author\n--fixup\n--squash\n"; git ls-files -m ;;
             add) git ls-files -dmo --exclude-standard ;;
-            apply) printf -- "--reverse\n--cached\n--index\n" ;;
+            apply) printf -- "--reverse\n--cached\n--index\n--3way\n" ;;
             grep|edit) git ls-files -c --recurse-submodules ;;
         esac
     fi
