@@ -1368,23 +1368,26 @@ const HighlighterDesc flag_lines_desc = {
 };
 struct FlagLinesHighlighter : Highlighter
 {
-    FlagLinesHighlighter(String option_name, String default_face)
+    FlagLinesHighlighter(String option_name, String default_face, bool after)
         : Highlighter{HighlightPass::Move},
           m_option_name{std::move(option_name)},
-          m_default_face{std::move(default_face)} {}
+          m_default_face{std::move(default_face)},
+          m_after(after) {}
 
     static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
     {
-        if (params.size() != 2)
-            throw runtime_error("wrong parameter count");
+        ParametersParser parser{params, {
+            {{"after", {{}, "display at line end" }}},
+            ParameterDesc::Flags::SwitchesOnlyAtStart, 2, 2
+        }};
 
-        const String& option_name = params[1];
-        const String& default_face = params[0];
+        const String& default_face = parser[0];
+        const String& option_name = parser[1];
 
         // throw if wrong option type
         GlobalScope::instance().options()[option_name].get<LineAndSpecList>();
 
-        return std::make_unique<FlagLinesHighlighter>(option_name, default_face);
+        return std::make_unique<FlagLinesHighlighter>(option_name, default_face, (bool)parser.get_switch("after"));
     }
 
 private:
@@ -1422,6 +1425,17 @@ private:
             auto it = find_if(lines,
                               [&](const LineAndSpec& l)
                               { return std::get<0>(l) == line_num; });
+            if (m_after)
+            {
+                if (it != lines.end())
+                {
+                    DisplayLine& display_line = display_lines[it - lines.begin()];
+                    std::copy(std::make_move_iterator(display_line.begin()),
+                              std::make_move_iterator(display_line.end()),
+                              std::inserter(line, line.end()));
+                }
+                continue;
+            }
             if (it == lines.end())
                 line.insert(line.begin(), empty);
             else
@@ -1440,6 +1454,9 @@ private:
 
     void do_compute_display_setup(HighlightContext context, DisplaySetup& setup) const override
     {
+        if (m_after)
+            return;
+
         auto& line_flags = context.context.options()[m_option_name].get_mutable<LineAndSpecList>();
         const auto& buffer = context.context.buffer();
         update_line_specs_ifn(buffer, line_flags);
@@ -1461,6 +1478,7 @@ private:
 
     String m_option_name;
     String m_default_face;
+    bool m_after;
 };
 
 bool is_empty(const InclusiveBufferRange& range)
