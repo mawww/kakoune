@@ -3,6 +3,7 @@ static ?= no
 gzip_man ?= yes
 # to get format compatible with GitHub archive use "gzip -S .gz" here
 compress_bin ?= bzip2
+tree_sitter ?= yes
 
 ifneq ($(gzip_man),yes)
     ifneq ($(gzip_man),no)
@@ -20,6 +21,16 @@ else
         suffix := .opt
     else
         $(error debug should be either yes or no)
+    endif
+endif
+
+ifeq ($(tree_sitter),yes)
+    CPPFLAGS += -DKAK_TREE_SITTER
+    CXXFLAGS += `pkg-config --cflags tree-sitter`
+    LDFLAGS += `pkg-config --libs tree-sitter`
+else
+    ifneq ($(tree_sitter),no)
+        $(error tree_sitter should be either yes or no)
     endif
 endif
 
