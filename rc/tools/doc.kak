@@ -1,5 +1,7 @@
 declare-option -docstring "name of the client in which documentation is to be displayed" \
     str docsclient
+declare-option -docstring "extra paths to search for `*.asciidoc` files." \
+    str-list docsextrapaths
 
 declare-option -hidden range-specs doc_render_ranges
 declare-option -hidden range-specs doc_links
@@ -150,6 +152,7 @@ define-command doc -params 0..2 -menu -docstring %{
                 "${kak_config}/autoload/" \
                 "${kak_runtime}/doc/" \
                 "${kak_runtime}/rc/" \
+                "${kak_opt_docsextrapaths}" \
                 -type f -name "$topic.asciidoc" 2>/dev/null |
                 head -1
         )
@@ -172,6 +175,7 @@ complete-command doc shell-script-candidates %{
                 "${kak_config}/autoload/" \
                 "${kak_runtime}/doc/" \
                 "${kak_runtime}/rc/" \
+                "${kak_opt_docsextrapaths}" \
                 -type f -name "*.asciidoc" 2>/dev/null |
                 sed 's,.*/,,; s/\.[^.]*$//';;
         1)
@@ -180,6 +184,7 @@ complete-command doc shell-script-candidates %{
                     "${kak_config}/autoload/" \
                     "${kak_runtime}/doc/" \
                     "${kak_runtime}/rc/" \
+                    "${kak_opt_docsextrapaths}" \
                     -type f -name "$1.asciidoc" 2>/dev/null |
                     head -1
             )

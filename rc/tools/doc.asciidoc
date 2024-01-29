@@ -8,6 +8,8 @@ from the completion menu.  Then hit Enter.
 
 Documentation will be displayed in the client named in the `docsclient` option.
 
+You can add extra search paths for documents with the `docsextrapaths` option.
+
 == Using the documentation browser
 
 Documentation buffers are like any other buffer, so you can scroll through
