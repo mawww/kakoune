@@ -9,6 +9,11 @@
                   Mawww's experiment for a better code editor
 +=----------------------------------------------------------------------------=+
 
+To view this inside Kakoune, map it to some key like so:
+:map global user T ": e -scratch<ret>! curl -L https://github.com/mawww/kakoune/
+raw/HEAD/contrib/TRAMPOLINE<ret>gk" -docstring "walk-through"
+then you can press comma then T (,T) to open this document
+
 This walk-through is an introduction to Kakoune's basic editing capabilities
 to help new users transition over easily from another editor, or simply
 learn how to write and edit documents with style.
