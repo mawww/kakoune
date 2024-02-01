@@ -199,7 +199,7 @@ define-command -params 1.. \
                       $count = $4;
                   }
                   if (m/^author /) { $authors{$sha} = substr($_,7) }
-                  if (m/^author-time ([0-9]*)/) { $dates{$sha} = strftime("%F %T", localtime $1) }
+                  if (m/^author-time ([0-9]*)/) { $dates{$sha} = strftime("%F", localtime $1) }
                   END { send_flags(1); }'
         ) > /dev/null 2>&1 < /dev/null &
     }
