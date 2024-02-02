@@ -75,6 +75,7 @@ hook -group git-show-branch-highlight global WinSetOption filetype=git-show-bran
 
 declare-option -hidden line-specs git_blame_flags
 declare-option -hidden str git_blame
+declare-option -hidden str git_blob
 declare-option -hidden line-specs git_diff_flags
 declare-option -hidden int-list git_hunk_list
 
@@ -168,6 +169,7 @@ define-command -params 1.. \
                   edit! -fifo ${output} *git*
                   set-option buffer filetype ${filetype}
                   $(hide_blame)
+                  set-option buffer git_blob %{}
                   hook -always -once buffer BufCloseFifo .* ''
                       nop %sh{ rm -r $(dirname ${output}) }
                       $(printf %s "${on_close_fifo}" | sed "s/'/''''/g")
@@ -185,16 +187,21 @@ define-command -params 1.. \
     }
 
     prepare_git_blame_args='
-        contents_fifo=$(mktemp -d "${TMPDIR:-/tmp}"/kak-git.XXXXXXXX)/fifo
-        mkfifo ${contents_fifo}
-        echo >${kak_command_fifo} "evaluate-commands -save-regs | %{
-            set-register | %{
-                contents=\$(cat; printf .)
-                ( printf %s \"\${contents%.}\" >${contents_fifo} ) >/dev/null 2>&1 &
-            }
-            execute-keys -client ${kak_client} -draft %{%<a-|><ret>}
-        }"
-        set -- "$@" --contents - -- "${kak_buffile}"
+        if [ -n "${kak_opt_git_blob}" ]; then {
+            contents_fifo=/dev/null
+            set -- "$@" "${kak_opt_git_blob%%:*}" -- "${kak_opt_git_blob#*:}"
+        } else {
+            contents_fifo=$(mktemp -d "${TMPDIR:-/tmp}"/kak-git.XXXXXXXX)/fifo
+            mkfifo ${contents_fifo}
+            echo >${kak_command_fifo} "evaluate-commands -save-regs | %{
+                set-register | %{
+                    contents=\$(cat; printf .)
+                    ( printf %s \"\${contents%.}\" >${contents_fifo} ) >/dev/null 2>&1 &
+                }
+                execute-keys -client ${kak_client} -draft %{%<a-|><ret>}
+            }"
+            set -- "$@" --contents - -- "${kak_buffile}"
+        } fi
     '
 
     blame_toggle() {
@@ -205,6 +212,59 @@ define-command -params 1.. \
             echo -to-file ${kak_response_fifo} 'hide_blame; exit'
         }"
         eval $(cat ${kak_response_fifo})
+        if [ -z "${kak_opt_git_blob}" ] && {
+            [ "${kak_opt_filetype}" = git-diff ] || [ "${kak_opt_filetype}" = git-log ]
+        } then {
+            echo 'remove-highlighter window/git-blame'
+            printf >${kak_command_fifo} %s '
+                evaluate-commands -client '${kak_client}' -draft %{
+                    try %{
+                        execute-keys <a-l><semicolon><a-?>^commit<ret><a-semicolon>
+                        require-module diff
+                        try %{
+                            diff-parse END %{
+                                $commit = "$commit~" if $diff_line_text =~ m{^[-]};
+                                printf "echo -to-file '${kak_response_fifo}' -quoting shell %s %s %d %d",
+                                    $commit, quote($file), ($file_line or 1), ('${kak_cursor_column}' - 1);
+                            }
+                        } catch %{
+                            echo -to-file '${kak_response_fifo}' -quoting shell -- %val{error}
+                        }
+                    } catch %{
+                        # Missing commit line, assume it is an uncommitted change.
+                        echo -to-file '${kak_response_fifo}' -quoting shell -- \
+                            "git blame: blaming without commit line is not yet supported"
+                    }
+                }
+            '
+            n=$#
+            eval set -- "$(cat ${kak_response_fifo})" "$@"
+            if [ $# -eq $((n+1)) ]; then
+                echo fail -- "$(kakquote "$1")"
+                exit
+            fi
+            commit=$1
+            file=${2#"$PWD/"}
+            cursor_line=$3
+            cursor_column=$4
+            shift 4
+            # Log commit and file name because they are only echoed briefly
+            # and not shown elsewhere (we don't have a :messages buffer).
+            message="Blaming $file as of $(git rev-parse --short $commit)"
+            echo "echo -debug -- $(kakquote "$message")"
+            on_close_fifo="
+                execute-keys -client ${kak_client} ${cursor_line}g<a-h>${cursor_column}l
+                evaluate-commands -client ${kak_client} %{
+                    set-option buffer git_blob $(kakquote "$commit:$file")
+                    git blame $(for arg; do kakquote "$arg"; printf " "; done)
+                    hook -once window NormalIdle .* %{
+                        execute-keys vv
+                        echo -markup -- $(kakquote "{Information}{\\}$message. Press <ret> to jump to blamed commit")
+                    }
+                }
+            " show_git_cmd_output show "$commit:$file"
+            exit
+        } fi
         eval "$prepare_git_blame_args"
         echo 'map window normal <ret> %{:git blame-jump<ret>}'
         echo 'echo -markup {Information}Press <ret> to jump to blamed commit'
@@ -257,7 +317,9 @@ define-command -params 1.. \
                   }
                   if (m/^author-time ([0-9]*)/) { $dates{$sha} = strftime("%F %T", localtime $1) }
                   END { send_flags(1); }'
-            rm -r $(dirname $contents_fifo)
+            if [ "$contents_fifo" != /dev/null ]; then
+                rm -r $(dirname $contents_fifo)
+            fi
         ) > /dev/null 2>&1 < /dev/null &
     }
 
@@ -470,7 +532,9 @@ define-command -params 1.. \
             set --
             eval "$prepare_git_blame_args"
             blame_info=$(git blame --porcelain -L"$cursor_line,$cursor_line" "$@" <${contents_fifo})
-            rm -r $(dirname $contents_fifo)
+            if [ "$contents_fifo" != /dev/null ]; then
+                rm -r $(dirname $contents_fifo)
+            fi
         } fi
         eval "$(printf %s "$blame_info" |
                 client=${kak_opt_docsclient:-$kak_client} \
