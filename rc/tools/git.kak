@@ -21,6 +21,18 @@ hook -group git-log-highlight global WinSetOption filetype=git-log %{
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/git-log }
 }
 
+hook global WinSetOption filetype=diff %{
+    try %{
+        execute-keys -draft %{/^diff --git\b<ret>}
+        evaluate-commands %sh{
+            if [ -n "$(git ls-files -- "${kak_buffile}")" ]; then
+                echo fail
+            fi
+        }
+        set-option buffer filetype git-diff
+    }
+}
+
 hook -group git-diff-highlight global WinSetOption filetype=(git-diff|git-log) %{
     require-module diff
     add-highlighter %exp{window/%val{hook_param_capture_1}-ref-diff} ref diff
