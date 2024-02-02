@@ -14,14 +14,26 @@ declare-option -docstring "git diff top deleted character" \
     str git_diff_top_char "‾"
 
 hook -group git-log-highlight global WinSetOption filetype=git-log %{
-    require-module diff
     add-highlighter window/git-log group
     add-highlighter window/git-log/ regex '^([*|\\ /_.-])*' 0:keyword
     add-highlighter window/git-log/ regex '^( ?[*|\\ /_.-])*\h{,3}(commit )?(\b[0-9a-f]{4,40}\b)' 2:keyword 3:comment
     add-highlighter window/git-log/ regex '^( ?[*|\\ /_.-])*\h{,3}([a-zA-Z_-]+:) (.*?)$' 2:variable 3:value
-    add-highlighter window/git-log/ ref diff # highlight potential diffs from the -p option
-
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/git-log }
+}
+
+hook -group git-diff-highlight global WinSetOption filetype=(git-diff|git-log) %{
+    require-module diff
+    add-highlighter %exp{window/%val{hook_param_capture_1}-ref-diff} ref diff
+    hook -once -always window WinSetOption filetype=.* %exp{
+        remove-highlighter window/%val{hook_param_capture_1}-ref-diff
+    }
+}
+
+hook global WinSetOption filetype=(?:git-diff|git-log) %{
+    map buffer normal <ret> %exp{:git-diff-goto-source # %val{hook_param}<ret>} -docstring 'Jump to source from git diff'
+    hook -once -always window WinSetOption filetype=.* %exp{
+        unmap buffer normal <ret> %%{:git-diff-goto-source # %val{hook_param}<ret>}
+    }
 }
 
 hook -group git-status-highlight global WinSetOption filetype=git-status %{
@@ -121,13 +133,12 @@ define-command -params 1.. \
 
     show_git_cmd_output() {
         local filetype
-        local map_diff_goto_source
 
         case "$1" in
-           diff) map_diff_goto_source=true; filetype=diff ;;
-           show) map_diff_goto_source=true; filetype=git-log ;;
+           diff) filetype=git-diff ;;
+           show) filetype=git-log ;;
            show-branch) filetype=git-show-branch ;;
-           log)  map_diff_goto_source=true; filetype=git-log ;;
+           log)  filetype=git-log ;;
            status)  filetype=git-status ;;
            *) return 1 ;;
         esac
@@ -135,17 +146,10 @@ define-command -params 1.. \
         mkfifo ${output}
         ( git "$@" > ${output} 2>&1 & ) > /dev/null 2>&1 < /dev/null
 
-        # We need to unmap in case an existing buffer changes type,
-        # for example if the user runs "git show" and "git status".
-        map_diff_goto_source=$([ -n "${map_diff_goto_source}" ] \
-          && printf %s "map buffer normal <ret> :git-diff-goto-source<ret> -docstring 'Jump to source from git diff'" \
-          || printf %s "unmap buffer normal <ret> :git-diff-goto-source<ret>")
-
         printf %s "evaluate-commands -try-client '$kak_opt_docsclient' %{
                   edit! -fifo ${output} *git*
                   set-option buffer filetype '${filetype}'
                   hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname ${output}) } }
-                  ${map_diff_goto_source}
               }"
     }
 
