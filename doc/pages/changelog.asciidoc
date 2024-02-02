@@ -20,7 +20,9 @@ released versions.
 
 * View mode commands and mouse scrolling no longer change selections when those go off-screen.
 
-* New commands `git apply`, `git edit`, `git grep`
+* New commands `git apply`, `git blame-jump`, `git edit` and `git grep`.
+
+* `git blame` now also works in `git-diff` and `git-log` buffers.
 
 == Kakoune 2023.08.08
 

@@ -52,7 +52,8 @@ struct {
         "» {+b}+{} only duplicates identical selections a single time\n"
         "» {+u}daemonize-session{} command\n"
         "» view mode and mouse scrolling no longer change selections\n"
-        "» {+u}git apply/edit/grep{} commands\n"
+        "» {+u}git apply/blame-jump/edit/grep{} commands\n"
+        "» {+u}git blame{} works in {+u}git-diff{} and {+u}git-log{} buffers\n"
     }, {
         20230805,
         "» Fix FreeBSD/MacOS clang compilation\n"
