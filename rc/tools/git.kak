@@ -166,12 +166,21 @@ define-command -params 1.. \
             echo -to-file ${kak_response_fifo} 'hide_blame; exit'
         }"
         eval $(cat ${kak_response_fifo})
+        contents_fifo=$(mktemp -d "${TMPDIR:-/tmp}"/kak-git.XXXXXXXX)/fifo
+        mkfifo ${contents_fifo}
+        echo >${kak_command_fifo} 'evaluate-commands -save-regs | %{
+            set-register | %{
+                contents=$(cat; printf .)
+                ( printf %s "${contents%.}" >'${contents_fifo}' ) >/dev/null 2>&1 &
+            }
+            execute-keys -client '${kak_client}' -draft %{%<a-|><ret>}
+        }'
         (
             cd_bufdir
             printf %s "evaluate-commands -client '$kak_client' %{
                       set-option buffer=$kak_bufname git_blame_flags '$kak_timestamp'
                   }" | kak -p ${kak_session}
-                  git blame "$@" --incremental ${kak_buffile} | perl -wne '
+            git blame "$@" --incremental "${kak_buffile}" --contents - <$contents_fifo | perl -wne '
                   use POSIX qw(strftime);
                   sub send_flags {
                       my $flush = shift;
@@ -192,15 +201,20 @@ define-command -params 1.. \
                       $flags = "";
                       $last_sent = $now;
                   }
+                  chomp;
                   if (m/^([0-9a-f]+) ([0-9]+) ([0-9]+) ([0-9]+)/) {
                       send_flags(0);
                       $sha = $1;
                       $line = $3;
                       $count = $4;
                   }
-                  if (m/^author /) { $authors{$sha} = substr($_,7) }
+                  if (m/^author /) {
+                      $authors{$sha} = substr($_,7);
+                      $authors{$sha} = "Not Committed Yet" if $authors{$sha} eq "External file (--contents)";
+                  }
                   if (m/^author-time ([0-9]*)/) { $dates{$sha} = strftime("%F %T", localtime $1) }
                   END { send_flags(1); }'
+            rm -r $(dirname $contents_fifo)
         ) > /dev/null 2>&1 < /dev/null &
     }
 
