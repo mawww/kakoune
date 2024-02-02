@@ -167,6 +167,7 @@ define-command -params 1.. \
         printf %s "evaluate-commands -try-client '$kak_opt_docsclient' '
                   edit! -fifo ${output} *git*
                   set-option buffer filetype ${filetype}
+                  $(hide_blame)
                   hook -always -once buffer BufCloseFifo .* ''
                       nop %sh{ rm -r $(dirname ${output}) }
                       $(printf %s "${on_close_fifo}" | sed "s/'/''''/g")
@@ -176,9 +177,10 @@ define-command -params 1.. \
 
     hide_blame() {
         printf %s "
-            set-option buffer=$kak_bufname git_blame_flags $kak_timestamp
-            set-option buffer=$kak_bufname git_blame ''
+            set-option buffer git_blame_flags $kak_timestamp
+            set-option buffer git_blame %{}
             remove-highlighter window/git-blame
+            unmap window normal <ret> %{:git blame-jump<ret>}
         "
     }
 
@@ -204,6 +206,8 @@ define-command -params 1.. \
         }"
         eval $(cat ${kak_response_fifo})
         eval "$prepare_git_blame_args"
+        echo 'map window normal <ret> %{:git blame-jump<ret>}'
+        echo 'echo -markup {Information}Press <ret> to jump to blamed commit'
         (
             cd_bufdir
             printf %s "evaluate-commands -client '$kak_client' %{
