@@ -39,11 +39,17 @@ while (defined $ARGV[0]) {
 # Inputs
 our $directory = $ENV{PWD};
 our $strip;
+our $in_file;
+our $in_file_line;
 our $version = "+";
 
 eval $begin if defined $begin;
 
+$in_file = "$directory/$in_file" if defined $in_file;
+
 # Outputs
+our $diff_line = 0;
+our $commit;
 our $file;
 our $file_line;
 our $diff_line_text;
@@ -83,8 +89,13 @@ sub strip {
 }
 
 while (<STDIN>) {
+    $diff_line++;
     s/^(> )*//g;
     $diff_line_text = $_;
+    if (m{^commit (\w+)}) {
+        $commit = $1;
+        next;
+    }
     if (m{^diff\b}) {
         $state = "header";
         $is_recursive_diff = 1;
@@ -114,6 +125,11 @@ while (<STDIN>) {
         }
         if (m{^[ $other_version]}) {
            $other_file_line++ if defined $other_file_line;
+        }
+    }
+    if (defined $in_file and defined $file and $file eq $in_file) {
+        if (defined $in_file_line and defined $file_line and $file_line >= $in_file_line) {
+            last;
         }
     }
 }
