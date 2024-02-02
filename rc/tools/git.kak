@@ -25,7 +25,6 @@ hook -group git-log-highlight global WinSetOption filetype=git-log %{
 }
 
 hook -group git-status-highlight global WinSetOption filetype=git-status %{
-    require-module diff
     add-highlighter window/git-status group
     add-highlighter window/git-status/ regex '^## ' 0:comment
     add-highlighter window/git-status/ regex '^## (\S*[^\s\.@])' 1:green
@@ -42,7 +41,6 @@ hook -group git-status-highlight global WinSetOption filetype=git-status %{
 }
 
 hook -group git-show-branch-highlight global WinSetOption filetype=git-show-branch %{
-    require-module diff
     add-highlighter window/git-show-branch group
     add-highlighter window/git-show-branch/ regex '(\*)|(\+)|(!)' 1:red 2:green 3:green
     add-highlighter window/git-show-branch/ regex '(!\D+\{0\}\])|(!\D+\{1\}\])|(!\D+\{2\}\])|(!\D+\{3\}\])' 1:red 2:green 3:yellow 4:blue
