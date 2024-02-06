@@ -83,6 +83,11 @@ private:
     const HighlightPass m_passes;
 };
 
+struct HighlighterDelegate : public Highlighter {
+    using Highlighter::Highlighter;
+    virtual Highlighter& delegate() const = 0;
+};
+
 using HighlighterParameters = ConstArrayView<String>;
 using HighlighterFactory = std::unique_ptr<Highlighter> (*)(HighlighterParameters params, Highlighter* parent);
 

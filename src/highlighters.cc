@@ -16,6 +16,7 @@
 #include "regex.hh"
 #include "register_manager.hh"
 #include "string.hh"
+#include "tree_sitter.hh"
 #include "utf8.hh"
 #include "utf8_iterator.hh"
 #include "window.hh"
@@ -2045,8 +2046,8 @@ public:
     {
         if (dynamic_cast<RegionsHighlighter*>(parent))
             return true;
-        if (auto* region = dynamic_cast<RegionHighlighter*>(parent))
-            return is_regions(&region->delegate());
+        if (auto* highlighter = dynamic_cast<HighlighterDelegate*>(parent))
+            return is_regions(&highlighter->delegate());
         return false;
     }
 
@@ -2096,12 +2097,12 @@ public:
     }
 
 private:
-    struct RegionHighlighter : public Highlighter
+    struct RegionHighlighter : public HighlighterDelegate
     {
         RegionHighlighter(std::unique_ptr<Highlighter>&& delegate,
                           String begin, String end, String recurse,
                           bool match_capture)
-            : Highlighter{delegate->passes()},
+            : HighlighterDelegate{delegate->passes()},
               m_delegate{std::move(delegate)},
               m_begin{std::move(begin)}, m_end{std::move(end)}, m_recurse{std::move(recurse)},
               m_match_capture{match_capture}
@@ -2109,7 +2110,7 @@ private:
        }
 
         RegionHighlighter(std::unique_ptr<Highlighter>&& delegate)
-            : Highlighter{delegate->passes()}, m_delegate{std::move(delegate)}, m_default{true}
+            : HighlighterDelegate{delegate->passes()}, m_delegate{std::move(delegate)}, m_default{true}
        {
        }
 
@@ -2152,7 +2153,7 @@ private:
         bool match_capture() const { return m_match_capture; }
         bool is_default() const { return m_default; }
 
-        Highlighter& delegate() { return *m_delegate; }
+        Highlighter& delegate() const override { return *m_delegate; }
 
     // private:
         std::unique_ptr<Highlighter> m_delegate;
@@ -2522,6 +2523,12 @@ void register_highlighters()
     registry.insert({
         "show-whitespaces",
         { ShowWhitespacesHighlighter::create, &show_whitespace_desc } });
+    registry.insert({
+        "tree-sitter",
+        { create_tree_sitter_highlighter, &tree_sitter_desc } });
+    registry.insert({
+        "tree-sitter-injection",
+        { create_tree_sitter_injection_highlighter, &tree_sitter_injection_desc } });
     registry.insert({
         "wrap",
         { WrapHighlighter::create, &wrap_desc } });
