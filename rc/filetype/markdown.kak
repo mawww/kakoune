@@ -41,70 +41,85 @@ provide-module markdown %{
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
-add-highlighter shared/markdown regions
-add-highlighter shared/markdown/inline default-region regions
-add-highlighter shared/markdown/inline/text default-region group
-
-add-highlighter shared/markdown/listblock region ^\h*[-*]\s ^(?=\S) regions
-add-highlighter shared/markdown/listblock/g default-region group
-add-highlighter shared/markdown/listblock/g/ ref markdown/inline
-add-highlighter shared/markdown/listblock/g/marker regex ^\h*([-*])\s 1:bullet
-
-add-highlighter shared/markdown/codeblock region -match-capture \
-    ^(\h*)```\h* \
-    ^(\h*)```\h*$ \
-    regions
-add-highlighter shared/markdown/codeblock/ default-region fill meta
-add-highlighter shared/markdown/listblock/codeblock region -match-capture \
-    ^(\h*)```\h* \
-    ^(\h*)```\h*$ \
-    regions
-add-highlighter shared/markdown/listblock/codeblock/ default-region fill meta
-add-highlighter shared/markdown/codeline region "^( {4}|\t)" "$" fill meta
-
-# https://spec.commonmark.org/0.29/#link-destination
-add-highlighter shared/markdown/angle_bracket_url region (?<=<)([a-z]+://|(mailto|magnet|xmpp):) (?!\\).(?=>)|\n fill link
-add-highlighter shared/markdown/inline/url region -recurse \( (\b[a-z]+://|(mailto|magnet|xmpp):) (?!\\).(?=\))|\s fill link
-add-highlighter shared/markdown/listblock/angle_bracket_url region (?<=<)(\b[a-z]+://|(mailto|magnet|xmpp):) (?!\\).(?=>)|\n fill link
-
 try %{
-    require-module html
-    add-highlighter shared/markdown/inline/tag region (?i)</?[a-z][a-z0-9-]*\s*([a-z_:]|(?=>)) > ref html/tag
+    require-module tree-sitter
+    tree-sitter-load-highlighter shared/markdown markdown %opt{tree_sitter_default_faces}
+
+    define-command markdown-load-languages -params 1 %{
+        evaluate-commands -draft %{ try %{
+            execute-keys "%arg{1}s```\h*\{?[.=]?\K\w+<ret>" # }
+            evaluate-commands -itersel %{ try %{
+                require-module %val{selection}
+                add-highlighter "shared/markdown/%val{selection}" tree-sitter-injection ref %val{selection}
+            }}
+        }}
+    }
+} catch %{
+    add-highlighter shared/markdown regions
+    add-highlighter shared/markdown/inline default-region regions
+    add-highlighter shared/markdown/inline/text default-region group
+
+    add-highlighter shared/markdown/listblock region ^\h*[-*]\s ^(?=\S) regions
+    add-highlighter shared/markdown/listblock/g default-region group
+    add-highlighter shared/markdown/listblock/g/ ref markdown/inline
+    add-highlighter shared/markdown/listblock/g/marker regex ^\h*([-*])\s 1:bullet
+
+    add-highlighter shared/markdown/codeblock region -match-capture \
+        ^(\h*)```\h* \
+        ^(\h*)```\h*$ \
+        regions
+    add-highlighter shared/markdown/codeblock/ default-region fill meta
+    add-highlighter shared/markdown/listblock/codeblock region -match-capture \
+        ^(\h*)```\h* \
+        ^(\h*)```\h*$ \
+        regions
+    add-highlighter shared/markdown/listblock/codeblock/ default-region fill meta
+    add-highlighter shared/markdown/codeline region "^( {4}|\t)" "$" fill meta
+
+    # https://spec.commonmark.org/0.29/#link-destination
+    add-highlighter shared/markdown/angle_bracket_url region (?<=<)([a-z]+://|(mailto|magnet|xmpp):) (?!\\).(?=>)|\n fill link
+    add-highlighter shared/markdown/inline/url region -recurse \( (\b[a-z]+://|(mailto|magnet|xmpp):) (?!\\).(?=\))|\s fill link
+    add-highlighter shared/markdown/listblock/angle_bracket_url region (?<=<)(\b[a-z]+://|(mailto|magnet|xmpp):) (?!\\).(?=>)|\n fill link
+
+    try %{
+        require-module html
+        add-highlighter shared/markdown/inline/tag region (?i)</?[a-z][a-z0-9-]*\s*([a-z_:]|(?=>)) > ref html/tag
+    }
+
+    add-highlighter shared/markdown/inline/code region -match-capture (`+) (`+) fill mono
+
+    # Setext-style header
+    add-highlighter shared/markdown/inline/text/ regex (\A|^\n)[^\n]+\n={2,}\h*\n\h*$ 0:title
+    add-highlighter shared/markdown/inline/text/ regex (\A|^\n)[^\n]+\n-{2,}\h*\n\h*$ 0:header
+
+    # Atx-style header
+    add-highlighter shared/markdown/inline/text/ regex ^#[^\n]* 0:header
+
+    add-highlighter shared/markdown/inline/text/ regex (?<!\*)(\*([^\s*]|([^\s*](\n?[^\n*])*[^\s*]))\*)(?!\*) 1:+i
+    add-highlighter shared/markdown/inline/text/ regex (?<!_)(_([^\s_]|([^\s_](\n?[^\n_])*[^\s_]))_)(?!_) 1:+i
+    add-highlighter shared/markdown/inline/text/ regex (?<!\*)(\*\*([^\s*]|([^\s*](\n?[^\n*])*[^\s*]))\*\*)(?!\*) 1:+b
+    add-highlighter shared/markdown/inline/text/ regex (?<!_)(__([^\s_]|([^\s_](\n?[^\n_])*[^\s_]))__)(?!_) 1:+b
+    add-highlighter shared/markdown/inline/text/ regex ^\h*(>\h*)+ 0:comment
+    add-highlighter shared/markdown/inline/text/ regex "\H( {2,})$" 1:+r@meta
+
+    define-command markdown-load-languages -params 1 %{
+        evaluate-commands -draft %{ try %{
+            execute-keys "%arg{1}s```\h*\{?[.=]?\K\w+<ret>" # }
+            evaluate-commands -itersel %{ try %{
+                require-module %val{selection}
+                add-highlighter "shared/markdown/codeblock/%val{selection}" region -match-capture "^(\h*)```\h*(%val{selection}\b|\{[.=]?%val{selection}\})" ^(\h*)``` regions
+                add-highlighter "shared/markdown/codeblock/%val{selection}/" default-region fill meta
+                add-highlighter "shared/markdown/codeblock/%val{selection}/inner" region \A\h*```[^\n]*\K (?=```) ref %val{selection}
+                add-highlighter "shared/markdown/listblock/codeblock/%val{selection}" region -match-capture "^(\h*)```\h*(%val{selection}\b|\{[.=]?%val{selection}\})" ^(\h*)``` regions
+                add-highlighter "shared/markdown/listblock/codeblock/%val{selection}/" default-region fill meta
+                add-highlighter "shared/markdown/listblock/codeblock/%val{selection}/inner" region \A\h*```[^\n]*\K (?=```) ref %val{selection}
+            }}
+        }}
+    }
 }
-
-add-highlighter shared/markdown/inline/code region -match-capture (`+) (`+) fill mono
-
-# Setext-style header
-add-highlighter shared/markdown/inline/text/ regex (\A|^\n)[^\n]+\n={2,}\h*\n\h*$ 0:title
-add-highlighter shared/markdown/inline/text/ regex (\A|^\n)[^\n]+\n-{2,}\h*\n\h*$ 0:header
-
-# Atx-style header
-add-highlighter shared/markdown/inline/text/ regex ^#[^\n]* 0:header
-
-add-highlighter shared/markdown/inline/text/ regex (?<!\*)(\*([^\s*]|([^\s*](\n?[^\n*])*[^\s*]))\*)(?!\*) 1:+i
-add-highlighter shared/markdown/inline/text/ regex (?<!_)(_([^\s_]|([^\s_](\n?[^\n_])*[^\s_]))_)(?!_) 1:+i
-add-highlighter shared/markdown/inline/text/ regex (?<!\*)(\*\*([^\s*]|([^\s*](\n?[^\n*])*[^\s*]))\*\*)(?!\*) 1:+b
-add-highlighter shared/markdown/inline/text/ regex (?<!_)(__([^\s_]|([^\s_](\n?[^\n_])*[^\s_]))__)(?!_) 1:+b
-add-highlighter shared/markdown/inline/text/ regex ^\h*(>\h*)+ 0:comment
-add-highlighter shared/markdown/inline/text/ regex "\H( {2,})$" 1:+r@meta
 
 # Commands
 # ‾‾‾‾‾‾‾‾
-
-define-command markdown-load-languages -params 1 %{
-    evaluate-commands -draft %{ try %{
-        execute-keys "%arg{1}s```\h*\{?[.=]?\K\w+<ret>" # }
-        evaluate-commands -itersel %{ try %{
-            require-module %val{selection}
-            add-highlighter "shared/markdown/codeblock/%val{selection}" region -match-capture "^(\h*)```\h*(%val{selection}\b|\{[.=]?%val{selection}\})" ^(\h*)``` regions
-            add-highlighter "shared/markdown/codeblock/%val{selection}/" default-region fill meta
-            add-highlighter "shared/markdown/codeblock/%val{selection}/inner" region \A\h*```[^\n]*\K (?=```) ref %val{selection}
-            add-highlighter "shared/markdown/listblock/codeblock/%val{selection}" region -match-capture "^(\h*)```\h*(%val{selection}\b|\{[.=]?%val{selection}\})" ^(\h*)``` regions
-            add-highlighter "shared/markdown/listblock/codeblock/%val{selection}/" default-region fill meta
-            add-highlighter "shared/markdown/listblock/codeblock/%val{selection}/inner" region \A\h*```[^\n]*\K (?=```) ref %val{selection}
-        }}
-    }}
-}
 
 define-command -hidden markdown-trim-indent %{
     evaluate-commands -no-hooks -draft -itersel %{
