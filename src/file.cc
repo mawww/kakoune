@@ -626,7 +626,7 @@ FsStatus get_fs_status(StringView filename)
 {
     MappedFile fd{filename};
 
-    return {fd.st.st_mtim, fd.st.st_size, hash_data(fd.data, fd.st.st_size)};
+    return {fd.st.st_mtim, fd.st.st_size, murmur3(fd.data, fd.st.st_size)};
 }
 
 String get_kak_binary_path()

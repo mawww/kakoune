@@ -140,7 +140,7 @@ decltype(auto) parse_file(StringView filename, Func&& func)
     const bool crlf = has_crlf and not has_lf;
     auto eolformat = crlf ? EolFormat::Crlf : EolFormat::Lf;
 
-    FsStatus fs_status{file.st.st_mtim, file.st.st_size, hash_data(file.data, file.st.st_size)};
+    FsStatus fs_status{file.st.st_mtim, file.st.st_size, murmur3(file.data, file.st.st_size)};
     return func(parse_lines(pos, end, eolformat), bom, eolformat, fs_status);
 }
 
