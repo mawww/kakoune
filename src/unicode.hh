@@ -124,17 +124,17 @@ inline CharCategories categorize(Codepoint c, ConstArrayView<Codepoint> extra_wo
     return CharCategories::Punctuation;
 }
 
-inline Codepoint to_lower(Codepoint cp) noexcept { return towlower((wchar_t)cp); }
-inline Codepoint to_upper(Codepoint cp) noexcept { return towupper((wchar_t)cp); }
-
-inline bool is_lower(Codepoint cp) noexcept { return iswlower((wchar_t)cp); }
-inline bool is_upper(Codepoint cp) noexcept { return iswupper((wchar_t)cp); }
-
 inline char to_lower(char c) noexcept { return c >= 'A' and c <= 'Z' ? c - 'A' + 'a' : c; }
 inline char to_upper(char c) noexcept { return c >= 'a' and c <= 'z' ? c - 'a' + 'A' : c; }
 
 inline bool is_lower(char c) noexcept { return c >= 'a' and c <= 'z'; }
 inline bool is_upper(char c) noexcept { return c >= 'A' and c <= 'Z'; }
+
+inline Codepoint to_lower(Codepoint cp) noexcept { return cp < 128 ? (Codepoint)to_lower((char)cp) : towlower((wchar_t)cp); }
+inline Codepoint to_upper(Codepoint cp) noexcept { return cp < 128 ? (Codepoint)to_upper((char)cp) : towupper((wchar_t)cp); }
+
+inline bool is_lower(Codepoint cp) noexcept { return cp < 128 ? is_lower((char)cp) : iswlower((wchar_t)cp); }
+inline bool is_upper(Codepoint cp) noexcept { return cp < 128 ? is_upper((char)cp) : iswupper((wchar_t)cp); }
 
 }
 
