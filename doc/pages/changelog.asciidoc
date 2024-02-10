@@ -24,6 +24,10 @@ released versions.
 
 * `git blame` now also works in `git-diff` and `git-log` buffers.
 
+* Completions provided via `shell-script-candidates` or `completers` are no longer sorted if the typed text is empty.
+
+* The `terminal` alias has been replaced with a command that selects terminal program and placement based on windowing options.
+
 == Kakoune 2023.08.08
 
 * Fix compilation errors on FreeBSD and MacOS using clang
