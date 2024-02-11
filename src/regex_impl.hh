@@ -410,6 +410,9 @@ private:
                     thread.inst = inst.param.jump_target;
                     break;
                 case CompiledRegex::Split:
+                    if (instructions[inst.param.split.target].last_step == current_step)
+                        break;
+
                     if (thread.saves >= 0)
                         ++m_saves[thread.saves]->refcount;
 
