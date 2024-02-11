@@ -530,7 +530,7 @@ private:
                 const unsigned char c = *start;
                 if (start_desc.map[(c < StartDesc::count) ? c : StartDesc::other])
                     return;
-                utf8::to_next(start, config.end);
+                ++start;
             }
             else
             {
