@@ -713,7 +713,7 @@ define-command -params 1.. \
         add|rm)
             cmd="$1"
             shift
-            run_git_cmd $cmd "${@:-${kak_buffile}}"
+            run_git_cmd $cmd "${@:-"${kak_buffile}"}"
             ;;
         reset|checkout)
             run_git_cmd "$@"
