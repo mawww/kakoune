@@ -1,0 +1,11 @@
+ui_out -ignore 7
+ui_out -ignore 11
+
+# We've jumped to the new version of line 2. Move to the old version so we
+# can annotate the old file.
+ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "k:git blame<ret>" ] }'
+ui_out -ignore 11
+
+# We should have jumped to the old version of line 2, assert on kak_selection.
+ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "x" ] }'
+ui_out -ignore 5

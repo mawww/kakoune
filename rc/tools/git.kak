@@ -225,9 +225,14 @@ define-command -params 1.. \
                         require-module diff
                         try %{
                             diff-parse END %{
-                                $commit = "$commit~" if $diff_line_text =~ m{^[-]};
+                                my $line = $file_line;
+                                if ($diff_line_text =~ m{^[-]}) {
+                                    $commit = "$commit~";
+                                    $line = $other_file_line;
+                                }
+                                $line = $line or 1;
                                 printf "echo -to-file '${kak_response_fifo}' -quoting shell %s %s %d %d",
-                                    $commit, quote($file), ($file_line or 1), ('${kak_cursor_column}' - 1);
+                                    $commit, quote($file), $line, ('${kak_cursor_column}' - 1);
                             }
                         } catch %{
                             echo -to-file '${kak_response_fifo}' -quoting shell -- %val{error}

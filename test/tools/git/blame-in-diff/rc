@@ -1,0 +1,14 @@
+declare-option str jumpclient
+source "%val{runtime}/rc/filetype/diff.kak"
+source "%val{runtime}/rc/tools/git.kak"
+
+define-command run %{
+    git init
+    git add
+    git commit --message 'initial commit'
+    execute-keys %{2gIchanged <esc>}
+    write
+    git commit --all --message 'changed line 2'
+    # Show the commit, jumping to the new version of line 2.
+    git blame-jump
+}
