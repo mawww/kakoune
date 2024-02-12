@@ -28,7 +28,7 @@ main() {
   else
     session_path="${TMPDIR:-/tmp}/kakoune/${USER}/$session"
   fi
-  trap "rm -R $work" EXIT
+  trap "rm -Rf $work" EXIT
 
   number_tests=0
   number_failures=0
@@ -47,13 +47,18 @@ main() {
     env_vars=$(ls -1 kak_* 2>/dev/null)
     number_tests=$(($number_tests + 1))
     mkdir -p $work/$dir
-    cp in cmd rc $work/$dir/ 2>/dev/null
+    cp in cmd rc env $work/$dir/ 2>/dev/null
     cd $work/$dir;
 
     mkfifo ui-in ui-out
     touch in; cp in out
     rm -f "$session_path"
-    $DEBUGGER $root/../src/kak out -n -s "$session" -ui json -e "$kak_commands" >ui-out <ui-in &
+    (
+      if [ -f env ]; then
+        . ./env
+      fi
+      exec $DEBUGGER $root/../src/kak out -n -s "$session" -ui json -e "$kak_commands" >ui-out <ui-in
+    ) &
     kakpid=$!
 
     failed=0
@@ -82,10 +87,7 @@ main() {
       else
         for file in out $env_vars; do
           if [ -f $root/$dir/$file ] && ! cmp -s $root/$dir/$file $file; then
-            if [ $failed -eq 0 ]; then
-              printf "${red}$indent%s${none}\n" "$name"
-              failed=1
-            fi
+            fail_ifn
             show_diff $root/$dir/$file $file
           fi
         done
@@ -126,6 +128,13 @@ main() {
 }
 
 # Utility ├─────────────────────────────────────────────────────────────────────
+
+fail_ifn() {
+  if [ $failed -eq 0 ]; then
+    printf "${red}$indent%s${none}\n" "$name"
+    failed=1
+  fi
+}
 
 show_diff() {
   diff -u $1 $2 | while IFS='' read -r line; do
@@ -168,20 +177,40 @@ ui_out() {
     case "$1" in
     -ignore)
       shift
-      skip_count="$1"
+      skip_count=$1
       while [ $skip_count -gt 0 ]; do
         read -r event <&4
         skip_count=$(( skip_count - 1 ))
       done
       ;;
+    -within-next)
+        shift
+        candidate_count=$1
+        shift
+        candidates=
+        found=false
+        while [ $candidate_count -gt 0 ]; do
+          read -r event <&4
+          if [ "$1" = "$event" ]; then
+            found=true
+          elif ! $found; then
+            candidates="$candidates${indent}      $event
+"
+          fi
+          candidate_count=$(( candidate_count - 1 ))
+        done
+        if ! $found; then
+          fail_ifn
+          printf "${indent}    Failed to find:\n"
+          printf "${indent}      %s\n" "$1"
+          printf "${indent}    Candidates:\n%s" "$candidates"
+        fi
+        ;;
     *)
       read -r event <&4
       if [ ! "$1" = "$event" ]; then
-        if [ $failed -eq 0 ]; then
-          printf "${red}$indent%s${none}\n" "$name"
-        fi
+        fail_ifn
         printf "${indent}  ${red}- %s\n${indent}  ${green}+ %s${none}\n" "$1" "$event"
-        failed=1
       fi
       ;;
     esac

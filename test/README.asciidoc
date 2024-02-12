@@ -13,6 +13,7 @@ Source structure
 └── compose
     └── …
         ├── [enabled]    → applicability
+        ├── [env]        → environment setup
         ├── [rc]         → configuration
         ├── [in]         → start file
         ├── cmd          → command
@@ -40,6 +41,9 @@ the test is assumed to be not applicable to the current environment
 (for example, a test for OS-specific integration
 isn't useful on a different OS)
 and will be silently skipped.
+
++env+ is optional.
+If it exists, it will be sourced before starting Kakoune.
 
 +rc+ is optional
 and should contain a sequence of commands,
