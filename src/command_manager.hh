@@ -52,13 +52,18 @@ struct Token
         ValExpand,
         ArgExpand,
         FileExpand,
-        CommandSeparator
+        CommandSeparator,
+        UnknownExpand
     };
 
     Type type;
     ByteCount pos;
     String content;
-    bool terminated = false;
+    struct Terminator {
+        Codepoint character;
+        bool present;
+    };
+    Optional<Terminator> terminator{};
 };
 
 struct ParseState
