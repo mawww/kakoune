@@ -246,7 +246,7 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
                         if (is_first)
                             m_buffer.erase({0,0}, m_buffer.next({0,0}));
                         else if (not m_had_trailing_newline and have_trailing_newline)
-                            m_buffer.erase(pos, m_buffer.next(pos));
+                            m_buffer.erase(m_buffer.prev(pos), pos);
                     }
                     m_had_trailing_newline = have_trailing_newline;
                 }
@@ -264,7 +264,7 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
 
         Buffer& m_buffer;
         bool m_scroll;
-        bool m_had_trailing_newline;
+        bool m_had_trailing_newline = false;
     };
 
     buffer->values()[fifo_watcher_id] = Value(Meta::Type<FifoWatcher>{}, fd, *buffer, scroll);
