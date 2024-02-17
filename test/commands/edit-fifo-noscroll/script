@@ -12,7 +12,7 @@ ui_out -ignore 2
 
 dd if=/dev/zero bs=2049 count=1 2>/dev/null | sed s/././g >&5
 ui_out -ignore 3
-ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "gjxH|wc -c<ret>" ] }'
+ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "gjxH|wc -c | tr -d \" \"<ret>" ] }'
 ui_out -ignore 6
 
 exec 5>&-
