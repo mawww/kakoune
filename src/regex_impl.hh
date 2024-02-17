@@ -267,11 +267,12 @@ public:
         };
 
         Iterator start = forward ? begin : end;
+        uint16_t idle_step = -1;
         if (const auto& start_desc = forward ? m_program.forward_start_desc : m_program.backward_start_desc)
         {
             if (search)
             {
-                to_next_start(start, config, *start_desc);
+                to_next_start(start, config, *start_desc, idle_func, idle_step);
                 if (start == config.end) // If start_desc is not null, it means we consume at least one char
                     return false;
             }
@@ -283,7 +284,7 @@ public:
             }
         }
 
-        return exec_program(std::move(start), config, idle_func);
+        return exec_program(std::move(start), config, idle_func, idle_step);
     }
 
     ArrayView<const Iterator> captures() const
@@ -465,7 +466,7 @@ private:
         return failed();
     }
 
-    bool exec_program(Iterator pos, const ExecConfig& config, auto&& idle_func)
+    bool exec_program(Iterator pos, const ExecConfig& config, auto&& idle_func, uint16_t& idle_step)
     {
         kak_assert(m_threads.current_is_empty() and m_threads.next_is_empty());
         release_saves(m_captures);
@@ -483,10 +484,10 @@ private:
         m_found_match = false;
         while (true) // Iterate on all codepoints and once at the end
         {
+            if (++idle_step == 0)
+                idle_func();
             if (++current_step == 0)
             {
-                idle_func();
-
                 // We wrapped, avoid potential collision on inst.last_step by resetting them
                 ConstArrayView<CompiledRegex::Instruction> instructions{m_program.instructions};
                 instructions = forward ? instructions.subrange(0, m_program.first_backward_inst)
@@ -516,17 +517,20 @@ private:
             if (search and not m_found_match)
             {
                 if (start_desc and m_threads.next_is_empty())
-                    to_next_start(pos, config, *start_desc);
+                    to_next_start(pos, config, *start_desc, idle_func, idle_step);
                 m_threads.push_next({first_inst, -1});
             }
             m_threads.swap_next();
         }
     }
 
-    static void to_next_start(Iterator& start, const ExecConfig& config, const StartDesc& start_desc)
+    static void to_next_start(Iterator& start, const ExecConfig& config, const StartDesc& start_desc,
+                              auto&& idle_func, uint16_t& idle_step)
     {
         while (start != config.end)
         {
+            if (++idle_step == 0)
+                idle_func();
             static_assert(StartDesc::count <= 128, "start desc should be ascii only");
             if constexpr (forward)
             {
