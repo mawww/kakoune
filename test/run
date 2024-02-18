@@ -197,29 +197,6 @@ ui_out() {
         ! printf %s "$event" | grep "$@"
       do :; done
       ;;
-    -within-next)
-        shift
-        candidate_count=$1
-        shift
-        candidates=
-        found=false
-        while [ $candidate_count -gt 0 ]; do
-          read -r event <&4
-          if [ "$1" = "$event" ]; then
-            found=true
-          elif ! $found; then
-            candidates="$candidates${indent}      $event
-"
-          fi
-          candidate_count=$(( candidate_count - 1 ))
-        done
-        if ! $found; then
-          fail_ifn
-          printf "${indent}    Failed to find:\n"
-          printf "${indent}      %s\n" "$1"
-          printf "${indent}    Candidates:\n%s" "$candidates"
-        fi
-        ;;
     *)
       read -r event <&4
       assert_eq "$1" "$event"
