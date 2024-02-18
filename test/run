@@ -136,6 +136,13 @@ fail_ifn() {
   fi
 }
 
+assert_eq() {
+  if [ ! "$1" = "$2" ]; then
+    fail_ifn
+    printf "${indent}  ${red}- %s\n${indent}  ${green}+ %s${none}\n" "$1" "$2"
+  fi
+}
+
 show_diff() {
   diff -u $1 $2 | while IFS='' read -r line; do
     first_character=$(printf '%s\n' "$line" | cut -b 1)
@@ -183,6 +190,13 @@ ui_out() {
         skip_count=$(( skip_count - 1 ))
       done
       ;;
+    -until-grep)
+      shift
+      while
+        read -r event <&4
+        ! printf %s "$event" | grep "$@"
+      do :; done
+      ;;
     -within-next)
         shift
         candidate_count=$1
@@ -208,10 +222,7 @@ ui_out() {
         ;;
     *)
       read -r event <&4
-      if [ ! "$1" = "$event" ]; then
-        fail_ifn
-        printf "${indent}  ${red}- %s\n${indent}  ${green}+ %s${none}\n" "$1" "$event"
-      fi
+      assert_eq "$1" "$event"
       ;;
     esac
     shift
