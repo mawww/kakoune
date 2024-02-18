@@ -1,7 +1,8 @@
-for _ in fifo-opened fifo-closed blame-info
+while ! ui_out -until-grep draw_status | grep -v '\[fifo\]' >/dev/null;
 do
-  actual_draw_status=$(ui_out -until-grep draw_status)
+    :
 done
+actual_draw_status=$(ui_out -until-grep draw_status)
 
 expected_subject=$(cat <<'EOF'
 2017-07-14 A U Thor "Don't break on single quotes or unbalanced {"
