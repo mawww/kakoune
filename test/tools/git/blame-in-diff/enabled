@@ -1,0 +1,2 @@
+#!/bin/sh
+command -v git >/dev/null

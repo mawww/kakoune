@@ -410,6 +410,9 @@ private:
                     thread.inst = inst.param.jump_target;
                     break;
                 case CompiledRegex::Split:
+                    if (instructions[inst.param.split.target].last_step == current_step)
+                        break;
+
                     if (thread.saves >= 0)
                         ++m_saves[thread.saves]->refcount;
 
@@ -530,7 +533,7 @@ private:
                 const unsigned char c = *start;
                 if (start_desc.map[(c < StartDesc::count) ? c : StartDesc::other])
                     return;
-                utf8::to_next(start, config.end);
+                ++start;
             }
             else
             {

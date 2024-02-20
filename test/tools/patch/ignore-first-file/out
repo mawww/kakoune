@@ -1,0 +1,19 @@
+Applied:
+diff -ur a/file2 b/file2
+--- a/file2
++++ b/file2
+@@ -1 +1 @@
+-file2 here
++modified file2 here
+
+Updated buffer:
+diff -ur a/file1 b/file1
+--- a/file1
++++ b/file1
+@@ -1 +1 @@
+ file1 here
+diff -ur a/file2 b/file2
+--- a/file2
++++ b/file2
+@@ -1 +1 @@
+ modified file2 here

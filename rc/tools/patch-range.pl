@@ -18,12 +18,15 @@ my $reverse = grep /^(--reverse|-R)$/, @ARGV;
 
 my $lineno = 0;
 my $original = "";
+my $diff_header = "";
 my $wheat = "";
 my $chaff = "";
 my $state = undef;
 my $hunk_wheat = undef;
 my $hunk_chaff = undef;
 my $hunk_header = undef;
+my $hunk_remaining_lines = undef;
+my $signature = "";
 
 sub compute_hunk_header {
     my $original_header = shift;
@@ -41,9 +44,13 @@ sub compute_hunk_header {
 sub finish_hunk {
     return unless defined $hunk_header;
     if ($hunk_wheat =~ m{^[-+]}m) {
+        if ($diff_header) {
+            $wheat .= $diff_header;
+            $diff_header = "";
+        }
         $wheat .= (compute_hunk_header $hunk_header, $hunk_wheat). $hunk_wheat;
     }
-    $chaff .= (compute_hunk_header $hunk_header, $hunk_chaff) . $hunk_chaff;
+    $chaff .= (compute_hunk_header $hunk_header, $hunk_chaff) . $hunk_chaff . $signature;
     $hunk_header = undef;
 }
 
@@ -53,20 +60,33 @@ while (<STDIN>) {
     if (m{^diff}) {
         finish_hunk();
         $state = "diff header";
+        $diff_header = "";
     }
-    if (m{^@@}) {
+    if ($state eq "signature") {
+        $signature .= $_;
+        next;
+    }
+    if (m{^@@ -\d+(?:,(\d)+)? \+\d+(?:,\d+)? @@}) {
+        $hunk_remaining_lines = $1 or 1;
         finish_hunk();
         $state = "diff hunk";
         $hunk_header = $_;
         $hunk_wheat = "";
         $hunk_chaff = "";
+        $signature = "";
         next;
     }
     if ($state eq "diff header") {
-        $wheat .= $_;
+        $diff_header .= $_;
         $chaff .= $_;
         next;
     }
+    if ($hunk_remaining_lines == 0 and m{^-- $}) {
+        $state = "signature";
+        $signature .= $_;
+        next;
+    }
+    --$hunk_remaining_lines if m{^[ -]};
     my $include = m{^ } || ($lineno >= $min_line && $lineno <= $max_line);
     if ($include) {
         $hunk_wheat .= $_;

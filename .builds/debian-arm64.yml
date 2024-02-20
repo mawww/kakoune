@@ -1,0 +1,20 @@
+image: debian/unstable
+arch: arm64
+packages:
+    - clang
+    - make
+    - gcc
+tasks:
+    - clang-build: |
+        cd kakoune
+        CXX=clang++ make -j$(nproc)
+    - clang-test: |
+        cd kakoune
+        LC_ALL=C.utf8 make test
+    - gcc-build: |
+        cd kakoune
+        make clean
+        CXX=g++ make -j$(nproc)
+    - gcc-test: |
+        cd kakoune
+        LC_ALL=C.utf8 make test

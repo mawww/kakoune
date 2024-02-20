@@ -394,7 +394,7 @@ void Client::check_if_buffer_needs_reloading()
             return;
 
         if (MappedFile fd{filename};
-            fd.st.st_size == status.file_size and hash_data(fd.data, fd.st.st_size) == status.hash)
+            fd.st.st_size == status.file_size and murmur3(fd.data, fd.st.st_size) == status.hash)
             return;
 
         if (reload == Autoreload::Ask)

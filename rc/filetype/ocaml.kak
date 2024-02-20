@@ -15,6 +15,8 @@ hook global WinSetOption filetype=ocaml %{
     require-module ocaml
     set-option window static_words %opt{ocaml_static_words}
     hook window InsertChar -group ocaml-insert '\*' ocaml-insert-closing-comment-bracket
+    hook window InsertChar \n -group ocaml-insert ocaml-insert-on-new-line
+    hook window ModeChange pop:insert:.* -group ocaml-trim-indent ocaml-trim-indent
 }
 
 hook -group ocaml-highlight global WinSetOption filetype=ocaml %{
@@ -97,6 +99,23 @@ define-command ocaml-alternative-file -docstring 'Switch between .ml and .mli fi
     }
 }
 
+}
+
+# Remove trailing whitespaces
+define-command -hidden ocaml-trim-indent %{
+    evaluate-commands -no-hooks -draft -itersel %{
+        try %{ execute-keys -draft x s \h+$ <ret> d }
+    }
+}
+
+# Preserve indentation when creating new line
+define-command -hidden ocaml-insert-on-new-line %{
+    evaluate-commands -draft -itersel %{
+        # copy white spaces at the beginnig of the previous line
+        try %{ execute-keys -draft k x s ^\h+ <ret> y jgh P x s \h+$ <a-d> }
+        # increase indentation if the previous line ended with either '=' sign or do keyword
+        try %{ execute-keys -draft k x s (=|\bdo)$ <ret> j <a-gt> }
+    }
 }
 
 # The OCaml comment is `(* Some comment *)`. Like the C-family this can be a multiline comment.

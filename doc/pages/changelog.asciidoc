@@ -5,6 +5,8 @@ released versions.
 
 == Development version
 
+* `flag-lines -after` switch to display text after the line
+
 * `shell-script-candidates` completion now runs the script asynchronously
   while displaying and updating results live.
 
@@ -18,7 +20,13 @@ released versions.
 
 * View mode commands and mouse scrolling no longer change selections when those go off-screen.
 
-* New commands `git apply`, `git edit`, `git grep`
+* New commands `git apply`, `git blame-jump`, `git edit` and `git grep`.
+
+* `git blame` now also works in `git-diff` and `git-log` buffers.
+
+* Completions provided via `shell-script-candidates` or `completers` are no longer sorted if the typed text is empty.
+
+* The `terminal` alias has been replaced with a command that selects terminal program and placement based on windowing options.
 
 == Kakoune 2023.08.08
 

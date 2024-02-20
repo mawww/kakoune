@@ -27,8 +27,8 @@ static inline uint32_t fmix(uint32_t h)
     return h;
 }
 
-// murmur3 hash, based on https://github.com/PeterScott/murmur3
-size_t hash_data(const char* input, size_t len)
+// based on https://github.com/PeterScott/murmur3
+size_t murmur3(const char* input, size_t len)
 {
     const uint8_t* data = reinterpret_cast<const uint8_t*>(input);
     uint32_t hash = 0x1235678;
@@ -73,13 +73,13 @@ size_t hash_data(const char* input, size_t len)
 UnitTest test_murmur_hash{[] {
     {
         constexpr char data[] = "Hello, World!";
-        kak_assert(hash_data(data, strlen(data)) == 0xf816f95b);
+        kak_assert(murmur3(data, strlen(data)) == 0xf816f95b);
     }
     {
         constexpr char data[] = "xxxxxxxxxxxxxxxxxxxxxxxxxxxx";
-        kak_assert(hash_data(data, strlen(data)) == 3551113186);
+        kak_assert(murmur3(data, strlen(data)) == 3551113186);
     }
-    kak_assert(hash_data("", 0) == 2572747774);
+    kak_assert(murmur3("", 0) == 2572747774);
 }};
 
 }

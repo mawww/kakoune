@@ -21,7 +21,7 @@ public:
 
     friend constexpr size_t hash_value(const Type& str)
     {
-        return hash_data(str.data(), (int)str.length());
+        return fnv1a(str.data(), (int)str.length());
     }
 
     using iterator = CharType*;

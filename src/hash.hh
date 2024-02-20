@@ -5,11 +5,23 @@
 #include <utility>
 
 #include <cstddef>
+#include <cstdint>
 
 namespace Kakoune
 {
 
-size_t hash_data(const char* data, size_t len);
+inline size_t fnv1a(const char* data, size_t len)
+{
+    constexpr uint32_t FNV_prime_32 = 16777619;
+    constexpr uint32_t offset_basis_32 = 2166136261;
+
+    uint32_t hash_value = offset_basis_32;
+    for (size_t i = 0; i < len; ++i)
+        hash_value = (hash_value ^ data[i]) * FNV_prime_32;
+    return hash_value;
+}
+
+size_t murmur3(const char* input, size_t len);
 
 template<typename Type> requires std::is_integral_v<Type>
 constexpr size_t hash_value(const Type& val)
