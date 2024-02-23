@@ -1,7 +1,7 @@
 declare-option -docstring "shell command run to build the project" \
     str makecmd make
 declare-option -docstring "pattern that describes lines containing information about errors in the output of the `makecmd` command. Capture groups must be: 1: filename 2: line number 3: optional column 4: optional error description" \
-    regex make_error_pattern "^(?:\w:)?([^:\n]+):(\d+):(?:(\d+):)? (?:fatal )?error:([^\n]+)?"
+    regex make_error_pattern "^([^:\n]+):(\d+):(?:(\d+):)? (?:fatal )?error:([^\n]+)?"
 
 
 declare-option -docstring "name of the client in which utilities display information" \
@@ -26,7 +26,7 @@ define-command -params .. \
 }}
 
 add-highlighter shared/make group
-add-highlighter shared/make/ regex "^((?:\w:)?[^:\n]+):(\d+):(?:(\d+):)?\h+(?:((?:fatal )?error)|(warning)|(note)|(required from(?: here)?))?.*?$" 1:cyan 2:green 3:green 4:red 5:yellow 6:blue 7:yellow
+add-highlighter shared/make/ regex "^([^:\n]+):(\d+):(?:(\d+):)?\h+(?:((?:fatal )?error)|(warning)|(note)|(required from(?: here)?))?.*?$" 1:cyan 2:green 3:green 4:red 5:yellow 6:blue 7:yellow
 add-highlighter shared/make/ regex "^\h*(~*(?:(\^)~*)?)$" 1:green 2:cyan+b
 add-highlighter shared/make/ line '%opt{make_current_error_line}' default+b
 
