@@ -1,0 +1,1 @@
+:hook -group h g InsertChar f %{exec FINSERTED}<ret>ifoo<esc>.\.\ifoo<esc>.
