@@ -5,8 +5,13 @@ declare-option -docstring "shell command run to search for subtext in a file/dir
 
 define-command -params .. -docstring %{
     grep [<arguments>]: grep utility wrapper
-    All optional arguments are forwarded to the grep utility
-    Passing no argument will perform a literal-string grep for the current selection
+
+    All optional arguments are forwarded to the grep utility.
+
+    Passing no argument will perform a literal-string grep for the current selection.
+
+    The output will be displayed in a scratch buffer in the client named by
+    the 'toolsclient' option. See also `:jump-pop`.
 } grep %{ evaluate-commands %sh{
     if [ $# -eq 0 ]; then
         case "$kak_opt_grepcmd" in
@@ -27,6 +32,11 @@ define-command -params .. -docstring %{
      ( ${kak_opt_grepcmd} "$@" 2>&1 | tr -d '\r' > ${output} 2>&1 & ) > /dev/null 2>&1 < /dev/null
 
      printf %s\\n "evaluate-commands -try-client '$kak_opt_toolsclient' %{
+               try %{
+                   evaluate-commands -buffer *grep* %{
+                       rename-buffer -unique *grep-|*
+                   }
+               }
                edit! -fifo ${output} *grep*
                require-module buffer
                set-option buffer buffer_kind jump
