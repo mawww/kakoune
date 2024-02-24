@@ -21,19 +21,30 @@ define-command -hidden jump %{
     }
 }
 
-define-command jump-next -params 1 -docstring %{
-    jump-next <bufname>: jump to next location listed in the given *grep*-like location list buffer.
+define-command jump-next -params 0..1 -docstring %{
+    jump-next [<bufname>]: jump to next location listed in the given buffer
+
+    <bufname> defaults to the last buffer whose 'buffer_kind' option is 'jump', typically '*grep*'.
 } %{
-    evaluate-commands -try-client %opt{jumpclient} -save-regs / %{
-        buffer %arg{1}
-        jump-select-next
-        jump
-    }
-    try %{
-        evaluate-commands -client %opt{toolsclient} %{
-            buffer %arg{1}
-            execute-keys gg %opt{jump_current_line}g
-        }
+    evaluate-commands %sh{
+        if [ $# -eq 0 ]; then
+            echo require-module buffer
+            echo buffer-with-last jump jump-next
+            exit
+        fi
+        echo "
+            evaluate-commands -try-client %opt{jumpclient} -save-regs / %{
+                buffer '$1'
+                jump-select-next
+                jump
+            }
+            try %{
+                evaluate-commands -client %opt{toolsclient} %{
+                    buffer '$1'
+                    execute-keys gg %opt{jump_current_line}g
+                }
+            }
+        "
     }
 }
 complete-command jump-next buffer
@@ -44,19 +55,30 @@ define-command -hidden jump-select-next %{
     execute-keys ge %opt{jump_current_line}g<a-l> /^[^:\n]+:\d+:<ret>
 }
 
-define-command jump-previous -params 1 -docstring %{
-    jump-previous <bufname>: jump to previous location listed in the given *grep*-like location list buffer.
+define-command jump-previous -params 0..1 -docstring %{
+    jump-previous [<bufname>]: jump to previous location listed in the given buffer
+
+    <bufname> defaults to the last buffer whose 'buffer_kind' option is 'jump', usually '*typically*'.
 } %{
-    evaluate-commands -try-client %opt{jumpclient} -save-regs / %{
-        buffer %arg{1}
-        jump-select-previous
-        jump
-    }
-    try %{
-        evaluate-commands -client %opt{toolsclient} %{
-            buffer %arg{1}
-            execute-keys gg %opt{jump_current_line}g
-        }
+    evaluate-commands %sh{
+        if [ $# -eq 0 ]; then
+            echo require-module buffer
+            echo buffer-with-last jump jump-previous
+            exit
+        fi
+        echo "
+            evaluate-commands -try-client %opt{jumpclient} -save-regs / %{
+                buffer '$1'
+                jump-select-previous
+                jump
+            }
+            try %{
+                evaluate-commands -client %opt{toolsclient} %{
+                    buffer '$1'
+                    execute-keys gg %opt{jump_current_line}g
+                }
+            }
+        "
     }
 }
 complete-command jump-previous buffer

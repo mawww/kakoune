@@ -28,6 +28,8 @@ define-command -params .. -docstring %{
 
      printf %s\\n "evaluate-commands -try-client '$kak_opt_toolsclient' %{
                edit! -fifo ${output} *grep*
+               require-module buffer
+               set-option buffer buffer_kind jump
                set-option buffer filetype grep
                set-option buffer jump_current_line 0
                hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname ${output}) } }
@@ -51,10 +53,10 @@ define-command -hidden grep-jump %{
     jump
 }
 
-define-command grep-next-match -docstring %{alias for "jump-next *grep*"} %{
-    jump-next *grep*
+define-command grep-next-match -docstring %{alias for "jump-next"} %{
+    jump-next
 }
 
-define-command grep-previous-match -docstring %{alias for "jump-previous *grep*"} %{
-    jump-previous *grep*
+define-command grep-previous-match -docstring %{alias for "jump-previous"} %{
+    jump-previous
 }
