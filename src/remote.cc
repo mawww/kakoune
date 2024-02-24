@@ -806,7 +806,9 @@ private:
                 auto env_vars = m_reader.read<HashMap<String, String, MemoryDomain::EnvVars>>();
 
                 if (auto stdin_fd = m_reader.ancillary_fd())
-                    create_fifo_buffer(generate_buffer_name("*stdin-{}*"), *stdin_fd, Buffer::Flags::None);
+                    create_fifo_buffer(
+                        generate_buffer_name([](int i) {  return format("*stdin-{}*", i); }),
+                        *stdin_fd, Buffer::Flags::None);
 
                 auto* ui = new RemoteUI{sock, dimensions};
                 ClientManager::instance().create_client(
