@@ -86,3 +86,31 @@ define-command -hidden jump-select-previous %{
     # See comment in jump-select-next
     execute-keys ge %opt{jump_current_line}g<a-h> <a-/>^[^:\n]+:\d+:<ret>
 }
+
+define-command jump-pop -docstring %{
+    delete the last buffer whose buffer_kind option is set to 'jump'.
+    Activate the next such buffer in the client specified in the toolsclient
+    option. If the active client is different from the toolsclient, jump to
+    the current location.
+} %{
+    require-module buffer
+    buffer-with-last jump delete-buffer
+    try %{
+        evaluate-commands -save-regs b %{
+            buffer-with-last jump set-register b
+            evaluate-commands -try-client %opt{toolsclient} -verbatim buffer %reg{b}
+            evaluate-commands -try-client %opt{jumpclient} %{
+                evaluate-commands %sh{
+                    if [ -n "${kak_opt_toolsclient}" ] &&
+                    [ "${kak_client}" != "${kak_opt_toolsclient}" ]; then
+                        echo buffer %reg{b}
+                        echo jump
+                    fi
+                }
+            }
+            echo -markup {Information}{\}returned to buffer %reg{b}
+        }
+    } catch %{
+        echo -markup {Information}no jump buffer remaining
+    }
+}
