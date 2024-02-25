@@ -52,11 +52,14 @@ declare-option -docstring "name of the client in which all source code jumps wil
     str jumpclient
 
 define-command -hidden grep-jump %{
-    evaluate-commands %{ # use evaluate-commands to ensure jumps are collapsed
+    evaluate-commands -save-regs a %{ # use evaluate-commands to ensure jumps are collapsed
         try %{
-            execute-keys 'xs^([^:\n]+):(\d+):(\d+)?<ret>'
+            evaluate-commands -draft %{
+                execute-keys ',xs^([^:\n]+):(\d+):(\d+)?<ret>'
+                set-register a %reg{1} %reg{2} %reg{3}
+            }
             set-option buffer grep_current_line %val{cursor_line}
-            evaluate-commands -try-client %opt{jumpclient} -verbatim -- edit -existing %reg{1} %reg{2} %reg{3}
+            evaluate-commands -try-client %opt{jumpclient} -verbatim -- edit -existing -- %reg{a}
             try %{ focus %opt{jumpclient} }
         }
     }
