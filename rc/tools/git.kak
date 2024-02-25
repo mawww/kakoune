@@ -222,25 +222,32 @@ define-command -params 1.. \
                 evaluate-commands -client '${kak_client}' -draft %{
                     try %{
                         execute-keys <a-l><semicolon><a-?>^commit<ret><a-semicolon>
-                        require-module diff
-                        try %{
-                            diff-parse END %{
-                                my $line = $file_line;
-                                if ($diff_line_text =~ m{^[-]}) {
-                                    $commit = "$commit~";
-                                    $line = $other_file_line;
-                                }
-                                $line = $line or 1;
-                                printf "echo -to-file '${kak_response_fifo}' -quoting shell %s %s %d %d",
-                                    $commit, quote($file), $line, ('${kak_cursor_column}' - 1);
-                            }
-                        } catch %{
-                            echo -to-file '${kak_response_fifo}' -quoting shell -- %val{error}
-                        }
                     } catch %{
                         # Missing commit line, assume it is an uncommitted change.
-                        echo -to-file '${kak_response_fifo}' -quoting shell -- \
-                            "git blame: blaming without commit line is not yet supported"
+                        execute-keys <a-l><semicolon><a-?>\A<ret><a-semicolon>
+                    }
+                    require-module diff
+                    try %{
+                        diff-parse END %{
+                            my $line = $file_line;
+                            if (not defined $commit) {
+                                $commit = "HEAD";
+                                $line = $other_file_line;
+                                if ($diff_line_text =~ m{^\+}) {
+                                    print "echo -to-file '${kak_response_fifo}' -quoting shell "
+                                        . "%{git blame: blame from HEAD does not work on added lines}";
+                                    exit;
+                                }
+                            } elsif ($diff_line_text =~ m{^[-]}) {
+                                $commit = "$commit~";
+                                $line = $other_file_line;
+                            }
+                            $line = $line or 1;
+                            printf "echo -to-file '${kak_response_fifo}' -quoting shell %s %s %d %d",
+                                $commit, quote($file), $line, ('${kak_cursor_column}' - 1);
+                        }
+                    } catch %{
+                        echo -to-file '${kak_response_fifo}' -quoting shell -- %val{error}
                     }
                 }
             '
