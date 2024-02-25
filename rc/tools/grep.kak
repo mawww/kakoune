@@ -38,7 +38,7 @@ complete-command grep file
 
 hook -group grep-highlight global WinSetOption filetype=grep %{
     add-highlighter window/grep group
-    add-highlighter window/grep/ regex "^((?:\w:)?[^:\n]+):(\d+):(\d+)?" 1:cyan 2:green 3:green
+    add-highlighter window/grep/ regex "^([^:\n]+):(\d+):(\d+)?" 1:cyan 2:green 3:green
     add-highlighter window/grep/ line %{%opt{grep_current_line}} default+b
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/grep }
 }
@@ -54,7 +54,7 @@ declare-option -docstring "name of the client in which all source code jumps wil
 define-command -hidden grep-jump %{
     evaluate-commands %{ # use evaluate-commands to ensure jumps are collapsed
         try %{
-            execute-keys 'xs^((?:\w:)?[^:]+):(\d+):(\d+)?<ret>'
+            execute-keys 'xs^([^:]+):(\d+):(\d+)?<ret>'
             set-option buffer grep_current_line %val{cursor_line}
             evaluate-commands -try-client %opt{jumpclient} -verbatim -- edit -existing %reg{1} %reg{2} %reg{3}
             try %{ focus %opt{jumpclient} }
