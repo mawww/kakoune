@@ -159,6 +159,7 @@ endif
 
 install: kak man installdirs
 	install -m 0755 kak $(bindir)
+	install -m 0755 kak-connect $(bindir)
 	ln -sf ../../bin/kak $(libexecdir)/kak
 	install -m 0644 ../share/kak/kakrc $(sharedir)
 	install -m 0644 ../doc/pages/*.asciidoc $(sharedir)/doc
