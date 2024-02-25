@@ -221,6 +221,20 @@ String to_string(Key key)
     return res;
 }
 
+String option_to_string(const Key& key)
+{
+    return to_string(key);
+}
+
+Key option_from_string(Meta::Type<Key>, StringView str)
+{
+    auto keys = parse_keys(str);
+    if (keys.empty())
+        return Key(Key::Invalid);
+
+    return keys.front();
+}
+
 UnitTest test_keys{[]()
 {
     KeyList keys{

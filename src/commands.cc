@@ -1827,6 +1827,7 @@ const CommandDesc declare_option_cmd = {
     "    bool: boolean (true/false or yes/no)\n"
     "    str: character string\n"
     "    regex: regular expression\n"
+    "    key: keystroke specifier\n"
     "    int-list: list of integers\n"
     "    str-list: list of character strings\n"
     "    completions: list of completion candidates\n"
@@ -1843,7 +1844,7 @@ const CommandDesc declare_option_cmd = {
     make_completer(
         [](const Context& context, CompletionFlags flags,
            StringView prefix, ByteCount cursor_pos) -> Completions {
-               auto c = {"int", "bool", "str", "regex", "int-list", "str-list", "completions", "line-specs", "range-specs", "str-to-str-map"};
+               auto c = {"int", "bool", "str", "regex", "key", "int-list", "str-list", "completions", "line-specs", "range-specs", "str-to-str-map"};
                return { 0_byte, cursor_pos, complete(prefix, cursor_pos, c), Completions::Flags::Menu };
     }),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
@@ -1866,6 +1867,8 @@ const CommandDesc declare_option_cmd = {
             opt = &reg.declare_option<String>(parser[1], docstring, "", flags);
         else if (parser[0] == "regex")
             opt = &reg.declare_option<Regex>(parser[1], docstring, Regex{}, flags);
+        else if (parser[0] == "key")
+            opt = &reg.declare_option<Key>(parser[1], docstring, Key(Key::Invalid), flags);
         else if (parser[0] == "int-list")
             opt = &reg.declare_option<Vector<int, MemoryDomain::Options>>(parser[1], docstring, {}, flags);
         else if (parser[0] == "str-list")
