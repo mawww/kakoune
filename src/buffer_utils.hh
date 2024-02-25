@@ -2,6 +2,7 @@
 #define buffer_utils_hh_INCLUDED
 
 #include "buffer.hh"
+#include "buffer_manager.hh"
 #include "selection.hh"
 
 #include "utf8_iterator.hh"
@@ -85,7 +86,18 @@ void write_to_debug_buffer(StringView str);
 Vector<String> history_as_strings(const Vector<Buffer::HistoryNode>& history);
 Vector<String> undo_group_as_strings(const Buffer::UndoGroup& undo_group);
 
-String generate_buffer_name(StringView pattern);
+template<typename  Func>
+String generate_buffer_name(Func&& func)
+{
+    auto& buffer_manager = BufferManager::instance();
+    for (int i = 0; true; ++i)
+    {
+        String name = func(i);
+        if (buffer_manager.get_buffer_ifp(name) == nullptr)
+            return name;
+    }
+}
+
 
 }
 

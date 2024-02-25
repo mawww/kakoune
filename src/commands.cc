@@ -453,7 +453,8 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
 
     auto& buffer_manager = BufferManager::instance();
     const auto& name = parser.positional_count() > 0 ?
-        parser[0] : (scratch ? generate_buffer_name("*scratch-{}*") : context.buffer().name());
+        parser[0] : (scratch ? generate_buffer_name([](int i) {  return format("*scratch-{}*", i); })
+                             : context.buffer().name());
 
     Buffer* buffer = buffer_manager.get_buffer_ifp(name);
     if (scratch)
@@ -965,7 +966,8 @@ const CommandDesc rename_buffer_cmd = {
     ParameterDesc{
         {
             { "scratch",  { {}, "convert a file buffer to a scratch buffer" } },
-            { "file",  { {}, "convert a scratch buffer to a file buffer" } }
+            { "file",  { {}, "convert a scratch buffer to a file buffer" } },
+            { "unique",  { {}, "substitute '|' in <name> to create a unique buffer name" } }
         },
         ParameterDesc::Flags::None, 1, 1
     },
@@ -985,8 +987,23 @@ const CommandDesc rename_buffer_cmd = {
 
         const bool is_file = (buffer.flags() & Buffer::Flags::File);
 
-        if (not buffer.set_name(is_file ? parse_filename(parser[0]) : parser[0]))
-            throw runtime_error(format("unable to change buffer name to '{}': a buffer with this name already exists", parser[0]));
+        String name;
+        if (parser.get_switch("unique"))
+        {
+            auto& pattern = parser[0];
+            auto options = option_from_string(
+                Meta::Type<std::tuple<String, String>>{}, pattern);
+            name = generate_buffer_name([&](int i) {
+                return format("{}{}{}", std::get<0>(options), i, std::get<1>(options));
+            });
+        }
+        else if (is_file)
+            name = parse_filename(parser[0]);
+        else
+            name = parser[0];
+
+        if (not buffer.set_name(name))
+            throw runtime_error(format("unable to change buffer name to '{}': a buffer with this name already exists", name));
     }
 };
 

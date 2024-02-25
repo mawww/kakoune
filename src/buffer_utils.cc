@@ -340,15 +340,4 @@ Vector<String> undo_group_as_strings(const Buffer::UndoGroup& undo_group)
     return res;
 }
 
-String generate_buffer_name(StringView pattern)
-{
-    auto& buffer_manager = BufferManager::instance();
-    for (int i = 0; true; ++i)
-    {
-        String name = format(pattern, i);
-        if (buffer_manager.get_buffer_ifp(name) == nullptr)
-            return name;
-    }
-}
-
 }
