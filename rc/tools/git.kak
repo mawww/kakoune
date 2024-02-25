@@ -553,12 +553,21 @@ define-command -params 1.. \
             cursor_line=$3
             cursor_column=$4
             blame_info=$(git blame --porcelain "$starting_commit" -L"$cursor_line,$cursor_line" -- "$file")
+            if [ $? -ne 0 ]; then
+                echo 'echo -markup %{{Error}failed to run git blame, see *debug* buffer}'
+                exit
+            fi
         } else {
             set --
             eval "$prepare_git_blame_args"
             blame_info=$(git blame --porcelain -L"$cursor_line,$cursor_line" "$@" <${contents_fifo})
+            status=$?
             if [ "$contents_fifo" != /dev/null ]; then
                 rm -r $(dirname $contents_fifo)
+            fi
+            if [ $status -ne 0 ]; then
+                echo 'echo -markup %{{Error}failed to run git blame, see *debug* buffer}'
+                exit
             fi
         } fi
         eval "$(printf '%s\n---\n%s' "$blame_index" "$blame_info" |
