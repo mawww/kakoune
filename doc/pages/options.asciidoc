@@ -317,6 +317,15 @@ are exclusively available to built-in options.
 *debug* `flags(hooks|shell|profile|keys|commands)`::
     dump various debug information in the '\*debug*' buffer
 
+*interrupt_key* `key`::
+    _default_ <c-c> +
+    key used to interrupt any running external processes
+
+*cancel_key* `key`::
+    _default_ <c-g> +
+    key used to cancel long-running Kakoune operations and clear the input
+    buffer
+
 *idle_timeout* `int`::
     _default_ 50 +
     timeout, in milliseconds, with no user input that will trigger the
