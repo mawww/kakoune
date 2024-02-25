@@ -260,7 +260,7 @@ define-command -params 1.. \
             message="Blaming $file as of $(git rev-parse --short $commit)"
             echo "echo -debug -- $(kakquote "$message")"
             on_close_fifo="
-                execute-keys -client ${kak_client} ${cursor_line}g<a-h>${cursor_column}l
+                execute-keys -client ${kak_client} ${cursor_line}g<a-h>${cursor_column}lh
                 evaluate-commands -client ${kak_client} %{
                     set-option buffer git_blob $(kakquote "$commit:$file")
                     git blame $(for arg; do kakquote "$arg"; printf " "; done)
