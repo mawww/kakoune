@@ -289,7 +289,7 @@ define-command -params 1.. \
                       set-option buffer=$kak_bufname git_blame_index '$kak_timestamp'
                       set-option buffer=$kak_bufname git_blame ''
                   }" | kak -p ${kak_session}
-            git blame --incremental "$@" <${contents_fifo} | perl -wne '
+            if ! stderr=$({ git blame --incremental "$@" <${contents_fifo} | perl -wne '
                   use POSIX qw(strftime);
                   sub quote {
                       my $SQ = "'\''";
@@ -298,8 +298,11 @@ define-command -params 1.. \
                       return "$SQ$token$SQ";
                   }
                   sub send_flags {
-                      my $flush = shift;
-                      if (not defined $line) { return; }
+                      my $is_last_call = shift;
+                      if (not defined $line) {
+                          if ($is_last_call) { exit 1; }
+                          return;
+                      }
                       my $text = substr($sha,0,7) . " " . $dates{$sha} . " " . $authors{$sha};
                       $text =~ s/~/~~/g;
                       for ( my $i = 0; $i < $count; $i++ ) {
@@ -307,7 +310,7 @@ define-command -params 1.. \
                       }
                       $now = time();
                       # Send roughly one update per second, to avoid creating too many kak processes.
-                      if (!$flush && defined $last_sent && $now - $last_sent < 1) {
+                      if (!$is_last_call && defined $last_sent && $now - $last_sent < 1) {
                           return
                       }
                       open CMD, "|-", "kak -p $ENV{kak_session}";
@@ -337,6 +340,21 @@ define-command -params 1.. \
                   }
                   if (m/^author-time ([0-9]*)/) { $dates{$sha} = strftime("%F %T", localtime $1) }
                   END { send_flags(1); }'
+            } 2>&1); then
+                escape2() { printf %s "$*" | sed "s/'/''''/g"; }
+                echo "evaluate-commands -client ${kak_client} '
+                    evaluate-commands -draft %{
+                        buffer %{${kak_buffile}}
+                        git hide-blame
+                    }
+                    echo -debug failed to run git blame
+                    echo -debug git stderr: <<<
+                    echo -debug ''$(escape2 "$stderr")>>>''
+                    hook -once buffer NormalIdle .* %{
+                        echo -markup %{{Error}failed to run git blame, see *debug* buffer}
+                    }
+                '" | kak -p ${kak_session}
+            fi
             if [ "$contents_fifo" != /dev/null ]; then
                 rm -r $(dirname $contents_fifo)
             fi
