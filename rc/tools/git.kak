@@ -167,7 +167,17 @@ define-command -params 1.. \
         ( git "$@" > ${output} 2>&1 & ) > /dev/null 2>&1 < /dev/null
 
         printf %s "evaluate-commands -try-client '$kak_opt_docsclient' '
+                  try %{
+                      evaluate-commands -buffer *git* %{
+                        rename-buffer -unique *git-|*
+                      }
+                  }
                   edit! -fifo ${output} *git*
+
+                  try %{
+                      require-module buffer
+                      set-option buffer buffer_kind git
+                  }
                   set-option buffer filetype ${filetype}
                   $(hide_blame)
                   set-option buffer git_blob %{}
