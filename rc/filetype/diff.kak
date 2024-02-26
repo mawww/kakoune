@@ -29,7 +29,7 @@ define-command diff-jump -params .. -docstring %{
             -       jump to the old file instead of the new file
             -<num> strip <num> leading directory components, like -p<num> in patch(1). Defaults to 1 if there is a 'diff' line (as printed by 'diff -r'), or 0 otherwise.
     } %{
-    evaluate-commands -draft -save-regs c| %{
+    evaluate-commands -draft -save-regs c %{
         # Save the column because we will move the cursor.
         set-register c %val{cursor_column}
         # If there is a "diff" line, we don't need to look further back.
@@ -93,7 +93,7 @@ define-command diff-jump -params .. -docstring %{
 complete-command diff-jump file
 
 define-command -hidden diff-parse -params 2.. %{
-    evaluate-commands -save-regs ae %{
+    evaluate-commands -save-regs ae| %{
         set-register a %arg{@}
         set-register e nop
         set-register | %{

@@ -222,25 +222,32 @@ define-command -params 1.. \
                 evaluate-commands -client '${kak_client}' -draft %{
                     try %{
                         execute-keys <a-l><semicolon><a-?>^commit<ret><a-semicolon>
-                        require-module diff
-                        try %{
-                            diff-parse END %{
-                                my $line = $file_line;
-                                if ($diff_line_text =~ m{^[-]}) {
-                                    $commit = "$commit~";
-                                    $line = $other_file_line;
-                                }
-                                $line = $line or 1;
-                                printf "echo -to-file '${kak_response_fifo}' -quoting shell %s %s %d %d",
-                                    $commit, quote($file), $line, ('${kak_cursor_column}' - 1);
-                            }
-                        } catch %{
-                            echo -to-file '${kak_response_fifo}' -quoting shell -- %val{error}
-                        }
                     } catch %{
                         # Missing commit line, assume it is an uncommitted change.
-                        echo -to-file '${kak_response_fifo}' -quoting shell -- \
-                            "git blame: blaming without commit line is not yet supported"
+                        execute-keys <a-l><semicolon><a-?>\A<ret><a-semicolon>
+                    }
+                    require-module diff
+                    try %{
+                        diff-parse END %{
+                            my $line = $file_line;
+                            if (not defined $commit) {
+                                $commit = "HEAD";
+                                $line = $other_file_line;
+                                if ($diff_line_text =~ m{^\+}) {
+                                    print "echo -to-file '${kak_response_fifo}' -quoting shell "
+                                        . "%{git blame: blame from HEAD does not work on added lines}";
+                                    exit;
+                                }
+                            } elsif ($diff_line_text =~ m{^[-]}) {
+                                $commit = "$commit~";
+                                $line = $other_file_line;
+                            }
+                            $line = $line or 1;
+                            printf "echo -to-file '${kak_response_fifo}' -quoting shell %s %s %d %d",
+                                $commit, quote($file), $line, ('${kak_cursor_column}' - 1);
+                        }
+                    } catch %{
+                        echo -to-file '${kak_response_fifo}' -quoting shell -- %val{error}
                     }
                 }
             '
@@ -260,7 +267,7 @@ define-command -params 1.. \
             message="Blaming $file as of $(git rev-parse --short $commit)"
             echo "echo -debug -- $(kakquote "$message")"
             on_close_fifo="
-                execute-keys -client ${kak_client} ${cursor_line}g<a-h>${cursor_column}l
+                execute-keys -client ${kak_client} ${cursor_line}g<a-h>${cursor_column}lh
                 evaluate-commands -client ${kak_client} %{
                     set-option buffer git_blob $(kakquote "$commit:$file")
                     git blame $(for arg; do kakquote "$arg"; printf " "; done)
@@ -282,7 +289,7 @@ define-command -params 1.. \
                       set-option buffer=$kak_bufname git_blame_index '$kak_timestamp'
                       set-option buffer=$kak_bufname git_blame ''
                   }" | kak -p ${kak_session}
-            git blame --incremental "$@" <${contents_fifo} | perl -wne '
+            if ! stderr=$({ git blame --incremental "$@" <${contents_fifo} | perl -wne '
                   use POSIX qw(strftime);
                   sub quote {
                       my $SQ = "'\''";
@@ -291,8 +298,11 @@ define-command -params 1.. \
                       return "$SQ$token$SQ";
                   }
                   sub send_flags {
-                      my $flush = shift;
-                      if (not defined $line) { return; }
+                      my $is_last_call = shift;
+                      if (not defined $line) {
+                          if ($is_last_call) { exit 1; }
+                          return;
+                      }
                       my $text = substr($sha,0,7) . " " . $dates{$sha} . " " . $authors{$sha};
                       $text =~ s/~/~~/g;
                       for ( my $i = 0; $i < $count; $i++ ) {
@@ -300,7 +310,7 @@ define-command -params 1.. \
                       }
                       $now = time();
                       # Send roughly one update per second, to avoid creating too many kak processes.
-                      if (!$flush && defined $last_sent && $now - $last_sent < 1) {
+                      if (!$is_last_call && defined $last_sent && $now - $last_sent < 1) {
                           return
                       }
                       open CMD, "|-", "kak -p $ENV{kak_session}";
@@ -330,6 +340,21 @@ define-command -params 1.. \
                   }
                   if (m/^author-time ([0-9]*)/) { $dates{$sha} = strftime("%F %T", localtime $1) }
                   END { send_flags(1); }'
+            } 2>&1); then
+                escape2() { printf %s "$*" | sed "s/'/''''/g"; }
+                echo "evaluate-commands -client ${kak_client} '
+                    evaluate-commands -draft %{
+                        buffer %{${kak_buffile}}
+                        git hide-blame
+                    }
+                    echo -debug failed to run git blame
+                    echo -debug git stderr: <<<
+                    echo -debug ''$(escape2 "$stderr")>>>''
+                    hook -once buffer NormalIdle .* %{
+                        echo -markup %{{Error}failed to run git blame, see *debug* buffer}
+                    }
+                '" | kak -p ${kak_session}
+            fi
             if [ "$contents_fifo" != /dev/null ]; then
                 rm -r $(dirname $contents_fifo)
             fi
@@ -546,12 +571,21 @@ define-command -params 1.. \
             cursor_line=$3
             cursor_column=$4
             blame_info=$(git blame --porcelain "$starting_commit" -L"$cursor_line,$cursor_line" -- "$file")
+            if [ $? -ne 0 ]; then
+                echo 'echo -markup %{{Error}failed to run git blame, see *debug* buffer}'
+                exit
+            fi
         } else {
             set --
             eval "$prepare_git_blame_args"
             blame_info=$(git blame --porcelain -L"$cursor_line,$cursor_line" "$@" <${contents_fifo})
+            status=$?
             if [ "$contents_fifo" != /dev/null ]; then
                 rm -r $(dirname $contents_fifo)
+            fi
+            if [ $status -ne 0 ]; then
+                echo 'echo -markup %{{Error}failed to run git blame, see *debug* buffer}'
+                exit
             fi
         } fi
         eval "$(printf '%s\n---\n%s' "$blame_index" "$blame_info" |

@@ -38,7 +38,7 @@ complete-command grep file
 
 hook -group grep-highlight global WinSetOption filetype=grep %{
     add-highlighter window/grep group
-    add-highlighter window/grep/ regex "^((?:\w:)?[^:\n]+):(\d+):(\d+)?" 1:cyan 2:green 3:green
+    add-highlighter window/grep/ regex "^([^:\n]+):(\d+):(\d+)?" 1:cyan 2:green 3:green
     add-highlighter window/grep/ line %{%opt{grep_current_line}} default+b
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/grep }
 }
@@ -52,11 +52,14 @@ declare-option -docstring "name of the client in which all source code jumps wil
     str jumpclient
 
 define-command -hidden grep-jump %{
-    evaluate-commands %{ # use evaluate-commands to ensure jumps are collapsed
+    evaluate-commands -save-regs a %{ # use evaluate-commands to ensure jumps are collapsed
         try %{
-            execute-keys 'xs^((?:\w:)?[^:]+):(\d+):(\d+)?<ret>'
+            evaluate-commands -draft %{
+                execute-keys ',xs^([^:\n]+):(\d+):(\d+)?<ret>'
+                set-register a %reg{1} %reg{2} %reg{3}
+            }
             set-option buffer grep_current_line %val{cursor_line}
-            evaluate-commands -try-client %opt{jumpclient} -verbatim -- edit -existing %reg{1} %reg{2} %reg{3}
+            evaluate-commands -try-client %opt{jumpclient} -verbatim -- edit -existing -- %reg{a}
             try %{ focus %opt{jumpclient} }
         }
     }
@@ -68,7 +71,7 @@ define-command grep-next-match -docstring 'Jump to the next grep match' %{
         # First jump to end of buffer so that if grep_current_line == 0
         # 0g<a-l> will be a no-op and we'll jump to the first result.
         # Yeah, thats ugly...
-        execute-keys ge %opt{grep_current_line}g<a-l> /^[^:]+:\d+:<ret>
+        execute-keys ge %opt{grep_current_line}g<a-l> /^[^:\n]+:\d+:<ret>
         grep-jump
     }
     try %{
@@ -83,7 +86,7 @@ define-command grep-previous-match -docstring 'Jump to the previous grep match' 
     evaluate-commands -try-client %opt{jumpclient} %{
         buffer '*grep*'
         # See comment in grep-next-match
-        execute-keys ge %opt{grep_current_line}g<a-h> <a-/>^[^:]+:\d+:<ret>
+        execute-keys ge %opt{grep_current_line}g<a-h> <a-/>^[^:\n]+:\d+:<ret>
         grep-jump
     }
     try %{
