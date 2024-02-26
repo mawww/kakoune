@@ -229,8 +229,8 @@ String option_to_string(const Key& key)
 Key option_from_string(Meta::Type<Key>, StringView str)
 {
     auto keys = parse_keys(str);
-    if (keys.empty())
-        return Key(Key::Invalid);
+    if (keys.size() != 1)
+        throw runtime_error(format("'{}' is not a single key", str));
 
     return keys.front();
 }

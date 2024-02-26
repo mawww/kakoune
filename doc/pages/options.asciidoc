@@ -81,8 +81,7 @@ are exclusively available to built-in options.
 
 *key*::
     a single keypress using the same syntax as `map` (see
-    <<mapping#mappable-keys,`:doc mapping mappable-keys`>>).  If
-    multiple keys are entered, only the first will be used.
+    <<mapping#mappable-keys,`:doc mapping mappable-keys`>>)
 
 *coord*::
     a line, column pair (separated by a comma)
