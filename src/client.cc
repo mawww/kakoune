@@ -47,7 +47,7 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
     m_ui->set_ui_options(m_window->options()["ui_options"].get<UserInterface::Options>());
     m_ui->set_on_key([this](Key key) {
         kak_assert(key != Key::Invalid);
-        auto opts = context().options();
+        auto& opts = context().options();
         if (key == opts["interrupt_key"].get<Key>())
         {
             auto prev_handler = set_signal_handler(SIGINT, SIG_IGN);
