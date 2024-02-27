@@ -1582,7 +1582,7 @@ void InputHandler::repeat_last_insert()
         // refill last_insert,  this is very inefficient, but necessary at the moment
         // to properly handle insert completion
         m_last_insert.keys.push_back(key);
-        current_mode().handle_key(key, true);
+        handle_key(key);
     }
     kak_assert(dynamic_cast<InputModes::Normal*>(&current_mode()) != nullptr);
 }
@@ -1655,10 +1655,11 @@ void InputHandler::handle_key(Key key)
     auto dec = on_scope_end([this]{ --m_handle_key_level;} );
 
     auto process_key = [&](Key key, bool synthesized) {
-        if (m_last_insert.recording)
-            m_last_insert.keys.push_back(key);
         current_mode().handle_key(key, synthesized);
     };
+
+    if (m_last_insert.recording and m_handle_key_level <= 1)
+        m_last_insert.keys.push_back(key);
 
     const auto keymap_mode = current_mode().keymap_mode();
     KeymapManager& keymaps = m_context.keymaps();
