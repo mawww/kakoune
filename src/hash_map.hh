@@ -74,7 +74,7 @@ struct HashIndex
             auto target_slot = compute_slot(entry.hash);
             for (auto slot = target_slot; slot < m_entries.size(); ++slot)
             {
-                if (m_entries[slot].index == -1)
+                if (m_entries[slot].index < 0)
                 {
                     m_entries[slot] = entry;
                     return;
@@ -104,7 +104,7 @@ struct HashIndex
                 // Recompact following entries
                 for (auto next = slot+1; next < m_entries.size(); ++next)
                 {
-                    if (m_entries[next].index == -1 or
+                    if (m_entries[next].index < 0 or
                         compute_slot(m_entries[next].hash) == next)
                         break;
                     kak_assert(compute_slot(m_entries[next].hash) < next);
@@ -224,7 +224,7 @@ struct HashMap
         for (auto slot = m_index.compute_slot(hash); slot < m_index.size(); ++slot)
         {
             auto& entry = m_index[slot];
-            if (entry.index == -1)
+            if (entry.index < 0)
                 return -1;
             if (entry.hash == hash and item_key(m_items[entry.index]) == key)
                 return entry.index;
