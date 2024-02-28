@@ -34,7 +34,7 @@ Buffer* BufferManager::create_buffer(String name, Buffer::Flags flags, BufferLin
             throw runtime_error{"buffer name is already in use"};
     }
 
-    m_buffers.push_back(std::make_unique<Buffer>(std::move(name), flags, lines, bom, eolformat, fs_status));
+    m_buffers.push_back(std::make_unique<Buffer>(std::move(name), flags, std::move(lines), bom, eolformat, fs_status));
     auto* buffer = m_buffers.back().get();
     buffer->on_registered();
 
