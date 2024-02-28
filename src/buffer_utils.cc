@@ -132,13 +132,9 @@ decltype(auto) parse_file(StringView filename, Func&& func)
     }
 
     bool has_crlf = false, has_lf = false;
-    for (auto it = pos; it != end; ++it)
-    {
-        if (*it == '\n')
-            ((it != pos and *(it-1) == '\r') ? has_crlf : has_lf) = true;
-    }
-    const bool crlf = has_crlf and not has_lf;
-    auto eolformat = crlf ? EolFormat::Crlf : EolFormat::Lf;
+    for (auto it = std::find(pos, end, '\n'); it != end; it = std::find(it+1, end, '\n'))
+        ((it != pos and *(it-1) == '\r') ? has_crlf : has_lf) = true;
+    auto eolformat = (has_crlf and not has_lf) ? EolFormat::Crlf : EolFormat::Lf;
 
     FsStatus fs_status{file.st.st_mtim, file.st.st_size, murmur3(file.data, file.st.st_size)};
     return func(parse_lines(pos, end, eolformat), bom, eolformat, fs_status);
