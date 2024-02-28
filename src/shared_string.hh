@@ -37,7 +37,9 @@ private:
                 return;
             if (r->refcount & interned_flag)
                 Registry::instance().remove(r->strview());
-            StringData::operator delete(r, sizeof(StringData) + r->length + 1);
+            auto alloc_len = sizeof(StringData) + r->length + 1;
+            r->~StringData();
+            operator delete(r, alloc_len);
         }
         static void ptr_moved(StringData*, void*, void*) noexcept {}
     };
@@ -60,11 +62,11 @@ public:
     static Ptr create(ConvertibleTo<StringView> auto&&... strs)
     {
         const int len = ((int)StringView{strs}.length() + ...);
-        void* ptr = StringData::operator new(sizeof(StringData) + len + 1);
+        void* ptr = operator new(sizeof(StringData) + len + 1);
         auto* res = new (ptr) StringData(len);
         auto* data = reinterpret_cast<char*>(res + 1);
         auto append = [&](StringView str) {
-            if (str.empty()) // memccpy(..., nullptr, 0) is UB
+            if (str.empty()) // memcpy(..., nullptr, 0) is UB
                 return;
             memcpy(data, str.begin(), (size_t)str.length());
             data += (int)str.length();
