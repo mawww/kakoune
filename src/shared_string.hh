@@ -7,6 +7,7 @@
 #include "hash_map.hh"
 
 #include <numeric>
+#include <cstring>
 
 namespace Kakoune
 {
@@ -32,12 +33,11 @@ private:
         static void inc_ref(StringData* r, void*) noexcept { ++r->refcount; }
         static void dec_ref(StringData* r, void*) noexcept
         {
-            if ((--r->refcount & refcount_mask) == 0)
-            {
-                if (r->refcount & interned_flag)
-                    Registry::instance().remove(r->strview());
-                StringData::operator delete(r, sizeof(StringData) + r->length + 1);
-            }
+            if ((--r->refcount & refcount_mask) > 0)
+                return;
+            if (r->refcount & interned_flag)
+                Registry::instance().remove(r->strview());
+            StringData::operator delete(r, sizeof(StringData) + r->length + 1);
         }
         static void ptr_moved(StringData*, void*, void*) noexcept {}
     };
@@ -57,7 +57,23 @@ public:
         HashMap<StringView, StringData*, MemoryDomain::SharedString> m_strings;
     };
 
-    static Ptr create(ArrayView<const StringView> strs);
+    static Ptr create(ConvertibleTo<StringView> auto&&... strs)
+    {
+        const int len = ((int)StringView{strs}.length() + ...);
+        void* ptr = StringData::operator new(sizeof(StringData) + len + 1);
+        auto* res = new (ptr) StringData(len);
+        auto* data = reinterpret_cast<char*>(res + 1);
+        auto append = [&](StringView str) {
+            if (str.empty()) // memccpy(..., nullptr, 0) is UB
+                return;
+            memcpy(data, str.begin(), (size_t)str.length());
+            data += (int)str.length();
+        };
+        (append(strs), ...);
+        *data = 0;
+        return RefPtr<StringData, PtrPolicy>{res};
+    }
+
 };
 
 using StringDataPtr = StringData::Ptr;

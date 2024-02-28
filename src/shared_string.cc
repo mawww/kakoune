@@ -1,29 +1,8 @@
 #include "shared_string.hh"
 #include "buffer_utils.hh"
 
-#include <cstring>
-
 namespace Kakoune
 {
-
-StringDataPtr StringData::create(ArrayView<const StringView> strs)
-{
-    const int len = accumulate(strs, 0, [](int l, StringView s) {
-                        return l + (int)s.length();
-                    });
-    void* ptr = StringData::operator new(sizeof(StringData) + len + 1);
-    auto* res = new (ptr) StringData(len);
-    auto* data = reinterpret_cast<char*>(res + 1);
-    for (auto& str : strs)
-    {
-        if (str.length() == 0) // memccpy(..., nullptr, 0) is UB
-            continue;
-        memcpy(data, str.begin(), (size_t)str.length());
-        data += (int)str.length();
-    }
-    *data = 0;
-    return RefPtr<StringData, PtrPolicy>{res};
-}
 
 StringDataPtr StringData::Registry::intern(StringView str, size_t hash)
 {

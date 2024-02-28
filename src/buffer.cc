@@ -430,14 +430,14 @@ BufferRange Buffer::do_insert(BufferCoord pos, StringView content)
         if (content[i] == '\n')
         {
             StringView line = content.substr(start, i + 1 - start);
-            new_lines.push_back(start == 0 ? StringData::create({prefix, line}) : StringData::create({line}));
+            new_lines.push_back(start == 0 ? StringData::create(prefix, line) : StringData::create(line));
             start = i + 1;
         }
     }
     if (start == 0)
-        new_lines.push_back(StringData::create({prefix, content, suffix}));
+        new_lines.push_back(StringData::create(prefix, content, suffix));
     else if (start != content.length() or not suffix.empty())
-        new_lines.push_back(StringData::create({content.substr(start), suffix}));
+        new_lines.push_back(StringData::create(content.substr(start), suffix));
 
     auto line_it = m_lines.begin() + (int)pos.line;
     auto new_lines_it = new_lines.begin();
@@ -466,7 +466,7 @@ BufferCoord Buffer::do_erase(BufferCoord begin, BufferCoord end)
     StringView prefix = m_lines[begin.line].substr(0, begin.column);
     StringView suffix = end.line == line_count() ? StringView{} : m_lines[end.line].substr(end.column);
 
-    auto new_line = (not prefix.empty() or not suffix.empty()) ? StringData::create({prefix, suffix}) : StringDataPtr{};
+    auto new_line = (not prefix.empty() or not suffix.empty()) ? StringData::create(prefix, suffix) : StringDataPtr{};
     m_lines.erase(m_lines.begin() + (int)begin.line, m_lines.begin() + (int)end.line);
 
     m_changes.push_back({ Change::Erase, begin, end });
@@ -691,7 +691,7 @@ String Buffer::debug_description() const
 
 UnitTest test_buffer{[]()
 {
-    auto make_lines = [](auto&&... lines) { return BufferLines{StringData::create({lines})...}; };
+    auto make_lines = [](auto&&... lines) { return BufferLines{StringData::create(lines)...}; };
 
     Buffer empty_buffer("empty", Buffer::Flags::None, make_lines("\n"));
 
@@ -738,7 +738,7 @@ UnitTest test_buffer{[]()
 
 UnitTest test_undo{[]()
 {
-    auto make_lines = [](auto&&... lines) { return BufferLines{StringData::create({lines})...}; };
+    auto make_lines = [](auto&&... lines) { return BufferLines{StringData::create(lines)...}; };
 
     Buffer buffer("test", Buffer::Flags::None, make_lines("allo ?\n", "mais que fais la police\n", " hein ?\n", " youpi\n"));
     auto pos = buffer.end_coord();
