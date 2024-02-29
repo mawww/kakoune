@@ -1584,7 +1584,7 @@ const CommandDesc debug_cmd = {
         }
         else if (parser[0] == "memory")
         {
-            auto total = 0;
+            size_t total = 0;
             write_to_debug_buffer("Memory usage:");
             const ColumnCount column_size = 17;
             write_to_debug_buffer(format("{:17} │{:17} │{:17} │{:17} ",

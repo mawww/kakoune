@@ -97,12 +97,12 @@ static BufferLines parse_lines(const char* pos, const char* end, EolFormat eolfo
         if ((eol - pos) >= std::numeric_limits<int>::max())
             throw runtime_error("line is too long");
 
-        lines.emplace_back(StringData::create({{pos, eol - (eolformat == EolFormat::Crlf and eol != end ? 1 : 0)}, "\n"}));
+        lines.emplace_back(StringData::create(StringView{pos, eol - (eolformat == EolFormat::Crlf and eol != end ? 1 : 0)}, "\n"));
         pos = eol + 1;
     }
 
     if (lines.empty())
-        lines.emplace_back(StringData::create({"\n"}));
+        lines.emplace_back(StringData::create("\n"));
 
     return lines;
 }
@@ -132,13 +132,9 @@ decltype(auto) parse_file(StringView filename, Func&& func)
     }
 
     bool has_crlf = false, has_lf = false;
-    for (auto it = pos; it != end; ++it)
-    {
-        if (*it == '\n')
-            ((it != pos and *(it-1) == '\r') ? has_crlf : has_lf) = true;
-    }
-    const bool crlf = has_crlf and not has_lf;
-    auto eolformat = crlf ? EolFormat::Crlf : EolFormat::Lf;
+    for (auto it = std::find(pos, end, '\n'); it != end; it = std::find(it+1, end, '\n'))
+        ((it != pos and *(it-1) == '\r') ? has_crlf : has_lf) = true;
+    auto eolformat = (has_crlf and not has_lf) ? EolFormat::Crlf : EolFormat::Lf;
 
     FsStatus fs_status{file.st.st_mtim, file.st.st_size, murmur3(file.data, file.st.st_size)};
     return func(parse_lines(pos, end, eolformat), bom, eolformat, fs_status);
@@ -179,12 +175,12 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
     {
         buffer->flags() |= Buffer::Flags::NoUndo | flags;
         buffer->values().clear();
-        buffer->reload({StringData::create({"\n"})}, ByteOrderMark::None, EolFormat::Lf, {InvalidTime, {}, {}});
+        buffer->reload({StringData::create("\n")}, ByteOrderMark::None, EolFormat::Lf, {InvalidTime, {}, {}});
     }
     else
         buffer = buffer_manager.create_buffer(
             std::move(name), flags | Buffer::Flags::Fifo | Buffer::Flags::NoUndo,
-            {StringData::create({"\n"})}, ByteOrderMark::None, EolFormat::Lf, {InvalidTime, {}, {}});
+            {StringData::create("\n")}, ByteOrderMark::None, EolFormat::Lf, {InvalidTime, {}, {}});
 
     struct FifoWatcher : FDWatcher
     {

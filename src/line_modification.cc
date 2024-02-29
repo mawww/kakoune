@@ -196,7 +196,7 @@ void LineRangeSet::remove_range(LineRange range)
 
 UnitTest test_line_modifications{[]()
 {
-    auto make_lines = [](auto&&... lines) { return BufferLines{StringData::create({lines})...}; };
+    auto make_lines = [](auto&&... lines) { return BufferLines{StringData::create(lines)...}; };
 
     {
         Buffer buffer("test", Buffer::Flags::None, make_lines("line 1\n", "line 2\n"));

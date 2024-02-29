@@ -564,7 +564,7 @@ CandidateList complete_command(StringView prefix, ByteCount cursor_pos)
         Vector<RankedMatch> matches;
         for (auto& file : files)
         {
-            if (RankedMatch match{file, real_prefix})
+            if (RankedMatch match{file, fileprefix})
                 matches.push_back(match);
         }
         std::sort(matches.begin(), matches.end());
