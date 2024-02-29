@@ -109,7 +109,7 @@ src/kak: src/kak$(tag)
 src/kak$(tag): src/.version.o $(objects)
 	$(CXX) $(KAK_LDFLAGS) $(KAK_CXXFLAGS) $(KAK_LIBS) $(objects) src/.version.o -o $@
 
-include $(deps)
+include $(deps) /dev/null # FreeBSD make does not support empty lists
 
 .cc$(tag).o:
 	$(CXX) $(KAK_CPPFLAGS) $(KAK_CXXFLAGS) -MD -MP -MF $(*D)/.$(*F)$(tag).d -c -o $@ $<
