@@ -1,6 +1,5 @@
 .POSIX:
 .SUFFIXES:
-.SUFFIXES: .o .cc
 
 CXX = c++
 
@@ -15,27 +14,23 @@ compress-suffix-zstd = zst
 
 CPPFLAGS-debug-yes = -DKAK_DEBUG
 CXXFLAGS-debug-yes = -O0 -g
-suffix-debug-yes = .debug
+tag-debug-yes = .debug
 
 CXXFLAGS-debug-no = -O3
-suffix-debug-no = .opt
+tag-debug-no = .opt
 
 CXXFLAGS-sanitize-address = -fsanitize=address
 LDFLAGS-sanitize-address = -lasan
-suffix-sanitize-address = .san_a
+tag-sanitize-address = .san_a
 
 CXXFLAGS-sanitize-undefined = -fsanitize=undefined
 
 LDFLAGS-sanitize-undefined = -lubsan
-suffix-sanitize-undefined = .san_u
+tag-sanitize-undefined = .san_u
 
 LDFLAGS-static-yes = -static -pthread
 
 version != cat .version 2>/dev/null || git describe --tags HEAD 2>/dev/null || echo unknown
-
-sources != find src -type f -name '*.cc' | sed -e '/\.version\.cc/d'
-deps != find src -type f -name '*.d'
-objects = $(sources:.cc=.o)
 
 PREFIX = /usr/local
 DESTDIR = # root dir
@@ -98,20 +93,26 @@ KAK_LIBS = \
 	$(LIBS-os-$(os)) \
 	$(LIBS)
 
-suffix = $(suffix-debug-$(debug))$(suffix-sanitize-$(sanitize))
+tag = $(tag-debug-$(debug))$(tag-sanitize-$(sanitize))
+
+.SUFFIXES: $(tag).o .cc
+
+sources != find src -type f -name '*.cc' | sed -e '/\.version\.cc/d'
+objects = $(sources:.cc=$(tag).o)
+deps != find src -type f -name '.*$(tag).d'
 
 all: src/kak
 
-src/kak: src/kak$(suffix)
-	ln -sf kak$(suffix) $@
+src/kak: src/kak$(tag)
+	ln -sf kak$(tag) $@
 
-src/kak$(suffix): src/.version.o $(objects)
+src/kak$(tag): src/.version.o $(objects)
 	$(CXX) $(KAK_LDFLAGS) $(KAK_CXXFLAGS) $(KAK_LIBS) $(objects) src/.version.o -o $@
 
 include $(deps)
 
-.cc.o:
-	$(CXX) $(KAK_CPPFLAGS) $(KAK_CXXFLAGS) -MD -MP -MF $*.d -c -o $@ $<
+.cc$(tag).o:
+	$(CXX) $(KAK_CPPFLAGS) $(KAK_CXXFLAGS) -MD -MP -MF $(*D)/.$(*F)$(tag).d -c -o $@ $<
 
 src/.version.cc:
 	echo 'namespace Kakoune { const char *version = "$(version)"; }' > $@
@@ -153,7 +154,7 @@ kakoune-$(version).tar:
 	rm -f src/.version
 
 distclean: clean
-	rm -f src/kak src/kak$(suffix)
+	rm -f src/kak src/kak$(suffix) src/.*.d src/*.o
 	find doc -type f -name '*.gz' -exec rm -f '{}' +
 
 installdirs: installdirs-debug-$(debug)
