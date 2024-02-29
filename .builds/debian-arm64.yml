@@ -7,14 +7,14 @@ packages:
 tasks:
     - clang-build: |
         cd kakoune
-        CXX=clang++ make -j$(nproc)
+        make CXX=clang++ -j$(nproc)
     - clang-test: |
         cd kakoune
         LC_ALL=C.utf8 make test
     - gcc-build: |
         cd kakoune
         make clean
-        CXX=g++ make -j$(nproc)
+        make CXX=g++ -j$(nproc)
     - gcc-test: |
         cd kakoune
         LC_ALL=C.utf8 make test
