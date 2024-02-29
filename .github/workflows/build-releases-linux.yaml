@@ -19,9 +19,7 @@ jobs:
       - name: Build
         run: |
           mkdir -p kakoune-${{ github.event.release.tag_name }}-linux/
-          make -C src all static=yes
-          make -C src install PREFIX=$(pwd)/kakoune-${{ github.event.release.tag_name }}-linux/
-          strip -s kakoune-${{ github.event.release.tag_name }}-linux/bin/kak
+          make -j$(nproc) PREFIX=$(pwd)/kakoune-${{ github.event.release.tag_name }}-linux static=yes install strip
           tar cvjf kakoune-${{ github.event.release.tag_name }}-linux.tar.bz2 kakoune-${{ github.event.release.tag_name }}-linux/
       - name: Upload
         uses: softprops/action-gh-release@v1

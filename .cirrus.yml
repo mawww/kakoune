@@ -1,7 +1,6 @@
 freebsd_task:
     freebsd_instance:
         image_family: freebsd-13-2
-    gmake_script: pkg install -y gmake
     matrix:
         - name: freebsd_clang
           env:
@@ -10,7 +9,7 @@ freebsd_task:
           gcc_script: pkg install -y gcc
           env:
               CXX: g++
-    test_script: gmake -j4 test
+    test_script: make CXX=$CXX -j$(sysctl -n hw.ncpu) test
     env:
         LC_ALL: en_US.UTF-8
 
@@ -28,7 +27,9 @@ linux_task:
         - name: linux_gcc
           container:
               image: gcc:10
-    test_script: make -j4 test
+          env:
+              CXX: g++
+    test_script: make CXX=$CXX -j$(nproc) test
     env:
         LC_ALL: en_US.UTF-8
 
@@ -47,4 +48,4 @@ macos_task:
             - arch -x86_64 /usr/local/bin/brew install gcc@10
           env:
               CXX: g++-10
-    test_script: make -j4 test
+    test_script: make CXX=$CXX -j$(sysctl -n hw.ncpu) test
