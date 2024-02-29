@@ -99,7 +99,6 @@ tag = $(tag-debug-$(debug))$(tag-sanitize-$(sanitize))
 
 sources != find src -type f -name '*.cc' | sed -e '/\.version\.cc/d'
 objects = $(sources:.cc=$(tag).o)
-deps != find src -type f -name '.*$(tag).d'
 
 all: src/kak
 
@@ -109,7 +108,8 @@ src/kak: src/kak$(tag)
 src/kak$(tag): src/.version.o $(objects)
 	$(CXX) $(KAK_LDFLAGS) $(KAK_CXXFLAGS) $(KAK_LIBS) $(objects) src/.version.o -o $@
 
-include $(deps) /dev/null # FreeBSD make does not support empty lists
+deps != touch src/.version$(tag).d && find src -type f -name '.*$(tag).d' # Ensure we find one deps for FreeBSD make
+include $(deps)
 
 .cc$(tag).o:
 	$(CXX) $(KAK_CPPFLAGS) $(KAK_CXXFLAGS) -MD -MP -MF $(*D)/.$(*F)$(tag).d -c -o $@ $<
@@ -118,7 +118,7 @@ src/.version.cc:
 	echo 'namespace Kakoune { const char *version = "$(version)"; }' > $@
 
 src/.version.o: src/.version.cc
-	$(CXX) $(KAK_CPPFLAGS) $(KAK_CXXFLAGS) -c -o $@ $<
+	$(CXX) $(KAK_CPPFLAGS) $(KAK_CXXFLAGS) -c -o $@ src/.version.cc
 
 # Generate the man page
 man: gzip-man-$(gzip_man)
