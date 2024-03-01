@@ -63,11 +63,11 @@ LIBS-os-Windows = -ldbghelp
 
 CXXFLAGS-default = -std=c++2a -Wall -Wextra -pedantic -Wno-unused-parameter -Wno-sign-compare
 
-compiler != $(CXX) --version | grep -E -o 'clang|g\+\+' | head -1
+compiler != $(CXX) --version | grep -E -o 'clang|GCC' | head -1
 #CXXFLAGS-compiler-clang = -frelaxed-template-template-args -Wno-ambiguous-reversed-operator
-#CXXFLAGS-compiler-g++ = -Wno-init-list-lifetime
+#CXXFLAGS-compiler-GCC = -Wno-init-list-lifetime
 CXXFLAGS-compiler-clang =
-CXXFLAGS-compiler-g++ = -Wno-init-list-lifetime -Wno-stringop-overflow
+CXXFLAGS-compiler-GCC = -Wno-init-list-lifetime -Wno-stringop-overflow
 
 KAK_CPPFLAGS = \
 	$(CPPFLAGS-default) \
