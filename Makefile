@@ -178,7 +178,7 @@ install: src/kak installdirs install-debug-$(debug) install-gzip-man-$(gzip_man)
 
 	ln -sf ../../bin/kak $(libexecdir)/kak
 
-	cp src/kak/kakrc $(sharedir)
+	cp share/kak/kakrc $(sharedir)
 	chmod 0644 $(sharedir)/kakrc
 
 	cp -r rc/* $(sharedir)/rc
