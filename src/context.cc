@@ -4,6 +4,7 @@
 #include "client.hh"
 #include "face_registry.hh"
 #include "buffer_manager.hh"
+#include "hook_manager.hh"
 #include "register_manager.hh"
 #include "window.hh"
 
@@ -417,4 +418,8 @@ StringView Context::main_sel_register_value(StringView reg) const
     return RegisterManager::instance()[reg].get_main(*this, index);
 }
 
+void Context::set_name(String name) { 
+    String old_name = std::exchange(m_name, std::move(name));
+    hooks().run_hook(Hook::ClientRenamed, format("{}:{}", old_name, m_name), *this);
+}
 }
