@@ -47,6 +47,7 @@ Buffer::Buffer(String name, Flags flags, BufferLines lines,
 
     options().get_local_option("eolformat").set(eolformat);
     options().get_local_option("BOM").set(bom);
+    options().get_local_option("readonly").set((bool)(flags & Flags::ReadOnly));
 
     // now we may begin to record undo data
     if (not (flags & Flags::NoUndo))
