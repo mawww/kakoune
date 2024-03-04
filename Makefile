@@ -32,7 +32,7 @@ LDFLAGS-static-yes = -static -pthread
 
 version != cat .version 2>/dev/null || git describe --tags HEAD 2>/dev/null || echo unknown
 
-PREFIX = /usr/local
+PREFIX ?= /usr/local
 DESTDIR = # root dir
 
 bindir = $(DESTDIR)$(PREFIX)/bin
