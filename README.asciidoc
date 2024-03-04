@@ -22,9 +22,9 @@ TL;DR
 
 ---------------------------------------------
 git clone https://github.com/mawww/kakoune.git
-cd kakoune/src
+cd kakoune
 make
-./kak
+./src/kak
 ---------------------------------------------
 
 See https://github.com/mawww/golf for Kakoune solutions to vimgolf challenges,
