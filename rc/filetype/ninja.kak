@@ -42,13 +42,13 @@ add-highlighter shared/ninja regions
 add-highlighter shared/ninja/comment region '#' '\n' fill comment
 
 # `subninja`, `include`, `rule`, `pool` and `default` declarations
-add-highlighter shared/ninja/sirpd region '^(subninja|include|rule|pool|default)\b' '[^$]\n' group
+add-highlighter shared/ninja/sirpd region '^(subninja|include|rule|pool|default)\b' '(?<!\$)\n' group
 add-highlighter shared/ninja/sirpd/default regex '^(subninja|include)\b' 0:module
 add-highlighter shared/ninja/sirpd/rulepool regex '^(rule|pool|default)\b' 0:keyword
 add-highlighter shared/ninja/sirpd/linebreak regex '\$$' 0:operator
 
 # `build`
-add-highlighter shared/ninja/build region '^build\b' '[^$]\n' group
+add-highlighter shared/ninja/build region '^build\b' '(?<!\$)\n' group
 add-highlighter shared/ninja/build/build regex '^build\b' 0:keyword
 add-highlighter shared/ninja/build/rule regex ':\h+((\w|-)+)' 0:function
 add-highlighter shared/ninja/build/colonpipe regex ':|\||\|\|' 0:operator
@@ -56,7 +56,7 @@ add-highlighter shared/ninja/build/linebreak regex '\$$' 0:operator
 add-highlighter shared/ninja/build/variables regex '\$(\w|-)+|\$\{(\w|-)+\}' 0:value
 
 # variables declarations
-add-highlighter shared/ninja/variable region '^\h*(\w|-)+\h*=' '[^$]\n' group
+add-highlighter shared/ninja/variable region '^\h*(\w|-)+\h*=' '(?<!\$)\n' group
 add-highlighter shared/ninja/variable/declaredname regex '^\h*((\w|-)+)\h*(=)' 1:variable 0:operator
 add-highlighter shared/ninja/variable/linebreak regex '\$$' 0:operator
 add-highlighter shared/ninja/variable/variables regex '\$(\w|-)+|\$\{(\w|-)+\}' 0:value
