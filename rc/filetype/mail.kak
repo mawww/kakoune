@@ -23,7 +23,7 @@ require-module diff
 add-highlighter shared/mail group
 add-highlighter shared/mail/ ref diff
 add-highlighter shared/mail/ regex ^(From|To|Cc|Bcc|Subject|Reply-To|In-Reply-To|References|Date|Message-Id|User-Agent):([^\n]*(?:\n\h+[^\n]+)*)$ 1:keyword 2:attribute
-add-highlighter shared/mail/ regex <[^@>]+@.*?> 0:string
+add-highlighter shared/mail/ regex <[a-zA-Z0-9!#$%&'*+/=?^`{|}~.-]+@[a-zA-Z0-9!#$%&'*+/=?^`{|}~.-]+> 0:string
 add-highlighter shared/mail/ regex ^>.*?$ 0:comment
 add-highlighter shared/mail/ regex ^--\ \n.* 0:comment
 
