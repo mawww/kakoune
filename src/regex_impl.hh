@@ -361,7 +361,8 @@ private:
 
     // Steps a thread until it consumes the current character, matches or fail
     [[gnu::always_inline]]
-    void step_thread(const Iterator& pos, Codepoint cp, uint16_t current_step, Thread thread, const ExecConfig& config)
+    void step_thread(const CompiledRegex::Instruction* instructions, const Iterator& pos, Codepoint cp,
+                     uint16_t current_step, Thread thread, const ExecConfig& config)
     {
         auto failed = [this, &thread]() {
             release_saves(thread.saves);
@@ -370,7 +371,6 @@ private:
             m_threads.push_next(thread);
         };
 
-        auto* instructions = m_program.instructions.data();
         while (true)
         {
             auto& inst = instructions[thread.inst++];
@@ -479,6 +479,7 @@ private:
 
         constexpr bool search = mode & RegexMode::Search;
         constexpr bool any_match = mode & RegexMode::AnyMatch;
+        ConstArrayView<CompiledRegex::Instruction> insts{m_program.instructions};
         uint16_t current_step = -1;
         m_found_match = false;
         while (true) // Iterate on all codepoints and once at the end
@@ -488,20 +489,17 @@ private:
                 idle_func();
 
                 // We wrapped, avoid potential collision on inst.last_step by resetting them
-                ConstArrayView<CompiledRegex::Instruction> instructions{m_program.instructions};
-                instructions = forward ? instructions.subrange(0, m_program.first_backward_inst)
-                                       : instructions.subrange(m_program.first_backward_inst);
-
-                for (auto& inst : instructions)
+                for (auto& inst : forward ? insts.subrange(0, m_program.first_backward_inst)
+                                          : insts.subrange(m_program.first_backward_inst))
                     inst.last_step = 0;
                 current_step = 1; // step 0 is never valid
             }
 
             auto next = pos;
-            Codepoint cp = pos != config.end ? codepoint(next, config) : -1;
+            Codepoint cp = codepoint(next, config);
 
             while (not m_threads.current_is_empty())
-                step_thread(pos, cp, current_step, m_threads.pop_current(), config);
+                step_thread(insts.pointer(), pos, cp, current_step, m_threads.pop_current(), config);
 
             if (pos == config.end or
                 (m_threads.next_is_empty() and (not search or m_found_match)) or
