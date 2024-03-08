@@ -13,10 +13,10 @@ compress-suffix-bzip = bz2
 compress-suffix-zstd = zst
 
 CPPFLAGS-debug-yes = -DKAK_DEBUG
-CXXFLAGS-debug-yes = -O0 -g
+CXXFLAGS-debug-yes = -O0 -g3
 tag-debug-yes = .debug
 
-CXXFLAGS-debug-no = -O3
+CXXFLAGS-debug-no = -O3 -g3
 tag-debug-no = .opt
 
 CXXFLAGS-sanitize-address = -fsanitize=address
@@ -66,7 +66,7 @@ CXXFLAGS-default = -std=c++2a -Wall -Wextra -pedantic -Wno-unused-parameter -Wno
 compiler != $(CXX) --version | grep -E -o 'clang|GCC' | head -1
 #CXXFLAGS-compiler-clang = -frelaxed-template-template-args -Wno-ambiguous-reversed-operator
 #CXXFLAGS-compiler-GCC = -Wno-init-list-lifetime
-CXXFLAGS-compiler-clang =
+CXXFLAGS-compiler-clang = -fsized-deallocation
 CXXFLAGS-compiler-GCC = -Wno-init-list-lifetime -Wno-stringop-overflow
 
 KAK_CPPFLAGS = \

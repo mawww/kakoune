@@ -1,3 +1,5 @@
+# require-module jump
+
 declare-option \
     -docstring %{
         The shell command used by lint-buffer and lint-selections.
@@ -11,14 +13,11 @@ declare-option -hidden line-specs lint_messages
 declare-option -hidden int lint_error_count
 declare-option -hidden int lint_warning_count
 
-declare-option -docstring "name of the client in which utilities display information" \
-    str toolsclient
-
 define-command -hidden -params 1 lint-open-output-buffer %{
     evaluate-commands -try-client %opt{toolsclient} %{
         edit! -fifo "%arg{1}/fifo" -debug *lint-output*
         set-option buffer filetype make
-        set-option buffer make_current_error_line 0
+        set-option buffer jump_current_line 0
     }
 }
 

@@ -233,12 +233,11 @@ public:
 
     ~ThreadedRegexVM()
     {
-        for (auto* saves : m_saves)
+        for (auto& saves : m_saves)
         {
-            for (size_t i = m_program.save_count-1; i > 0; --i)
-                saves->pos[i].~Iterator();
-            saves->~Saves();
-            operator delete(saves);
+            for (int i = m_program.save_count-1; i >= 0; --i)
+                saves.pos[i].~Iterator();
+            operator delete(saves.pos, m_program.save_count * sizeof(Iterator));
         }
     }
 
@@ -289,16 +288,16 @@ public:
     ArrayView<const Iterator> captures() const
     {
         if (m_captures >= 0)
-            return { m_saves[m_captures]->pos, m_program.save_count };
+            return { m_saves[m_captures].pos, m_program.save_count };
         return {};
     }
 
 private:
     struct Saves
     {
-        int16_t refcount;
-        int16_t next_free;
-        Iterator pos[1];
+        int32_t refcount;
+        int32_t next_free;
+        Iterator* pos;
     };
 
     template<bool copy>
@@ -309,7 +308,7 @@ private:
         if (m_first_free >= 0)
         {
             const int16_t res = m_first_free;
-            Saves& saves = *m_saves[res];
+            Saves& saves = m_saves[res];
             m_first_free = saves.next_free;
             kak_assert(saves.refcount == 1);
             if (copy)
@@ -320,11 +319,10 @@ private:
             return res;
         }
 
-        void* ptr = operator new (sizeof(Saves) + (count-1) * sizeof(Iterator));
-        Saves* saves = new (ptr) Saves{1, 0, {copy ? pos[0] : Iterator{}}};
-        for (size_t i = 1; i < count; ++i)
-            new (&saves->pos[i]) Iterator{copy ? pos[i] : Iterator{}};
-        m_saves.push_back(saves);
+        auto* new_pos = reinterpret_cast<Iterator*>(operator new (count * sizeof(Iterator)));
+        for (size_t i = 0; i < count; ++i)
+            new (new_pos+i) Iterator{copy ? pos[i] : Iterator{}};
+        m_saves.push_back({1, 0, new_pos});
         return static_cast<int16_t>(m_saves.size() - 1);
     }
 
@@ -332,7 +330,7 @@ private:
     {
         if (index < 0)
             return;
-        auto& saves = *m_saves[index];
+        auto& saves = m_saves[index];
         if (saves.refcount == 1)
         {
             saves.next_free = m_first_free;
@@ -361,7 +359,8 @@ private:
 
     // Steps a thread until it consumes the current character, matches or fail
     [[gnu::always_inline]]
-    void step_thread(const Iterator& pos, Codepoint cp, uint16_t current_step, Thread thread, const ExecConfig& config)
+    void step_thread(const CompiledRegex::Instruction* instructions, const Iterator& pos, Codepoint cp,
+                     uint16_t current_step, Thread thread, const ExecConfig& config)
     {
         auto failed = [this, &thread]() {
             release_saves(thread.saves);
@@ -370,7 +369,6 @@ private:
             m_threads.push_next(thread);
         };
 
-        auto* instructions = m_program.instructions.data();
         while (true)
         {
             auto& inst = instructions[thread.inst++];
@@ -414,7 +412,7 @@ private:
                         break;
 
                     if (thread.saves >= 0)
-                        ++m_saves[thread.saves]->refcount;
+                        ++m_saves[thread.saves].refcount;
 
                     if (inst.param.split.prioritize_parent)
                         m_threads.push_current({inst.param.split.target, thread.saves});
@@ -429,12 +427,12 @@ private:
                         break;
                     if (thread.saves < 0)
                         thread.saves = new_saves<false>(nullptr);
-                    else if (m_saves[thread.saves]->refcount > 1)
+                    else if (m_saves[thread.saves].refcount > 1)
                     {
-                        --m_saves[thread.saves]->refcount;
-                        thread.saves = new_saves<true>(m_saves[thread.saves]->pos);
+                        --m_saves[thread.saves].refcount;
+                        thread.saves = new_saves<true>(m_saves[thread.saves].pos);
                     }
-                    m_saves[thread.saves]->pos[inst.param.save_index] = pos;
+                    m_saves[thread.saves].pos[inst.param.save_index] = pos;
                     break;
                 case CompiledRegex::CharClass:
                     if (pos == config.end)
@@ -479,6 +477,7 @@ private:
 
         constexpr bool search = mode & RegexMode::Search;
         constexpr bool any_match = mode & RegexMode::AnyMatch;
+        ConstArrayView<CompiledRegex::Instruction> insts{m_program.instructions};
         uint16_t current_step = -1;
         m_found_match = false;
         while (true) // Iterate on all codepoints and once at the end
@@ -488,20 +487,17 @@ private:
                 idle_func();
 
                 // We wrapped, avoid potential collision on inst.last_step by resetting them
-                ConstArrayView<CompiledRegex::Instruction> instructions{m_program.instructions};
-                instructions = forward ? instructions.subrange(0, m_program.first_backward_inst)
-                                       : instructions.subrange(m_program.first_backward_inst);
-
-                for (auto& inst : instructions)
+                for (auto& inst : forward ? insts.subrange(0, m_program.first_backward_inst)
+                                          : insts.subrange(m_program.first_backward_inst))
                     inst.last_step = 0;
                 current_step = 1; // step 0 is never valid
             }
 
             auto next = pos;
-            Codepoint cp = pos != config.end ? codepoint(next, config) : -1;
+            Codepoint cp = codepoint(next, config);
 
             while (not m_threads.current_is_empty())
-                step_thread(pos, cp, current_step, m_threads.pop_current(), config);
+                step_thread(insts.pointer(), pos, cp, current_step, m_threads.pop_current(), config);
 
             if (pos == config.end or
                 (m_threads.next_is_empty() and (not search or m_found_match)) or
@@ -711,7 +707,7 @@ private:
     static constexpr bool forward = mode & RegexMode::Forward;
 
     DualThreadStack m_threads;
-    Vector<Saves*, MemoryDomain::Regex> m_saves;
+    Vector<Saves, MemoryDomain::Regex> m_saves;
     int16_t m_first_free = -1;
     int16_t m_captures = -1;
     bool m_found_match = false;

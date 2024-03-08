@@ -27,7 +27,7 @@ define-command -params ..1 \
             evaluate-commands -draft %{
                 edit! -fifo ${dir}/fifo -debug *clang-output*
                 set-option buffer filetype make
-                set-option buffer make_current_error_line 0
+                set-option buffer jump_current_line 0
                 hook -once -always buffer BufCloseFifo .* %{ nop %sh{ rm -r ${dir} } }
             }"
 

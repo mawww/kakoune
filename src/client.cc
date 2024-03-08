@@ -49,9 +49,9 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
         kak_assert(key != Key::Invalid);
         if (key == ctrl('c'))
         {
-            auto prev_handler = set_signal_handler(SIGINT, SIG_IGN);
-            killpg(getpgrp(), SIGINT);
-            set_signal_handler(SIGINT, prev_handler);
+            auto prev_handler = set_signal_handler(SIGTERM, SIG_IGN);
+            killpg(getpgrp(), SIGTERM);
+            set_signal_handler(SIGTERM, prev_handler);
         }
         else if (key == ctrl('g'))
         {
