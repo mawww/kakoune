@@ -127,7 +127,7 @@ gzip-man-yes: doc/kak.1.gz
 gzip-man-no: doc/kak.1
 
 doc/kak.1.gz: doc/kak.1
-	gzip -n -9 -f < $< > $@
+	gzip -n -9 -f < doc/kak.1 > $@
 
 check: test
 test: src/kak
