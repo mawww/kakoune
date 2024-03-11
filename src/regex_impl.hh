@@ -408,18 +408,14 @@ private:
                     thread.inst = inst.param.jump_target;
                     break;
                 case CompiledRegex::Split:
-                    if (instructions[inst.param.split.target].last_step == current_step)
-                        break;
-
-                    if (thread.saves >= 0)
-                        ++m_saves[thread.saves].refcount;
-
-                    if (inst.param.split.prioritize_parent)
-                        m_threads.push_current({inst.param.split.target, thread.saves});
-                    else
+                    if (auto target = inst.param.split.target;
+                        instructions[target].last_step != current_step)
                     {
-                        m_threads.push_current(thread);
-                        thread.inst = inst.param.split.target;
+                        if (thread.saves >= 0)
+                            ++m_saves[thread.saves].refcount;
+                        if (not inst.param.split.prioritize_parent)
+                            std::swap(thread.inst, target);
+                        m_threads.push_current({target, thread.saves});
                     }
                     break;
                 case CompiledRegex::Save:
