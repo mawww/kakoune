@@ -618,6 +618,7 @@ private:
                is_word(utf8::codepoint(pos, config.subject_end));
     }
 
+    [[gnu::flatten]]
     static Codepoint codepoint(Iterator& it, const ExecConfig& config)
     {
         if constexpr (forward)
