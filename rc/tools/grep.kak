@@ -1,7 +1,9 @@
-# require-module jump
-
 declare-option -docstring "shell command run to search for subtext in a file/directory" \
     str grepcmd 'grep -RHn'
+
+provide-module grep %{
+
+require-module jump
 
 define-command -params .. -docstring %{
     grep [<arguments>]: grep utility wrapper
@@ -58,3 +60,7 @@ define-command grep-next-match -docstring %{alias for "jump-next *grep*"} %{
 define-command grep-previous-match -docstring %{alias for "jump-previous *grep*"} %{
     jump-previous *grep*
 }
+
+}
+
+hook -once global KakBegin .* %{ require-module grep }

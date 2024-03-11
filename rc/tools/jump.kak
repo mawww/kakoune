@@ -1,9 +1,9 @@
-provide-module jump %§§
-
 declare-option -docstring "name of the client in which all source code jumps will be executed" \
     str jumpclient
 declare-option -docstring "name of the client in which utilities display information" \
     str toolsclient
+
+provide-module jump %{
 
 declare-option -hidden int jump_current_line 0
 
@@ -64,3 +64,7 @@ define-command -hidden jump-select-previous %{
     # See comment in jump-select-next
     execute-keys ge %opt{jump_current_line}g<a-h> <a-/>^[^:\n]+:\d+:<ret>
 }
+
+}
+
+hook -once global KakBegin .* %{ require-module jump }
