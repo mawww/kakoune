@@ -408,18 +408,14 @@ private:
                     thread.inst = inst.param.jump_target;
                     break;
                 case CompiledRegex::Split:
-                    if (instructions[inst.param.split.target].last_step == current_step)
-                        break;
-
-                    if (thread.saves >= 0)
-                        ++m_saves[thread.saves].refcount;
-
-                    if (inst.param.split.prioritize_parent)
-                        m_threads.push_current({inst.param.split.target, thread.saves});
-                    else
+                    if (auto target = inst.param.split.target;
+                        instructions[target].last_step != current_step)
                     {
-                        m_threads.push_current(thread);
-                        thread.inst = inst.param.split.target;
+                        if (thread.saves >= 0)
+                            ++m_saves[thread.saves].refcount;
+                        if (not inst.param.split.prioritize_parent)
+                            std::swap(thread.inst, target);
+                        m_threads.push_current({target, thread.saves});
                     }
                     break;
                 case CompiledRegex::Save:
@@ -618,6 +614,7 @@ private:
                is_word(utf8::codepoint(pos, config.subject_end));
     }
 
+    [[gnu::flatten]]
     static Codepoint codepoint(Iterator& it, const ExecConfig& config)
     {
         if constexpr (forward)
@@ -659,7 +656,6 @@ private:
             static_assert(initial_capacity >= 4);
             m_data.reset(new Thread[initial_capacity]);
             m_capacity = initial_capacity;
-
         }
 
         void grow_ifn(bool pushed_current)

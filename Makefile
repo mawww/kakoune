@@ -127,7 +127,7 @@ gzip-man-yes: doc/kak.1.gz
 gzip-man-no: doc/kak.1
 
 doc/kak.1.gz: doc/kak.1
-	gzip -n -9 -f < $< > $@
+	gzip -n -9 -f < doc/kak.1 > $@
 
 check: test
 test: src/kak
@@ -188,8 +188,10 @@ install: src/kak installdirs install-debug-$(debug) install-gzip-man-$(gzip_man)
 	cp colors/* $(sharedir)/colors
 	chmod 0644 $(sharedir)/colors/*
 
-	cp doc/pages/*.asciidoc README.asciidoc $(docdir)
+	cp README.asciidoc $(docdir)
 	chmod 0644 $(docdir)/*.asciidoc
+	cp doc/pages/*.asciidoc $(sharedir)/doc
+	chmod 0644 $(sharedir)/doc/*.asciidoc
 
 install-gzip-man-yes: gzip-man-yes
 	cp -f doc/kak.1.gz $(mandir)
