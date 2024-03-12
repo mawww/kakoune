@@ -541,13 +541,13 @@ private:
             return {1, 1};
 
         constexpr int max_repeat = 1000;
-        auto read_bound = [&]() {
+        auto read_bound = [&]() -> Optional<int16_t> {
             int16_t res = 0;
             for (auto begin = m_pos; m_pos != m_regex.end(); ++m_pos)
             {
                 const auto cp = *m_pos;
                 if (cp < '0' or cp > '9')
-                    return m_pos == begin ? (int16_t)-1 : res;
+                    return m_pos == begin ? Optional<int16_t>{} : res;
                 res = res * 10 + cp - '0';
                 if (res > max_repeat)
                     parse_error(format("Explicit quantifier is too big, maximum is {}", max_repeat));
@@ -570,14 +570,12 @@ private:
             case '{':
             {
                 ++m_pos;
-                const int16_t min = read_bound();
+                const int16_t min = read_bound().value_or(int16_t{});
                 int16_t max = min;
                 if (*m_pos == ',')
                 {
                     ++m_pos;
-                    max = read_bound();
-                    if (max == -1)
-                        max = ParsedRegex::Quantifier::infinite;
+                    max = read_bound().value_or(ParsedRegex::Quantifier::infinite);
                 }
                 if (*m_pos++ != '}')
                    parse_error("expected closing bracket");
