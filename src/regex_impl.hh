@@ -656,7 +656,6 @@ private:
             static_assert(initial_capacity >= 4);
             m_data.reset(new Thread[initial_capacity]);
             m_capacity = initial_capacity;
-
         }
 
         void grow_ifn(bool pushed_current)
