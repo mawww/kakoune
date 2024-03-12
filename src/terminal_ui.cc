@@ -1311,7 +1311,7 @@ void TerminalUI::info_show(const DisplayLine& title, const DisplayLineList& cont
         max_size.line -= m_menu.size.line;
 
     const auto max_content_width = (m_info_max_width > 0 ? std::min(max_size.column, m_info_max_width) : max_size.column) -
-                                   (framed ? 4 : 2) -
+                                   (framed ? 4 : 0) -
                                    (assisted ? m_assistant[0].column_length() : 0);
     if (max_content_width <= 0)
         return;
