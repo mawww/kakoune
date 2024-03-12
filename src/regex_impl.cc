@@ -46,31 +46,15 @@ struct ParsedRegex
 
     struct Quantifier
     {
-        enum Type : char
-        {
-            One,
-            Optional,
-            RepeatZeroOrMore,
-            RepeatOneOrMore,
-            RepeatMinMax,
-        };
-        Type type = One;
+        static constexpr int16_t infinite = std::numeric_limits<int16_t>::max();
+
+        int16_t min = 0, max = 0;
         bool greedy = true;
-        int16_t min = -1, max = -1;
 
-        bool allows_none() const
-        {
-            return type == Quantifier::Optional or
-                   type == Quantifier::RepeatZeroOrMore or
-                  (type == Quantifier::RepeatMinMax and min <= 0);
-        }
+        bool allows_none() const { return min == 0; }
+        bool allows_infinite_repeat() const { return max == infinite; };
 
-        bool allows_infinite_repeat() const
-        {
-            return type == Quantifier::RepeatZeroOrMore or
-                   type == Quantifier::RepeatOneOrMore or
-                  (type == Quantifier::RepeatMinMax and max < 0);
-        };
+        friend bool operator==(Quantifier, Quantifier) = default;
     };
 
     using NodeIndex = int16_t;
@@ -554,7 +538,7 @@ private:
     ParsedRegex::Quantifier quantifier()
     {
         if (at_end())
-            return {ParsedRegex::Quantifier::One};
+            return {1, 1};
 
         constexpr int max_repeat = 1000;
         auto read_bound = [&]() {
@@ -580,9 +564,9 @@ private:
 
         switch (*m_pos)
         {
-            case '*': ++m_pos; return {ParsedRegex::Quantifier::RepeatZeroOrMore, check_greedy()};
-            case '+': ++m_pos; return {ParsedRegex::Quantifier::RepeatOneOrMore, check_greedy()};
-            case '?': ++m_pos; return {ParsedRegex::Quantifier::Optional, check_greedy()};
+            case '*': ++m_pos; return {0, ParsedRegex::Quantifier::infinite, check_greedy()};
+            case '+': ++m_pos; return {1, ParsedRegex::Quantifier::infinite, check_greedy()};
+            case '?': ++m_pos; return {0, 1, check_greedy()};
             case '{':
             {
                 ++m_pos;
@@ -592,16 +576,18 @@ private:
                 {
                     ++m_pos;
                     max = read_bound();
+                    if (max == -1)
+                        max = ParsedRegex::Quantifier::infinite;
                 }
                 if (*m_pos++ != '}')
                    parse_error("expected closing bracket");
-                return {ParsedRegex::Quantifier::RepeatMinMax, check_greedy(), min, max};
+                return {min, max, check_greedy()};
             }
-            default: return {ParsedRegex::Quantifier::One};
+            default: return {1, 1};
         }
     }
 
-    NodeIndex add_node(ParsedRegex::Op op, Codepoint value = -1, ParsedRegex::Quantifier quantifier = {ParsedRegex::Quantifier::One})
+    NodeIndex add_node(ParsedRegex::Op op, Codepoint value = -1, ParsedRegex::Quantifier quantifier = {1, 1})
     {
         constexpr auto max_nodes = std::numeric_limits<int16_t>::max();
         const NodeIndex res = m_parsed_regex.nodes.size();
@@ -641,7 +627,7 @@ private:
                 to_underlying(Lookaround::OpBegin) <= child.value and
                 child.value < to_underlying(Lookaround::OpEnd))
                 parse_error("Lookaround does not support literals codepoint between 0xF0000 and 0xFFFFD");
-            if (child.quantifier.type != ParsedRegex::Quantifier::One)
+            if (child.quantifier != ParsedRegex::Quantifier{1, 1})
                 parse_error("Quantifiers cannot be used in lookarounds");
         }
     }
