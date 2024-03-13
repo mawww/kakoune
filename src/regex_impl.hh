@@ -152,8 +152,7 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
 
     struct StartDesc : UseMemoryDomain<MemoryDomain::Regex>
     {
-        static constexpr Codepoint count = 128;
-        static constexpr Codepoint other = 0;
+        static constexpr Codepoint count = 256;
         bool map[count];
     };
 
@@ -277,7 +276,7 @@ public:
             else if (start != config.end)
             {
                 const unsigned char c = forward ? *start : *utf8::previous(start, config.end);
-                if (not start_desc->map[(c < StartDesc::count) ? c : StartDesc::other])
+                if (not start_desc->map[c])
                     return false;
             }
         }
@@ -519,11 +518,11 @@ private:
     {
         while (start != config.end)
         {
-            static_assert(StartDesc::count <= 128, "start desc should be ascii only");
+            static_assert(StartDesc::count <= 256, "start desc should be ascii only");
             if constexpr (forward)
             {
                 const unsigned char c = *start;
-                if (start_desc.map[(c < StartDesc::count) ? c : StartDesc::other])
+                if (start_desc.map[c])
                     return;
                 ++start;
             }
@@ -531,7 +530,7 @@ private:
             {
                 auto prev = utf8::previous(start, config.end);
                 const unsigned char c = *prev;
-                if (start_desc.map[(c < StartDesc::count) ? c : StartDesc::other])
+                if (start_desc.map[c])
                     return;
                 start = prev;
             }
