@@ -189,6 +189,9 @@ are exclusively available to built-in options.
     key is provided it removes that entry regardless of the associated
     value. +
 
+    Any `=` or `\` characters that in `key` and `value` must be escaped as
+    `\=` or `\\`.
+
     Only `str-to-str-map` options can be created with `declare-option`.
 
 == Builtin options
@@ -339,6 +342,9 @@ are exclusively available to built-in options.
             in face Information.
 
     The default value is '%val{bufname} %val{cursor_line}:%val{cursor_char_column} {{context_info}} {{mode_info}} - %val{client}@[%val{session}]'
+
+*env* `str-to-str-map`::
+    a list of environment variable overrides to be passed to external processes.
 
 *ui_options* `str-to-str-map`::
     a list of `key=value` pairs that are forwarded to the user

@@ -146,6 +146,8 @@ Vector<String> generate_env(StringView cmdline, const Context& context, GetValue
     static const Regex re(R"(\bkak_(quoted_)?(\w+)\b)");
 
     Vector<String> env;
+    for (const auto& [key, value] : context.options()["env"].get<HashMap<String, String, MemoryDomain::Options>>())
+        env.push_back(format("{}={}", key, value));
     for (auto&& match : RegexIterator{cmdline.begin(), cmdline.end(), re})
     {
         StringView name{match[2].first, match[2].second};
