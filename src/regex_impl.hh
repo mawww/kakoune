@@ -313,8 +313,10 @@ private:
     template<bool copy>
     int16_t new_saves(Iterator* pos, uint32_t valid_mask)
     {
+        if constexpr (mode & RegexMode::NoSaves)
+            return -1;
+
         kak_assert(not copy or pos != nullptr);
-        const auto count = m_program.save_count;
         if (m_first_free >= 0)
         {
             const int16_t res = m_first_free;
@@ -327,6 +329,7 @@ private:
             return res;
         }
 
+        const auto count = m_program.save_count;
         auto* new_pos = reinterpret_cast<Iterator*>(operator new (count * sizeof(Iterator)));
         for (size_t i = 0; i < count; ++i)
             new (new_pos+i) Iterator{copy ? pos[i] : Iterator{}};
@@ -336,8 +339,9 @@ private:
 
     void release_saves(int16_t index)
     {
-        if (index < 0)
+        if constexpr (mode & RegexMode::NoSaves)
             return;
+
         auto& saves = m_saves[index];
         if (saves.refcount == 1)
         {
@@ -393,7 +397,8 @@ private:
                         (config.flags & RegexExecFlags::NotInitialNull and pos == config.begin))
                         return failed();
 
-                    release_saves(m_captures);
+                    if (m_captures >= 0)
+                        release_saves(m_captures);
                     m_captures = thread.saves;
                     m_found_match = true;
 
@@ -419,8 +424,7 @@ private:
                     if (auto target = inst.param.split.target;
                         instructions[target].last_step != current_step)
                     {
-                        if (thread.saves >= 0)
-                            ++m_saves[thread.saves].refcount;
+                        ++m_saves[thread.saves].refcount;
                         if (not inst.param.split.prioritize_parent)
                             std::swap(thread.inst, target);
                         m_threads.push_current({target, thread.saves});
@@ -429,9 +433,7 @@ private:
                 case CompiledRegex::Save:
                     if constexpr (mode & RegexMode::NoSaves)
                         break;
-                    if (thread.saves < 0)
-                        thread.saves = new_saves<false>(nullptr, 0);
-                    else if (auto& saves = m_saves[thread.saves]; saves.refcount > 1)
+                    if (auto& saves = m_saves[thread.saves]; saves.refcount > 1)
                     {
                         --saves.refcount;
                         thread.saves = new_saves<true>(saves.pos, saves.valid_mask);
@@ -471,12 +473,13 @@ private:
     bool exec_program(Iterator pos, const ExecConfig& config, auto&& idle_func)
     {
         kak_assert(m_threads.current_is_empty() and m_threads.next_is_empty());
-        release_saves(m_captures);
+        if (m_captures >= 0)
+            release_saves(m_captures);
         m_captures = -1;
         m_threads.ensure_initial_capacity();
 
         const int16_t first_inst = forward ? 0 : m_program.first_backward_inst;
-        m_threads.push_current({first_inst, -1});
+        m_threads.push_current({first_inst, new_saves<false>(nullptr, 0)});
 
         const auto& start_desc = forward ? m_program.forward_start_desc : m_program.backward_start_desc;
 
@@ -518,7 +521,7 @@ private:
             {
                 if (start_desc and m_threads.next_is_empty())
                     to_next_start(pos, config, *start_desc);
-                m_threads.push_next({first_inst, -1});
+                m_threads.push_next({first_inst, new_saves<false>(nullptr, 0)});
             }
             m_threads.swap_next();
         }
