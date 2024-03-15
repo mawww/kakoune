@@ -96,6 +96,7 @@ KAK_LIBS = \
 tag = $(tag-debug-$(debug))$(tag-sanitize-$(sanitize))
 
 .SUFFIXES: $(tag).o .cc
+.PHONY: src/kak
 
 sources != find src -type f -name '*.cc' | sed -e '/\.version\.cc/d'
 objects = $(sources:.cc=$(tag).o)
