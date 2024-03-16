@@ -269,7 +269,7 @@ public:
         {
             if (search)
             {
-                to_next_start(start, config, *start_desc);
+                start = find_next_start(start, config, *start_desc);
                 if (start == config.end) // If start_desc is not null, it means we consume at least one char
                     return false;
             }
@@ -479,6 +479,7 @@ private:
         m_threads.push_current({first_inst, -1});
 
         const auto& start_desc = forward ? m_program.forward_start_desc : m_program.backward_start_desc;
+        auto next_start = pos;
 
         constexpr bool search = mode & RegexMode::Search;
         constexpr bool any_match = mode & RegexMode::AnyMatch;
@@ -513,38 +514,43 @@ private:
                 return m_found_match;
             }
 
-            pos = next;
             if (search and not m_found_match)
             {
-                if (start_desc and m_threads.next_is_empty())
-                    to_next_start(pos, config, *start_desc);
-                m_threads.push_next({first_inst, -1});
+                if (start_desc)
+                {
+                    if (pos == next_start)
+                        next_start = find_next_start(next, config, *start_desc);
+                    if (m_threads.next_is_empty())
+                        next = next_start;
+                }
+                if (not start_desc or next == next_start)
+                    m_threads.push_next({first_inst, -1});
             }
+            pos = next;
             m_threads.swap_next();
         }
     }
 
-    static void to_next_start(Iterator& start, const ExecConfig& config, const StartDesc& start_desc)
+    static Iterator find_next_start(Iterator pos, const ExecConfig& config, const StartDesc& start_desc)
     {
-        while (start != config.end)
+        while (pos != config.end)
         {
             static_assert(StartDesc::count <= 256, "start desc should be ascii only");
             if constexpr (forward)
             {
-                const unsigned char c = *start;
-                if (start_desc.map[c])
-                    return;
-                ++start;
+                if (start_desc.map[static_cast<unsigned char>(*pos)])
+                    return pos;
+                ++pos;
             }
             else
             {
-                auto prev = utf8::previous(start, config.end);
-                const unsigned char c = *prev;
-                if (start_desc.map[c])
-                    return;
-                start = prev;
+                auto prev = utf8::previous(pos, config.end);
+                if (start_desc.map[static_cast<unsigned char>(*prev)])
+                    return pos;
+                pos = prev;
             }
         }
+        return pos;
     }
 
     bool lookaround(CompiledRegex::Param::Lookaround param, Iterator pos, const ExecConfig& config) const
