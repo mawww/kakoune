@@ -1347,7 +1347,8 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
     if (parser.get_switch("hidden"))
         flags = CommandFlags::Hidden;
 
-    const Completions::Flags completions_flags = parser.get_switch("menu") ?
+    const bool menu = (bool)parser.get_switch("menu");
+    const Completions::Flags completions_flags = menu ?
         Completions::Flags::Menu : Completions::Flags::None;
 
     const String& commands = parser[1];
@@ -1384,6 +1385,8 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
     }
 
     CommandCompleter completer = parse_completion_switch(parser, completions_flags);
+    if (menu and not completer)
+        throw runtime_error("menu switch requires a completion switch");
     auto docstring = trim_indent(parser.get_switch("docstring").value_or(StringView{}));
 
     cm.register_command(cmd_name, cmd, docstring, desc, flags, CommandHelper{}, std::move(completer));

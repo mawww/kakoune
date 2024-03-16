@@ -17,7 +17,6 @@
 namespace Kakoune
 {
 
-constexpr Codepoint CompiledRegex::StartDesc::other;
 constexpr Codepoint CompiledRegex::StartDesc::count;
 
 struct ParsedRegex
@@ -893,11 +892,17 @@ private:
     bool compute_start_desc(ParsedRegex::NodeIndex index,
                              CompiledRegex::StartDesc& start_desc) const
     {
+        // fill all bytes that mark the start of an utf8 multi byte sequence
+        auto add_multi_byte_utf8 = [&] {
+            std::fill(start_desc.map + 0b11000000, start_desc.map + 0b11111000, true);
+        };
+        static constexpr Codepoint single_byte_limit = 128;
+
         auto& node = get_node(index);
         switch (node.op)
         {
             case ParsedRegex::Literal:
-                if (node.value < CompiledRegex::StartDesc::count)
+                if (node.value < single_byte_limit)
                 {
                     if (node.ignore_case)
                     {
@@ -908,14 +913,14 @@ private:
                         start_desc.map[node.value] = true;
                 }
                 else
-                    start_desc.map[CompiledRegex::StartDesc::other] = true;
+                    add_multi_byte_utf8();
                 return node.quantifier.allows_none();
             case ParsedRegex::AnyChar:
                 for (auto& b : start_desc.map)
                     b = true;
                return node.quantifier.allows_none();
             case ParsedRegex::AnyCharExceptNewLine:
-                for (Codepoint cp = 0; cp < CompiledRegex::StartDesc::count; ++cp)
+                for (Codepoint cp = 0; cp < single_byte_limit; ++cp)
                 {
                     if (cp != '\n')
                         start_desc.map[cp] = true;
@@ -930,33 +935,33 @@ private:
                 {
                     for (auto& range : character_class.ranges)
                     {
-                        const auto clamp = [](Codepoint cp) { return std::min(CompiledRegex::StartDesc::count, cp); };
+                        const auto clamp = [](Codepoint cp) { return std::min(single_byte_limit, cp); };
                         for (auto cp = clamp(range.min), end = clamp(range.max + 1); cp < end; ++cp)
                             start_desc.map[cp] = true;
-                        if (range.max >= CompiledRegex::StartDesc::count)
-                            start_desc.map[CompiledRegex::StartDesc::other] = true;
+                        if (range.max >= single_byte_limit)
+                            add_multi_byte_utf8();
                     }
                 }
                 else
                 {
-                    for (Codepoint cp = 0; cp < CompiledRegex::StartDesc::count; ++cp)
+                    for (Codepoint cp = 0; cp < single_byte_limit; ++cp)
                     {
                         if (start_desc.map[cp] or character_class.matches(cp))
                             start_desc.map[cp] = true;
                     }
                 }
-                start_desc.map[CompiledRegex::StartDesc::other] = true;
+                add_multi_byte_utf8();
                 return node.quantifier.allows_none();
             }
             case ParsedRegex::CharType:
             {
                 const CharacterType ctype = (CharacterType)node.value;
-                for (Codepoint cp = 0; cp < CompiledRegex::StartDesc::count; ++cp)
+                for (Codepoint cp = 0; cp < single_byte_limit; ++cp)
                 {
                     if (is_ctype(ctype, cp))
                         start_desc.map[cp] = true;
                 }
-                start_desc.map[CompiledRegex::StartDesc::other] = true;
+                add_multi_byte_utf8();
                 return node.quantifier.allows_none();
             }
             case ParsedRegex::Sequence:

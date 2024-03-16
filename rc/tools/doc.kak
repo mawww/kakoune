@@ -134,7 +134,7 @@ define-command -params 1 -hidden doc-render %{
     map buffer normal <ret> :doc-follow-link<ret>
 }
 
-define-command doc -params 0..2 -menu -docstring %{
+define-command doc -params 0..2 -docstring %{
         doc <topic> [<keyword>]: open a buffer containing documentation about a given topic
         An optional keyword argument can be passed to the function, which will be automatically selected in the documentation
 
@@ -165,7 +165,7 @@ define-command doc -params 0..2 -menu -docstring %{
     }
 }
 
-complete-command doc shell-script-candidates %{
+complete-command -menu doc shell-script-candidates %{
     case "$kak_token_to_complete" in
         0)
             find -L \

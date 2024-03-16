@@ -152,8 +152,7 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
 
     struct StartDesc : UseMemoryDomain<MemoryDomain::Regex>
     {
-        static constexpr Codepoint count = 128;
-        static constexpr Codepoint other = 0;
+        static constexpr Codepoint count = 256;
         bool map[count];
     };
 
@@ -277,7 +276,7 @@ public:
             else if (start != config.end)
             {
                 const unsigned char c = forward ? *start : *utf8::previous(start, config.end);
-                if (not start_desc->map[(c < StartDesc::count) ? c : StartDesc::other])
+                if (not start_desc->map[c])
                     return false;
             }
         }
@@ -288,7 +287,15 @@ public:
     ArrayView<const Iterator> captures() const
     {
         if (m_captures >= 0)
-            return { m_saves[m_captures].pos, m_program.save_count };
+        {
+            auto& saves = m_saves[m_captures];
+            for (int i = 0; i < m_program.save_count; ++i)
+            {
+                if ((saves.valid_mask & (1 << i)) == 0)
+                    saves.pos[i] = Iterator{};
+            }
+            return { saves.pos, m_program.save_count };
+        }
         return {};
     }
 
@@ -296,12 +303,15 @@ private:
     struct Saves
     {
         int32_t refcount;
-        int32_t next_free;
+        union {
+            int32_t next_free;
+            uint32_t valid_mask;
+        };
         Iterator* pos;
     };
 
     template<bool copy>
-    int16_t new_saves(Iterator* pos)
+    int16_t new_saves(Iterator* pos, uint32_t valid_mask)
     {
         kak_assert(not copy or pos != nullptr);
         const auto count = m_program.save_count;
@@ -311,18 +321,16 @@ private:
             Saves& saves = m_saves[res];
             m_first_free = saves.next_free;
             kak_assert(saves.refcount == 1);
-            if (copy)
-                std::copy_n(pos, count, saves.pos);
-            else
-                std::fill_n(saves.pos, count, Iterator{});
-
+            if constexpr (copy)
+                std::copy_n(pos, std::bit_width(valid_mask), saves.pos);
+            saves.valid_mask = valid_mask;
             return res;
         }
 
         auto* new_pos = reinterpret_cast<Iterator*>(operator new (count * sizeof(Iterator)));
         for (size_t i = 0; i < count; ++i)
             new (new_pos+i) Iterator{copy ? pos[i] : Iterator{}};
-        m_saves.push_back({1, 0, new_pos});
+        m_saves.push_back({1, {.valid_mask=valid_mask}, new_pos});
         return static_cast<int16_t>(m_saves.size() - 1);
     }
 
@@ -419,16 +427,17 @@ private:
                     }
                     break;
                 case CompiledRegex::Save:
-                    if (mode & RegexMode::NoSaves)
+                    if constexpr (mode & RegexMode::NoSaves)
                         break;
                     if (thread.saves < 0)
-                        thread.saves = new_saves<false>(nullptr);
-                    else if (m_saves[thread.saves].refcount > 1)
+                        thread.saves = new_saves<false>(nullptr, 0);
+                    else if (auto& saves = m_saves[thread.saves]; saves.refcount > 1)
                     {
-                        --m_saves[thread.saves].refcount;
-                        thread.saves = new_saves<true>(m_saves[thread.saves].pos);
+                        --saves.refcount;
+                        thread.saves = new_saves<true>(saves.pos, saves.valid_mask);
                     }
                     m_saves[thread.saves].pos[inst.param.save_index] = pos;
+                    m_saves[thread.saves].valid_mask |= (1 << inst.param.save_index);
                     break;
                 case CompiledRegex::CharClass:
                     if (pos == config.end)
@@ -519,11 +528,11 @@ private:
     {
         while (start != config.end)
         {
-            static_assert(StartDesc::count <= 128, "start desc should be ascii only");
+            static_assert(StartDesc::count <= 256, "start desc should be ascii only");
             if constexpr (forward)
             {
                 const unsigned char c = *start;
-                if (start_desc.map[(c < StartDesc::count) ? c : StartDesc::other])
+                if (start_desc.map[c])
                     return;
                 ++start;
             }
@@ -531,7 +540,7 @@ private:
             {
                 auto prev = utf8::previous(start, config.end);
                 const unsigned char c = *prev;
-                if (start_desc.map[(c < StartDesc::count) ? c : StartDesc::other])
+                if (start_desc.map[c])
                     return;
                 start = prev;
             }
