@@ -54,6 +54,8 @@ public:
         auto coord = context().window().display_position(cursor).value_or(DisplayCoord{});
         return {CursorMode::Buffer, coord};
     }
+    
+    virtual const NormalParams* get_normal_params() const { return nullptr; }
 
     using Insertion = InputHandler::Insertion;
 
@@ -385,6 +387,10 @@ public:
             atoms.emplace_back(StringView(m_params.reg).str(), context().faces()["StatusLineValue"]);
         }
         return atoms;
+    }
+    
+    const NormalParams* get_normal_params() const override {
+        return &m_params;
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Normal; }
@@ -1709,6 +1715,11 @@ DisplayLine InputHandler::mode_line() const
 std::pair<CursorMode, DisplayCoord> InputHandler::get_cursor_info() const
 {
     return current_mode().get_cursor_info();
+}
+
+
+const NormalParams* InputHandler::get_normal_params() const {
+    return current_mode().get_normal_params();
 }
 
 bool should_show_info(AutoInfo mask, const Context& context)

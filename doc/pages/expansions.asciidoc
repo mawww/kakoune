@@ -244,7 +244,8 @@ The following expansions are supported (with required context _in italics_):
     directory containing the user configuration
 
 *%val{count}*::
-    _in `map` command <keys> parameter and `<a-;>` from object menu_ +
+    _in `map` command <keys> parameter, `<a-;>` from object menu and
+    `modelinefmt` expansion._ +
     current count when the mapping was triggered, defaults to 0 if no
     count given
 
@@ -320,7 +321,8 @@ The following expansions are supported (with required context _in italics_):
     beginning, and `to_end` if the user wants to select to the end
 
 *%val{register}*::
-    _in `map` command <keys> parameter and `<a-;>` from the object menu_ +
+    _in `map` command <keys> parameter, `<a-;>` from object menu and
+    `modelinefmt` expansion_ +
     current register when the mapping was triggered
 
 *%val{runtime}*::
