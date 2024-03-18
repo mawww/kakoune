@@ -153,6 +153,8 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
     struct StartDesc : UseMemoryDomain<MemoryDomain::Regex>
     {
         static constexpr Codepoint count = 256;
+        using OffsetLimits = std::numeric_limits<uint8_t>;
+        uint8_t offset = 0;
         bool map[count];
     };
 
@@ -531,15 +533,16 @@ private:
         }
     }
 
-    static Iterator find_next_start(Iterator pos, const ExecConfig& config, const StartDesc& start_desc)
+    static Iterator find_next_start(Iterator start, const ExecConfig& config, const StartDesc& start_desc)
     {
+        auto pos = start;
         while (pos != config.end)
         {
             static_assert(StartDesc::count <= 256, "start desc should be ascii only");
             if constexpr (forward)
             {
                 if (start_desc.map[static_cast<unsigned char>(*pos)])
-                    return pos;
+                    return utf8::advance(pos, start, -CharCount(start_desc.offset));
                 ++pos;
             }
             else
