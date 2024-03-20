@@ -215,7 +215,7 @@ If you want to compile from source on 20.04 or earlier, you must force the build
 ----------------------------------------------------------------
 git clone https://github.com/mawww/kakoune.git && cd kakoune/src
 CXX=g++-10 make
-PREFIX=$HOME/.local make install
+make PREFIX=$HOME/.local install
 ----------------------------------------------------------------
 ====
 
