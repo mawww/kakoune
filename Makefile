@@ -7,9 +7,9 @@ debug = no
 static = no
 gzip_man = yes
 # to get format compatible with GitHub archive use "gzip -S .gz" here
-compress_bin = bzip
+compress_bin = bzip2
 
-compress-suffix-bzip = bz2
+compress-suffix-bzip2 = bz2
 compress-suffix-zstd = zst
 
 CPPFLAGS-debug-yes = -DKAK_DEBUG
@@ -141,10 +141,10 @@ tags:
 clean:
 	rm -f $(objects) $(deps) src/.version*
 
-dist: kakoune-$(version).tar.zst
+dist: kakoune-$(version).tar.$(compress-suffix-$(compress_bin))
 
 kakoune-$(version).tar.$(compress-suffix-$(compress_bin)): kakoune-$(version).tar
-	$(compress_bin) -f $< -o $@
+	$(compress_bin) -f $<
 
 kakoune-$(version).tar:
 	@if ! [ -d .git ]; then echo "make dist can only run from a git repo";  false; fi
