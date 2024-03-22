@@ -1088,6 +1088,12 @@ String dump_regex(const CompiledRegex& program)
             case CompiledRegex::AnyCharExceptNewLine:
                 res += "anything but newline\n";
                 break;
+            case CompiledRegex::CharClass:
+                res += format("character class {}\n", inst.param.character_class_index);
+                break;
+            case CompiledRegex::CharType:
+                res += format("character type {}\n", to_underlying(inst.param.character_type));
+                break;
             case CompiledRegex::Jump:
                 res += format("jump {}\n", inst.param.jump_target);
                 break;
@@ -1100,12 +1106,6 @@ String dump_regex(const CompiledRegex& program)
             }
             case CompiledRegex::Save:
                 res += format("save {}\n", inst.param.save_index);
-                break;
-            case CompiledRegex::CharClass:
-                res += format("character class {}\n", inst.param.character_class_index);
-                break;
-            case CompiledRegex::CharType:
-                res += format("character type {}\n", to_underlying(inst.param.character_type));
                 break;
             case CompiledRegex::LineAssertion:
                 res += format("line {}\n", inst.param.line_start ? "start" : "end");;

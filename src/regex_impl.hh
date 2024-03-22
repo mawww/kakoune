@@ -413,6 +413,14 @@ private:
                     if (pos != config.end and cp != '\n')
                         return consumed();
                     return failed();
+                case CompiledRegex::CharClass:
+                    if (pos == config.end)
+                        return failed();
+                    return m_program.character_classes[inst.param.character_class_index].matches(cp) ? consumed() : failed();
+                case CompiledRegex::CharType:
+                    if (pos == config.end)
+                        return failed();
+                    return is_ctype(inst.param.character_type, cp) ? consumed() : failed();
                 case CompiledRegex::Jump:
                     thread.inst = inst.param.jump_target;
                     break;
@@ -440,14 +448,6 @@ private:
                     m_saves[thread.saves].pos[inst.param.save_index] = pos;
                     m_saves[thread.saves].valid_mask |= (1 << inst.param.save_index);
                     break;
-                case CompiledRegex::CharClass:
-                    if (pos == config.end)
-                        return failed();
-                    return m_program.character_classes[inst.param.character_class_index].matches(cp) ? consumed() : failed();
-                case CompiledRegex::CharType:
-                    if (pos == config.end)
-                        return failed();
-                    return is_ctype(inst.param.character_type, cp) ? consumed() : failed();
                 case CompiledRegex::LineAssertion:
                     if (not (inst.param.line_start ? is_line_start(pos, config) : is_line_end(pos, config)))
                         return failed();
