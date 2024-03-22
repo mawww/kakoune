@@ -719,7 +719,7 @@ struct WrapHighlighter : Highlighter
         const ColumnCount marker_len = zero_if_greater(m_marker.column_length(), wrap_column);
 
         for (auto buf_line = setup.first_line, win_line = 0_line;
-             win_line < win_height or buf_line <= cursor.line;
+             win_line < win_height or (setup.ensure_cursor_visible and buf_line <= cursor.line);
              ++buf_line, ++setup.line_count)
         {
             if (buf_line >= buffer.line_count())
