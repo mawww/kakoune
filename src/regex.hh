@@ -3,6 +3,7 @@
 
 #include "string.hh"
 #include "regex_impl.hh"
+#include "ref_ptr.hh"
 
 namespace Kakoune
 {
@@ -27,7 +28,9 @@ public:
     const CompiledRegex* impl() const { return m_impl.get(); }
 
 private:
-    RefPtr<CompiledRegex> m_impl;
+    struct Impl : RefCountable, CompiledRegex {};
+
+    RefPtr<Impl> m_impl;
     String m_str;
 };
 

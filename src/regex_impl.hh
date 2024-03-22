@@ -3,7 +3,6 @@
 
 #include "exception.hh"
 #include "flags.hh"
-#include "ref_ptr.hh"
 #include "unicode.hh"
 #include "utf8.hh"
 #include "vector.hh"
@@ -66,7 +65,7 @@ struct CharacterClass
 
 };
 
-struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
+struct CompiledRegex : UseMemoryDomain<MemoryDomain::Regex>
 {
     enum Op : char
     {
