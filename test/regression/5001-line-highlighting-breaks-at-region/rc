@@ -1,0 +1,5 @@
+add-highlighter window/test regions
+add-highlighter window/test/macro region %{#} %{(?=\\n)} group
+add-highlighter window/test/code default-region group
+add-highlighter window/ number-lines
+add-highlighter window/ line 2 ,red
