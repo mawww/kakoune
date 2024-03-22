@@ -1191,7 +1191,7 @@ public:
         }
     }
 
-    void on_key(Key key, bool) override
+    void on_key(Key key, bool synthesized) override
     {
         auto& buffer = context().buffer();
 
@@ -1289,22 +1289,13 @@ public:
                 }, "enter register name", register_doc.str());
             update_completions = false;
         }
-        else if (key == ctrl('n'))
+        else if (key == ctrl('n') or key == ctrl('p') or key.modifiers == Key::Modifiers::MenuSelect)
         {
-            last_insert().keys.pop_back();
-            m_completer.select(1, true, last_insert().keys);
-            update_completions = false;
-        }
-        else if (key == ctrl('p'))
-        {
-            last_insert().keys.pop_back();
-            m_completer.select(-1, true, last_insert().keys);
-            update_completions = false;
-        }
-        else if (key.modifiers == Key::Modifiers::MenuSelect)
-        {
-            last_insert().keys.pop_back();
-            m_completer.select(key.key, false, last_insert().keys);
+            if (not synthesized)
+                last_insert().keys.pop_back();
+            bool relative = key.modifiers != Key::Modifiers::MenuSelect;
+            int index = relative ? (key == ctrl('n') ? 1 : -1) : key.key;
+            m_completer.select(index, relative, last_insert().keys);
             update_completions = false;
         }
         else if (key == ctrl('x'))
