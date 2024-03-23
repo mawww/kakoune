@@ -56,7 +56,6 @@ public:
     }
 
     using Insertion = InputHandler::Insertion;
-    Insertion& last_insert() { return m_input_handler.m_last_insert; }
 
 protected:
     virtual void on_key(Key key, bool synthesized) = 0;
@@ -1140,11 +1139,12 @@ private:
 class Insert : public InputMode
 {
 public:
-    Insert(InputHandler& input_handler, InsertMode mode, int count)
+    Insert(InputHandler& input_handler, InsertMode mode, int count, Insertion* last_insert)
         : InputMode(input_handler),
           m_edition(context()),
           m_selection_edition(context()),
           m_completer(context()),
+          m_last_insert(last_insert),
           m_restore_cursor(mode == InsertMode::Append),
           m_auto_complete{context().options()["autocomplete"].get<AutoComplete>() & AutoComplete::Insert},
           m_idle_timer{TimePoint::max(), context().flags() & Context::Flags::Draft ?
@@ -1157,11 +1157,14 @@ public:
     {
         context().buffer().throw_if_read_only();
 
-        last_insert().recording.set();
-        last_insert().mode = mode;
-        last_insert().keys.clear();
-        last_insert().disable_hooks = context().hooks_disabled();
-        last_insert().count = count;
+        if (m_last_insert)
+        {
+            m_last_insert->recording.set();
+            m_last_insert->mode = mode;
+            m_last_insert->keys.clear();
+            m_last_insert->disable_hooks = context().hooks_disabled();
+            m_last_insert->count = count;
+        }
         prepare(mode, count);
     }
 
@@ -1177,7 +1180,8 @@ public:
 
         if (not from_push)
         {
-            last_insert().recording.unset();
+            if (m_last_insert)
+                m_last_insert->recording.unset();
 
             auto& selections = context().selections();
             if (m_restore_cursor)
@@ -1291,11 +1295,11 @@ public:
         }
         else if (key == ctrl('n') or key == ctrl('p') or key.modifiers == Key::Modifiers::MenuSelect)
         {
-            if (not synthesized)
-                last_insert().keys.pop_back();
+            if (m_last_insert and not synthesized)
+                m_last_insert->keys.pop_back();
             bool relative = key.modifiers != Key::Modifiers::MenuSelect;
             int index = relative ? (key == ctrl('n') ? 1 : -1) : key.key;
-            m_completer.select(index, relative, last_insert().keys);
+            m_completer.select(index, relative, m_last_insert ? &m_last_insert->keys : nullptr);
             update_completions = false;
         }
         else if (key == ctrl('x'))
@@ -1494,6 +1498,7 @@ private:
     ScopedEdition   m_edition;
     ScopedSelectionEdition m_selection_edition;
     InsertCompleter m_completer;
+    Insertion*      m_last_insert;
     const bool      m_restore_cursor;
     bool            m_auto_complete;
     Timer           m_idle_timer;
@@ -1550,7 +1555,7 @@ void InputHandler::reset_normal_mode()
 
 void InputHandler::insert(InsertMode mode, int count)
 {
-    push_mode(new InputModes::Insert(*this, mode, count));
+    push_mode(new InputModes::Insert(*this, mode, count, m_handle_key_level <= 1 ? &m_last_insert : nullptr));
 }
 
 void InputHandler::repeat_last_insert()
@@ -1562,19 +1567,12 @@ void InputHandler::repeat_last_insert()
         m_last_insert.recording)
         throw runtime_error{"repeating last insert not available in this context"};
 
-    Vector<Key> keys;
-    swap(keys, m_last_insert.keys);
     ScopedSetBool disable_hooks(context().hooks_disabled(),
                                 m_last_insert.disable_hooks);
 
-    push_mode(new InputModes::Insert(*this, m_last_insert.mode, m_last_insert.count));
-    for (auto& key : keys)
-    {
-        // refill last_insert,  this is very inefficient, but necessary at the moment
-        // to properly handle insert completion
-        m_last_insert.keys.push_back(key);
+    push_mode(new InputModes::Insert(*this, m_last_insert.mode, m_last_insert.count, nullptr));
+    for (auto& key : m_last_insert.keys)
         handle_key(key);
-    }
     kak_assert(dynamic_cast<InputModes::Normal*>(&current_mode()) != nullptr);
 }
 
@@ -1645,10 +1643,6 @@ void InputHandler::handle_key(Key key)
     ++m_handle_key_level;
     auto dec = on_scope_end([this]{ --m_handle_key_level;} );
 
-    auto process_key = [&](Key key, bool synthesized) {
-        current_mode().handle_key(key, synthesized);
-    };
-
     if (m_last_insert.recording and m_handle_key_level <= 1)
         m_last_insert.keys.push_back(key);
 
@@ -1659,10 +1653,10 @@ void InputHandler::handle_key(Key key)
         ScopedSetBool noninteractive{context().noninteractive()};
 
         for (auto& k : keymaps.get_mapping_keys(key, keymap_mode))
-            process_key(k, true);
+            current_mode().handle_key(k, true);
     }
     else
-        process_key(key, m_handle_key_level > 1);
+        current_mode().handle_key(key, m_handle_key_level > 1);
 
     // do not record the key that made us enter or leave recording mode,
     // and the ones that are triggered recursively by previous keys.
