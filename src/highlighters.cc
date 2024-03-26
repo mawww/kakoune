@@ -954,7 +954,7 @@ struct TabulationHighlighter : Highlighter
 };
 
 const HighlighterDesc show_whitespace_desc = {
-    "Parameters: [-tab <separator>] [-tabpad <separator>] [-lf <separator>] [-spc <separator>] [-nbsp <separator>]\n"
+    "Parameters: [-tab <separator>] [-tabpad <separator>] [-lf <separator>] [-spc <separator>] [-nbsp <separator>] [-indent <separator>]\n"
     "Display whitespaces using symbols",
     { {
         { "tab",    { ArgCompleter{}, "replace tabulations with the given character" } },
@@ -962,15 +962,16 @@ const HighlighterDesc show_whitespace_desc = {
         { "spc",    { ArgCompleter{}, "replace spaces with the given character" } },
         { "lf",     { ArgCompleter{}, "replace line feeds with the given character" } },
         { "nbsp",   { ArgCompleter{}, "replace non-breakable spaces with the given character" } },
+        { "indent", { ArgCompleter{}, "replace first space of every indent with the given character according to `indentwidth`" } },
         { "only-trailing", { {}, "only highlighting trailing whitespaces" } } },
         ParameterDesc::Flags::None, 0, 0
     }
 };
 struct ShowWhitespacesHighlighter : Highlighter
 {
-    ShowWhitespacesHighlighter(String tab, String tabpad, String spc, String lf, String nbsp, bool only_trailing)
+    ShowWhitespacesHighlighter(String tab, String tabpad, String spc, String lf, String nbsp, String indent, bool only_trailing)
       : Highlighter{HighlightPass::Move}, m_tab{std::move(tab)}, m_tabpad{std::move(tabpad)},
-        m_spc{std::move(spc)}, m_lf{std::move(lf)}, m_nbsp{std::move(nbsp)}, m_only_trailing{std::move(only_trailing)}
+        m_spc{std::move(spc)}, m_lf{std::move(lf)}, m_nbsp{std::move(nbsp)}, m_indent{std::move(indent)}, m_only_trailing{std::move(only_trailing)}
     {}
 
     static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
@@ -985,19 +986,26 @@ struct ShowWhitespacesHighlighter : Highlighter
             return value.str();
         };
 
+        String indent = parser.get_switch("indent").value_or("│").str();
+        if (indent.char_length() > 1)
+            throw runtime_error{format("-indent expects a single character or empty parameter")};
+
         return std::make_unique<ShowWhitespacesHighlighter>(
             get_param("tab", "→"), get_param("tabpad", " "), get_param("spc", "·"),
-            get_param("lf", "¬"), get_param("nbsp", "⍽"), only_trailing);
+            get_param("lf", "¬"), get_param("nbsp", "⍽"), indent, only_trailing);
     }
 
 private:
     void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange) override
     {
         const int tabstop = context.context.options()["tabstop"].get<int>();
+        const int indentwidth = context.context.options()["indentwidth"].get<int>();
         auto whitespaceface = context.context.faces()["Whitespace"];
+        auto indentface = context.context.faces()["WhitespaceIndent"];
         const auto& buffer = context.context.buffer();
         for (auto& line : display_buffer.lines())
         {
+            bool is_indentation = true;
             for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
             {
                 if (atom_it->type() != DisplayAtom::Range)
@@ -1024,6 +1032,7 @@ private:
                 {
                     auto coord = it.coord();
                     Codepoint cp = utf8::read_codepoint(it, end);
+                    auto face = whitespaceface;
                     if (is_whitespace(cp))
                     {
                         if (m_only_trailing and it.coord() <= last_non_space)
@@ -1040,21 +1049,36 @@ private:
                             const ColumnCount count = tabstop - (column % tabstop);
                             atom_it->replace(m_tab + String(m_tabpad[(CharCount)0], count - m_tab.column_length()));
                         }
-                        else if (cp == ' ')
-                            atom_it->replace(m_spc);
+                        else if (cp == ' ') {
+                            if (m_indent.empty() or indentwidth == 0 or not is_indentation) {
+                                atom_it->replace(m_spc);
+                            } else {
+                                const ColumnCount column = get_column(buffer, tabstop, coord);
+                                if (column % indentwidth == 0 and column != 0) {
+                                    atom_it->replace(m_indent);
+                                    face = indentface;
+                                } else  {
+                                    atom_it->replace(m_spc);
+                                }
+                            }
+                        }
                         else if (cp == '\n')
                             atom_it->replace(m_lf);
                         else if (cp == 0xA0 or cp == 0x202F)
                             atom_it->replace(m_nbsp);
-                        atom_it->face = merge_faces(atom_it->face, whitespaceface);
+                        atom_it->face = merge_faces(atom_it->face, face);
                         break;
+                    }
+                    else
+                    {
+                        is_indentation = false;
                     }
                 }
             }
         }
     }
 
-    const String m_tab, m_tabpad, m_spc, m_lf, m_nbsp;
+    const String m_tab, m_tabpad, m_spc, m_lf, m_nbsp, m_indent;
     const bool m_only_trailing;
 };
 
