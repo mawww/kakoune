@@ -47,13 +47,14 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
     m_ui->set_ui_options(m_window->options()["ui_options"].get<UserInterface::Options>());
     m_ui->set_on_key([this](Key key) {
         kak_assert(key != Key::Invalid);
-        if (key == ctrl('c'))
+        auto& opts = context().options();
+        if (key == opts["interrupt_key"].get<Key>())
         {
             auto prev_handler = set_signal_handler(SIGTERM, SIG_IGN);
             killpg(getpgrp(), SIGTERM);
             set_signal_handler(SIGTERM, prev_handler);
         }
-        else if (key == ctrl('g'))
+        else if (key == opts["cancel_key"].get<Key>())
         {
             m_pending_keys.clear();
             print_status({"operation cancelled", context().faces()["Error"]});
