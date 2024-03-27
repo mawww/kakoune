@@ -55,6 +55,10 @@ highlighter is replaced with the new one.
     *-tabpad* <separator>:::
         a one character long separator that will be appended to tabulations to honor the *tabstop* option
 
+    *-indent* <separator>:::
+        a one character long separator that will replace the first space in indentation according to the *indentwidth* option
+        This will use the `WhitespaceIndent` face.
+
     *-only-trailing*:::
         only highlight whitespaces at the end of the line
 
