@@ -161,7 +161,10 @@ struct MouseHandler
 
         case Key::Modifiers::MouseRelease: {
             if (not m_dragging)
+            {
+                context.ensure_cursor_visible = false;
                 return true;
+            }
             auto& selections = context.selections();
             cursor = context.window().buffer_coord(key.coord());
             selections.main() = {buffer.clamp(m_anchor), cursor};
@@ -172,7 +175,10 @@ struct MouseHandler
 
         case Key::Modifiers::MousePos: {
             if (not m_dragging)
+            {
+                context.ensure_cursor_visible = false;
                 return true;
+            }
             cursor = context.window().buffer_coord(key.coord());
             auto& selections = context.selections();
             selections.main() = {buffer.clamp(m_anchor), cursor};
