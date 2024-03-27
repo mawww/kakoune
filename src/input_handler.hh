@@ -100,6 +100,7 @@ public:
     DisplayLine mode_line() const;
 
     std::pair<CursorMode, DisplayCoord> get_cursor_info() const;
+    const NormalParams* get_normal_params() const;
 
     // Force an input handler into normal mode temporarily
     struct ScopedForceNormal

@@ -5,6 +5,7 @@
 #include "buffer_manager.hh"
 #include "buffer_utils.hh"
 #include "file.hh"
+#include "normal.hh"
 #include "remote.hh"
 #include "option.hh"
 #include "option_types.hh"
@@ -169,7 +170,12 @@ DisplayLine Client::generate_mode_line() const
         HashMap<String, DisplayLine> atoms{{ "mode_info", context().client().input_handler().mode_line() },
                                            { "context_info", {generate_context_info(context()),
                                                               context().faces()["Information"]}}};
-        auto expanded = expand(modelinefmt, context(), ShellContext{},
+        const NormalParams* normal_params = context().client().input_handler().get_normal_params();
+        ShellContext shell_context = { {}, {
+        {"register", normal_params ? String(normal_params->reg) : String("") }, 
+        {"count", normal_params ? String(to_string(normal_params->count)) : ""}}};
+        
+        auto expanded = expand(modelinefmt, context(), shell_context,
                                [](String s) { return escape(s, '{', '\\'); });
         modeline = parse_display_line(expanded, context().faces(), atoms);
     }
