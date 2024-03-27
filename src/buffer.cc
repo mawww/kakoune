@@ -321,10 +321,9 @@ bool Buffer::redo(size_t count)
 {
     throw_if_read_only();
 
-    if (current_history_node().redo_child == HistoryId::Invalid)
+    if (current_history_node().redo_child == HistoryId::Invalid or
+        not m_current_undo_group.empty())
         return false;
-
-    kak_assert(m_current_undo_group.empty());
 
     while (count-- != 0 and current_history_node().redo_child != HistoryId::Invalid)
     {

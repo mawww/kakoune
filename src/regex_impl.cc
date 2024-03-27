@@ -886,8 +886,8 @@ private:
     }
 
     // Mutate start_desc with informations on which Codepoint could start a match.
-    // Returns true if the node possibly does not consume the char, in which case
-    // the next node would still be relevant for the parent node start chars computation.
+    // Returns true if the subsequent nodes are still relevant for computing the
+    // start desc
     template<RegexMode direction>
     bool compute_start_desc(ParsedRegex::NodeIndex index,
                              CompiledRegex::StartDesc& start_desc) const
@@ -916,10 +916,20 @@ private:
                     add_multi_byte_utf8();
                 return node.quantifier.allows_none();
             case ParsedRegex::AnyChar:
+                if (start_desc.offset + node.quantifier.max <= CompiledRegex::StartDesc::OffsetLimits::max())
+                {
+                    start_desc.offset += node.quantifier.max;
+                    return true;
+                }
                 for (auto& b : start_desc.map)
                     b = true;
                return node.quantifier.allows_none();
             case ParsedRegex::AnyCharExceptNewLine:
+                if (start_desc.offset + node.quantifier.max <= CompiledRegex::StartDesc::OffsetLimits::max())
+                {
+                    start_desc.offset += node.quantifier.max;
+                    return true;
+                }
                 for (Codepoint cp = 0; cp < single_byte_limit; ++cp)
                 {
                     if (cp != '\n')
@@ -1078,6 +1088,12 @@ String dump_regex(const CompiledRegex& program)
             case CompiledRegex::AnyCharExceptNewLine:
                 res += "anything but newline\n";
                 break;
+            case CompiledRegex::CharClass:
+                res += format("character class {}\n", inst.param.character_class_index);
+                break;
+            case CompiledRegex::CharType:
+                res += format("character type {}\n", to_underlying(inst.param.character_type));
+                break;
             case CompiledRegex::Jump:
                 res += format("jump {}\n", inst.param.jump_target);
                 break;
@@ -1090,12 +1106,6 @@ String dump_regex(const CompiledRegex& program)
             }
             case CompiledRegex::Save:
                 res += format("save {}\n", inst.param.save_index);
-                break;
-            case CompiledRegex::CharClass:
-                res += format("character class {}\n", inst.param.character_class_index);
-                break;
-            case CompiledRegex::CharType:
-                res += format("character type {}\n", to_underlying(inst.param.character_type));
                 break;
             case CompiledRegex::LineAssertion:
                 res += format("line {}\n", inst.param.line_start ? "start" : "end");;
@@ -1138,7 +1148,7 @@ String dump_regex(const CompiledRegex& program)
                     res += (char)c;
             }
         }
-        res += "]\n";
+        res += format("]+{}\n", static_cast<int>(desc.offset));
     };
     if (program.forward_start_desc)
         dump_start_desc(*program.forward_start_desc, "forward");
@@ -1554,6 +1564,17 @@ auto test_regex = UnitTest{[]{
     {
         TestVM<RegexMode::Forward | RegexMode::Search> vm{".{40}"};
         kak_assert(vm.exec("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", RegexExecFlags::None));
+    }
+
+    {
+        TestVM<RegexMode::Forward | RegexMode::Search> vm{"(.{3,4}|f)oo"};
+        kak_assert(vm.forward_start_desc and vm.forward_start_desc->offset == 4);
+        for (int c = 0; c < CompiledRegex::StartDesc::count; ++c)
+            kak_assert(vm.forward_start_desc->map[c] == (c == 'f' or c == 'o'));
+
+        kak_assert(vm.exec("xxxoo", RegexExecFlags::None));
+        kak_assert(vm.exec("xfoo", RegexExecFlags::None));
+        kak_assert(not vm.exec("😄xoo", RegexExecFlags::None));
     }
 
     {

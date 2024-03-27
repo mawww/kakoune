@@ -7,9 +7,9 @@ debug = no
 static = no
 gzip_man = yes
 # to get format compatible with GitHub archive use "gzip -S .gz" here
-compress_bin = bzip
+compress_bin = bzip2
 
-compress-suffix-bzip = bz2
+compress-suffix-bzip2 = bz2
 compress-suffix-zstd = zst
 
 CPPFLAGS-debug-yes = -DKAK_DEBUG
@@ -63,11 +63,10 @@ LIBS-os-Windows = -ldbghelp
 
 CXXFLAGS-default = -std=c++2a -Wall -Wextra -pedantic -Wno-unused-parameter -Wno-sign-compare
 
-compiler != $(CXX) --version | grep -E -o 'clang|GCC' | head -1
-#CXXFLAGS-compiler-clang = -frelaxed-template-template-args -Wno-ambiguous-reversed-operator
-#CXXFLAGS-compiler-GCC = -Wno-init-list-lifetime
+compiler != $(CXX) --version | grep -E -o 'clang|g\+\+|c\+\+' | head -1
 CXXFLAGS-compiler-clang = -fsized-deallocation
-CXXFLAGS-compiler-GCC = -Wno-init-list-lifetime -Wno-stringop-overflow
+CXXFLAGS-compiler-g++ = -Wno-init-list-lifetime -Wno-stringop-overflow
+CXXFLAGS-compiler-c++ = $(CXXFLAGS-compiler-g++)
 
 KAK_CPPFLAGS = \
 	$(CPPFLAGS-default) \
@@ -96,6 +95,7 @@ KAK_LIBS = \
 tag = $(tag-debug-$(debug))$(tag-sanitize-$(sanitize))
 
 .SUFFIXES: $(tag).o .cc
+.PHONY: src/kak
 
 sources != find src -type f -name '*.cc' | sed -e '/\.version\.cc/d'
 objects = $(sources:.cc=$(tag).o)
@@ -140,10 +140,10 @@ tags:
 clean:
 	rm -f $(objects) $(deps) src/.version*
 
-dist: kakoune-$(version).tar.zst
+dist: kakoune-$(version).tar.$(compress-suffix-$(compress_bin))
 
 kakoune-$(version).tar.$(compress-suffix-$(compress_bin)): kakoune-$(version).tar
-	$(compress_bin) -f $< -o $@
+	$(compress_bin) -f $<
 
 kakoune-$(version).tar:
 	@if ! [ -d .git ]; then echo "make dist can only run from a git repo";  false; fi

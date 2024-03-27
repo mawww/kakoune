@@ -148,6 +148,8 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
 
     for (auto& line : m_display_buffer.lines())
         line.trim_from(setup.widget_columns, setup.first_column, m_dimensions.column);
+    if (m_display_buffer.lines().size() > m_dimensions.line)
+        m_display_buffer.lines().resize((size_t)m_dimensions.line);
 
     m_builtin_highlighters.highlight({context, setup, HighlightPass::Colorize, {}}, m_display_buffer, range);
 

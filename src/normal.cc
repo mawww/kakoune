@@ -1705,6 +1705,7 @@ void tabs_to_spaces(Context& context, NormalParams params)
     Vector<Selection> tabs;
     Vector<String> spaces;
     ScopedSelectionEdition selection_edition{context};
+    ScopedEdition edition{context};
     for (auto& sel : context.selections())
     {
         for (auto it = buffer.iterator_at(sel.min()),
@@ -1730,6 +1731,7 @@ void spaces_to_tabs(Context& context, NormalParams params)
     const ColumnCount tabstop = params.count == 0 ? opt_tabstop : params.count;
     Vector<Selection> spaces;
     ScopedSelectionEdition selection_edition{context};
+    ScopedEdition edition{context};
     for (auto& sel : context.selections())
     {
         for (auto it = buffer.iterator_at(sel.min()),

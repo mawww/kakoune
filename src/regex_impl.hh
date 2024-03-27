@@ -3,7 +3,6 @@
 
 #include "exception.hh"
 #include "flags.hh"
-#include "ref_ptr.hh"
 #include "unicode.hh"
 #include "utf8.hh"
 #include "vector.hh"
@@ -66,7 +65,7 @@ struct CharacterClass
 
 };
 
-struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
+struct CompiledRegex : UseMemoryDomain<MemoryDomain::Regex>
 {
     enum Op : char
     {
@@ -153,6 +152,8 @@ struct CompiledRegex : RefCountable, UseMemoryDomain<MemoryDomain::Regex>
     struct StartDesc : UseMemoryDomain<MemoryDomain::Regex>
     {
         static constexpr Codepoint count = 256;
+        using OffsetLimits = std::numeric_limits<uint8_t>;
+        uint8_t offset = 0;
         bool map[count];
     };
 
@@ -269,7 +270,7 @@ public:
         {
             if (search)
             {
-                to_next_start(start, config, *start_desc);
+                start = find_next_start(start, config, *start_desc);
                 if (start == config.end) // If start_desc is not null, it means we consume at least one char
                     return false;
             }
@@ -412,6 +413,14 @@ private:
                     if (pos != config.end and cp != '\n')
                         return consumed();
                     return failed();
+                case CompiledRegex::CharClass:
+                    if (pos == config.end)
+                        return failed();
+                    return m_program.character_classes[inst.param.character_class_index].matches(cp) ? consumed() : failed();
+                case CompiledRegex::CharType:
+                    if (pos == config.end)
+                        return failed();
+                    return is_ctype(inst.param.character_type, cp) ? consumed() : failed();
                 case CompiledRegex::Jump:
                     thread.inst = inst.param.jump_target;
                     break;
@@ -439,14 +448,6 @@ private:
                     m_saves[thread.saves].pos[inst.param.save_index] = pos;
                     m_saves[thread.saves].valid_mask |= (1 << inst.param.save_index);
                     break;
-                case CompiledRegex::CharClass:
-                    if (pos == config.end)
-                        return failed();
-                    return m_program.character_classes[inst.param.character_class_index].matches(cp) ? consumed() : failed();
-                case CompiledRegex::CharType:
-                    if (pos == config.end)
-                        return failed();
-                    return is_ctype(inst.param.character_type, cp) ? consumed() : failed();
                 case CompiledRegex::LineAssertion:
                     if (not (inst.param.line_start ? is_line_start(pos, config) : is_line_end(pos, config)))
                         return failed();
@@ -479,6 +480,7 @@ private:
         m_threads.push_current({first_inst, -1});
 
         const auto& start_desc = forward ? m_program.forward_start_desc : m_program.backward_start_desc;
+        auto next_start = pos;
 
         constexpr bool search = mode & RegexMode::Search;
         constexpr bool any_match = mode & RegexMode::AnyMatch;
@@ -513,38 +515,44 @@ private:
                 return m_found_match;
             }
 
-            pos = next;
             if (search and not m_found_match)
             {
-                if (start_desc and m_threads.next_is_empty())
-                    to_next_start(pos, config, *start_desc);
-                m_threads.push_next({first_inst, -1});
+                if (start_desc)
+                {
+                    if (pos == next_start)
+                        next_start = find_next_start(next, config, *start_desc);
+                    if (m_threads.next_is_empty())
+                        next = next_start;
+                }
+                if (not start_desc or next == next_start)
+                    m_threads.push_next({first_inst, -1});
             }
+            pos = next;
             m_threads.swap_next();
         }
     }
 
-    static void to_next_start(Iterator& start, const ExecConfig& config, const StartDesc& start_desc)
+    static Iterator find_next_start(Iterator start, const ExecConfig& config, const StartDesc& start_desc)
     {
-        while (start != config.end)
+        auto pos = start;
+        while (pos != config.end)
         {
             static_assert(StartDesc::count <= 256, "start desc should be ascii only");
             if constexpr (forward)
             {
-                const unsigned char c = *start;
-                if (start_desc.map[c])
-                    return;
-                ++start;
+                if (start_desc.map[static_cast<unsigned char>(*pos)])
+                    return utf8::advance(pos, start, -CharCount(start_desc.offset));
+                ++pos;
             }
             else
             {
-                auto prev = utf8::previous(start, config.end);
-                const unsigned char c = *prev;
-                if (start_desc.map[c])
-                    return;
-                start = prev;
+                auto prev = utf8::previous(pos, config.end);
+                if (start_desc.map[static_cast<unsigned char>(*prev)])
+                    return pos;
+                pos = prev;
             }
         }
+        return pos;
     }
 
     bool lookaround(CompiledRegex::Param::Lookaround param, Iterator pos, const ExecConfig& config) const
