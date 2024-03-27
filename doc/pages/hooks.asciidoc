@@ -144,6 +144,9 @@ name. Hooks with no description will always use an empty string.
 *ClientRenamed* `<old name>:<new name>`::
     executed when a client is renamed using the `rename-client` command
 
+*SessionRenamed* `<old name>:<new name>`::
+    executed when a session is renamed using the `rename-session` command
+
 *RuntimeError* `error message`::
     an error was encountered while executing a user command
 

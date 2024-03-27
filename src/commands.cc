@@ -2577,10 +2577,12 @@ const CommandDesc rename_session_cmd = {
     CommandFlags::None,
     CommandHelper{},
     make_single_word_completer([](const Context&){ return Server::instance().session(); }),
-    [](const ParametersParser& parser, Context&, const ShellContext&)
+    [](const ParametersParser& parser, Context& ctx, const ShellContext&)
     {
+        String old_name = Server::instance().session();
         if (not Server::instance().rename_session(parser[0]))
             throw runtime_error(format("unable to rename current session: '{}' may be already in use", parser[0]));
+        ctx.hooks().run_hook(Hook::SessionRenamed, format("{}:{}", old_name, Server::instance().session()), ctx);
     }
 };
 
