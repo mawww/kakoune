@@ -367,16 +367,16 @@ template<typename RegexGetter, typename FaceGetter>
 class DynamicRegexHighlighter : public Highlighter
 {
 public:
-    DynamicRegexHighlighter(RegexGetter regex_getter, FaceGetter face_getter)
+    DynamicRegexHighlighter(RegexGetter get_regex, FaceGetter resolve_faces)
       : Highlighter{HighlightPass::Colorize},
-        m_regex_getter(std::move(regex_getter)),
-        m_face_getter(std::move(face_getter)),
+        m_get_regex(std::move(get_regex)),
+        m_resolve_faces(std::move(resolve_faces)),
         m_highlighter(Regex{}, FacesSpec{}) {}
 
     void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range) override
     {
-        Regex regex = m_regex_getter(context.context);
-        FacesSpec face = regex.empty() ? FacesSpec{} : m_face_getter(context.context, regex);
+        Regex regex = m_get_regex(context.context);
+        FacesSpec face = regex.empty() ? FacesSpec{} : m_resolve_faces(regex);
         if (regex != m_last_regex or face != m_last_face)
         {
             m_last_regex = std::move(regex);
@@ -390,10 +390,10 @@ public:
 
 private:
     Regex       m_last_regex;
-    RegexGetter m_regex_getter;
+    RegexGetter m_get_regex;
 
     FacesSpec   m_last_face;
-    FaceGetter  m_face_getter;
+    FaceGetter  m_resolve_faces;
 
     RegexHighlighter m_highlighter;
 };
@@ -418,12 +418,12 @@ std::unique_ptr<Highlighter> create_dynamic_regex_highlighter(HighlighterParamet
         faces.emplace_back(String{spec.begin(), colon}, parse_face({colon+1, spec.end()}));
     }
 
-    auto make_hl = [](auto& regex_getter, auto& face_getter) {
-        return std::make_unique<DynamicRegexHighlighter<std::remove_cvref_t<decltype(regex_getter)>,
-                                                        std::remove_cvref_t<decltype(face_getter)>>>(
-            std::move(regex_getter), std::move(face_getter));
+    auto make_hl = [](auto& get_regex, auto& resolve_faces) {
+        return std::make_unique<DynamicRegexHighlighter<std::remove_cvref_t<decltype(get_regex)>,
+                                                        std::remove_cvref_t<decltype(resolve_faces)>>>(
+            std::move(get_regex), std::move(resolve_faces));
     };
-    auto get_face = [faces=std::move(faces)](const Context& context, const Regex& regex){
+    auto resolve_faces = [faces=std::move(faces)](const Regex& regex){
         FacesSpec spec;
         for (auto& face : faces)
         {
@@ -450,7 +450,7 @@ std::unique_ptr<Highlighter> create_dynamic_regex_highlighter(HighlighterParamet
         auto get_regex = [option_name = token->content](const Context& context) {
             return context.options()[option_name].get<Regex>();
         };
-        return make_hl(get_regex, get_face);
+        return make_hl(get_regex, resolve_faces);
     }
 
     auto get_regex = [expr = params[0]](const Context& context){
@@ -465,7 +465,7 @@ std::unique_ptr<Highlighter> create_dynamic_regex_highlighter(HighlighterParamet
             return Regex{};
         }
     };
-    return make_hl(get_regex, get_face);
+    return make_hl(get_regex, resolve_faces);
 }
 
 const HighlighterDesc line_desc = {
