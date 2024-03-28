@@ -58,7 +58,7 @@ evaluate-commands %sh[
         path_name record signal converse
     "
 
-    libraries="ieee std"
+    libraries="ieee std work"
 
     packages="
         math_real math_complex std_logic_1164 std_logic_textio numeric_bit numeric_std
@@ -96,7 +96,8 @@ evaluate-commands %sh[
         boolean boolean_vector
         character
         file_open_state file_origin_kind
-        integer natural positive
+        integer integer_vector
+        natural positive
         line line_vector
         real real_vector
         std_logic std_logic_vector
