@@ -74,6 +74,7 @@ define-command \
         # but shellcheck isn't a fan.
         # shellcheck disable=SC2094
         ({ # do the parsing in the background and when ready send to the session
+        trap - INT QUIT
 
         for selpath in "$dir"/sel-*; do
             # Read in the line and column offset of this selection.

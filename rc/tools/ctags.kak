@@ -112,6 +112,7 @@ declare-option -docstring "path to the directory in which the tags file will be 
 define-command ctags-generate -docstring 'Generate tag file asynchronously' %{
     echo -markup "{Information}launching tag generation in the background"
     nop %sh{ (
+        trap - INT QUIT
         while ! mkdir .tags.kaklock 2>/dev/null; do sleep 1; done
         trap 'rmdir .tags.kaklock' EXIT
 
@@ -128,6 +129,7 @@ define-command ctags-generate -docstring 'Generate tag file asynchronously' %{
 
 define-command ctags-update-tags -docstring 'Update tags for the given file' %{
     nop %sh{ (
+        trap - INT QUIT
         while ! mkdir .tags.kaklock 2>/dev/null; do sleep 1; done
             trap 'rmdir .tags.kaklock' EXIT
 
