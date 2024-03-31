@@ -164,7 +164,7 @@ define-command -params 1.. \
         esac
         output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-git.XXXXXXXX)/fifo
         mkfifo ${output}
-        ( git "$@" > ${output} 2>&1 & ) > /dev/null 2>&1 < /dev/null
+        ( trap - INT QUIT; git "$@" > ${output} 2>&1 & ) > /dev/null 2>&1 < /dev/null
 
         printf %s "evaluate-commands -try-client '$kak_opt_docsclient' '
                   edit! -fifo ${output} *git*
@@ -283,6 +283,7 @@ define-command -params 1.. \
         echo 'map window normal <ret> %{:git blame-jump<ret>}'
         echo 'echo -markup {Information}Press <ret> to jump to blamed commit'
         (
+            trap - INT QUIT
             cd_bufdir
             printf %s "evaluate-commands -client '$kak_client' %{
                       set-option buffer=$kak_bufname git_blame_flags '$kak_timestamp'

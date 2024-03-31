@@ -84,8 +84,8 @@ define-command -hidden -params 0 gopls-ref %{
     evaluate-commands %sh{
         dir=${kak_opt_gopls_tmp_dir}
         mkfifo "${dir}/fifo"
-        ( gopls references "${kak_buffile}:${kak_cursor_line}:${kak_cursor_column}" \
-            > "${dir}/fifo" 2> /dev/null & ) > /dev/null 2>&1 < /dev/null
+        ( { trap - INT QUIT; gopls references "${kak_buffile}:${kak_cursor_line}:${kak_cursor_column}"
+          } > "${dir}/fifo" 2> /dev/null & ) > /dev/null 2>&1 < /dev/null
         # using filetype=grep for nice hilight and <ret> mapping
         printf %s\\n "evaluate-commands -try-client '${kak_opt_toolsclient}' %{
             edit! -fifo '${dir}/fifo' *gopls-refs*

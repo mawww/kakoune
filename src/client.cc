@@ -49,9 +49,9 @@ Client::Client(std::unique_ptr<UserInterface>&& ui,
         kak_assert(key != Key::Invalid);
         if (key == ctrl('c'))
         {
-            auto prev_handler = set_signal_handler(SIGTERM, SIG_IGN);
-            killpg(getpgrp(), SIGTERM);
-            set_signal_handler(SIGTERM, prev_handler);
+            auto prev_handler = set_signal_handler(SIGINT, SIG_IGN);
+            killpg(getpgrp(), SIGINT);
+            set_signal_handler(SIGINT, prev_handler);
         }
         else if (key == ctrl('g'))
         {
@@ -165,11 +165,12 @@ DisplayLine Client::generate_mode_line() const
     DisplayLine modeline;
     try
     {
+        ModeInfo mode_info = context().client().input_handler().mode_info();
         const String& modelinefmt = context().options()["modelinefmt"].get<String>();
-        HashMap<String, DisplayLine> atoms{{ "mode_info", context().client().input_handler().mode_line() },
+        HashMap<String, DisplayLine> atoms{{ "mode_info",  mode_info.display_line},
                                            { "context_info", {generate_context_info(context()),
                                                               context().faces()["Information"]}}};
-        auto expanded = expand(modelinefmt, context(), ShellContext{},
+        auto expanded = expand(modelinefmt, context(), {{}, mode_info.env_vars},
                                [](String s) { return escape(s, '{', '\\'); });
         modeline = parse_display_line(expanded, context().faces(), atoms);
     }

@@ -36,16 +36,17 @@ define-command -params ..1 \
         # position and a buffer timestamp, only valid completions should be
         # displayed.
         ((
+            trap - INT QUIT
             until [ -f ${dir}/buf ]; do :; done # wait for the buffer to be written
 
             if [ -n "$kak_opt_clang_directory" ]; then
                 cd "$kak_opt_clang_directory"
             fi
             case ${kak_opt_filetype} in
-                c) ft=c ;;
-                cpp) ft=c++ ;;
-                obj-c) ft=objective-c ;;
-                *) ft=c++ ;;
+                (c) ft=c ;;
+                (cpp) ft=c++ ;;
+                (obj-c) ft=objective-c ;;
+                (*) ft=c++ ;;
             esac
 
             if [ "$1" = "-complete" ]; then

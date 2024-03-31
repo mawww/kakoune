@@ -42,7 +42,7 @@ public:
     bool enabled() const { return &m_input_handler.current_mode() == this; }
     Context& context() const { return m_input_handler.context(); }
 
-    virtual DisplayLine mode_line() const = 0;
+    virtual ModeInfo mode_info() const = 0;
 
     virtual KeymapMode keymap_mode() const = 0;
 
@@ -370,7 +370,7 @@ public:
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
-    DisplayLine mode_line() const override
+    ModeInfo mode_info() const override
     {
         AtomList atoms;
         auto num_sel = context().selections().size();
@@ -390,7 +390,7 @@ public:
             atoms.emplace_back(" reg=", context().faces()["StatusLineInfo"]);
             atoms.emplace_back(StringView(m_params.reg).str(), context().faces()["StatusLineValue"]);
         }
-        return atoms;
+        return {atoms, {{"count", to_string(m_params.count)}, {"register", StringView(m_params.reg).str()}}};
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Normal; }
@@ -951,9 +951,9 @@ public:
         }
     }
 
-    DisplayLine mode_line() const override
+    ModeInfo mode_info() const override
     {
-        return { "prompt", context().faces()["StatusLineMode"] };
+        return {{ "prompt", context().faces()["StatusLineMode"] }, {}};
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Prompt; }
@@ -1126,9 +1126,9 @@ public:
         m_callback(key, context());
     }
 
-    DisplayLine mode_line() const override
+    ModeInfo mode_info() const override
     {
-        return { "enter key", context().faces()["StatusLineMode"] };
+        return {{ "enter key", context().faces()["StatusLineMode"] }, {}};
     }
 
     KeymapMode keymap_mode() const override { return m_keymap_mode; }
@@ -1376,15 +1376,16 @@ public:
         m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
-    DisplayLine mode_line() const override
+    ModeInfo mode_info() const override
     {
         auto num_sel = context().selections().size();
         auto main_index = context().selections().main_index();
-        return {AtomList{ { "insert", context().faces()["StatusLineMode"] },
-                          { " ", context().faces()["StatusLine"] },
-                          { num_sel == 1 ? format("{} sel", num_sel)
-                              : format("{} sels ({})", num_sel, main_index + 1),
-                            context().faces()["StatusLineInfo"] } }};
+        return {{AtomList{ { "insert", context().faces()["StatusLineMode"] },
+                           { " ", context().faces()["StatusLine"] },
+                           { num_sel == 1 ? format("{} sel", num_sel)
+                               : format("{} sels ({})", num_sel, main_index + 1),
+                             context().faces()["StatusLineInfo"] } }},
+                {}};
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Insert; }
@@ -1707,9 +1708,9 @@ void InputHandler::stop_recording()
     m_recording_level = -1;
 }
 
-DisplayLine InputHandler::mode_line() const
+ModeInfo InputHandler::mode_info() const
 {
-    return current_mode().mode_line();
+    return current_mode().mode_info();
 }
 
 std::pair<CursorMode, DisplayCoord> InputHandler::get_cursor_info() const

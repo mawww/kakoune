@@ -26,7 +26,7 @@ define-command -params .. -docstring %{
 
      output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-grep.XXXXXXXX)/fifo
      mkfifo ${output}
-     ( ${kak_opt_grepcmd} "$@" 2>&1 | tr -d '\r' > ${output} 2>&1 & ) > /dev/null 2>&1 < /dev/null
+     ( { trap - INT QUIT; ${kak_opt_grepcmd} "$@" 2>&1 | tr -d '\r'; } > ${output} 2>&1 & ) > /dev/null 2>&1 < /dev/null
 
      printf %s\\n "evaluate-commands -try-client '$kak_opt_toolsclient' %{
                edit! -fifo ${output} *grep*
