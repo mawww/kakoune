@@ -4,6 +4,7 @@
 #include "completion.hh"
 #include "constexpr_utils.hh"
 #include "context.hh"
+#include "env_vars.hh"
 #include "face.hh"
 #include "normal.hh"
 #include "keys.hh"
@@ -52,6 +53,12 @@ enum class InsertMode : unsigned
     OpenLineAbove
 };
 
+struct ModeInfo
+{
+    DisplayLine display_line;
+    EnvVarMap env_vars;
+};
+
 class InputHandler : public SafeCountable
 {
 public:
@@ -97,7 +104,7 @@ public:
     Context& context() { return m_context; }
     const Context& context() const { return m_context; }
 
-    DisplayLine mode_line() const;
+    ModeInfo mode_info() const;
 
     std::pair<CursorMode, DisplayCoord> get_cursor_info() const;
 
