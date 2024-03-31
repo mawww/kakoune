@@ -110,7 +110,7 @@ public:
     StringView main_sel_register_value(StringView reg) const;
 
     const String& name() const { return m_name; }
-    void set_name(String name) { m_name = std::move(name); }
+    void set_name(String name);
 
     bool is_editing() const { return m_edition_level!= 0; }
     void disable_undo_handling() { m_edition_level = -1; }
