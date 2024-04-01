@@ -8,6 +8,8 @@
 #include "vector.hh"
 #include "utils.hh"
 
+#include <bit>
+
 namespace Kakoune
 {
 
