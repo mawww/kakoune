@@ -7,6 +7,7 @@
 #include "env_vars.hh"
 #include "face.hh"
 #include "normal.hh"
+#include "optional.hh"
 #include "keys.hh"
 #include "string.hh"
 #include "utils.hh"
@@ -56,7 +57,7 @@ enum class InsertMode : unsigned
 struct ModeInfo
 {
     DisplayLine display_line;
-    std::optional<NormalParams> normal_params;
+    Optional<NormalParams> normal_params;
 };
 
 class InputHandler : public SafeCountable
