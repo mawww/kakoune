@@ -56,7 +56,7 @@ enum class InsertMode : unsigned
 struct ModeInfo
 {
     DisplayLine display_line;
-    EnvVarMap env_vars;
+    std::optional<NormalParams> normal_params;
 };
 
 class InputHandler : public SafeCountable
