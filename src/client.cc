@@ -165,12 +165,16 @@ DisplayLine Client::generate_mode_line() const
     DisplayLine modeline;
     try
     {
-        ModeInfo mode_info = context().client().input_handler().mode_info();
+        auto [mode_info_line, normal_params] = context().client().input_handler().mode_info();
         const String& modelinefmt = context().options()["modelinefmt"].get<String>();
-        HashMap<String, DisplayLine> atoms{{ "mode_info",  mode_info.display_line},
+        HashMap<String, DisplayLine> atoms{{ "mode_info",  mode_info_line},
                                            { "context_info", {generate_context_info(context()),
                                                               context().faces()["Information"]}}};
-        auto expanded = expand(modelinefmt, context(), {{}, mode_info.env_vars},
+        ShellContext shell_context{{}, {
+            {"register", normal_params ? StringView{normal_params->reg}.str() : ""},
+            {"count", normal_params ? String{to_string(normal_params->count)} : ""},
+        }};
+        auto expanded = expand(modelinefmt, context(), shell_context,
                                [](String s) { return escape(s, '{', '\\'); });
         modeline = parse_display_line(expanded, context().faces(), atoms);
     }

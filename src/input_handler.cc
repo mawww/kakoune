@@ -390,7 +390,7 @@ public:
             atoms.emplace_back(" reg=", context().faces()["StatusLineInfo"]);
             atoms.emplace_back(StringView(m_params.reg).str(), context().faces()["StatusLineValue"]);
         }
-        return {atoms, {{"count", to_string(m_params.count)}, {"register", StringView(m_params.reg).str()}}};
+        return {atoms, m_params};
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Normal; }
