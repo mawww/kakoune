@@ -145,7 +145,7 @@ More complex assertions can be expressed with lookarounds:
             text following the current position.
 * `(?!...)` is a negative lookahead; it will match if its content does
             not match the text following the current position.
-* `(?&lt;\=...)` is a lookbehind; it will match if its content matches
+* `(?&lt;=...)` is a lookbehind; it will match if its content matches
              the text preceding the current position.
 * `(?<!...)` is a negative lookbehind; it will match if its content does
              not match the text preceding the current position.
