@@ -4,6 +4,16 @@
 namespace Kakoune
 {
 
+void Scope::reparent(Scope& parent)
+{
+    m_options.reparent(parent.m_options);
+    m_hooks.reparent(parent.m_hooks);
+    m_keymaps.reparent(parent.m_keymaps);
+    m_aliases.reparent(parent.m_aliases);
+    m_faces.reparent(parent.m_faces);
+    m_highlighters.reparent(parent.m_highlighters);
+}
+
 GlobalScope::GlobalScope()
     : m_option_registry(m_options)
 {

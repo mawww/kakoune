@@ -123,6 +123,8 @@ public:
     HookManager(HookManager& parent);
     ~HookManager();
 
+    void reparent(HookManager& parent) { m_parent = &parent; }
+
     void add_hook(Hook hook, String group, HookFlags flags,
                   Regex filter, String commands, Context& context);
     void remove_hooks(const Regex& regex);

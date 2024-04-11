@@ -89,6 +89,8 @@ public:
     OptionManager(OptionManager& parent);
     ~OptionManager();
 
+    void reparent(OptionManager& parent);
+
     Option& operator[] (StringView name);
     const Option& operator[] (StringView name) const;
     Option& get_local_option(StringView name);

@@ -42,6 +42,8 @@ private:
 
 using LastSelectFunc = std::function<void (Context&)>;
 
+struct LocalScope;
+
 // A Context is used to access non singleton objects for various services
 // in commands.
 //
@@ -97,7 +99,10 @@ public:
     void set_client(Client& client);
     void set_window(Window& window);
 
-    Scope& scope() const;
+    friend struct LocalScope;
+
+    Scope& scope(bool allow_local = true) const;
+    Scope* local_scope() const { return m_local_scopes.empty() ? nullptr : m_local_scopes.back(); }
 
     OptionManager& options() const { return scope().options(); }
     HookManager&   hooks()   const { return scope().hooks(); }
@@ -155,6 +160,7 @@ private:
     SafePtr<InputHandler> m_input_handler;
     SafePtr<Window>       m_window;
     SafePtr<Client>       m_client;
+    std::vector<Scope*>   m_local_scopes;
 
     class SelectionHistory {
     public:

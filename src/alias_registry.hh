@@ -12,6 +12,9 @@ class AliasRegistry : public SafeCountable
 {
 public:
     AliasRegistry(AliasRegistry& parent) : SafeCountable{}, m_parent(&parent) {}
+
+    void reparent(AliasRegistry& parent) { m_parent = &parent; }
+
     void add_alias(String alias, String command);
     void remove_alias(StringView alias);
     StringView operator[](StringView alias) const;

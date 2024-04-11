@@ -48,6 +48,24 @@ namespace Kakoune
 
 extern const char* version;
 
+struct LocalScope : Scope
+{
+    LocalScope(Context& context)
+        : Scope(context.scope()), m_context{context}
+    {
+        m_context.m_local_scopes.push_back(this);
+    }
+
+    ~LocalScope()
+    {
+        kak_assert(not m_context.m_local_scopes.empty() and m_context.m_local_scopes.back() == this);
+        m_context.m_local_scopes.pop_back();
+    }
+
+private:
+    Context& m_context;
+};
+
 namespace
 {
 
@@ -215,21 +233,21 @@ const ParameterDesc double_params{ {}, ParameterDesc::Flags::None, 2, 2 };
 static Completions complete_scope(const Context&, CompletionFlags,
                                   StringView prefix, ByteCount cursor_pos)
 {
-   static constexpr StringView scopes[] = { "global", "buffer", "window", };
+   static constexpr StringView scopes[] = { "global", "buffer", "window", "local"};
    return { 0_byte, cursor_pos, complete(prefix, cursor_pos, scopes) };
 }
 
 static Completions complete_scope_including_current(const Context&, CompletionFlags,
                                   StringView prefix, ByteCount cursor_pos)
 {
-   static constexpr StringView scopes[] = { "global", "buffer", "window", "current" };
+   static constexpr StringView scopes[] = { "global", "buffer", "window", "local", "current" };
    return { 0_byte, cursor_pos, complete(prefix, cursor_pos, scopes) };
 }
 
 static Completions complete_scope_no_global(const Context&, CompletionFlags,
                                             StringView prefix, ByteCount cursor_pos)
 {
-   static constexpr StringView scopes[] = { "buffer", "window", "current" };
+   static constexpr StringView scopes[] = { "buffer", "window", "local", "current" };
    return { 0_byte, cursor_pos, complete(prefix, cursor_pos, scopes) };
 }
 
@@ -395,6 +413,8 @@ Scope* get_scope_ifp(StringView scope, const Context& context)
         return &context.buffer();
     else if (prefix_match("window", scope))
         return &context.window();
+    else if (prefix_match("local", scope))
+        return context.local_scope();
     else if (prefix_match(scope, "buffer="))
         return &BufferManager::instance().get_buffer(scope.substr(7_byte));
     return nullptr;
@@ -2168,6 +2188,7 @@ const CommandDesc execute_keys_cmd = {
     }
 };
 
+
 const CommandDesc evaluate_commands_cmd = {
     "evaluate-commands",
     "eval",
@@ -2186,6 +2207,7 @@ const CommandDesc evaluate_commands_cmd = {
             const bool no_hooks = context.hooks_disabled() or parser.get_switch("no-hooks");
             ScopedSetBool disable_hooks(context.hooks_disabled(), no_hooks);
 
+            LocalScope local_scope{context};
             if (parser.get_switch("verbatim"))
                 CommandManager::instance().execute_single_command(parser | gather<Vector<String>>(), context, shell_context);
             else

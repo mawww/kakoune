@@ -36,15 +36,25 @@ Scopes are named as follows:
 *global*::
     global context linked to the instance of Kakoune
 
+*local*::
+    A local scope is inserted by each *evaluate-commands* invocations
+    for its duration. Nested *evaluate-commands* each inject a new
+    local scope whose parent is the previous local scope.
+
+    A local scope is intended for temporarily overwriting some scoped
+    value, such as an option or an alias.
+
+
 The following order of priority applies to the above scopes:
 
---------------------------
-window ]> buffer ]> global
---------------------------
+-----------------------------------
+local ]> window ]> buffer ]> global
+-----------------------------------
 
-The above priority line implies that objects can have individual values that
-will be resolved first in the *window* scope (highest priority), then in
-the *buffer* scope, and finally in the *global* scope (lowest priority).
+The above priority line implies that objects can have individual values
+that will be resolved first in the *local* scope (if it exists), then the
+*window* scope, then in the *buffer* scope, and finally in the *global*
+scope.
 
 Normally, the *buffer* scope keyword means the scope associated with the
 currently active buffer, but it's possible to specify any existing buffer by

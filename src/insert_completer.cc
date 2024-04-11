@@ -403,7 +403,10 @@ InsertCompletion complete_line(const SelectionList& sels,
 }
 
 InsertCompleter::InsertCompleter(Context& context)
-    : m_context(context), m_options(context.options()), m_faces(context.faces())
+    : m_context(context),
+      // local scopes might go away before completion ends, make sure to register on a long lived one
+      m_options(context.scope(false).options()),
+      m_faces(context.scope(false).faces())
 {
     m_options.register_watcher(*this);
 }
