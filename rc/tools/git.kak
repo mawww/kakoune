@@ -183,7 +183,7 @@ define-command -params 1.. \
             set-option buffer git_blame_flags $kak_timestamp
             set-option buffer git_blame_index $kak_timestamp
             set-option buffer git_blame %{}
-            remove-highlighter window/git-blame
+            try %{ remove-highlighter window/git-blame }
             unmap window normal <ret> %{:git blame-jump<ret>}
         "
     }
@@ -217,7 +217,7 @@ define-command -params 1.. \
         if [ -z "${kak_opt_git_blob}" ] && {
             [ "${kak_opt_filetype}" = git-diff ] || [ "${kak_opt_filetype}" = git-log ]
         } then {
-            echo 'remove-highlighter window/git-blame'
+            echo 'try %{ remove-highlighter window/git-blame }'
             printf >${kak_command_fifo} %s '
                 evaluate-commands -client '${kak_client}' -draft %{
                     try %{
