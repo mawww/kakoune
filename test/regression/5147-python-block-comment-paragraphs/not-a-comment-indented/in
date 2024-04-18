@@ -1,0 +1,4 @@
+    # If we're not in a comment at all, make sure we do the right thing.
+    # (one empty line and a 4-space prefixed line follows)
+
+    

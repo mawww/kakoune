@@ -1,0 +1,4 @@
+# A new line after a single empty comment line should leave the empty comment
+# in place as a possible paragraph separator, starting a new comment with the
+# prefix copied.
+#

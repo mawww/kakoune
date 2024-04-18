@@ -167,14 +167,52 @@ define-command -hidden python-insert-on-new-line %{ evaluate-commands -itersel -
     execute-keys <semicolon>
     try %{
         evaluate-commands -draft -save-regs '/"' %{
-            # copy the commenting prefix
-            execute-keys -save-regs '' k x1s^\h*(#+\h*)<ret> y
+            # Handle block comment continuation/termination.
+            #
+            # This code applies in the context where we have a new line
+            # inserted, and the previous line is a block comment (i.e. a line
+            # that matches '^\h*#+\h*\S*$'). We assume that the comment will
+            # be continued, so we copy the prefix (all leading whitespace, any
+            # '#' characters, and then any additional whitespace before the
+            # next non-whitespace character) into the new line.
+            #
+            # PEP8's text on block comments says they can include an empty
+            # comment (i.e. '^\h*#+\h*$') as a paragraph separator - we
+            # leave a single empty comment as-is, to allow paragraph breaks,
+            # but if we see two consecutive empty comments we exit the
+            # comment block and delete the empty comments.
+            # Reference: https://peps.python.org/pep-0008/#block-comments
+            #
+            # first, make sure we're in the right context - don't wrap this
+            # in a try/catch so we fail out immediately
+            execute-keys -draft kxs^\h*#+\h*<ret>
+
+            # now handle the coment continuation logic
             try %{
-                # if the previous comment isn't empty, create a new one
-                execute-keys x<a-K>^\h*#+\h*$<ret> jxs^\h*<ret>P
+                # try and match a regular block comment, copying the prefix
+                execute-keys -draft -save-regs '' k x 1s^(\h*#+\h*)\S.*$ <ret> y
+                execute-keys -draft P
             } catch %{
-                # if there is no text in the previous comment, remove it completely
-                execute-keys d
+                try %{
+                    # try and match a regular block comment followed by a single
+                    # empty comment line
+                    execute-keys -draft -save-regs '' kKx 1s^(\h*#+\h*)\S+\n\h*#+\h*$ <ret> y
+                    execute-keys -draft P
+                } catch %{
+                    try %{
+                        # try and match a pair of empty comment lines, and delete
+                        # them if we match
+                        execute-keys -draft kKx <a-k> ^\h*#+\h*\n\h*#+\h*$ <ret> <a-d>
+                    } catch %{
+                        # finally, we need a special case for a new line inserted
+                        # into a file that consists of a single empty comment - in
+                        # that case we can't expect to copy the trailing whitespace,
+                        # so we add our own
+                        execute-keys -draft -save-regs '' k x1s^(\h*#+)\h*$<ret> y
+                        execute-keys -draft P
+                        execute-keys -draft i<space>
+                    }
+                }
             }
         }
 
