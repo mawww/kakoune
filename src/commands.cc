@@ -1268,6 +1268,14 @@ Vector<String> params_to_shell(const ParametersParser& parser)
     return vars;
 }
 
+Completions complete_completer_type(const Context&, CompletionFlags,
+                                    StringView prefix, ByteCount cursor_pos)
+{
+   static constexpr StringView completers[] = {"file", "client", "buffer", "shell-script", "shell-script-candidates", "command", "shell"};
+   return { 0_byte, cursor_pos, complete(prefix, cursor_pos, completers) };
+}
+
+
 CommandCompleter make_command_completer(StringView type, StringView param, Completions::Flags completions_flags)
 {
     if (type == "file")
@@ -1494,7 +1502,7 @@ const CommandDesc complete_command_cmd = {
         ParameterDesc::Flags::None, 2, 3},
     CommandFlags::None,
     CommandHelper{},
-    make_completer(complete_command_name),
+    make_completer(complete_command_name, complete_completer_type),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
         const Completions::Flags flags = parser.get_switch("menu") ? Completions::Flags::Menu : Completions::Flags::None;
