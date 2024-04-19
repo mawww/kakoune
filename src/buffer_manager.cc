@@ -149,4 +149,11 @@ void BufferManager::arrange_buffers(ConstArrayView<String> first_ones)
     m_buffers = std::move(res);
 }
 
+void BufferManager::make_latest(Buffer& buffer)
+{
+    auto it = find(m_buffers, &buffer);
+    kak_assert(it != m_buffers.end());
+    std::rotate(it, it+1, m_buffers.end());
+}
+
 }
