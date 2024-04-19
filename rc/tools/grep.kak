@@ -45,8 +45,7 @@ hook -group grep-highlight global WinSetOption filetype=grep %{
 }
 
 hook global WinSetOption filetype=grep %{
-    hook buffer -group grep-hooks NormalKey <ret> jump
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks buffer grep-hooks }
+    map buffer normal <ret> :jump<ret>
 }
 
 define-command -hidden grep-jump %{
