@@ -2208,7 +2208,7 @@ const CommandDesc evaluate_commands_cmd = {
     }}),
     CommandFlags::None,
     CommandHelper{},
-    CommandCompleter{},
+    CommandManager::NestedCompleter{},
     [](const ParametersParser& parser, Context& context, const ShellContext& shell_context)
     {
         context_wrap(parser, context, {}, [&](const ParametersParser& parser, Context& context) {
