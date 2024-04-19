@@ -847,13 +847,17 @@ const CommandDesc buffer_cmd = {
     "buffer",
     "b",
     "buffer <name>: set buffer to edit in current client",
-    single_param,
+    {
+        { { "matching", { {}, "treat the argument as a regex" } } },
+        ParameterDesc::Flags::None, 1, 1
+    },
     CommandFlags::None,
     CommandHelper{},
     make_completer(menu(complete_buffer_name<true>)),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        Buffer& buffer = BufferManager::instance().get_buffer(parser[0]);
+        Buffer& buffer = parser.get_switch("matching") ? BufferManager::instance().get_buffer_matching(Regex{parser[0]})
+                                                       : BufferManager::instance().get_buffer(parser[0]);
         if (&buffer != &context.buffer())
         {
             context.push_jump();
