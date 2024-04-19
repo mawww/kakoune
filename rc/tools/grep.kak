@@ -54,11 +54,11 @@ define-command -hidden grep-jump %{
 }
 
 define-command grep-next-match -docstring %{alias for "jump-next *grep*"} %{
-    jump-next *grep*
+    jump-next -matching \*grep(-.*)?\*
 }
 
 define-command grep-previous-match -docstring %{alias for "jump-previous *grep*"} %{
-    jump-previous *grep*
+    jump-previous -matching \*grep(-.*)?\*
 }
 
 }
