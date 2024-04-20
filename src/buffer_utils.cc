@@ -5,6 +5,7 @@
 #include "file.hh"
 #include "selection.hh"
 #include "changes.hh"
+#include "utf8.hh"
 
 #include <unistd.h>
 
@@ -173,15 +174,28 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
     Buffer* buffer = buffer_manager.get_buffer_ifp(name);
     if (buffer)
     {
-        buffer->flags() |= Buffer::Flags::NoUndo | flags;
-        buffer->values().clear();
-        buffer->reload({StringData::create("\n")}, ByteOrderMark::None, EolFormat::Lf, {InvalidTime, {}, {}});
-        buffer_manager.make_latest(*buffer);
+        auto& name = buffer->name();
+        auto pos = name.end();
+        Codepoint codepoint = 0;
+        while (pos != name.begin())
+        {
+            utf8::to_previous(pos, name.begin());
+            codepoint = utf8::codepoint(pos, name.end());
+            if (codepoint != '*' and not isdigit(codepoint))
+                break;
+        }
+        String prefix = {name.begin(), pos + 1};
+        if (codepoint != '-')
+            prefix.push_back('-');
+        auto new_name = generate_buffer_name([&](int i) {
+            return format("{}{}*", prefix, i);
+        });
+        const bool ok = buffer->set_name(new_name);
+        kak_assert(ok);
     }
-    else
-        buffer = buffer_manager.create_buffer(
-            std::move(name), flags | Buffer::Flags::Fifo | Buffer::Flags::NoUndo,
-            {StringData::create("\n")}, ByteOrderMark::None, EolFormat::Lf, {InvalidTime, {}, {}});
+    buffer = buffer_manager.create_buffer(
+        std::move(name), flags | Buffer::Flags::Fifo | Buffer::Flags::NoUndo,
+        {StringData::create("\n")}, ByteOrderMark::None, EolFormat::Lf, {InvalidTime, {}, {}});
 
     struct FifoWatcher : FDWatcher
     {
