@@ -108,7 +108,7 @@ public:
     HookManager&   hooks()   const { return scope().hooks(); }
     KeymapManager& keymaps() const { return scope().keymaps(); }
     AliasRegistry& aliases() const { return scope().aliases(); }
-    FaceRegistry&  faces()   const { return scope().faces(); }
+    FaceRegistry&  faces(bool allow_local = true) const { return scope(allow_local).faces(); }
 
     void print_status(DisplayLine status) const;
 

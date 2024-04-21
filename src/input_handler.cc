@@ -657,7 +657,8 @@ public:
         : InputMode(input_handler), m_callback(std::move(callback)), m_completer(std::move(completer)),
           m_prompt(prompt.str()), m_prompt_face(face),
           m_empty_text{std::move(emptystr)},
-          m_line_editor{context().faces()}, m_flags(flags),
+          // This prompt may outlive local scopes so ignore local faces.
+          m_line_editor{context().faces(false)}, m_flags(flags),
           m_was_interactive{not context().noninteractive()},
           m_history{RegisterManager::instance()[history_register]},
           m_current_history{-1},
