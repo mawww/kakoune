@@ -846,8 +846,8 @@ const CommandDesc write_all_quit_cmd = {
 const CommandDesc buffer_cmd = {
     "buffer",
     "b",
-    "buffer <name>: set buffer to edit in current client",
-    single_param,
+    "buffer <name> [<line> [<column>]]: set buffer to edit in current client",
+    {{}, ParameterDesc::Flags::None, 1, 3},
     CommandFlags::None,
     CommandHelper{},
     make_completer(menu(complete_buffer_name<true>)),
@@ -858,6 +858,17 @@ const CommandDesc buffer_cmd = {
         {
             context.push_jump();
             context.change_buffer(buffer);
+
+            const size_t param_count = parser.positional_count();
+            if (param_count > 1)
+            {
+                const LineCount line = std::max(0, str_to_int(parser[1]) - 1);
+                const ByteCount column = param_count > 2 ? std::max(0, str_to_int(parser[2]) - 1) : 0;
+
+                context.selections_write_only() = { buffer, buffer.clamp({ line,  column }) };
+                if (context.has_window())
+                    context.window().center_line(context.selections().main().cursor().line);
+            }
         }
     }
 };
