@@ -2039,7 +2039,10 @@ public:
         if (id == m_default_region)
             m_default_region = String{};
 
-        m_regions.remove(id);
+        auto it = m_regions.find(id);
+        if (it == m_regions.end())
+            throw child_not_found(format("no such id: {}", id));
+        m_regions.remove(it);
         ++m_regions_timestamp;
     }
 

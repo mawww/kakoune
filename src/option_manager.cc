@@ -28,6 +28,15 @@ OptionManager::~OptionManager()
     kak_assert(m_watchers.empty());
 }
 
+void OptionManager::reparent(OptionManager& parent)
+{
+    if (m_parent)
+        m_parent->unregister_watcher(*this);
+
+    m_parent = &parent;
+    parent.register_watcher(*this);
+}
+
 void OptionManager::register_watcher(OptionManagerWatcher& watcher) const
 {
     kak_assert(not contains(m_watchers, &watcher));

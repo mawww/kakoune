@@ -24,6 +24,8 @@ class FaceRegistry : public SafeCountable
 public:
     FaceRegistry(FaceRegistry& parent) : SafeCountable{}, m_parent(&parent) {}
 
+    void reparent(FaceRegistry& parent) { m_parent = &parent; }
+
     Face operator[](StringView facedesc) const;
     Face operator[](const FaceSpec& facespec) const;
     void add_face(StringView name, StringView facedesc, bool override = false);

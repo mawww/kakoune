@@ -31,6 +31,8 @@ class KeymapManager
 public:
     KeymapManager(KeymapManager& parent) : m_parent(&parent) {}
 
+    void reparent(KeymapManager& parent) { m_parent = &parent; }
+
     using KeyList = Vector<Key, MemoryDomain::Mapping>;
     void map_key(Key key, KeymapMode mode, KeyList mapping, String docstring);
     void unmap_key(Key key, KeymapMode mode);

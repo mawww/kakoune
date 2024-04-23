@@ -694,7 +694,7 @@ void paste(Context& context, NormalParams params)
     ScopedEdition edition(context);
     ScopedSelectionEdition selection_edition{context};
     context.selections().for_each([&, last=BufferCoord{}](size_t index, Selection& sel) mutable {
-        auto& str = strings[std::min(strings.size()-1, index)];
+        auto& str = strings[index % strings.size()];
         auto& min = sel.min();
         auto& max = sel.max();
         BufferRange range = (mode == PasteMode::Replace) ?

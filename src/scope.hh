@@ -36,6 +36,8 @@ public:
     Highlighters&        highlighters()       { return m_highlighters; }
     const Highlighters&  highlighters() const { return m_highlighters; }
 
+    void reparent(Scope& parent);
+
 private:
     friend class GlobalScope;
     Scope() = default;

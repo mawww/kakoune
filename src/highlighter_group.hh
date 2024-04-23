@@ -43,6 +43,8 @@ class Highlighters : public SafeCountable
 public:
     Highlighters(Highlighters& parent) : SafeCountable{}, m_parent{&parent}, m_group{HighlightPass::All} {}
 
+    void reparent(Highlighters& parent) { m_parent = &parent; }
+
     HighlighterGroup& group() { return m_group; }
     const HighlighterGroup& group() const { return m_group; }
 
