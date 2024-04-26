@@ -1665,9 +1665,14 @@ const CommandDesc debug_cmd = {
             for (auto mode : concatenated(modes, user_modes))
             {
                 KeymapMode m = parse_keymap_mode(mode, user_modes);
-                for (auto& key : keymaps.get_mapped_keys(m))
-                    write_to_debug_buffer(format(" * {} {}: {}",
-                                          mode, key, keymaps.get_mapping_docstring(key, m)));
+                for (auto& key : keymaps.get_mapped_keys(m)) {
+                    KeyList kl = keymaps.get_mapping_keys(key, m);
+                    String mapping;
+                    for (const auto& k : kl)
+                        mapping += to_string(k);
+                    write_to_debug_buffer(format(" * {} {}: '{}' {}",
+                                          mode, key, mapping, keymaps.get_mapping_docstring(key, m)));
+                }
             }
         }
         else if (parser[0] == "regex")
