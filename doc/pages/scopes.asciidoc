@@ -39,7 +39,9 @@ Scopes are named as follows:
 *local*::
     A local scope is inserted by each *evaluate-commands* invocations
     for its duration. Nested *evaluate-commands* each inject a new
-    local scope whose parent is the previous local scope.
+    local scope whose parent is the previous local scope. User declared
+    commands defined with *define-command* also introduce a local scope
+    while executing.
 
     A local scope is intended for temporarily overwriting some scoped
     value, such as an option or an alias.

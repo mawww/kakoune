@@ -1404,6 +1404,7 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
 
         desc = ParameterDesc{ {}, ParameterDesc::Flags::SwitchesAsPositional, min, max };
         cmd = [=](const ParametersParser& parser, Context& context, const ShellContext& sc) {
+            LocalScope local_scope{context};
             CommandManager::instance().execute(commands, context,
                                                { params_to_shell(parser), sc.env_vars });
         };
@@ -1412,6 +1413,7 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
     {
         desc = ParameterDesc{ {}, ParameterDesc::Flags::SwitchesAsPositional, 0, 0 };
         cmd = [=](const ParametersParser& parser, Context& context, const ShellContext& sc) {
+            LocalScope local_scope{context};
             CommandManager::instance().execute(commands, context, { {}, sc.env_vars });
         };
     }
