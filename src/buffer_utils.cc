@@ -176,6 +176,7 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
         buffer->flags() |= Buffer::Flags::NoUndo | flags;
         buffer->values().clear();
         buffer->reload({StringData::create("\n")}, ByteOrderMark::None, EolFormat::Lf, {InvalidTime, {}, {}});
+        buffer_manager.make_latest(*buffer);
     }
     else
         buffer = buffer_manager.create_buffer(

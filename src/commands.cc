@@ -847,13 +847,17 @@ const CommandDesc buffer_cmd = {
     "buffer",
     "b",
     "buffer <name>: set buffer to edit in current client",
-    single_param,
+    {
+        { { "matching", { {}, "treat the argument as a regex" } } },
+        ParameterDesc::Flags::None, 1, 1
+    },
     CommandFlags::None,
     CommandHelper{},
     make_completer(menu(complete_buffer_name<true>)),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        Buffer& buffer = BufferManager::instance().get_buffer(parser[0]);
+        Buffer& buffer = parser.get_switch("matching") ? BufferManager::instance().get_buffer_matching(Regex{parser[0]})
+                                                       : BufferManager::instance().get_buffer(parser[0]);
         if (&buffer != &context.buffer())
         {
             context.push_jump();
@@ -1400,6 +1404,7 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
 
         desc = ParameterDesc{ {}, ParameterDesc::Flags::SwitchesAsPositional, min, max };
         cmd = [=](const ParametersParser& parser, Context& context, const ShellContext& sc) {
+            LocalScope local_scope{context};
             CommandManager::instance().execute(commands, context,
                                                { params_to_shell(parser), sc.env_vars });
         };
@@ -1408,6 +1413,7 @@ void define_command(const ParametersParser& parser, Context& context, const Shel
     {
         desc = ParameterDesc{ {}, ParameterDesc::Flags::SwitchesAsPositional, 0, 0 };
         cmd = [=](const ParametersParser& parser, Context& context, const ShellContext& sc) {
+            LocalScope local_scope{context};
             CommandManager::instance().execute(commands, context, { {}, sc.env_vars });
         };
     }

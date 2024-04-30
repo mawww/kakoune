@@ -21,17 +21,17 @@ define-command -hidden jump %{
     }
 }
 
-define-command jump-next -params 1 -docstring %{
+define-command jump-next -params 1.. -docstring %{
     jump-next <bufname>: jump to next location listed in the given *grep*-like location list buffer.
 } %{
     evaluate-commands -try-client %opt{jumpclient} -save-regs / %{
-        buffer %arg{1}
+        buffer %arg{@}
         jump-select-next
         jump
     }
     try %{
         evaluate-commands -client %opt{toolsclient} %{
-            buffer %arg{1}
+            buffer %arg{@}
             execute-keys gg %opt{jump_current_line}g
         }
     }
@@ -44,17 +44,17 @@ define-command -hidden jump-select-next %{
     execute-keys ge %opt{jump_current_line}g<a-l> /^[^:\n]+:\d+:<ret>
 }
 
-define-command jump-previous -params 1 -docstring %{
+define-command jump-previous -params 1.. -docstring %{
     jump-previous <bufname>: jump to previous location listed in the given *grep*-like location list buffer.
 } %{
     evaluate-commands -try-client %opt{jumpclient} -save-regs / %{
-        buffer %arg{1}
+        buffer %arg{@}
         jump-select-previous
         jump
     }
     try %{
         evaluate-commands -client %opt{toolsclient} %{
-            buffer %arg{1}
+            buffer %arg{@}
             execute-keys gg %opt{jump_current_line}g
         }
     }

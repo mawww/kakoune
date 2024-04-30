@@ -7,6 +7,7 @@
 #include "file.hh"
 #include "ranges.hh"
 #include "string.hh"
+#include "regex.hh"
 
 namespace Kakoune
 {
@@ -79,6 +80,24 @@ Buffer& BufferManager::get_buffer(StringView name)
     return *res;
 }
 
+Buffer* BufferManager::get_buffer_matching_ifp(const Regex& regex)
+{
+    for (auto& buf : m_buffers | reverse())
+    {
+        if (StringView name = buf->name(); regex_match(name.begin(), name.end(), regex))
+            return buf.get();
+    }
+    return nullptr;
+}
+
+Buffer& BufferManager::get_buffer_matching(const Regex& regex)
+{
+    Buffer* res = get_buffer_matching_ifp(regex);
+    if (not res)
+        throw runtime_error{format("no buffer matching '{}'", regex.str())};
+    return *res;
+}
+
 Buffer& BufferManager::get_first_buffer()
 {
     if (all_of(m_buffers, [](auto& b) { return (b->flags() & Buffer::Flags::Debug); }))
@@ -128,6 +147,13 @@ void BufferManager::arrange_buffers(ConstArrayView<String> first_ones)
             res.push_back(std::move(buf));
     }
     m_buffers = std::move(res);
+}
+
+void BufferManager::make_latest(Buffer& buffer)
+{
+    auto it = find(m_buffers, &buffer);
+    kak_assert(it != m_buffers.end());
+    std::rotate(it, it+1, m_buffers.end());
 }
 
 }
