@@ -30,8 +30,8 @@ tag-sanitize-undefined = .san_u
 
 LDFLAGS-static-yes = -static -pthread
 
-version = $(shell cat .version 2>/dev/null || git describe --tags HEAD 2>/dev/null || echo unknown)
-version != cat .version 2>/dev/null || git describe --tags HEAD 2>/dev/null || echo unknown
+version = $(shell cat .version 2>/dev/null || git describe --tags HEAD 2>/dev/null | sed s/^v// || echo unknown)
+version != cat .version 2>/dev/null || ( git describe --tags HEAD 2>/dev/null | sed s/^v// ) || echo unknown
 
 PREFIX = /usr/local
 DESTDIR = # root dir
@@ -154,9 +154,9 @@ kakoune-$(version).tar:
 	@if ! [ -d .git ]; then echo "make dist can only run from a git repo";  false; fi
 	@if git status -s | grep -qEv '^\?\?'; then echo "working tree is not clean";  false; fi
 	git archive --format=tar --prefix=$(@:.tar=)/ HEAD -o $@
-	echo "$(version)" > src/.version
-	tar --transform "s,^,$(@:.tar=)/," -rf $@ src/.version
-	rm -f src/.version
+	echo "$(version)" > .version
+	tar --transform "s,^,$(@:.tar=)/," -rf $@ .version
+	rm -f .version
 
 distclean: clean
 	rm -f src/kak src/kak$(suffix) src/.*.d src/*.o
