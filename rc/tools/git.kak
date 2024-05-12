@@ -224,7 +224,7 @@ define-command -params 1.. \
                         execute-keys <a-l><semicolon><a-?>^commit<ret><a-semicolon>
                     } catch %{
                         # Missing commit line, assume it is an uncommitted change.
-                        execute-keys <a-l><semicolon><a-?>\A<ret><a-semicolon>
+                        execute-keys <a-l><semicolon>Gg<a-semicolon>
                     }
                     require-module diff
                     try %{

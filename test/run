@@ -193,7 +193,7 @@ ui_out() {
     -until)
       shift
       while read -r event <&4; do
-        [ "$event" == "$1" ] && break
+        [ "$event" = "$1" ] && break
       done
       ;;
     -until-grep)
