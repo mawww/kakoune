@@ -666,6 +666,7 @@ String get_kak_binary_path()
     buffer[res] = '\0';
     return buffer;
 #elif defined(__OpenBSD__)
+    (void)buffer;
     return KAK_BIN_PATH;
 #elif defined(__sun__)
     ssize_t res = readlink("/proc/self/path/a.out", buffer, 2048);

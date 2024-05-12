@@ -54,7 +54,7 @@ LDFLAGS-os-FreeBSD = -L/usr/local/lib
 
 LIBS-os-Haiku = -lnetwork -lbe
 
-CPPFLAGS-os-OpenBSD = -DKAK_BIN_PATH="$(bindir)/kak" -I/usr/local/include
+CPPFLAGS-os-OpenBSD = -DKAK_BIN_PATH=\"$(bindir)/kak\" -I/usr/local/include
 LDFLAGS-os-OpenBSD = -L/usr/local/lib
 mandir-os-OpenBSD = $(DESTDIR)$(PREFIX)/man/man1
 
@@ -136,6 +136,9 @@ doc/kak.1.gz: doc/kak.1
 
 check: test
 test: src/kak
+	if [ $(os) = OpenBSD ]; then \
+        	export KAKOUNE_RUNTIME=$$PWD/share/kak; \
+	fi && \
 	cd test && ./run
 
 TAGS: tags
