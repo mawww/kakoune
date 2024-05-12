@@ -634,7 +634,8 @@ String get_kak_binary_path()
     char buffer[2048];
 #if defined(__linux__) or defined(__CYGWIN__) or defined(__gnu_hurd__)
     ssize_t res = readlink("/proc/self/exe", buffer, 2048);
-    kak_assert(res != -1);
+    if (res == -1 || res >= 2048)
+        throw runtime_error("unable to get the executable path");
     buffer[res] = '\0';
     return buffer;
 #elif defined(__FreeBSD__) or defined(__NetBSD__)
@@ -662,7 +663,8 @@ String get_kak_binary_path()
     return path.Path();
 #elif defined(__DragonFly__)
     ssize_t res = readlink("/proc/curproc/file", buffer, 2048);
-    kak_assert(res != -1);
+    if (res == -1 || res >= 2048)
+        throw runtime_error("unable to get the executable path");
     buffer[res] = '\0';
     return buffer;
 #elif defined(__OpenBSD__)
@@ -670,7 +672,8 @@ String get_kak_binary_path()
     return KAK_BIN_PATH;
 #elif defined(__sun__)
     ssize_t res = readlink("/proc/self/path/a.out", buffer, 2048);
-    kak_assert(res != -1);
+    if (res == -1 || res >= 2048)
+        throw runtime_error("unable to get the executable path");
     buffer[res] = '\0';
     return buffer;
 #else
