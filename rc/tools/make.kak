@@ -26,11 +26,11 @@ define-command -params .. \
 }}
 
 add-highlighter shared/make group
-add-highlighter shared/make/ regex "^([^:\n]+):(\d+):(?:(\d+):)?\h+(?:((?:fatal )?error)|(warning)|(note)|(required from(?: here)?))?.*?$" 1:cyan 2:green 3:green 4:red 5:yellow 6:blue 7:yellow
 add-highlighter shared/make/ regex "^\h*(~*(?:(\^)~*)?)$" 1:green 2:cyan+b
 add-highlighter shared/make/ line '%opt{jump_current_line}' default+b
 
 hook -group make-highlight global WinSetOption filetype=make %{
+    add-highlighter -override shared/make/ regex %opt{make_error_pattern} 1:cyan 2:green 3:green 4:red 5:yellow 6:blue 7:yellow
     add-highlighter window/make ref make
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/make }
 }
