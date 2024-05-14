@@ -20,6 +20,7 @@ define-command -params .. \
                edit! -fifo ${output} -scroll *make*
                set-option buffer filetype make
                set-option buffer jump_current_line 0
+               set-option buffer make_error_pattern '$kak_opt_make_error_pattern'
                hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname ${output}) } }
            }"
 }}
