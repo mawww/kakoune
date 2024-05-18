@@ -3,6 +3,10 @@
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
+== Kakoune 2024.05.18
+
+* Fixed tests on Alpine Linux and *BSD
+
 == Kakoune 2024.05.09
 
 * `flag-lines -after` switch to display text after the line
