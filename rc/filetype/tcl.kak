@@ -45,10 +45,10 @@ evaluate-commands %sh{
 add-highlighter shared/tcl/code/function   regex ^\h*proc\h+((\w|-)+) 1:function
 add-highlighter shared/tcl/code/brackets   regex [\[\]]{1,2}          0:operator
 add-highlighter shared/tcl/code/parameters regex \s-\w+\b             0:attribute
-add-highlighter shared/tcl/code/variable   regex \$(\w|:)+            0:value
+add-highlighter shared/tcl/code/variable   regex \$(\w|:)+            0:variable
 add-highlighter shared/tcl/code/numbers    regex '\b\d+\.?'           0:value
 
-add-highlighter shared/tcl/double_string/variable regex \$(\w|:)+   0:value
+add-highlighter shared/tcl/double_string/variable regex \$(\w|:)+   0:variable
 add-highlighter shared/tcl/double_string/brackets regex [\[\]]{1,2} 0:operator
 
 # Commands
