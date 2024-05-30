@@ -3,7 +3,11 @@
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
-== Development version
+== Kakoune 2024.05.18
+
+* Fixed tests on Alpine Linux and *BSD
+
+== Kakoune 2024.05.09
 
 * `flag-lines -after` switch to display text after the line
 
@@ -27,6 +31,8 @@ released versions.
 * Completions provided via `shell-script-candidates` or `completers` are no longer sorted if the typed text is empty.
 
 * The `terminal` alias has been replaced with a command that selects terminal program and placement based on windowing options.
+
+* `local` scopes in `commands` and `evaluate-commands`.
 
 == Kakoune 2023.08.08
 

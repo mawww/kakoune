@@ -634,9 +634,10 @@ String get_kak_binary_path()
     char buffer[2048];
 #if defined(__linux__) or defined(__CYGWIN__) or defined(__gnu_hurd__)
     ssize_t res = readlink("/proc/self/exe", buffer, 2048);
-    kak_assert(res != -1);
-    buffer[res] = '\0';
-    return buffer;
+    if (res != -1 && res < 2048) {
+        buffer[res] = '\0';
+        return buffer;
+    }
 #elif defined(__FreeBSD__) or defined(__NetBSD__)
 #if defined(__FreeBSD__)
     int mib[] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1};
@@ -644,37 +645,44 @@ String get_kak_binary_path()
     int mib[] = {CTL_KERN, KERN_PROC_ARGS, -1, KERN_PROC_PATHNAME};
 #endif
     size_t res = sizeof(buffer);
-    sysctl(mib, 4, buffer, &res, NULL, 0);
-    return buffer;
+    if (sysctl(mib, 4, buffer, &res, NULL, 0) != -1)
+        return buffer;
 #elif defined(__APPLE__)
     uint32_t bufsize = 2048;
-    _NSGetExecutablePath(buffer, &bufsize);
-    char* canonical_path = realpath(buffer, nullptr);
-    String path = canonical_path;
-    free(canonical_path);
-    return path;
+    char* canonical_path = NULL;
+    if (_NSGetExecutablePath(buffer, &bufsize) != -1)
+        canonical_path = realpath(buffer, nullptr);
+    if (canonical_path) {
+        String path = canonical_path;
+        free(canonical_path);
+        return path;
+    }
 #elif defined(__HAIKU__)
     BApplication app("application/x-vnd.kakoune");
     app_info info;
-    status_t status = app.GetAppInfo(&info);
-    kak_assert(status == B_OK);
-    BPath path(&info.ref);
-    return path.Path();
+    if (app.GetAppInfo(&info) == B_OK) {
+        BPath path(&info.ref);
+        return path.Path();
+    }
 #elif defined(__DragonFly__)
     ssize_t res = readlink("/proc/curproc/file", buffer, 2048);
-    kak_assert(res != -1);
-    buffer[res] = '\0';
-    return buffer;
+    if (res != -1 && res < 2048) {
+        buffer[res] = '\0';
+        return buffer;
+    }
 #elif defined(__OpenBSD__)
+    (void)buffer;
     return KAK_BIN_PATH;
 #elif defined(__sun__)
     ssize_t res = readlink("/proc/self/path/a.out", buffer, 2048);
-    kak_assert(res != -1);
-    buffer[res] = '\0';
-    return buffer;
+    if (res != -1 && res < 2048) {
+        buffer[res] = '\0';
+        return buffer;
+    }
 #else
 # error "finding executable path is not implemented on this platform"
 #endif
+    throw runtime_error("unable to get the executable path");
 }
 
 }

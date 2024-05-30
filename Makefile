@@ -30,8 +30,8 @@ tag-sanitize-undefined = .san_u
 
 LDFLAGS-static-yes = -static -pthread
 
-version = $(shell cat .version 2>/dev/null || git describe --tags HEAD 2>/dev/null || echo unknown)
-version != cat .version 2>/dev/null || git describe --tags HEAD 2>/dev/null || echo unknown
+version = $(shell cat .version 2>/dev/null || git describe --tags HEAD 2>/dev/null | sed s/^v// || echo unknown)
+version != cat .version 2>/dev/null || ( git describe --tags HEAD 2>/dev/null | sed s/^v// ) || echo unknown
 
 PREFIX = /usr/local
 DESTDIR = # root dir
@@ -54,7 +54,7 @@ LDFLAGS-os-FreeBSD = -L/usr/local/lib
 
 LIBS-os-Haiku = -lnetwork -lbe
 
-CPPFLAGS-os-OpenBSD = -DKAK_BIN_PATH="$(bindir)/kak" -I/usr/local/include
+CPPFLAGS-os-OpenBSD = -DKAK_BIN_PATH=\"$(bindir)/kak\" -I/usr/local/include
 LDFLAGS-os-OpenBSD = -L/usr/local/lib
 mandir-os-OpenBSD = $(DESTDIR)$(PREFIX)/man/man1
 
@@ -136,6 +136,9 @@ doc/kak.1.gz: doc/kak.1
 
 check: test
 test: src/kak
+	if [ $(os) = OpenBSD ]; then \
+        	export KAKOUNE_RUNTIME=$$PWD/share/kak; \
+	fi && \
 	cd test && ./run
 
 TAGS: tags
@@ -154,9 +157,9 @@ kakoune-$(version).tar:
 	@if ! [ -d .git ]; then echo "make dist can only run from a git repo";  false; fi
 	@if git status -s | grep -qEv '^\?\?'; then echo "working tree is not clean";  false; fi
 	git archive --format=tar --prefix=$(@:.tar=)/ HEAD -o $@
-	echo "$(version)" > src/.version
-	tar --transform "s,^,$(@:.tar=)/," -rf $@ src/.version
-	rm -f src/.version
+	echo "$(version)" > .version
+	tar --transform "s,^,$(@:.tar=)/," -rf $@ .version
+	rm -f .version
 
 distclean: clean
 	rm -f src/kak src/kak$(suffix) src/.*.d src/*.o

@@ -45,7 +45,10 @@ struct {
     unsigned int version;
     StringView notes;
 } constexpr version_notes[] = { {
-        0,
+        20240518,
+        "» Fix tests failing on some platforms\n"
+    }, {
+        20240509,
         "» {+u}flag-lines -after{} highlighter\n"
         "» asynchronous {+u}shell-script-candidates{} completion\n"
         "» {+b}%val\\{window_range}{} is now emitted as separate strings\n"
@@ -56,6 +59,7 @@ struct {
         "» {+u}git blame{} works in {+u}git-diff{} and {+u}git-log{} buffers\n"
         "» custom completions are no longer sorted if the typed text is empty\n"
         "» {+u}terminal{} now selects implementation based on windowing options\n"
+        "» {+u}local{} scopes\n"
     }, {
         20230805,
         "» Fix FreeBSD/MacOS clang compilation\n"

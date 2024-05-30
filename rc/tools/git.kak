@@ -109,6 +109,7 @@ define-command -params 1.. \
     } -shell-script-candidates %{
     if [ $kak_token_to_complete -eq 0 ]; then
         printf %s\\n \
+            add \
             apply \
             blame \
             blame-jump \
@@ -224,7 +225,7 @@ define-command -params 1.. \
                         execute-keys <a-l><semicolon><a-?>^commit<ret><a-semicolon>
                     } catch %{
                         # Missing commit line, assume it is an uncommitted change.
-                        execute-keys <a-l><semicolon><a-?>\A<ret><a-semicolon>
+                        execute-keys <a-l><semicolon>Gg<a-semicolon>
                     }
                     require-module diff
                     try %{

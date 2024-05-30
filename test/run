@@ -190,6 +190,12 @@ ui_out() {
         skip_count=$(( skip_count - 1 ))
       done
       ;;
+    -until)
+      shift
+      while read -r event <&4; do
+        [ "$event" = "$1" ] && break
+      done
+      ;;
     -until-grep)
       shift
       while

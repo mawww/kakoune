@@ -1,2 +1,2 @@
 #!/bin/sh
-command -v git >/dev/null
+command -v git >/dev/null && command -v perl >/dev/null

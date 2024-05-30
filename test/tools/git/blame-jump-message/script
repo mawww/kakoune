@@ -1,6 +1,5 @@
-while ! ui_out -until-grep draw_status | grep -v '\[fifo\]' >/dev/null;
-do
-    :
+while true; do
+    ui_out -until-grep draw_status | grep -v '\[fifo\]' >/dev/null && break
 done
 actual_draw_status=$(ui_out -until-grep draw_status)
 
@@ -11,5 +10,5 @@ EOF
 expected_subject_json=\"$(printf '%s' "$expected_subject" | sed 's/"/\\"/g')\"
 expected_draw_status='{ "jsonrpc": "2.0", "method": "draw_status", "params": [[{ "face": { "fg": "black", "bg": "yellow", "underline": "default", "attributes": [] }, "contents": '"$expected_subject_json"' }], [{ "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": "*git* 13:2 " }, { "face": { "fg": "black", "bg": "yellow", "underline": "default", "attributes": [] }, "contents": "[scratch]" }, { "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": " " }, { "face": { "fg": "blue", "bg": "default", "underline": "default", "attributes": [] }, "contents": "1 sel" }, { "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": " - client0@[kak-tests]" }], { "fg": "cyan", "bg": "default", "underline": "default", "attributes": [] }] }'
 
-assert_eq "$actual_draw_status" "$expected_draw_status"
+assert_eq "$expected_draw_status" "$actual_draw_status"
 ui_out -ignore 2
