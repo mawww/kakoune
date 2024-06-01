@@ -582,6 +582,9 @@ void register_options()
     reg.declare_option<int, check_timeout>(
         "fs_check_timeout", "timeout, in milliseconds, between file system buffer modification checks",
         500);
+    reg.declare_option("env",
+                       "a list of environment variable overrides to be passed to external processes",
+                       HashMap<String, String, MemoryDomain::Options>{});
     reg.declare_option("ui_options",
                        "space separated list of <key>=<value> options that are "
                        "passed to and interpreted by the user interface\n"
