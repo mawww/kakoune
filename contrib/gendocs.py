@@ -20,7 +20,6 @@
 
 from dataclasses import dataclass
 from typing import Optional
-import atexit
 import glob
 import itertools
 import os
@@ -35,51 +34,24 @@ script_dir = os.path.dirname(os.path.realpath(__file__))
 # Switch to the projects root dir.
 os.chdir(os.path.join(script_dir, ".."))
 
-
-# Revert the changes upon script exit.
-def cleanup():
-    try:
-        shutil.move("test/tests.asciidoc", "test/README.asciidoc")
-    except BaseException:
-        pass
-    try:
-        shutil.move("index.asciidoc", "README.asciidoc")
-    except BaseException:
-        pass
-    try:
-        shutil.move("VIMTOKAK.asciidoc", "VIMTOKAK")
-    except BaseException:
-        pass
-
-
-atexit.register(cleanup)
-
+# Recreating the final output dir to start from scratch.
+shutil.rmtree("doc_gen", ignore_errors=True)
+os.makedirs("doc_gen", exist_ok=True)
 
 # Antora fails if the repo contains broken symbolic links.
-shutil.rmtree("libexec", ignore_errors=True)
+# shutil.rmtree("libexec", ignore_errors=True)
 
 # Canonical Antora paths.
 # See: https://docs.antora.org/antora/latest/standard-directories.
 #      https://docs.antora.org/antora/latest/root-module-directory.
-os.makedirs("modules/ROOT/images", exist_ok=True)
-os.makedirs("modules/ROOT/pages", exist_ok=True)
+os.makedirs("doc_gen/modules/ROOT/images", exist_ok=True)
+os.makedirs("doc_gen/modules/ROOT/pages", exist_ok=True)
 
-# The file name is used for navigation links.
-# Update so it reflects the content.
-shutil.move("test/README.asciidoc", "test/tests.asciidoc")
-
-# Update the filename so it reflects the content.
-# The filename is used for navigation links.
-shutil.move("README.asciidoc", "index.asciidoc")
-
-# A useful documentation page.
-# Add the `.asciidoc` extension to include it into the result.
-shutil.move("VIMTOKAK", "VIMTOKAK.asciidoc")
 
 # Put necessary images to the Antora canonical directory.
 # See: https://docs.antora.org/antora/latest/images-directory.
 for gif_file in glob.glob("doc/*.gif"):
-    shutil.copy(gif_file, "modules/ROOT/images/")
+    shutil.copy(gif_file, "doc_gen/modules/ROOT/images/")
 
 
 # Fix links according to the Antora specification.
@@ -99,13 +71,32 @@ def fix_links(path):
             self.title = title
 
     def dropwhile(predicate, string):
-        return "".join(itertools.dropwhile(predicate, string))
+        return "".join(
+            itertools.dropwhile(
+                predicate,
+                string,
+            )
+        )
 
     def dropwhileright(predicate, string):
-        return "".join(reversed(list(itertools.dropwhile(predicate, reversed(string)))))
+        return "".join(
+            reversed(
+                list(
+                    itertools.dropwhile(
+                        predicate,
+                        reversed(string),
+                    )
+                )
+            )
+        )
 
     def takewhile(predicate, string):
-        return "".join(itertools.takewhile(predicate, string))
+        return "".join(
+            itertools.takewhile(
+                predicate,
+                string,
+            )
+        )
 
     def untag(string):
         no_opening = dropwhile(lambda c: c == "<", string)
@@ -158,10 +149,21 @@ def fix_links(path):
         file.write(re.sub(r"<<[^>]+>>", process, content))
 
 
+# A useful documentation page.
+# Add the `.adoc` extension to include it into the result.
+shutil.copy(
+    "VIMTOKAK",
+    "doc_gen/modules/ROOT/pages/VIMTOKAK.adoc",
+)
+fix_links("doc_gen/modules/ROOT/pages/VIMTOKAK.adoc")
+
 for source in glob.glob("**/*.asciidoc", recursive=True):
     # Create directories structure matching the project's original structure.
     # See: https://docs.antora.org/antora/latest/pages-directory.
-    page_dir = os.path.join("modules/ROOT/pages", os.path.dirname(source))
+    page_dir = os.path.join(
+        "doc_gen/modules/ROOT/pages",
+        os.path.dirname(source),
+    )
     os.makedirs(page_dir, exist_ok=True)
 
     # Copy the `asciidoc` file into the Antora `pages` directory
@@ -169,6 +171,22 @@ for source in glob.glob("**/*.asciidoc", recursive=True):
     adoc = os.path.join(page_dir, pathlib.Path(source).stem + ".adoc")
     shutil.copy(source, adoc)
 
+    if source == "README.asciidoc":
+        # Update the filename so it reflects the content.
+        # The filename is used for navigation links.
+        shutil.move(
+            "doc_gen/modules/ROOT/pages/README.adoc",
+            "doc_gen/modules/ROOT/pages/index.adoc",
+        )
+        adoc = "doc_gen/modules/ROOT/pages/index.adoc"
+    elif source == "test/README.asciidoc":
+        # The file name is used for navigation links.
+        # Update so it reflects the content.
+        shutil.move(
+            "doc_gen/modules/ROOT/pages/test/README.adoc",
+            "doc_gen/modules/ROOT/pages/test/tests.adoc",
+        )
+        adoc = "doc_gen/modules/ROOT/pages/test/tests.adoc"
     fix_links(adoc)
 
 
@@ -209,7 +227,7 @@ nav_content = """
 * xref:VIMTOKAK.adoc[Vi(m) to Kakoune]
 """
 
-with open("modules/ROOT/nav.adoc", "w") as f:
+with open("doc_gen/modules/ROOT/nav.adoc", "w") as f:
     f.write(nav_content)
 
 # Antora component description file.
@@ -222,7 +240,7 @@ title: Kakoune
 version: latest
 """
 
-with open("antora.yml", "w") as f:
+with open("doc_gen/antora.yml", "w") as f:
     f.write(antora_yml_content)
 
 # Antora playbook file.
@@ -263,11 +281,12 @@ asciidoc:
 
 content:
   sources:
-  - url: ./
+  - url: ./..
+    start_path: doc_gen
     branches: ["HEAD"]
 
 runtime:
-  cache_dir: ./cache # More convenient for the development
+  cache_dir: ./doc_gen/cache # More convenient for the development
   fetch: true # More convenient for the development
 
   log:
@@ -286,12 +305,11 @@ ui:
     url: https://gitlab.com/antora/antora-ui-default/-/jobs/artifacts/HEAD/raw/build/ui-bundle.zip?job=bundle-stable
 """
 
-with open("antora-playbook.yml", "w") as f:
+with open("doc_gen/antora-playbook.yml", "w") as f:
     f.write(antora_playbook_content)
 
 # Finally, generate the documentation,
 # results will be saved to the output directory
 # as specified in the `antora-playbook.yml`.
-subprocess.run(["antora", "generate", "antora-playbook.yml"])
-
-subprocess.run(["xdg-open", "./build/Kakoune/latest/index.html"])
+subprocess.run(["antora", "generate", "doc_gen/antora-playbook.yml"])
+subprocess.run(["xdg-open", "./doc_gen/build/Kakoune/latest/index.html"])
