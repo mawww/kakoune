@@ -32,6 +32,7 @@ define-command -params ..1 -docstring %{
         printf 'eval -no-hooks write %s\n' "${kak_response_fifo}" > $kak_command_fifo
 
         {
+            trap - INT QUIT
             sed 's/^/^/' | eval "aspell --byte-offsets -a $options" 2>&1 | awk '
                 BEGIN {
                     line_num = 1

@@ -1,0 +1,10 @@
+declare-option str jumpclient
+source "%val{runtime}/rc/filetype/diff.kak"
+source "%val{runtime}/rc/tools/git.kak"
+
+define-command run %[
+    git init
+    git add
+    git commit --message "Don't break on single quotes or unbalanced {"
+    git blame-jump
+]

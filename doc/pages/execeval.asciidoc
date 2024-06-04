@@ -64,3 +64,8 @@ are then restored when the keys have been executed: */*, *"*, *|*, *^*,
 *-with-hooks*::
     Execute keys and trigger existing hooks.
     (See <<hooks#,`:doc hooks`>>)
+
+== Local scope in *evaluate-commands*
+
+When using *evaluate-commands* a new scope, named `local` is inserted.
+See <<scopes#,`:doc scopes`>>

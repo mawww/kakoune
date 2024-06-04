@@ -23,7 +23,7 @@ struct Snake
 
 template<bool forward, typename IteratorA, typename IteratorB, typename Equal>
 Snake find_end_snake_of_further_reaching_dpath(IteratorA a, int N, IteratorB b, int M,
-                                               const int* V, const int D, const int k, Equal eq)
+                                               const int* V, const int D, const int k, Equal&& eq)
 {
     const bool add = k == -D or (k != D and V[k-1] < V[k+1]);
 
@@ -48,7 +48,7 @@ Snake find_end_snake_of_further_reaching_dpath(IteratorA a, int N, IteratorB b, 
 
 template<typename IteratorA, typename IteratorB, typename Equal>
 Snake find_middle_snake(IteratorA a, int N, IteratorB b, int M,
-                        int* V1, int* V2, int cost_limit, Equal eq)
+                        int* V1, int* V2, int cost_limit, Equal&& eq)
 {
     const int delta = N - M;
     V1[1] = 0;
@@ -113,7 +113,7 @@ template<typename IteratorA, typename IteratorB, typename Equal, typename OnDiff
 void find_diff_rec(IteratorA a, int begA, int endA,
                    IteratorB b, int begB, int endB,
                    int* V1, int* V2, int cost_limit,
-                   Equal eq, OnDiff&& on_diff)
+                   Equal&& eq, OnDiff&& on_diff)
 {
     auto on_diff_ifn = [&](DiffOp op, int len) {
         if (len != 0)
@@ -172,7 +172,7 @@ struct Diff
 };
 
 template<typename IteratorA, typename IteratorB, typename OnDiff, typename Equal = std::equal_to<>>
-void for_each_diff(IteratorA a, int N, IteratorB b, int M, OnDiff&& on_diff, Equal eq = Equal{})
+void for_each_diff(IteratorA a, int N, IteratorB b, int M, OnDiff&& on_diff, Equal&& eq = Equal{})
 {
     const int max = 2 * (N + M) + 1;
     std::unique_ptr<int[]> data(new int[2*max]);

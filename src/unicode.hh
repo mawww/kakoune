@@ -60,12 +60,23 @@ inline bool is_blank(Codepoint c) noexcept
            is_horizontal_blank(c) ;
 }
 
+inline bool is_basic_alpha(Codepoint c) noexcept
+{
+    return (c >= 'a' and c <= 'z') or (c >= 'A' and c <= 'Z');
+}
+
+inline bool is_basic_digit(Codepoint c) noexcept
+{
+    return c >= '0' and c <= '9';
+}
+
 enum WordType { Word, WORD };
 
 template<WordType word_type = Word>
 inline bool is_word(Codepoint c, ConstArrayView<Codepoint> extra_word_chars = {'_'}) noexcept
 {
-    return iswalnum((wchar_t)c) or contains(extra_word_chars, c);
+    return (c < 128 ? is_basic_alpha(c) or is_basic_digit(c) : iswalnum((wchar_t)c)) or
+           contains(extra_word_chars, c);
 }
 
 template<>
@@ -77,16 +88,6 @@ inline bool is_word<WORD>(Codepoint c, ConstArrayView<Codepoint>) noexcept
 inline bool is_punctuation(Codepoint c, ConstArrayView<Codepoint> extra_word_chars = {'_'}) noexcept
 {
     return not (is_word(c, extra_word_chars) or is_blank(c));
-}
-
-inline bool is_basic_alpha(Codepoint c) noexcept
-{
-    return (c >= 'a' and c <= 'z') or (c >= 'A' and c <= 'Z');
-}
-
-inline bool is_basic_digit(Codepoint c) noexcept
-{
-    return c >= '0' and c <= '9';
 }
 
 inline bool is_identifier(Codepoint c) noexcept
@@ -123,17 +124,17 @@ inline CharCategories categorize(Codepoint c, ConstArrayView<Codepoint> extra_wo
     return CharCategories::Punctuation;
 }
 
-inline Codepoint to_lower(Codepoint cp) noexcept { return towlower((wchar_t)cp); }
-inline Codepoint to_upper(Codepoint cp) noexcept { return towupper((wchar_t)cp); }
-
-inline bool is_lower(Codepoint cp) noexcept { return iswlower((wchar_t)cp); }
-inline bool is_upper(Codepoint cp) noexcept { return iswupper((wchar_t)cp); }
-
 inline char to_lower(char c) noexcept { return c >= 'A' and c <= 'Z' ? c - 'A' + 'a' : c; }
 inline char to_upper(char c) noexcept { return c >= 'a' and c <= 'z' ? c - 'a' + 'A' : c; }
 
 inline bool is_lower(char c) noexcept { return c >= 'a' and c <= 'z'; }
 inline bool is_upper(char c) noexcept { return c >= 'A' and c <= 'Z'; }
+
+inline Codepoint to_lower(Codepoint cp) noexcept { return cp < 128 ? (Codepoint)to_lower((char)cp) : towlower((wchar_t)cp); }
+inline Codepoint to_upper(Codepoint cp) noexcept { return cp < 128 ? (Codepoint)to_upper((char)cp) : towupper((wchar_t)cp); }
+
+inline bool is_lower(Codepoint cp) noexcept { return cp < 128 ? is_lower((char)cp) : iswlower((wchar_t)cp); }
+inline bool is_upper(Codepoint cp) noexcept { return cp < 128 ? is_upper((char)cp) : iswupper((wchar_t)cp); }
 
 }
 

@@ -65,8 +65,7 @@ define-command -params ..1 \
     -shell-script-candidates %{
         find /usr/share/man/ $(printf %s "${MANPATH}" |
             sed 's/:/ /') -name '*.[1-8]*' |
-            sed 's,^.*/\(.*\)\.\([1-8][a-zA-Z]*\).*$,\1(\2),' |
-            sort
+            sed 's,^.*/\(.*\)\.\([1-8][a-zA-Z]*\).*$,\1(\2),'
     } \
     -docstring %{
         man [<page>]: manpage viewer wrapper

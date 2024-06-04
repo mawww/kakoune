@@ -399,6 +399,13 @@ void view_commands(Context& context, NormalParams params)
         case 'b':
             window.display_line_at(cursor.line, window.dimensions().line-1);
             break;
+        case '<':
+            window.display_column_at(context.buffer()[cursor.line].column_count_to(cursor.column), 0);
+            break;
+        case '>':
+            window.display_column_at(context.buffer()[cursor.line].column_count_to(cursor.column),
+                                     window.dimensions().column-1);
+            break;
         case 'h':
             window.scroll(-std::max<ColumnCount>(1, count));
             break;
@@ -420,6 +427,8 @@ void view_commands(Context& context, NormalParams params)
          {{'m'},     "center cursor (horizontally)"},
          {{'t'},     "cursor on top"},
          {{'b'},     "cursor on bottom"},
+         {{'<'},     "cursor on left"},
+         {{'>'},     "cursor on right"},
          {{'h'},     "scroll left"},
          {{'j'},     "scroll down"},
          {{'k'},     "scroll up"},
@@ -694,7 +703,7 @@ void paste(Context& context, NormalParams params)
     ScopedEdition edition(context);
     ScopedSelectionEdition selection_edition{context};
     context.selections().for_each([&, last=BufferCoord{}](size_t index, Selection& sel) mutable {
-        auto& str = strings[std::min(strings.size()-1, index)];
+        auto& str = strings[index % strings.size()];
         auto& min = sel.min();
         auto& max = sel.max();
         BufferRange range = (mode == PasteMode::Replace) ?
@@ -866,7 +875,8 @@ void regex_prompt(Context& context, String prompt, char reg, T func)
                         RegisterManager::instance()[reg].set(context, str.str());
                     break;
                 case PromptEvent::Validate:
-                    RegisterManager::instance()[reg].set(context, str.str());
+                    if (not str.empty())
+                        RegisterManager::instance()[reg].set(context, str.str());
                     context.push_jump();
                     break;
                 }
@@ -1704,6 +1714,7 @@ void tabs_to_spaces(Context& context, NormalParams params)
     Vector<Selection> tabs;
     Vector<String> spaces;
     ScopedSelectionEdition selection_edition{context};
+    ScopedEdition edition{context};
     for (auto& sel : context.selections())
     {
         for (auto it = buffer.iterator_at(sel.min()),
@@ -1729,6 +1740,7 @@ void spaces_to_tabs(Context& context, NormalParams params)
     const ColumnCount tabstop = params.count == 0 ? opt_tabstop : params.count;
     Vector<Selection> spaces;
     ScopedSelectionEdition selection_edition{context};
+    ScopedEdition edition{context};
     for (auto& sel : context.selections())
     {
         for (auto it = buffer.iterator_at(sel.min()),

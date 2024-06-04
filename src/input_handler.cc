@@ -42,7 +42,7 @@ public:
     bool enabled() const { return &m_input_handler.current_mode() == this; }
     Context& context() const { return m_input_handler.context(); }
 
-    virtual DisplayLine mode_line() const = 0;
+    virtual ModeInfo mode_info() const = 0;
 
     virtual KeymapMode keymap_mode() const = 0;
 
@@ -56,7 +56,6 @@ public:
     }
 
     using Insertion = InputHandler::Insertion;
-    Insertion& last_insert() { return m_input_handler.m_last_insert; }
 
 protected:
     virtual void on_key(Key key, bool synthesized) = 0;
@@ -162,7 +161,10 @@ struct MouseHandler
 
         case Key::Modifiers::MouseRelease: {
             if (not m_dragging)
+            {
+                context.ensure_cursor_visible = false;
                 return true;
+            }
             auto& selections = context.selections();
             cursor = context.window().buffer_coord(key.coord());
             selections.main() = {buffer.clamp(m_anchor), cursor};
@@ -173,7 +175,10 @@ struct MouseHandler
 
         case Key::Modifiers::MousePos: {
             if (not m_dragging)
+            {
+                context.ensure_cursor_visible = false;
                 return true;
+            }
             cursor = context.window().buffer_coord(key.coord());
             auto& selections = context.selections();
             selections.main() = {buffer.clamp(m_anchor), cursor};
@@ -365,7 +370,7 @@ public:
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
-    DisplayLine mode_line() const override
+    ModeInfo mode_info() const override
     {
         AtomList atoms;
         auto num_sel = context().selections().size();
@@ -385,7 +390,7 @@ public:
             atoms.emplace_back(" reg=", context().faces()["StatusLineInfo"]);
             atoms.emplace_back(StringView(m_params.reg).str(), context().faces()["StatusLineValue"]);
         }
-        return atoms;
+        return {atoms, m_params};
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Normal; }
@@ -652,7 +657,8 @@ public:
         : InputMode(input_handler), m_callback(std::move(callback)), m_completer(std::move(completer)),
           m_prompt(prompt.str()), m_prompt_face(face),
           m_empty_text{std::move(emptystr)},
-          m_line_editor{context().faces()}, m_flags(flags),
+          // This prompt may outlive local scopes so ignore local faces.
+          m_line_editor{context().faces(false)}, m_flags(flags),
           m_was_interactive{not context().noninteractive()},
           m_history{RegisterManager::instance()[history_register]},
           m_current_history{-1},
@@ -946,9 +952,9 @@ public:
         }
     }
 
-    DisplayLine mode_line() const override
+    ModeInfo mode_info() const override
     {
-        return { "prompt", context().faces()["StatusLineMode"] };
+        return {{ "prompt", context().faces()["StatusLineMode"] }, {}};
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Prompt; }
@@ -1121,9 +1127,9 @@ public:
         m_callback(key, context());
     }
 
-    DisplayLine mode_line() const override
+    ModeInfo mode_info() const override
     {
-        return { "enter key", context().faces()["StatusLineMode"] };
+        return {{ "enter key", context().faces()["StatusLineMode"] }, {}};
     }
 
     KeymapMode keymap_mode() const override { return m_keymap_mode; }
@@ -1140,11 +1146,12 @@ private:
 class Insert : public InputMode
 {
 public:
-    Insert(InputHandler& input_handler, InsertMode mode, int count)
+    Insert(InputHandler& input_handler, InsertMode mode, int count, Insertion* last_insert)
         : InputMode(input_handler),
           m_edition(context()),
           m_selection_edition(context()),
           m_completer(context()),
+          m_last_insert(last_insert),
           m_restore_cursor(mode == InsertMode::Append),
           m_auto_complete{context().options()["autocomplete"].get<AutoComplete>() & AutoComplete::Insert},
           m_idle_timer{TimePoint::max(), context().flags() & Context::Flags::Draft ?
@@ -1157,11 +1164,14 @@ public:
     {
         context().buffer().throw_if_read_only();
 
-        last_insert().recording.set();
-        last_insert().mode = mode;
-        last_insert().keys.clear();
-        last_insert().disable_hooks = context().hooks_disabled();
-        last_insert().count = count;
+        if (m_last_insert)
+        {
+            m_last_insert->recording.set();
+            m_last_insert->mode = mode;
+            m_last_insert->keys.clear();
+            m_last_insert->disable_hooks = context().hooks_disabled();
+            m_last_insert->count = count;
+        }
         prepare(mode, count);
     }
 
@@ -1177,7 +1187,8 @@ public:
 
         if (not from_push)
         {
-            last_insert().recording.unset();
+            if (m_last_insert)
+                m_last_insert->recording.unset();
 
             auto& selections = context().selections();
             if (m_restore_cursor)
@@ -1191,7 +1202,7 @@ public:
         }
     }
 
-    void on_key(Key key, bool) override
+    void on_key(Key key, bool synthesized) override
     {
         auto& buffer = context().buffer();
 
@@ -1289,22 +1300,13 @@ public:
                 }, "enter register name", register_doc.str());
             update_completions = false;
         }
-        else if (key == ctrl('n'))
+        else if (key == ctrl('n') or key == ctrl('p') or key.modifiers == Key::Modifiers::MenuSelect)
         {
-            last_insert().keys.pop_back();
-            m_completer.select(1, true, last_insert().keys);
-            update_completions = false;
-        }
-        else if (key == ctrl('p'))
-        {
-            last_insert().keys.pop_back();
-            m_completer.select(-1, true, last_insert().keys);
-            update_completions = false;
-        }
-        else if (key.modifiers == Key::Modifiers::MenuSelect)
-        {
-            last_insert().keys.pop_back();
-            m_completer.select(key.key, false, last_insert().keys);
+            if (m_last_insert and not synthesized)
+                m_last_insert->keys.pop_back();
+            bool relative = key.modifiers != Key::Modifiers::MenuSelect;
+            int index = relative ? (key == ctrl('n') ? 1 : -1) : key.key;
+            m_completer.select(index, relative, m_last_insert ? &m_last_insert->keys : nullptr);
             update_completions = false;
         }
         else if (key == ctrl('x'))
@@ -1375,15 +1377,16 @@ public:
         m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
-    DisplayLine mode_line() const override
+    ModeInfo mode_info() const override
     {
         auto num_sel = context().selections().size();
         auto main_index = context().selections().main_index();
-        return {AtomList{ { "insert", context().faces()["StatusLineMode"] },
-                          { " ", context().faces()["StatusLine"] },
-                          { num_sel == 1 ? format("{} sel", num_sel)
-                              : format("{} sels ({})", num_sel, main_index + 1),
-                            context().faces()["StatusLineInfo"] } }};
+        return {{AtomList{ { "insert", context().faces()["StatusLineMode"] },
+                           { " ", context().faces()["StatusLine"] },
+                           { num_sel == 1 ? format("{} sel", num_sel)
+                               : format("{} sels ({})", num_sel, main_index + 1),
+                             context().faces()["StatusLineInfo"] } }},
+                {}};
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Insert; }
@@ -1503,6 +1506,7 @@ private:
     ScopedEdition   m_edition;
     ScopedSelectionEdition m_selection_edition;
     InsertCompleter m_completer;
+    Insertion*      m_last_insert;
     const bool      m_restore_cursor;
     bool            m_auto_complete;
     Timer           m_idle_timer;
@@ -1559,7 +1563,7 @@ void InputHandler::reset_normal_mode()
 
 void InputHandler::insert(InsertMode mode, int count)
 {
-    push_mode(new InputModes::Insert(*this, mode, count));
+    push_mode(new InputModes::Insert(*this, mode, count, m_handle_key_level <= 1 ? &m_last_insert : nullptr));
 }
 
 void InputHandler::repeat_last_insert()
@@ -1571,19 +1575,12 @@ void InputHandler::repeat_last_insert()
         m_last_insert.recording)
         throw runtime_error{"repeating last insert not available in this context"};
 
-    Vector<Key> keys;
-    swap(keys, m_last_insert.keys);
     ScopedSetBool disable_hooks(context().hooks_disabled(),
                                 m_last_insert.disable_hooks);
 
-    push_mode(new InputModes::Insert(*this, m_last_insert.mode, m_last_insert.count));
-    for (auto& key : keys)
-    {
-        // refill last_insert,  this is very inefficient, but necessary at the moment
-        // to properly handle insert completion
-        m_last_insert.keys.push_back(key);
-        current_mode().handle_key(key, true);
-    }
+    push_mode(new InputModes::Insert(*this, m_last_insert.mode, m_last_insert.count, nullptr));
+    for (auto& key : m_last_insert.keys)
+        handle_key(key);
     kak_assert(dynamic_cast<InputModes::Normal*>(&current_mode()) != nullptr);
 }
 
@@ -1654,11 +1651,8 @@ void InputHandler::handle_key(Key key)
     ++m_handle_key_level;
     auto dec = on_scope_end([this]{ --m_handle_key_level;} );
 
-    auto process_key = [&](Key key, bool synthesized) {
-        if (m_last_insert.recording)
-            m_last_insert.keys.push_back(key);
-        current_mode().handle_key(key, synthesized);
-    };
+    if (m_last_insert.recording and m_handle_key_level <= 1)
+        m_last_insert.keys.push_back(key);
 
     const auto keymap_mode = current_mode().keymap_mode();
     KeymapManager& keymaps = m_context.keymaps();
@@ -1667,10 +1661,10 @@ void InputHandler::handle_key(Key key)
         ScopedSetBool noninteractive{context().noninteractive()};
 
         for (auto& k : keymaps.get_mapping_keys(key, keymap_mode))
-            process_key(k, true);
+            current_mode().handle_key(k, true);
     }
     else
-        process_key(key, m_handle_key_level > 1);
+        current_mode().handle_key(key, m_handle_key_level > 1);
 
     // do not record the key that made us enter or leave recording mode,
     // and the ones that are triggered recursively by previous keys.
@@ -1715,9 +1709,9 @@ void InputHandler::stop_recording()
     m_recording_level = -1;
 }
 
-DisplayLine InputHandler::mode_line() const
+ModeInfo InputHandler::mode_info() const
 {
-    return current_mode().mode_line();
+    return current_mode().mode_info();
 }
 
 std::pair<CursorMode, DisplayCoord> InputHandler::get_cursor_info() const

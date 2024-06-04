@@ -27,7 +27,7 @@ define-command -params ..1 \
             evaluate-commands -draft %{
                 edit! -fifo ${dir}/fifo -debug *clang-output*
                 set-option buffer filetype make
-                set-option buffer make_current_error_line 0
+                set-option buffer jump_current_line 0
                 hook -once -always buffer BufCloseFifo .* %{ nop %sh{ rm -r ${dir} } }
             }"
 
@@ -36,16 +36,17 @@ define-command -params ..1 \
         # position and a buffer timestamp, only valid completions should be
         # displayed.
         ((
+            trap - INT QUIT
             until [ -f ${dir}/buf ]; do :; done # wait for the buffer to be written
 
             if [ -n "$kak_opt_clang_directory" ]; then
                 cd "$kak_opt_clang_directory"
             fi
             case ${kak_opt_filetype} in
-                c) ft=c ;;
-                cpp) ft=c++ ;;
-                obj-c) ft=objective-c ;;
-                *) ft=c++ ;;
+                (c) ft=c ;;
+                (cpp) ft=c++ ;;
+                (obj-c) ft=objective-c ;;
+                (*) ft=c++ ;;
             esac
 
             if [ "$1" = "-complete" ]; then

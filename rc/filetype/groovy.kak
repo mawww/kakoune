@@ -52,7 +52,7 @@ evaluate-commands %sh{
     add-highlighter shared/groovy/code/builtin regex \b(${builtins})\b 0:builtin
     add-highlighter shared/groovy/code/types   regex \b(${types})\b    0:type
 
-    declare-option str-list groovy_static_words "${keywords}|${types}|${builtins}"
+    declare-option str-list groovy_static_words \"${keywords}|${types}|${builtins}\"
   "
 }
 

@@ -97,12 +97,12 @@ static BufferLines parse_lines(const char* pos, const char* end, EolFormat eolfo
         if ((eol - pos) >= std::numeric_limits<int>::max())
             throw runtime_error("line is too long");
 
-        lines.emplace_back(StringData::create({{pos, eol - (eolformat == EolFormat::Crlf and eol != end ? 1 : 0)}, "\n"}));
+        lines.emplace_back(StringData::create(StringView{pos, eol - (eolformat == EolFormat::Crlf and eol != end ? 1 : 0)}, "\n"));
         pos = eol + 1;
     }
 
     if (lines.empty())
-        lines.emplace_back(StringData::create({"\n"}));
+        lines.emplace_back(StringData::create("\n"));
 
     return lines;
 }
@@ -132,15 +132,11 @@ decltype(auto) parse_file(StringView filename, Func&& func)
     }
 
     bool has_crlf = false, has_lf = false;
-    for (auto it = pos; it != end; ++it)
-    {
-        if (*it == '\n')
-            ((it != pos and *(it-1) == '\r') ? has_crlf : has_lf) = true;
-    }
-    const bool crlf = has_crlf and not has_lf;
-    auto eolformat = crlf ? EolFormat::Crlf : EolFormat::Lf;
+    for (auto it = std::find(pos, end, '\n'); it != end; it = std::find(it+1, end, '\n'))
+        ((it != pos and *(it-1) == '\r') ? has_crlf : has_lf) = true;
+    auto eolformat = (has_crlf and not has_lf) ? EolFormat::Crlf : EolFormat::Lf;
 
-    FsStatus fs_status{file.st.st_mtim, file.st.st_size, hash_data(file.data, file.st.st_size)};
+    FsStatus fs_status{file.st.st_mtim, file.st.st_size, murmur3(file.data, file.st.st_size)};
     return func(parse_lines(pos, end, eolformat), bom, eolformat, fs_status);
 }
 
@@ -179,12 +175,13 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
     {
         buffer->flags() |= Buffer::Flags::NoUndo | flags;
         buffer->values().clear();
-        buffer->reload({StringData::create({"\n"})}, ByteOrderMark::None, EolFormat::Lf, {InvalidTime, {}, {}});
+        buffer->reload({StringData::create("\n")}, ByteOrderMark::None, EolFormat::Lf, {InvalidTime, {}, {}});
+        buffer_manager.make_latest(*buffer);
     }
     else
         buffer = buffer_manager.create_buffer(
             std::move(name), flags | Buffer::Flags::Fifo | Buffer::Flags::NoUndo,
-            {StringData::create({"\n"})}, ByteOrderMark::None, EolFormat::Lf, {InvalidTime, {}, {}});
+            {StringData::create("\n")}, ByteOrderMark::None, EolFormat::Lf, {InvalidTime, {}, {}});
 
     struct FifoWatcher : FDWatcher
     {
@@ -205,7 +202,7 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
             m_buffer.flags() &= ~(Buffer::Flags::Fifo | Buffer::Flags::NoUndo);
         }
 
-        void read_fifo() const
+        void read_fifo()
         {
             kak_assert(m_buffer.flags() & Buffer::Flags::Fifo);
 
@@ -234,20 +231,21 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
                     }
 
                     auto pos = m_buffer.back_coord();
-                    const bool prevent_scrolling = pos == BufferCoord{0,0} and not m_scroll;
-                    if (prevent_scrolling)
+                    const bool is_first = pos == BufferCoord{0,0};
+                    if (not m_scroll and (is_first or m_had_trailing_newline))
                         pos = m_buffer.next(pos);
 
-                    m_buffer.insert(pos, StringView(data, data+count));
+                    pos = m_buffer.insert(pos, StringView(data, data+count)).end;
 
-                    if (prevent_scrolling)
+                    bool have_trailing_newline = (data[count-1] == '\n');
+                    if (not m_scroll)
                     {
-                        m_buffer.erase({0,0}, m_buffer.next({0,0}));
-                        // in the other case, the buffer will have automatically
-                        // inserted a \n to guarantee its invariant.
-                        if (data[count-1] == '\n')
-                            m_buffer.insert(m_buffer.end_coord(), "\n");
+                        if (is_first)
+                            m_buffer.erase({0,0}, m_buffer.next({0,0}));
+                        else if (not m_had_trailing_newline and have_trailing_newline)
+                            m_buffer.erase(m_buffer.prev(pos), pos);
                     }
+                    m_had_trailing_newline = have_trailing_newline;
                 }
                 while (++loop < max_loop  and fd_readable(fifo));
             }
@@ -263,6 +261,7 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
 
         Buffer& m_buffer;
         bool m_scroll;
+        bool m_had_trailing_newline = false;
     };
 
     buffer->values()[fifo_watcher_id] = Value(Meta::Type<FifoWatcher>{}, fd, *buffer, scroll);

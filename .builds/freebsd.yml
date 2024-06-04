@@ -1,0 +1,17 @@
+image: freebsd/13.x
+packages:
+    - gcc
+tasks:
+    - build-clang: |
+        cd kakoune
+        make CXX=clang++ -j$(sysctl -n hw.ncpu)
+    - test-clang: |
+        cd kakoune
+        LC_ALL=en_US.UTF-8 make test
+    - build-gcc: |
+        cd kakoune
+        make clean
+        make CXX=g++ -j$(sysctl -n hw.ncpu)
+    - test-gcc: |
+        cd kakoune
+        LC_ALL=en_US.UTF-8 make test

@@ -78,7 +78,7 @@ public:
     InsertCompleter& operator=(const InsertCompleter&) = delete;
     ~InsertCompleter();
 
-    void select(int index, bool relative, Vector<Key>& keystrokes);
+    void select(int index, bool relative, Vector<Key>* keystrokes);
     void update(bool allow_implicit);
     void try_accept();
     void reset();

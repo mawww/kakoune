@@ -4,6 +4,7 @@
 #include "client.hh"
 #include "face_registry.hh"
 #include "buffer_manager.hh"
+#include "hook_manager.hh"
 #include "register_manager.hh"
 #include "window.hh"
 
@@ -50,8 +51,10 @@ Client& Context::client() const
     return *m_client;
 }
 
-Scope& Context::scope() const
+Scope& Context::scope(bool allow_local) const
 {
+    if (allow_local and not m_local_scopes.empty())
+        return *m_local_scopes.back();
     if (has_window())
         return window();
     if (has_buffer())
@@ -69,6 +72,8 @@ void Context::set_window(Window& window)
 {
     kak_assert(&window.buffer() == &buffer());
     m_window.reset(&window);
+    if (not m_local_scopes.empty())
+        m_local_scopes.front()->reparent(window);
 }
 
 void Context::print_status(DisplayLine status) const
@@ -313,6 +318,8 @@ void Context::change_buffer(Buffer& buffer, Optional<FunctionRef<void()>> set_se
             ScopedSelectionEdition selection_edition{*this};
             selections_write_only() = SelectionList{buffer, Selection{}};
         }
+        if (not m_local_scopes.empty())
+            m_local_scopes.front()->reparent(buffer);
     }
 
     if (has_input_handler())
@@ -417,4 +424,8 @@ StringView Context::main_sel_register_value(StringView reg) const
     return RegisterManager::instance()[reg].get_main(*this, index);
 }
 
+void Context::set_name(String name) { 
+    String old_name = std::exchange(m_name, std::move(name));
+    hooks().run_hook(Hook::ClientRenamed, format("{}:{}", old_name, m_name), *this);
+}
 }

@@ -28,6 +28,10 @@ public:
     Buffer* get_buffer_ifp(StringView name);
     Buffer& get_buffer(StringView name);
 
+    Buffer* get_buffer_matching_ifp(const Regex& regex);
+    Buffer& get_buffer_matching(const Regex& regex);
+
+    void make_latest(Buffer& buffer);
     void arrange_buffers(ConstArrayView<String> first_ones);
 
     Buffer& get_first_buffer();

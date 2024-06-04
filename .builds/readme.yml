@@ -1,0 +1,11 @@
+image: archlinux
+oauth: git.sr.ht/REPOSITORIES:RW git.sr.ht/PROFILE:RO
+packages:
+    - hut
+    - asciidoctor
+tasks:
+    - update-readme: |
+        cd kakoune
+        asciidoctor -e README.asciidoc
+        hut git update --readme README.html --repo https://git.sr.ht/~mawww/kakoune
+

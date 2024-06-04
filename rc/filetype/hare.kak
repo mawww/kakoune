@@ -99,7 +99,7 @@ provide-module hare %§
     add-highlighter shared/hare/code/ regex "(=|\+|-|\*|/|<|>|!|\?|&|\||\.\.(\.)?)" 0:operator
 
     # commands
-    define-command -hidden hare-indent-on-new-line %{ evaluate-commands -draft -itersel %{
+    define-command -hidden hare-indent-on-new-line %[ evaluate-commands -draft -itersel %[
         # preserve indentation on new lines
         try %{ execute-keys -draft <semicolon> K <a-&> }
         # indent after lines ending with { or (
@@ -110,7 +110,7 @@ provide-module hare %§
         try %[ execute-keys -draft kx <a-k> case\h.*=>\h*$ <ret> j<a-gt> ]
         # deindent closing brace(s) when after cursor
         try %[ execute-keys -draft x <a-k> ^\h*[})] <ret> gh / [})] <ret> m <a-S> 1<a-&> ]
-    } }
+    ] ]
 
     define-command -hidden hare-insert-on-new-line %{ evaluate-commands -draft -itersel %{
         try %{ evaluate-commands -draft -save-regs '/"' %{

@@ -20,6 +20,7 @@ define-command jedi-complete -docstring "Complete the current selection" %{
         dir=${kak_opt_jedi_tmp_dir}
         printf %s\\n "evaluate-commands -draft %{ edit! -fifo ${dir}/fifo *jedi-output* }"
         ((
+            trap - INT QUIT
             cd $(dirname ${kak_buffile})
 
             export PYTHONPATH="$kak_opt_jedi_python_path:$PYTHONPATH"

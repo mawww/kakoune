@@ -1,0 +1,1 @@
+source "%val{runtime}/rc/tools/patch.kak"

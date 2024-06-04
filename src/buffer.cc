@@ -47,6 +47,7 @@ Buffer::Buffer(String name, Flags flags, BufferLines lines,
 
     options().get_local_option("eolformat").set(eolformat);
     options().get_local_option("BOM").set(bom);
+    options().get_local_option("readonly").set((bool)(flags & Flags::ReadOnly));
 
     // now we may begin to record undo data
     if (not (flags & Flags::NoUndo))
@@ -219,40 +220,55 @@ void Buffer::reload(BufferLines lines, ByteOrderMark bom, EolFormat eolformat, F
                       [](const StringDataPtr& lhs, const StringDataPtr& rhs)
                       { return lhs->strview() == rhs->strview(); });
 
-        auto it = m_lines.begin();
+        auto read_it = m_lines.begin();
+        auto write_it = m_lines.begin();
         auto new_it = lines.begin();
-        for (auto& [op, len] : diff)
+        for (auto [op, len] : diff)
         {
+            kak_assert(read_it >= write_it);
             if (op == DiffOp::Keep)
             {
-                it += len;
+                if (read_it != write_it)
+                    std::move(read_it, read_it + len, write_it);
+                write_it += len;
+                read_it += len;
                 new_it += len;
             }
             else if (op == DiffOp::Add)
             {
-                const LineCount cur_line = (int)(it - m_lines.begin());
-
+                const LineCount cur_line = (int)(write_it - m_lines.begin());
                 for (LineCount line = 0; line < len; ++line)
                     m_current_undo_group.push_back({Modification::Insert, cur_line + line, *(new_it + (int)line)});
-
                 m_changes.push_back({Change::Insert, cur_line, cur_line + len});
-                m_lines.insert(it, new_it, new_it + len);
-                it = m_lines.begin() + (int)(cur_line + len);
+
+                if (read_it != write_it)
+                {
+                    auto count = std::min(len, static_cast<int>(read_it - write_it));
+                    write_it = std::copy(new_it, new_it + count, write_it);
+                    new_it += count;
+                    if (len == count)
+                        continue;
+                    len -= count;
+                }
+
+                auto read_pos = read_it - m_lines.begin();
+                write_it = m_lines.insert(write_it, new_it, new_it + len) + len;
+                read_it = m_lines.begin() + read_pos + len;
                 new_it += len;
             }
             else if (op == DiffOp::Remove)
             {
-                const LineCount cur_line = (int)(it - m_lines.begin());
-
+                const LineCount cur_line = (int)(write_it - m_lines.begin());
                 for (LineCount line = len-1; line >= 0; --line)
                     m_current_undo_group.push_back({
                         Modification::Erase, cur_line + line,
-                        m_lines.get_storage(cur_line + line)});
+                        *(read_it + (size_t)line)});
 
-                it = m_lines.erase(it, it + len);
+                read_it += len;
                 m_changes.push_back({ Change::Erase, cur_line, cur_line + len });
             }
         }
+        m_lines.erase(write_it, m_lines.end());
     }
 
     commit_undo_group();
@@ -305,10 +321,9 @@ bool Buffer::redo(size_t count)
 {
     throw_if_read_only();
 
-    if (current_history_node().redo_child == HistoryId::Invalid)
+    if (current_history_node().redo_child == HistoryId::Invalid or
+        not m_current_undo_group.empty())
         return false;
-
-    kak_assert(m_current_undo_group.empty());
 
     while (count-- != 0 and current_history_node().redo_child != HistoryId::Invalid)
     {
@@ -415,14 +430,14 @@ BufferRange Buffer::do_insert(BufferCoord pos, StringView content)
         if (content[i] == '\n')
         {
             StringView line = content.substr(start, i + 1 - start);
-            new_lines.push_back(start == 0 ? StringData::create({prefix, line}) : StringData::create({line}));
+            new_lines.push_back(start == 0 ? StringData::create(prefix, line) : StringData::create(line));
             start = i + 1;
         }
     }
     if (start == 0)
-        new_lines.push_back(StringData::create({prefix, content, suffix}));
+        new_lines.push_back(StringData::create(prefix, content, suffix));
     else if (start != content.length() or not suffix.empty())
-        new_lines.push_back(StringData::create({content.substr(start), suffix}));
+        new_lines.push_back(StringData::create(content.substr(start), suffix));
 
     auto line_it = m_lines.begin() + (int)pos.line;
     auto new_lines_it = new_lines.begin();
@@ -451,7 +466,7 @@ BufferCoord Buffer::do_erase(BufferCoord begin, BufferCoord end)
     StringView prefix = m_lines[begin.line].substr(0, begin.column);
     StringView suffix = end.line == line_count() ? StringView{} : m_lines[end.line].substr(end.column);
 
-    auto new_line = (not prefix.empty() or not suffix.empty()) ? StringData::create({prefix, suffix}) : StringDataPtr{};
+    auto new_line = (not prefix.empty() or not suffix.empty()) ? StringData::create(prefix, suffix) : StringDataPtr{};
     m_lines.erase(m_lines.begin() + (int)begin.line, m_lines.begin() + (int)end.line);
 
     m_changes.push_back({ Change::Erase, begin, end });
@@ -676,7 +691,7 @@ String Buffer::debug_description() const
 
 UnitTest test_buffer{[]()
 {
-    auto make_lines = [](auto&&... lines) { return BufferLines{StringData::create({lines})...}; };
+    auto make_lines = [](auto&&... lines) { return BufferLines{StringData::create(lines)...}; };
 
     Buffer empty_buffer("empty", Buffer::Flags::None, make_lines("\n"));
 
@@ -723,7 +738,7 @@ UnitTest test_buffer{[]()
 
 UnitTest test_undo{[]()
 {
-    auto make_lines = [](auto&&... lines) { return BufferLines{StringData::create({lines})...}; };
+    auto make_lines = [](auto&&... lines) { return BufferLines{StringData::create(lines)...}; };
 
     Buffer buffer("test", Buffer::Flags::None, make_lines("allo ?\n", "mais que fais la police\n", " hein ?\n", " youpi\n"));
     auto pos = buffer.end_coord();

@@ -30,6 +30,8 @@ enum class Hook
     BufSetOption,
     ClientCreate,
     ClientClose,
+    ClientRenamed,
+    SessionRenamed,
     InsertChar,
     InsertDelete,
     InsertIdle,
@@ -75,6 +77,8 @@ constexpr auto enum_desc(Meta::Type<Hook>)
         {Hook::BufSetOption, "BufSetOption"},
         {Hook::ClientCreate, "ClientCreate"},
         {Hook::ClientClose, "ClientClose"},
+        {Hook::ClientRenamed, "ClientRenamed"},
+        {Hook::SessionRenamed, "SessionRenamed"},
         {Hook::InsertChar, "InsertChar"},
         {Hook::InsertDelete, "InsertDelete"},
         {Hook::InsertIdle, "InsertIdle"},
@@ -118,6 +122,8 @@ class HookManager : public SafeCountable
 public:
     HookManager(HookManager& parent);
     ~HookManager();
+
+    void reparent(HookManager& parent) { m_parent = &parent; }
 
     void add_hook(Hook hook, String group, HookFlags flags,
                   Regex filter, String commands, Context& context);

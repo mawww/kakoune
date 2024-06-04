@@ -1,0 +1,5 @@
+ui_out -ignore 7
+ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ ":eval %{ exec %{:echo -} }<ret>" ] }'
+ui_out -ignore 5
+ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "markup 123<ret>" ] }'
+ui_out -until-grep '"method": "draw_status", .* "contents": "123"' >/dev/null

@@ -45,8 +45,8 @@ static int count_word_boundaries_match(StringView candidate, StringView query)
     {
         const Codepoint c = *it;
         const bool is_word_boundary = prev == 0 or
-                                      (!iswalnum((wchar_t)prev) and iswalnum((wchar_t)c)) or
-                                      (iswlower((wchar_t)prev) and iswupper((wchar_t)c));
+                                      (!is_word(prev, {}) and is_word(c, {})) or
+                                      (is_lower(prev) and is_upper(c));
         prev = c;
 
         if (not is_word_boundary)
@@ -56,7 +56,7 @@ static int count_word_boundaries_match(StringView candidate, StringView query)
         for (auto qit = query_it; qit != query.end(); ++qit)
         {
             const Codepoint qc = *qit;
-            if (qc == (iswlower((wchar_t)qc) ? lc  : c))
+            if (qc == (is_lower(qc) ? lc  : c))
             {
                 ++count;
                 query_it = qit+1;
@@ -71,7 +71,7 @@ static int count_word_boundaries_match(StringView candidate, StringView query)
 
 static bool smartcase_eq(Codepoint candidate, Codepoint query)
 {
-    return query == (iswlower((wchar_t)query) ? to_lower(candidate) : candidate);
+    return query == (is_lower(query) ? to_lower(candidate) : candidate);
 }
 
 struct SubseqRes

@@ -367,16 +367,16 @@ template<typename RegexGetter, typename FaceGetter>
 class DynamicRegexHighlighter : public Highlighter
 {
 public:
-    DynamicRegexHighlighter(RegexGetter regex_getter, FaceGetter face_getter)
+    DynamicRegexHighlighter(RegexGetter get_regex, FaceGetter resolve_faces)
       : Highlighter{HighlightPass::Colorize},
-        m_regex_getter(std::move(regex_getter)),
-        m_face_getter(std::move(face_getter)),
+        m_get_regex(std::move(get_regex)),
+        m_resolve_faces(std::move(resolve_faces)),
         m_highlighter(Regex{}, FacesSpec{}) {}
 
     void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range) override
     {
-        Regex regex = m_regex_getter(context.context);
-        FacesSpec face = regex.empty() ? FacesSpec{} : m_face_getter(context.context, regex);
+        Regex regex = m_get_regex(context.context);
+        FacesSpec face = regex.empty() ? FacesSpec{} : m_resolve_faces(regex);
         if (regex != m_last_regex or face != m_last_face)
         {
             m_last_regex = std::move(regex);
@@ -390,10 +390,10 @@ public:
 
 private:
     Regex       m_last_regex;
-    RegexGetter m_regex_getter;
+    RegexGetter m_get_regex;
 
     FacesSpec   m_last_face;
-    FaceGetter  m_face_getter;
+    FaceGetter  m_resolve_faces;
 
     RegexHighlighter m_highlighter;
 };
@@ -418,12 +418,12 @@ std::unique_ptr<Highlighter> create_dynamic_regex_highlighter(HighlighterParamet
         faces.emplace_back(String{spec.begin(), colon}, parse_face({colon+1, spec.end()}));
     }
 
-    auto make_hl = [](auto& regex_getter, auto& face_getter) {
-        return std::make_unique<DynamicRegexHighlighter<std::remove_cvref_t<decltype(regex_getter)>,
-                                                        std::remove_cvref_t<decltype(face_getter)>>>(
-            std::move(regex_getter), std::move(face_getter));
+    auto make_hl = [](auto& get_regex, auto& resolve_faces) {
+        return std::make_unique<DynamicRegexHighlighter<std::remove_cvref_t<decltype(get_regex)>,
+                                                        std::remove_cvref_t<decltype(resolve_faces)>>>(
+            std::move(get_regex), std::move(resolve_faces));
     };
-    auto get_face = [faces=std::move(faces)](const Context& context, const Regex& regex){
+    auto resolve_faces = [faces=std::move(faces)](const Regex& regex){
         FacesSpec spec;
         for (auto& face : faces)
         {
@@ -450,7 +450,7 @@ std::unique_ptr<Highlighter> create_dynamic_regex_highlighter(HighlighterParamet
         auto get_regex = [option_name = token->content](const Context& context) {
             return context.options()[option_name].get<Regex>();
         };
-        return make_hl(get_regex, get_face);
+        return make_hl(get_regex, resolve_faces);
     }
 
     auto get_regex = [expr = params[0]](const Context& context){
@@ -465,7 +465,7 @@ std::unique_ptr<Highlighter> create_dynamic_regex_highlighter(HighlighterParamet
             return Regex{};
         }
     };
-    return make_hl(get_regex, get_face);
+    return make_hl(get_regex, resolve_faces);
 }
 
 const HighlighterDesc line_desc = {
@@ -719,7 +719,7 @@ struct WrapHighlighter : Highlighter
         const ColumnCount marker_len = zero_if_greater(m_marker.column_length(), wrap_column);
 
         for (auto buf_line = setup.first_line, win_line = 0_line;
-             win_line < win_height or buf_line <= cursor.line;
+             win_line < win_height or (setup.ensure_cursor_visible and buf_line <= cursor.line);
              ++buf_line, ++setup.line_count)
         {
             if (buf_line >= buffer.line_count())
@@ -954,7 +954,7 @@ struct TabulationHighlighter : Highlighter
 };
 
 const HighlighterDesc show_whitespace_desc = {
-    "Parameters: [-tab <separator>] [-tabpad <separator>] [-lf <separator>] [-spc <separator>] [-nbsp <separator>]\n"
+    "Parameters: [-tab <separator>] [-tabpad <separator>] [-lf <separator>] [-spc <separator>] [-nbsp <separator>] [-indent <separator>]\n"
     "Display whitespaces using symbols",
     { {
         { "tab",    { ArgCompleter{}, "replace tabulations with the given character" } },
@@ -962,15 +962,16 @@ const HighlighterDesc show_whitespace_desc = {
         { "spc",    { ArgCompleter{}, "replace spaces with the given character" } },
         { "lf",     { ArgCompleter{}, "replace line feeds with the given character" } },
         { "nbsp",   { ArgCompleter{}, "replace non-breakable spaces with the given character" } },
+        { "indent", { ArgCompleter{}, "replace first space of every indent with the given character according to `indentwidth`" } },
         { "only-trailing", { {}, "only highlighting trailing whitespaces" } } },
         ParameterDesc::Flags::None, 0, 0
     }
 };
 struct ShowWhitespacesHighlighter : Highlighter
 {
-    ShowWhitespacesHighlighter(String tab, String tabpad, String spc, String lf, String nbsp, bool only_trailing)
+    ShowWhitespacesHighlighter(String tab, String tabpad, String spc, String lf, String nbsp, String indent, bool only_trailing)
       : Highlighter{HighlightPass::Move}, m_tab{std::move(tab)}, m_tabpad{std::move(tabpad)},
-        m_spc{std::move(spc)}, m_lf{std::move(lf)}, m_nbsp{std::move(nbsp)}, m_only_trailing{std::move(only_trailing)}
+        m_spc{std::move(spc)}, m_lf{std::move(lf)}, m_nbsp{std::move(nbsp)}, m_indent{std::move(indent)}, m_only_trailing{std::move(only_trailing)}
     {}
 
     static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
@@ -985,19 +986,26 @@ struct ShowWhitespacesHighlighter : Highlighter
             return value.str();
         };
 
+        String indent = parser.get_switch("indent").value_or("│").str();
+        if (indent.char_length() > 1)
+            throw runtime_error{format("-indent expects a single character or empty parameter")};
+
         return std::make_unique<ShowWhitespacesHighlighter>(
             get_param("tab", "→"), get_param("tabpad", " "), get_param("spc", "·"),
-            get_param("lf", "¬"), get_param("nbsp", "⍽"), only_trailing);
+            get_param("lf", "¬"), get_param("nbsp", "⍽"), indent, only_trailing);
     }
 
 private:
     void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange) override
     {
         const int tabstop = context.context.options()["tabstop"].get<int>();
+        const int indentwidth = context.context.options()["indentwidth"].get<int>();
         auto whitespaceface = context.context.faces()["Whitespace"];
+        auto indentface = context.context.faces()["WhitespaceIndent"];
         const auto& buffer = context.context.buffer();
         for (auto& line : display_buffer.lines())
         {
+            bool is_indentation = true;
             for (auto atom_it = line.begin(); atom_it != line.end(); ++atom_it)
             {
                 if (atom_it->type() != DisplayAtom::Range)
@@ -1024,6 +1032,7 @@ private:
                 {
                     auto coord = it.coord();
                     Codepoint cp = utf8::read_codepoint(it, end);
+                    auto face = whitespaceface;
                     if (is_whitespace(cp))
                     {
                         if (m_only_trailing and it.coord() <= last_non_space)
@@ -1040,21 +1049,36 @@ private:
                             const ColumnCount count = tabstop - (column % tabstop);
                             atom_it->replace(m_tab + String(m_tabpad[(CharCount)0], count - m_tab.column_length()));
                         }
-                        else if (cp == ' ')
-                            atom_it->replace(m_spc);
+                        else if (cp == ' ') {
+                            if (m_indent.empty() or indentwidth == 0 or not is_indentation) {
+                                atom_it->replace(m_spc);
+                            } else {
+                                const ColumnCount column = get_column(buffer, tabstop, coord);
+                                if (column % indentwidth == 0 and column != 0) {
+                                    atom_it->replace(m_indent);
+                                    face = indentface;
+                                } else  {
+                                    atom_it->replace(m_spc);
+                                }
+                            }
+                        }
                         else if (cp == '\n')
                             atom_it->replace(m_lf);
                         else if (cp == 0xA0 or cp == 0x202F)
                             atom_it->replace(m_nbsp);
-                        atom_it->face = merge_faces(atom_it->face, whitespaceface);
+                        atom_it->face = merge_faces(atom_it->face, face);
                         break;
+                    }
+                    else
+                    {
+                        is_indentation = false;
                     }
                 }
             }
         }
     }
 
-    const String m_tab, m_tabpad, m_spc, m_lf, m_nbsp;
+    const String m_tab, m_tabpad, m_spc, m_lf, m_nbsp, m_indent;
     const bool m_only_trailing;
 };
 
@@ -1368,23 +1392,26 @@ const HighlighterDesc flag_lines_desc = {
 };
 struct FlagLinesHighlighter : Highlighter
 {
-    FlagLinesHighlighter(String option_name, String default_face)
+    FlagLinesHighlighter(String option_name, String default_face, bool after)
         : Highlighter{HighlightPass::Move},
           m_option_name{std::move(option_name)},
-          m_default_face{std::move(default_face)} {}
+          m_default_face{std::move(default_face)},
+          m_after(after) {}
 
     static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
     {
-        if (params.size() != 2)
-            throw runtime_error("wrong parameter count");
+        ParametersParser parser{params, {
+            {{"after", {{}, "display at line end" }}},
+            ParameterDesc::Flags::SwitchesOnlyAtStart, 2, 2
+        }};
 
-        const String& option_name = params[1];
-        const String& default_face = params[0];
+        const String& default_face = parser[0];
+        const String& option_name = parser[1];
 
         // throw if wrong option type
         GlobalScope::instance().options()[option_name].get<LineAndSpecList>();
 
-        return std::make_unique<FlagLinesHighlighter>(option_name, default_face);
+        return std::make_unique<FlagLinesHighlighter>(option_name, default_face, (bool)parser.get_switch("after"));
     }
 
 private:
@@ -1422,6 +1449,17 @@ private:
             auto it = find_if(lines,
                               [&](const LineAndSpec& l)
                               { return std::get<0>(l) == line_num; });
+            if (m_after)
+            {
+                if (it != lines.end())
+                {
+                    DisplayLine& display_line = display_lines[it - lines.begin()];
+                    std::copy(std::make_move_iterator(display_line.begin()),
+                              std::make_move_iterator(display_line.end()),
+                              std::inserter(line, line.end()));
+                }
+                continue;
+            }
             if (it == lines.end())
                 line.insert(line.begin(), empty);
             else
@@ -1440,6 +1478,9 @@ private:
 
     void do_compute_display_setup(HighlightContext context, DisplaySetup& setup) const override
     {
+        if (m_after)
+            return;
+
         auto& line_flags = context.context.options()[m_option_name].get_mutable<LineAndSpecList>();
         const auto& buffer = context.context.buffer();
         update_line_specs_ifn(buffer, line_flags);
@@ -1461,6 +1502,7 @@ private:
 
     String m_option_name;
     String m_default_face;
+    bool m_after;
 };
 
 bool is_empty(const InclusiveBufferRange& range)
@@ -1997,7 +2039,10 @@ public:
         if (id == m_default_region)
             m_default_region = String{};
 
-        m_regions.remove(id);
+        auto it = m_regions.find(id);
+        if (it == m_regions.end())
+            throw child_not_found(format("no such id: {}", id));
+        m_regions.remove(it);
         ++m_regions_timestamp;
     }
 

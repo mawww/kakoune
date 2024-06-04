@@ -26,9 +26,9 @@ define-command -hidden -params 2.. tmux-terminal-impl %{
         # ideally we should escape single ';' to stop tmux from interpreting it as a new command
         # but that's probably too rare to care
         if [ -n "$TMPDIR" ]; then
-            TMUX=$tmux tmux $tmux_args env TMPDIR="$TMPDIR" "$@" < /dev/null > /dev/null 2>&1 &
+            TMUX=$tmux tmux $tmux_args env TMPDIR="$TMPDIR" "$@"
         else
-            TMUX=$tmux tmux $tmux_args "$@" < /dev/null > /dev/null 2>&1 &
+            TMUX=$tmux tmux $tmux_args "$@"
         fi
     }
 }

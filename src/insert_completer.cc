@@ -403,7 +403,10 @@ InsertCompletion complete_line(const SelectionList& sels,
 }
 
 InsertCompleter::InsertCompleter(Context& context)
-    : m_context(context), m_options(context.options()), m_faces(context.faces())
+    : m_context(context),
+      // local scopes might go away before completion ends, make sure to register on a long lived one
+      m_options(context.scope(false).options()),
+      m_faces(context.scope(false).faces())
 {
     m_options.register_watcher(*this);
 }
@@ -413,7 +416,7 @@ InsertCompleter::~InsertCompleter()
     m_options.unregister_watcher(*this);
 }
 
-void InsertCompleter::select(int index, bool relative, Vector<Key>& keystrokes)
+void InsertCompleter::select(int index, bool relative, Vector<Key>* keystrokes)
 {
     m_enabled = true;
     if (not setup_ifn())
@@ -450,12 +453,15 @@ void InsertCompleter::select(int index, bool relative, Vector<Key>& keystrokes)
         m_context.client().menu_select(m_current_candidate);
     }
 
-    for (auto i = 0_byte; i < prefix_len; ++i)
-        keystrokes.emplace_back(Key::Backspace);
-    for (auto i = 0_byte; i < suffix_len; ++i)
-        keystrokes.emplace_back(Key::Delete);
-    for (auto& c : candidate.completion)
-        keystrokes.emplace_back(c);
+    if (keystrokes)
+    {
+        for (auto i = 0_byte; i < prefix_len; ++i)
+            keystrokes->emplace_back(Key::Backspace);
+        for (auto i = 0_byte; i < suffix_len; ++i)
+            keystrokes->emplace_back(Key::Delete);
+        for (auto& c : candidate.completion)
+            keystrokes->emplace_back(c);
+    }
 
     if (not candidate.on_select.empty())
         CommandManager::instance().execute(candidate.on_select, m_context);

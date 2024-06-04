@@ -16,6 +16,7 @@ define-command racer-complete -docstring "Complete the current selection with ra
     evaluate-commands %sh{
         dir=${kak_opt_racer_tmp_dir}
         (
+            trap - INT QUIT
             cursor="${kak_cursor_line} $((${kak_cursor_column} - 1))"
             racer_data=$(racer --interface tab-text complete-with-snippet ${cursor} ${kak_buffile} ${dir}/buf)
             compl=$(printf %s\\n "${racer_data}" | awk '

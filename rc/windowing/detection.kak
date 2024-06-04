@@ -23,7 +23,7 @@ declare-option -docstring \
 "Ordered list of windowing modules to try and load. An empty list disables
 both automatic module loading and environment detection, enabling complete
 manual control of the module loading." \
-str-list windowing_modules 'tmux' 'screen' 'zellij' 'kitty' 'iterm' 'sway' 'wayland' 'x11' 'wezterm'
+str-list windowing_modules 'tmux' 'screen' 'zellij' 'kitty' 'iterm' 'appleterminal' 'sway' 'wayland' 'x11' 'wezterm'
 
 declare-option -docstring %{
     windowing module to use in the 'terminal' command
@@ -48,31 +48,13 @@ define-command terminal -params 1.. -docstring %{
     Example usage:
 
         terminal sh
-        with-option windowing_placement horizontal terminal sh
+        evaluate-commands %{ set local windowing_placement horizontal; terminal sh }
 
     See also the 'new' command.
 } %{
     "%opt{windowing_module}-terminal-%opt{windowing_placement}" %arg{@}
 }
 complete-command terminal shell
-
-# TODO Move this?
-define-command with-option -params 3.. -docstring %{
-    with-option <option_name> <new_value> <command> [<arguments>]: evaluate a command with a modified option
-} %{
-    evaluate-commands -save-regs s %{
-        evaluate-commands set-register s %exp{%%opt{%arg{1}}}
-        set-option current %arg{1} %arg{2}
-        evaluate-commands %sh{
-            shift 2
-            for arg
-            do
-                printf "'%s' " "$(printf %s "$arg" | sed "s/'/''/g")"
-            done
-        }
-        set-option current %arg{1} %reg{s}
-    }
-}
 
 hook -group windowing global KakBegin .* %{
     evaluate-commands %sh{

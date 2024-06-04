@@ -162,7 +162,7 @@ evaluate-commands %sh{ exec awk -f - <<'EOF'
         # unprefixed decimals
         add_highlighter("(?<![" normal_identifiers "])(\\d+(\\.\\d*)?|\\.\\d+)(?:[esfdlESFDL][-+]?\\d+)?(?![" normal_identifiers "])", "0:value");
         # inf and nan
-        add_highlighter("(?<![" normal_identifiers "])[+-](?:inf|nan)\.0(?![" normal_identifiers "])", "0:value");
+        add_highlighter("(?<![" normal_identifiers "])[+-](?:inf|nan)\\.0(?![" normal_identifiers "])", "0:value");
     }
 EOF
 }
