@@ -481,7 +481,7 @@ private:
         const int16_t first_inst = forward ? 0 : m_program.first_backward_inst;
         m_threads.push_current({first_inst, -1});
 
-        const auto& start_desc = forward ? m_program.forward_start_desc : m_program.backward_start_desc;
+        const auto* start_desc = (forward ? m_program.forward_start_desc : m_program.backward_start_desc).get();
         auto next_start = pos;
 
         constexpr bool search = mode & RegexMode::Search;
@@ -647,8 +647,6 @@ private:
         }
     }
 
-    const CompiledRegex& m_program;
-
     struct DualThreadStack
     {
         bool current_is_empty() const { return m_current == m_next_begin; }
@@ -721,6 +719,7 @@ private:
 
     static constexpr bool forward = mode & RegexMode::Forward;
 
+    const CompiledRegex& m_program;
     DualThreadStack m_threads;
     Vector<Saves, MemoryDomain::Regex> m_saves;
     int16_t m_first_free = -1;

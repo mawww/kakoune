@@ -479,6 +479,12 @@ Searches use the */* register by default (See <<registers#,`:doc registers`>>)
     *b*:::
         scroll to put the main selection on the bottom line of the window
 
+    *<*:::
+        scroll to put the main cursor on the leftmost column of the window
+
+    *>*:::
+        scroll to put the main cursor on the rightmost column of the window
+
     *h*:::
         scroll the window `count` columns left
 

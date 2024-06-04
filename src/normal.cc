@@ -399,6 +399,13 @@ void view_commands(Context& context, NormalParams params)
         case 'b':
             window.display_line_at(cursor.line, window.dimensions().line-1);
             break;
+        case '<':
+            window.display_column_at(context.buffer()[cursor.line].column_count_to(cursor.column), 0);
+            break;
+        case '>':
+            window.display_column_at(context.buffer()[cursor.line].column_count_to(cursor.column),
+                                     window.dimensions().column-1);
+            break;
         case 'h':
             window.scroll(-std::max<ColumnCount>(1, count));
             break;
@@ -420,6 +427,8 @@ void view_commands(Context& context, NormalParams params)
          {{'m'},     "center cursor (horizontally)"},
          {{'t'},     "cursor on top"},
          {{'b'},     "cursor on bottom"},
+         {{'<'},     "cursor on left"},
+         {{'>'},     "cursor on right"},
          {{'h'},     "scroll left"},
          {{'j'},     "scroll down"},
          {{'k'},     "scroll up"},
