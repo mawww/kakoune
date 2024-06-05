@@ -64,24 +64,28 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui, int pi
                                 std::move(on_exit)};
     m_clients.emplace_back(client);
 
+    auto& context = client->context();
+    if (buffer->name() == "*scratch*")
+        context.print_status({"This *scratch* buffer won't be automatically saved",
+                              context.faces()["Information"]});
+
     if (init_coord)
     {
-        auto& selections = client->context().selections_write_only();
+        auto& selections = context.selections_write_only();
         selections = SelectionList(*buffer, buffer->clamp(*init_coord));
-        client->context().window().center_line(init_coord->line);
+        context.window().center_line(init_coord->line);
     }
 
     try
     {
-        auto& context = client->context();
         context.hooks().run_hook(Hook::ClientCreate, context.name(), context);
         CommandManager::instance().execute(init_cmds, context);
     }
     catch (Kakoune::runtime_error& error)
     {
-        client->context().print_status({error.what().str(), client->context().faces()["Error"]});
-        client->context().hooks().run_hook(Hook::RuntimeError, error.what(),
-                                           client->context());
+        context.print_status({error.what().str(), context.faces()["Error"]});
+        context.hooks().run_hook(Hook::RuntimeError, error.what(),
+                                           context);
     }
 
     // Do not return the client if it already got moved to the trash
