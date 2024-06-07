@@ -3,6 +3,10 @@
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
+== Development version
+
+* Expose env vars that are mentionned in the arguments passed to shell expansions
+
 == Kakoune 2024.05.18
 
 * Fixed tests on Alpine Linux and *BSD
