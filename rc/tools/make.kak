@@ -5,24 +5,23 @@ declare-option -docstring "pattern that describes lines containing information a
 
 provide-module make %{
 
+require-module fifo
 require-module jump
 
-define-command -params .. \
-    -docstring %{
-        make [<arguments>]: make utility wrapper
-        All the optional arguments are forwarded to the make utility
-     } make %{ evaluate-commands %sh{
-     output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-make.XXXXXXXX)/fifo
-     mkfifo ${output}
-     ( { trap - INT QUIT; eval "${kak_opt_makecmd}" "$@"; } > ${output} 2>&1 & ) > /dev/null 2>&1 < /dev/null
-
-     printf %s\\n "evaluate-commands -try-client '$kak_opt_toolsclient' %{
-               edit! -fifo ${output} -scroll *make*
-               set-option buffer filetype make
-               set-option buffer jump_current_line 0
-               hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname ${output}) } }
-           }"
-}}
+define-command -params .. -docstring %{
+    make [<arguments>]: make utility wrapper
+    All the optional arguments are forwarded to the make utility
+} make %{
+    evaluate-commands -try-client %opt{toolsclient} %{
+        fifo -scroll -name *make* %{
+            shift 2
+            trap - INT QUIT
+            $kak_opt_makecmd "$@"
+        } 'exit;' %arg{@} # pass arguments for "$@" above, exit to avoid evaluating them
+        set-option buffer filetype make
+        set-option buffer jump_current_line 0
+    }
+}
 
 add-highlighter shared/make group
 add-highlighter shared/make/ regex "^([^:\n]+):(\d+):(?:(\d+):)?\h+(?:((?:fatal )?error)|(warning)|(note)|(required from(?: here)?))?.*?$" 1:cyan 2:green 3:green 4:red 5:yellow 6:blue 7:yellow
