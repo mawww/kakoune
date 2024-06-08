@@ -2,6 +2,7 @@
 #define string_hh_INCLUDED
 
 #include <bit>
+#include <cstring>
 #include "memory.hh"
 #include "hash.hh"
 #include "units.hh"

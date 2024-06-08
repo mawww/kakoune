@@ -1,7 +1,6 @@
 #include "string.hh"
 
 #include <cstdio>
-#include <cstring>
 #include "assert.hh"
 #include "unit_tests.hh"
 
