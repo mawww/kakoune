@@ -82,6 +82,8 @@ static constexpr KeyAndName keynamemap[] = {
     { "minus", '-' },
     { "semicolon", ';' },
     { "percent", '%' },
+    { "quote", '\'' },
+    { "dquote", '"' },
     { "focus_in", Key::FocusIn },
     { "focus_out", Key::FocusOut },
 };

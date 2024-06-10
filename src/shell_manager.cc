@@ -141,30 +141,35 @@ Shell spawn_shell(const char* shell, StringView cmdline,
 }
 
 template<typename GetValue>
-Vector<String> generate_env(StringView cmdline, const Context& context, GetValue&& get_value)
+Vector<String> generate_env(StringView cmdline, ConstArrayView<String> params, const Context& context, GetValue&& get_value)
 {
     static const Regex re(R"(\bkak_(quoted_)?(\w+)\b)");
 
     Vector<String> env;
-    for (auto&& match : RegexIterator{cmdline.begin(), cmdline.end(), re})
-    {
-        StringView name{match[2].first, match[2].second};
-        StringView shell_name{match[0].first, match[0].second};
-
-        auto match_name = [&](const String& s) {
-            return s.substr(0_byte, shell_name.length()) == shell_name and
-                   s.substr(shell_name.length(), 1_byte) == "=";
-        };
-        if (any_of(env, match_name))
-            continue;
-
-        try
+    auto add_matches = [&](StringView s) {
+        for (auto&& match : RegexIterator{s.begin(), s.end(), re})
         {
-            StringView quoted{match[1].first, match[1].second};
-            Quoting quoting = match[1].matched ? Quoting::Shell : Quoting::Raw;
-            env.push_back(format("kak_{}{}={}", quoted, name, get_value(name, quoting)));
-        } catch (runtime_error&) {}
-    }
+            StringView name{match[2].first, match[2].second};
+            StringView shell_name{match[0].first, match[0].second};
+
+            auto match_name = [&](const String& s) {
+                return s.substr(0_byte, shell_name.length()) == shell_name and
+                       s.substr(shell_name.length(), 1_byte) == "=";
+            };
+            if (any_of(env, match_name))
+                continue;
+
+            try
+            {
+                StringView quoted{match[1].first, match[1].second};
+                Quoting quoting = match[1].matched ? Quoting::Shell : Quoting::Raw;
+                env.push_back(format("kak_{}{}={}", quoted, name, get_value(name, quoting)));
+            } catch (runtime_error&) {}
+        }
+    };
+    add_matches(cmdline);
+    for (auto&& param : params)
+        add_matches(param);
 
     return env;
 }
@@ -265,13 +270,13 @@ std::pair<String, int> ShellManager::eval(
     const DebugFlags debug_flags = context.options()["debug"].get<DebugFlags>();
     const bool profile = debug_flags & DebugFlags::Profile;
     if (debug_flags & DebugFlags::Shell)
-        write_to_debug_buffer(format("shell:\n{}\n----\n", cmdline));
+        write_to_debug_buffer(format("shell:\n{}\n----\nargs: {}\n----\n", cmdline, join(shell_context.params | transform(shell_quote), ' ')));
 
     auto start_time = profile ? Clock::now() : Clock::time_point{};
 
     Optional<CommandFifos> command_fifos;
 
-    auto kak_env = generate_env(cmdline, context, [&](StringView name, Quoting quoting) {
+    auto kak_env = generate_env(cmdline, shell_context.params, context, [&](StringView name, Quoting quoting) {
         if (name == "command_fifo" or name == "response_fifo")
         {
             if (not command_fifos)
@@ -377,7 +382,7 @@ std::pair<String, int> ShellManager::eval(
 Shell ShellManager::spawn(StringView cmdline, const Context& context,
                           bool open_stdin, const ShellContext& shell_context)
 {
-    auto kak_env = generate_env(cmdline, context, [&](StringView name, Quoting quoting) {
+    auto kak_env = generate_env(cmdline, shell_context.params, context, [&](StringView name, Quoting quoting) {
         if (auto it = shell_context.env_vars.find(name); it != shell_context.env_vars.end())
             return it->value;
         return join(get_val(name, context) | transform(quoter(quoting)), ' ', false);
