@@ -167,24 +167,7 @@ define-command -hidden python-insert-on-new-line %{ evaluate-commands -itersel -
     execute-keys <semicolon>
     try %{
         evaluate-commands -draft -save-regs '/"' %{
-            # Handle block comment continuation/termination.
-            #
-            # This code applies in the context where we have a new line
-            # inserted, and the previous line is a block comment (i.e. a line
-            # that matches '^\h*#+\h*\S*$'). We assume that the comment will
-            # be continued, so we copy the prefix (all leading whitespace, any
-            # '#' characters, and then any additional whitespace before the
-            # next non-whitespace character) into the new line.
-            #
-            # PEP8's text on block comments says they can include an empty
-            # comment (i.e. '^\h*#+\h*$') as a paragraph separator - we
-            # leave a single empty comment as-is, to allow paragraph breaks,
-            # but if we see two consecutive empty comments we exit the
-            # comment block and delete the empty comments.
-            # Reference: https://peps.python.org/pep-0008/#block-comments
-            #
-            # first, make sure we're in the right context - don't wrap this
-            # in a try/catch so we fail out immediately
+            # Ensure previous line is a comment
             execute-keys -draft kxs^\h*#+\h*<ret>
 
             # now handle the coment continuation logic
