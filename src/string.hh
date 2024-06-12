@@ -1,12 +1,13 @@
 #ifndef string_hh_INCLUDED
 #define string_hh_INCLUDED
 
+#include <climits>
+#include <cstddef>
 #include "memory.hh"
 #include "hash.hh"
 #include "units.hh"
 #include "utf8.hh"
 
-#include <climits>
 
 namespace Kakoune
 {
@@ -156,17 +157,22 @@ public:
 
     // String data storage using small string optimization.
     //
-    // the LSB of the last byte is used to flag if we are using the small buffer
-    // or an allocated one. On big endian systems that means the allocated
-    // capacity must be pair, on little endian systems that means the allocated
-    // capacity cannot use its most significant byte, so we effectively limit
-    // capacity to 2^24 on 32bit arch, and 2^60 on 64.
+    // The MSB of the last byte is used to flag if we are using the allocated buffer
+    // (1) or in-situ storage, the small one (0). That means the allocated capacity
+    // cannot use its most significant byte, so we effectively limit capacity to
+    // 2^24 on 32bit arch, and 2^56 on 64bit.
+    //
+    // There is also a special NoCopy mode in which the data referred to is un-owned.
+    // It is indicated by being in Long mode with capacity == 0.
     struct Data
     {
         using Alloc = Allocator<char, MemoryDomain::String>;
 
         Data() { set_empty(); }
-        Data(NoCopy, const char* data, size_t size) : u{Long{const_cast<char*>(data), size, 0}} {}
+        Data(NoCopy, const char* data, size_t size) : u{Long{const_cast<char*>(data), 
+                                                             size,
+                                                             /*capacity=*/0, 
+                                                             /*mode=*/Long::active_mask}} {}
 
         Data(const char* data, size_t size, size_t capacity);
         Data(const char* data, size_t size) : Data(data, size, size) {}
@@ -177,8 +183,8 @@ public:
         Data& operator=(const Data& other);
         Data& operator=(Data&& other) noexcept;
 
-        bool is_long() const { return (u.s.size & 1) == 0; }
-        size_t size() const { return is_long() ? u.l.size : (u.s.size >> 1); }
+        bool is_long() const { return (u.l.mode& Long::active_mask) > 0; }
+        size_t size() const { return is_long() ? u.l.size : (Short::capacity - u.s.remaining_size); }
         size_t capacity() const { return is_long() ? u.l.capacity : Short::capacity; }
 
         const char* data() const { return is_long() ? u.l.ptr : u.s.string; }
@@ -195,18 +201,23 @@ public:
         struct Long
         {
             static constexpr size_t max_capacity =
-                (size_t)1 << 8 * (sizeof(size_t) - 1);
+                ((size_t)1 << (CHAR_BIT * (sizeof(size_t) - 1))) - 1;
 
             char* ptr;
             size_t size;
-            size_t capacity;
+            size_t capacity: (sizeof(size_t) - 1) *CHAR_BIT;
+            unsigned char mode;
+            static constexpr unsigned char active_mask = 0b1000'0000;
         };
 
         struct Short
         {
-            static constexpr size_t capacity = sizeof(Long) - 2;
-            char string[capacity+1];
-            unsigned char size;
+            static constexpr size_t capacity = sizeof(Long) - 1;
+            char string[capacity];
+            // When string is full remaining_size will be 0 and be the null terminator.
+            // When string is empty remaining size will be 23 (0b00010111)
+            // and not collide with Long::active_mask.
+            unsigned char remaining_size;
         };
 
         union
@@ -217,11 +228,11 @@ public:
 
         void release()
         {
-            if (is_long() and u.l.capacity != 0)
+            if (is_long() and (u.l.capacity != 0))
                 Alloc{}.deallocate(u.l.ptr, u.l.capacity+1);
         }
 
-        void set_empty() { u.s.size = 1; u.s.string[0] = 0; }
+        void set_empty() { u.s.remaining_size = Short::capacity; u.s.string[0] = '\0'; }
         void set_short(const char* data, size_t size);
     };
 
