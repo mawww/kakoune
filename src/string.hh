@@ -200,15 +200,16 @@ public:
     private:
         struct Long
         {
-            static constexpr size_t max_capacity =
-                ((size_t)1 << (CHAR_BIT * (sizeof(size_t) - 1))) - 1;
+            static constexpr size_t capacity_bits = CHAR_BIT * (sizeof(size_t) - 1);
+            static constexpr size_t max_capacity = ((size_t)1 << capacity_bits) - 1;
 
             char* ptr;
             size_t size;
-            size_t capacity: (sizeof(size_t) - 1) *CHAR_BIT;
+            size_t capacity : capacity_bits;
             unsigned char mode;
             static constexpr unsigned char active_mask = 0b1000'0000;
         };
+        static_assert(sizeof(Long) == sizeof(char*) * 3);
 
         struct Short
         {
@@ -219,6 +220,7 @@ public:
             // and not collide with Long::active_mask.
             unsigned char remaining_size;
         };
+        static_assert(offsetof(Long, mode) == offsetof(Short, remaining_size));
 
         union
         {
