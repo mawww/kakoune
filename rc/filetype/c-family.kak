@@ -222,6 +222,13 @@ evaluate-commands %sh{
     done
 }
 
+# Operators for c cpp objc
+evaluate-commands %sh{
+    for ft in c cpp objc; do
+        printf "%s\n" "add-highlighter shared/$ft/code/ regex %{\W} 0:operator"
+    done
+}
+
 # c specific
 add-highlighter shared/c/code/numbers regex %{\b-?(0[xX][0-9a-fA-F]+|\d+)([uU][lL]{0,2}|[lL]{1,2}[uU]?|[fFdDiI]|([eE][-+]?\d+))?|'((\\.)?|[^'\\])'} 0:value
 evaluate-commands %sh{
