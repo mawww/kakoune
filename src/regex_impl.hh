@@ -54,11 +54,11 @@ struct CharacterClass
         if (ignore_case)
             cp = to_lower(cp);
 
-        for (auto& range : ranges)
+        for (auto& [min, max] : ranges)
         {
-            if (cp < range.min)
+            if (cp < min)
                 break;
-            else if (cp <= range.max)
+            else if (cp <= max)
                 return not negative;
         }
 
@@ -370,8 +370,7 @@ private:
 
     // Steps a thread until it consumes the current character, matches or fail
     [[gnu::always_inline]]
-    void step_thread(const Iterator& pos, Codepoint cp,
-                     uint16_t current_step, Thread thread, const ExecConfig& config)
+    void step_thread(const Iterator& pos, Codepoint cp, uint16_t current_step, Thread thread, const ExecConfig& config)
     {
         auto failed = [this, &thread]() {
             release_saves(thread.saves);
@@ -416,13 +415,14 @@ private:
                         return consumed();
                     return failed();
                 case CompiledRegex::CharClass:
-                    if (pos == config.end)
-                        return failed();
-                    return m_program.character_classes[inst.param.character_class_index].matches(cp) ? consumed() : failed();
+                    if (pos != config.end and
+                        m_program.character_classes[inst.param.character_class_index].matches(cp))
+                        return consumed();
+                    return failed();
                 case CompiledRegex::CharType:
-                    if (pos == config.end)
-                        return failed();
-                    return is_ctype(inst.param.character_type, cp) ? consumed() : failed();
+                    if (pos != config.end and is_ctype(inst.param.character_type, cp))
+                        return consumed();
+                    return failed();
                 case CompiledRegex::Jump:
                     thread.inst = &inst + inst.param.jump_offset;
                     break;
