@@ -167,14 +167,35 @@ define-command -hidden python-insert-on-new-line %{ evaluate-commands -itersel -
     execute-keys <semicolon>
     try %{
         evaluate-commands -draft -save-regs '/"' %{
-            # copy the commenting prefix
-            execute-keys -save-regs '' k x1s^\h*(#+\h*)<ret> y
+            # Ensure previous line is a comment
+            execute-keys -draft kxs^\h*#+\h*<ret>
+
+            # now handle the coment continuation logic
             try %{
-                # if the previous comment isn't empty, create a new one
-                execute-keys x<a-K>^\h*#+\h*$<ret> jxs^\h*<ret>P
+                # try and match a regular block comment, copying the prefix
+                execute-keys -draft -save-regs '' k x 1s^(\h*#+\h*)\S.*$ <ret> y
+                execute-keys -draft P
             } catch %{
-                # if there is no text in the previous comment, remove it completely
-                execute-keys d
+                try %{
+                    # try and match a regular block comment followed by a single
+                    # empty comment line
+                    execute-keys -draft -save-regs '' kKx 1s^(\h*#+\h*)\S+\n\h*#+\h*$ <ret> y
+                    execute-keys -draft P
+                } catch %{
+                    try %{
+                        # try and match a pair of empty comment lines, and delete
+                        # them if we match
+                        execute-keys -draft kKx <a-k> ^\h*#+\h*\n\h*#+\h*$ <ret> <a-d>
+                    } catch %{
+                        # finally, we need a special case for a new line inserted
+                        # into a file that consists of a single empty comment - in
+                        # that case we can't expect to copy the trailing whitespace,
+                        # so we add our own
+                        execute-keys -draft -save-regs '' k x1s^(\h*#+)\h*$<ret> y
+                        execute-keys -draft P
+                        execute-keys -draft i<space>
+                    }
+                }
             }
         }
 

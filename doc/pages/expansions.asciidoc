@@ -226,8 +226,7 @@ The following expansions are supported (with required context _in italics_):
     number of lines in the current buffer
 
 *%val{buflist}*::
-    quoted list of the names of currently-open buffers (as seen in
-    `%val{bufname}`)
+    list of the names of currently-open buffers (as seen in %val{bufname})
 
 *%val{bufname}*::
     _in buffer, window scope_ +

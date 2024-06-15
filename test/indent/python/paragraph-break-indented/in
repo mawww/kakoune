@@ -1,0 +1,3 @@
+    # A new line after a single empty comment line should leave the comment in
+    # place as a possible paragraph separator.
+    #
