@@ -1108,7 +1108,7 @@ int main(int argc, char* argv[])
     try
     {
         auto show_usage = [&]() {
-            write_stdout(format("Usage: {} [options] [file]... [+<line>[:<col>]|+:]\n\n"
+            write_stdout(format("Usage: {} [options] [--] [file]... [+<line>[:<col>]|+:]\n\n"
                     "Options:\n"
                     "{}\n"
                     "Prefixing a positional argument with a plus (`+`) sign will place the\n"
