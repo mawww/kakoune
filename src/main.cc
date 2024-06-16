@@ -1122,9 +1122,6 @@ int main(int argc, char* argv[])
                           | transform([](auto* s) { return String{s}; })
                           | gather<Vector<String>>();
 
-        if (contains(params, "--help"_sv))
-            return show_usage();
-
         ParametersParser parser{params, param_desc};
 
         const bool show_help_message = (bool)parser.get_switch("help");
