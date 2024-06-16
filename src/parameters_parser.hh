@@ -5,6 +5,7 @@
 #include "hash_map.hh"
 #include "meta.hh"
 #include "array_view.hh"
+#include "coord.hh"
 #include "optional.hh"
 #include "flags.hh"
 #include "string.hh"
@@ -62,7 +63,8 @@ struct ParameterDesc
         None = 0,
         SwitchesOnlyAtStart   = 0b0001,
         SwitchesAsPositional  = 0b0010,
-        IgnoreUnknownSwitches = 0b0100
+        IgnoreUnknownSwitches = 0b0100,
+        WithCoord             = 0b1000,
     };
     friend constexpr bool with_bit_ops(Meta::Type<Flags>) { return true; }
 
@@ -142,12 +144,14 @@ struct ParametersParser
     iterator end() const { return iterator(*this, m_positional_indices.size()); }
 
     State state() const { return *m_state; }
+    Optional<BufferCoord> get_coord() const { return m_coord; }
 
 private:
     ParameterList m_params;
     Vector<size_t, MemoryDomain::Commands> m_positional_indices;
     HashMap<String, StringView> m_switches;
     Optional<State> m_state;
+    Optional<BufferCoord> m_coord;
 };
 
 }
