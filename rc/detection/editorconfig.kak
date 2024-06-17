@@ -4,6 +4,9 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
+declare-option -docstring "disable automatic edition of the buffer (wrap, trailing whitespaces)" \
+    bool editorconfig_noedit false
+
 hook global BufCreate .*[.](editorconfig) %{
     set-option buffer filetype ini
     set-option buffer static_words indent_style indent_size tab_width \
@@ -19,7 +22,7 @@ define-command editorconfig-load -params ..1 -docstring "editorconfig-load [file
         case $file in
             /*) # $kak_buffile is a full path that starts with a '/'
                 printf %s\\n "remove-hooks buffer editorconfig-hooks"
-                editorconfig "$file" | awk -v file="$file" -F= -- '
+                editorconfig "$file" | awk -v file="$file" -v noedit="$kak_opt_editorconfig_noedit" -F= -- '
                     $1 == "indent_style"             { indent_style = $2 }
                     $1 == "indent_size"              { indent_size = $2 == "tab" ? 4 : $2 }
                     $1 == "tab_width"                { tab_width = $2 }
@@ -44,13 +47,15 @@ define-command editorconfig-load -params ..1 -docstring "editorconfig-load [file
                         if (charset == "utf-8-bom") {
                             print "set-option buffer BOM utf8"
                         }
-                        if (trim_trailing_whitespace == "true") {
+                        if (trim_trailing_whitespace == "true" && noedit == "false") {
                             print "hook buffer BufWritePre \"" file "\" -group editorconfig-hooks %{ try %{ execute-keys -draft %{%s\\h+$<ret>d} } }"
                         }
                         if (max_line_length && max_line_length != "off") {
                             print "set window autowrap_column " max_line_length
-                            print "autowrap-enable"
                             print "add-highlighter window/ column %sh{ echo $((" max_line_length "+1)) } default,bright-black"
+                            if (noedit == "false") {
+                                print "autowrap-enable"
+                            }
                         }
                     }
                 ' ;;
