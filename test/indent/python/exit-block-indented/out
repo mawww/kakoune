@@ -1,0 +1,3 @@
+    # A new line after a pair of empty comment lines should exit the
+    # block comment.
+    

@@ -146,14 +146,16 @@ and unquote them, then execute the resulting `set` command, which sets
 the shell's argument variables to the items from `$kak_selections`. The
 `while` loop with `shift` iterates through the arguments one by one.
 
-Only variables actually mentioned in the body of the shell expansion will
-be exported into the shell's environment. For example:
+Only variables actually mentioned in the body of the shell expansion or
+in passed arguments will be exported into the shell's environment.
+
+For example:
 
 ----
 echo %sh{ env | grep ^kak_ }
 ----
 
-... will find none of Kakoune's special environment variables, but:
+... will not find any of Kakoune's special environment variables, but:
 
 ----
 echo %sh{ env | grep ^kak_ # kak_session }
@@ -161,6 +163,15 @@ echo %sh{ env | grep ^kak_ # kak_session }
 
 ... will find the `$kak_session` variable because it was mentioned by name
 in a comment, even though it wasn't directly used.
+
+----
+define-command -params .. eval-shell %{ echo %sh{ eval "$@" } }
+eval-shell 'echo $kak_session'
+----
+
+... will also find the `$kak_session` variable because it was mentioned by name
+in the command arguments, which are automatically made available to shell blocks
+as "$@"
 
 TIP: These environment variables are also available in other contexts where
 Kakoune uses a shell command, such as the `|`, `!` or `$` normal mode commands
@@ -215,8 +226,7 @@ The following expansions are supported (with required context _in italics_):
     number of lines in the current buffer
 
 *%val{buflist}*::
-    quoted list of the names of currently-open buffers (as seen in
-    `%val{bufname}`)
+    list of the names of currently-open buffers (as seen in %val{bufname})
 
 *%val{bufname}*::
     _in buffer, window scope_ +

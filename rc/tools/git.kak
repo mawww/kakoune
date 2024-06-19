@@ -109,6 +109,7 @@ define-command -params 1.. \
     } -shell-script-candidates %{
     if [ $kak_token_to_complete -eq 0 ]; then
         printf %s\\n \
+            add \
             apply \
             blame \
             blame-jump \

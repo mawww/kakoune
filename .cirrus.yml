@@ -1,6 +1,6 @@
 freebsd_task:
     freebsd_instance:
-        image_family: freebsd-13-2
+        image_family: freebsd-13-3
     matrix:
         - name: freebsd_clang
           env:
@@ -27,6 +27,7 @@ linux_task:
         - name: linux_gcc
           container:
               image: gcc:10
+              memory: 8G
           env:
               CXX: g++
     test_script: make CXX=$CXX -j$(nproc) test

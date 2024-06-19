@@ -101,9 +101,7 @@ Buffer& BufferManager::get_buffer_matching(const Regex& regex)
 Buffer& BufferManager::get_first_buffer()
 {
     if (all_of(m_buffers, [](auto& b) { return (b->flags() & Buffer::Flags::Debug); }))
-        create_buffer("*scratch*", Buffer::Flags::None,
-                      {StringData::create("*** this is a *scratch* buffer which won't be automatically saved ***\n"),
-                       StringData::create("*** use it for notes or open a file buffer with the :edit command ***\n")},
+        create_buffer("*scratch*", Buffer::Flags::None, {StringData::create("\n")},
                       ByteOrderMark::None, EolFormat::Lf, {InvalidTime, {}, {}});
 
     return *m_buffers.back();

@@ -3,38 +3,37 @@ declare-option -docstring "shell command run to search for subtext in a file/dir
 
 provide-module grep %{
 
+require-module fifo
 require-module jump
 
 define-command -params .. -docstring %{
     grep [<arguments>]: grep utility wrapper
     All optional arguments are forwarded to the grep utility
     Passing no argument will perform a literal-string grep for the current selection
-} grep %{ evaluate-commands %sh{
-    if [ $# -eq 0 ]; then
-        case "$kak_opt_grepcmd" in
-        ag\ * | git\ grep\ * | grep\ * | rg\ * | ripgrep\ * | ugrep\ * | ug\ *)
-            set -- -F "${kak_selection}"
-            ;;
-        ack\ *)
-            set -- -Q "${kak_selection}"
-            ;;
-        *)
-            set -- "${kak_selection}"
-            ;;
-        esac
-    fi
-
-     output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-grep.XXXXXXXX)/fifo
-     mkfifo ${output}
-     ( { trap - INT QUIT; ${kak_opt_grepcmd} "$@" 2>&1 | tr -d '\r'; } > ${output} 2>&1 & ) > /dev/null 2>&1 < /dev/null
-
-     printf %s\\n "evaluate-commands -try-client '$kak_opt_toolsclient' %{
-               edit! -fifo ${output} *grep*
-               set-option buffer filetype grep
-               set-option buffer jump_current_line 0
-               hook -always -once buffer BufCloseFifo .* %{ nop %sh{ rm -r $(dirname ${output}) } }
-           }"
-}}
+} grep %{
+    evaluate-commands -try-client %opt{toolsclient} %{
+        fifo -name *grep* %{
+            shift 2
+            trap - INT QUIT
+            if [ $# -eq 0 ]; then
+                case "$kak_opt_grepcmd" in
+                ag\ * | git\ grep\ * | grep\ * | rg\ * | ripgrep\ * | ugrep\ * | ug\ *)
+                    set -- -F "$kak_selection"
+                    ;;
+                ack\ *)
+                    set -- -Q "$kak_selection"
+                    ;;
+                *)
+                    set -- "$kak_selection"
+                    ;;
+                esac
+            fi
+            $kak_opt_grepcmd "$@" 2>&1 | tr -d '\r'
+        } 'exit;' %arg{@} # pass arguments for "$@" above, exit to avoid evaluating them
+        set-option buffer filetype grep
+        set-option buffer jump_current_line 0
+    }
+}
 complete-command grep file 
 
 hook -group grep-highlight global WinSetOption filetype=grep %{

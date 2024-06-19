@@ -54,11 +54,11 @@ struct CharacterClass
         if (ignore_case)
             cp = to_lower(cp);
 
-        for (auto& range : ranges)
+        for (auto& [min, max] : ranges)
         {
-            if (cp < range.min)
+            if (cp < min)
                 break;
-            else if (cp <= range.max)
+            else if (cp <= max)
                 return not negative;
         }
 
@@ -106,11 +106,11 @@ struct CompiledRegex : UseMemoryDomain<MemoryDomain::Regex>
         } literal;
         int16_t character_class_index;
         CharacterType character_type;
-        int16_t jump_target;
+        int16_t jump_offset;
         int16_t save_index;
         struct Split
         {
-            int16_t target;
+            int16_t offset;
             bool prioritize_parent : 1;
         } split;
         bool line_start;
@@ -351,10 +351,10 @@ private:
             --saves.refcount;
     };
 
-    struct alignas(int32_t) Thread
+    struct Thread
     {
-        int16_t inst;
-        int16_t saves;
+        const CompiledRegex::Instruction* inst;
+        int saves;
     };
 
     using StartDesc = CompiledRegex::StartDesc;
@@ -370,8 +370,7 @@ private:
 
     // Steps a thread until it consumes the current character, matches or fail
     [[gnu::always_inline]]
-    void step_thread(const CompiledRegex::Instruction* instructions, const Iterator& pos, Codepoint cp,
-                     uint16_t current_step, Thread thread, const ExecConfig& config)
+    void step_thread(const Iterator& pos, Codepoint cp, uint16_t current_step, Thread thread, const ExecConfig& config)
     {
         auto failed = [this, &thread]() {
             release_saves(thread.saves);
@@ -382,7 +381,7 @@ private:
 
         while (true)
         {
-            auto& inst = instructions[thread.inst++];
+            auto& inst = *thread.inst++;
             // if this instruction was already executed for this step in another thread,
             // then this thread is redundant and can be dropped
             if (inst.last_step == current_step)
@@ -416,19 +415,20 @@ private:
                         return consumed();
                     return failed();
                 case CompiledRegex::CharClass:
-                    if (pos == config.end)
-                        return failed();
-                    return m_program.character_classes[inst.param.character_class_index].matches(cp) ? consumed() : failed();
+                    if (pos != config.end and
+                        m_program.character_classes[inst.param.character_class_index].matches(cp))
+                        return consumed();
+                    return failed();
                 case CompiledRegex::CharType:
-                    if (pos == config.end)
-                        return failed();
-                    return is_ctype(inst.param.character_type, cp) ? consumed() : failed();
+                    if (pos != config.end and is_ctype(inst.param.character_type, cp))
+                        return consumed();
+                    return failed();
                 case CompiledRegex::Jump:
-                    thread.inst = inst.param.jump_target;
+                    thread.inst = &inst + inst.param.jump_offset;
                     break;
                 case CompiledRegex::Split:
-                    if (auto target = inst.param.split.target;
-                        instructions[target].last_step != current_step)
+                    if (auto* target = &inst + inst.param.split.offset;
+                        target->last_step != current_step)
                     {
                         if (thread.saves >= 0)
                             ++m_saves[thread.saves].refcount;
@@ -478,15 +478,15 @@ private:
         m_captures = -1;
         m_threads.ensure_initial_capacity();
 
-        const int16_t first_inst = forward ? 0 : m_program.first_backward_inst;
+        ConstArrayView<CompiledRegex::Instruction> insts{m_program.instructions};
+        const auto* first_inst = insts.begin() + (forward ? 0 : m_program.first_backward_inst);
         m_threads.push_current({first_inst, -1});
 
-        const auto& start_desc = forward ? m_program.forward_start_desc : m_program.backward_start_desc;
+        const auto* start_desc = (forward ? m_program.forward_start_desc : m_program.backward_start_desc).get();
         auto next_start = pos;
 
         constexpr bool search = mode & RegexMode::Search;
         constexpr bool any_match = mode & RegexMode::AnyMatch;
-        ConstArrayView<CompiledRegex::Instruction> insts{m_program.instructions};
         uint16_t current_step = -1;
         m_found_match = false;
         while (true) // Iterate on all codepoints and once at the end
@@ -506,7 +506,7 @@ private:
             Codepoint cp = codepoint(next, config);
 
             while (not m_threads.current_is_empty())
-                step_thread(insts.pointer(), pos, cp, current_step, m_threads.pop_current(), config);
+                step_thread(pos, cp, current_step, m_threads.pop_current(), config);
 
             if (pos == config.end or
                 (m_threads.next_is_empty() and (not search or m_found_match)) or
@@ -647,8 +647,6 @@ private:
         }
     }
 
-    const CompiledRegex& m_program;
-
     struct DualThreadStack
     {
         bool current_is_empty() const { return m_current == m_next_begin; }
@@ -721,6 +719,7 @@ private:
 
     static constexpr bool forward = mode & RegexMode::Forward;
 
+    const CompiledRegex& m_program;
     DualThreadStack m_threads;
     Vector<Saves, MemoryDomain::Regex> m_saves;
     int16_t m_first_free = -1;
