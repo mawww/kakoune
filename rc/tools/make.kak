@@ -12,7 +12,8 @@ define-command -params .. -docstring %{
     make [<arguments>]: make utility wrapper
     All the optional arguments are forwarded to the make utility
 } make %{
-    evaluate-commands -try-client %opt{toolsclient} %{
+    evaluate-commands -try-client %opt{toolsclient} -save-regs a %{
+        set-register a %opt{make_error_pattern} # save current error_pattern
         fifo -scroll -name *make* %{
             shift 2
             trap - INT QUIT
@@ -20,7 +21,7 @@ define-command -params .. -docstring %{
         } 'exit;' %arg{@} # pass arguments for "$@" above, exit to avoid evaluating them
         set-option buffer filetype make
         set-option buffer jump_current_line 0
-        set-option buffer make_error_pattern '$kak_opt_make_error_pattern'
+        set-option buffer make_error_pattern %reg{a} # set the pattern to the value while firing the make command
     }
 }
 
