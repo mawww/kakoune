@@ -11,7 +11,10 @@ define-command -hidden jump %{
     evaluate-commands -save-regs a %{ # use evaluate-commands to ensure jumps are collapsed
         try %{
             evaluate-commands -draft %{
-                execute-keys ',xs^([^:\n]+):(\d+):(\d+)?<ret>'
+                # file
+                # file:line
+                # file:line:col
+                execute-keys ',xs^([^:\n]+)(?::(\d+))?(?::(\d+))?<ret>'
                 set-register a %reg{1} %reg{2} %reg{3}
             }
             set-option buffer jump_current_line %val{cursor_line}
