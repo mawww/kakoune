@@ -2,6 +2,8 @@ declare-option -docstring "name of the client in which all source code jumps wil
     str jumpclient
 declare-option -docstring "name of the client in which utilities display information" \
     str toolsclient
+declare-option -docstring "the pattern for the jump information in the line, such as file:line:col" \
+    str jump_pattern "^([^:\n]+)(?::(\d+))?(?::(\d+))?"
 
 provide-module jump %{
 
@@ -11,10 +13,7 @@ define-command -hidden jump %{
     evaluate-commands -save-regs a %{ # use evaluate-commands to ensure jumps are collapsed
         try %{
             evaluate-commands -draft %{
-                # file
-                # file:line
-                # file:line:col
-                execute-keys ',xs^([^:\n]+)(?::(\d+))?(?::(\d+))?<ret>'
+                execute-keys ",xs%opt{jump_pattern}<ret>"
                 set-register a %reg{1} %reg{2} %reg{3}
             }
             set-option buffer jump_current_line %val{cursor_line}
@@ -44,7 +43,10 @@ define-command -hidden jump-select-next %{
     # First jump to end of buffer so that if jump_current_line == 0
     # 0g<a-l> will be a no-op and we'll jump to the first result.
     # Yeah, thats ugly...
-    execute-keys ge %opt{jump_current_line}g<a-l> /^[^:\n]+:\d+:<ret>
+    evaluate-commands -save-regs / %{
+        set-register / %opt{jump_pattern}
+        execute-keys ge %opt{jump_current_line}g<a-l>/<ret>
+    }
 }
 
 define-command jump-previous -params 1.. -docstring %{
@@ -65,7 +67,10 @@ define-command jump-previous -params 1.. -docstring %{
 complete-command jump-previous buffer
 define-command -hidden jump-select-previous %{
     # See comment in jump-select-next
-    execute-keys ge %opt{jump_current_line}g<a-h> <a-/>^[^:\n]+:\d+:<ret>
+    evaluate-commands -save-regs / %{
+        set-register / %opt{jump_pattern}
+        execute-keys ge %opt{jump_current_line}g<a-h> <a-/><ret>
+    }
 }
 
 }
