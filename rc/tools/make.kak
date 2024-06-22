@@ -13,11 +13,10 @@ define-command -params .. -docstring %{
     All the optional arguments are forwarded to the make utility
 } make %{
     evaluate-commands -try-client %opt{toolsclient} %{
-        fifo -scroll -name *make* %{
-            shift 2
+        fifo -scroll -name *make* -script %{
             trap - INT QUIT
             $kak_opt_makecmd "$@"
-        } 'exit;' %arg{@} # pass arguments for "$@" above, exit to avoid evaluating them
+        } %arg{@} # pass arguments for "$@" above, exit to avoid evaluating them
         set-option buffer filetype make
         set-option buffer jump_current_line 0
     }
