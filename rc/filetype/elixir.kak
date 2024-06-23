@@ -8,7 +8,7 @@ hook global BufCreate .*[.](ex|exs) %{
     set-option buffer filetype elixir
 }
 
-hook global BufCreate .*[.]html[.]l?eex %{
+hook global BufCreate .*[.]html[.][lh]?eex %{
     set-option buffer filetype eex
 }
 
@@ -64,6 +64,7 @@ add-highlighter shared/elixir/single_string region "'" "(?<!\\)(?:\\\\)*'" fill 
 add-highlighter shared/elixir/comment region '#' '$' fill comment
 
 add-highlighter shared/elixir/leex region -match-capture '~L("""|")' '(?<!\\)(?:\\\\)*("""|")' ref eex
+add-highlighter shared/elixir/heex region -match-capture '~H("""|")' '(?<!\\)(?:\\\\)*("""|")' ref eex
 
 add-highlighter shared/elixir/double_string/base default-region fill string
 add-highlighter shared/elixir/double_string/interpolation region -recurse \{ \Q#{ \} fill builtin
