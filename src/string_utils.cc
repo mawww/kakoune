@@ -202,7 +202,7 @@ InplaceString<23> to_string(Grouped val)
     InplaceString<23> res;
     for (int pos = 0, len = ungrouped.m_length; pos != len; ++pos)
     {
-        if (res.m_length and ((len - pos) % 3) == 0) 
+        if (res.m_length and ((len - pos) % 3) == 0)
             res.m_data[res.m_length++] = ',';
         res.m_data[res.m_length++] = ungrouped.m_data[pos];
     }

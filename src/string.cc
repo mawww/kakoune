@@ -6,7 +6,7 @@
 
 namespace Kakoune
 {
-namespace 
+namespace
 {
 // Avoid including all of <algorithm> just for this.
 constexpr auto max(auto lhs, auto rhs) { return lhs > rhs ? lhs : rhs;}
@@ -69,7 +69,7 @@ void String::Data::reserve(size_t new_capacity)
     if (current_capacity != 0 and new_capacity <= current_capacity)
         return;
 
-    if (!is_long() and new_capacity <= Short::capacity) 
+    if (!is_long() and new_capacity <= Short::capacity)
         return;
 
     kak_assert(new_capacity <= Long::max_capacity);

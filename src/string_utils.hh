@@ -144,10 +144,10 @@ decltype(auto) to_string(const StronglyTypedNumber<RealType, ValueType>& val)
 namespace detail
 {
 
-template<typename T> requires std::is_convertible_v<T, StringView> 
+template<typename T> requires std::is_convertible_v<T, StringView>
 StringView format_param(const T& val) { return val; }
 
-template<typename T> requires (not std::is_convertible_v<T, StringView>) 
+template<typename T> requires (not std::is_convertible_v<T, StringView>)
 decltype(auto) format_param(const T& val) { return to_string(val); }
 
 }

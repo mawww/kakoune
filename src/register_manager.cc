@@ -40,7 +40,7 @@ void HistoryRegister::set(Context& context, ConstArrayView<String> values, bool 
         return;
     }
 
-    for (auto&& entry : values | reverse()) 
+    for (auto&& entry : values | reverse())
     {
         m_content.erase(std::remove(m_content.begin(), m_content.end(), entry), m_content.end());
         m_content.insert(m_content.begin(), entry);

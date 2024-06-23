@@ -1050,7 +1050,7 @@ private:
                             if (column % indentwidth == 0 and column != 0) {
                                 atom_it->replace(m_indent);
                                 face = indentface;
-                            } 
+                            }
                             else {
                                 atom_it->replace(m_spc);
                             }
