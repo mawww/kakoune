@@ -981,18 +981,14 @@ struct ShowWhitespacesHighlighter : Highlighter
         bool only_trailing = (bool) parser.get_switch("only-trailing");
         auto get_param = [&](StringView param,  StringView fallback) {
             StringView value = parser.get_switch(param).value_or(fallback);
-            if (value.char_length() != 1)
-                throw runtime_error{format("-{} expects a single character parameter", param)};
+            if (value.char_length() > 1)
+                throw runtime_error{format("-{} expects a single character or empty parameter", param)};
             return value.str();
         };
 
-        String indent = parser.get_switch("indent").value_or("│").str();
-        if (indent.char_length() > 1)
-            throw runtime_error{format("-indent expects a single character or empty parameter")};
-
         return std::make_unique<ShowWhitespacesHighlighter>(
             get_param("tab", "→"), get_param("tabpad", " "), get_param("spc", "·"),
-            get_param("lf", "¬"), get_param("nbsp", "⍽"), indent, only_trailing);
+            get_param("lf", "¬"), get_param("nbsp", "⍽"), get_param("indent", "│"), only_trailing);
     }
 
 private:
@@ -1043,28 +1039,28 @@ private:
                         if (it != end)
                             atom_it = line.split(atom_it, it.coord());
 
-                        if (cp == '\t')
+                        if (cp == '\t' and not m_tab.empty() and not m_tabpad.empty())
                         {
                             const ColumnCount column = get_column(buffer, tabstop, coord);
                             const ColumnCount count = tabstop - (column % tabstop);
                             atom_it->replace(m_tab + String(m_tabpad[(CharCount)0], count - m_tab.column_length()));
                         }
-                        else if (cp == ' ') {
-                            if (m_indent.empty() or indentwidth == 0 or not is_indentation) {
+                        else if (cp == ' ' and is_indentation and indentwidth > 0 and not m_indent.empty()) {
+                            const ColumnCount column = get_column(buffer, tabstop, coord);
+                            if (column % indentwidth == 0 and column != 0) {
+                                atom_it->replace(m_indent);
+                                face = indentface;
+                            }
+                            else {
                                 atom_it->replace(m_spc);
-                            } else {
-                                const ColumnCount column = get_column(buffer, tabstop, coord);
-                                if (column % indentwidth == 0 and column != 0) {
-                                    atom_it->replace(m_indent);
-                                    face = indentface;
-                                } else  {
-                                    atom_it->replace(m_spc);
-                                }
                             }
                         }
-                        else if (cp == '\n')
+                        else if (cp == ' ' and not m_spc.empty()) {
+                            atom_it->replace(m_spc);
+                        }
+                        else if (cp == '\n' and not m_lf.empty())
                             atom_it->replace(m_lf);
-                        else if (cp == 0xA0 or cp == 0x202F)
+                        else if ((cp == 0xA0 or cp == 0x202F) and not m_nbsp.empty())
                             atom_it->replace(m_nbsp);
                         atom_it->face = merge_faces(atom_it->face, face);
                         break;

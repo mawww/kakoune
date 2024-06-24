@@ -239,7 +239,7 @@ struct HashMap
     constexpr bool contains(const KeyType& key) const { return find_index(key) >= 0; }
 
     template<typename KeyType> requires IsHashCompatible<Key, std::remove_cvref_t<KeyType>>
-    constexpr EffectiveValue& operator[](KeyType&& key) 
+    constexpr EffectiveValue& operator[](KeyType&& key)
     {
         const auto hash = hash_value(key);
         auto index = find_index(key, hash);

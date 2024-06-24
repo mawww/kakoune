@@ -169,9 +169,9 @@ public:
         using Alloc = Allocator<char, MemoryDomain::String>;
 
         Data() { set_empty(); }
-        Data(NoCopy, const char* data, size_t size) : u{Long{const_cast<char*>(data), 
+        Data(NoCopy, const char* data, size_t size) : u{Long{const_cast<char*>(data),
                                                              size,
-                                                             /*capacity=*/0, 
+                                                             /*capacity=*/0,
                                                              /*mode=*/Long::active_mask}} {}
 
         Data(const char* data, size_t size, size_t capacity);

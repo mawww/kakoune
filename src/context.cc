@@ -424,7 +424,7 @@ StringView Context::main_sel_register_value(StringView reg) const
     return RegisterManager::instance()[reg].get_main(*this, index);
 }
 
-void Context::set_name(String name) { 
+void Context::set_name(String name) {
     String old_name = std::exchange(m_name, std::move(name));
     hooks().run_hook(Hook::ClientRenamed, format("{}:{}", old_name, m_name), *this);
 }

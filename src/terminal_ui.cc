@@ -377,7 +377,7 @@ void TerminalUI::Screen::output(bool force, bool synchronized, Writer& writer)
     {
         for (int line = 0; line < (int)size.line; ++line)
         {
-            auto hash = hash_line(lines[line]); 
+            auto hash = hash_line(lines[line]);
             if (hash == hashes[line])
                 continue;
             hashes[line] = hash;
