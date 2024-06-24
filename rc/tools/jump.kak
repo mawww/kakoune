@@ -3,7 +3,7 @@ declare-option -docstring "name of the client in which all source code jumps wil
 declare-option -docstring "name of the client in which utilities display information" \
     str toolsclient
 declare-option -docstring "the pattern for the jump information in the line, such as file:line:col" \
-    str jump_pattern "^([^:\n]+)(?::(\d+))?(?::(\d+))?"
+    str jump_pattern "^([^:\n]+)(?::(\d+))(?::(\d+))?"
 
 provide-module jump %{
 
