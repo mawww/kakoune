@@ -589,13 +589,13 @@ void pipe(Context& context, NormalParams params)
                 return;
 
             Buffer& buffer = context.buffer();
-            SelectionList selections = context.selections();
             if (replace)
             {
+                buffer.throw_if_read_only();
                 ScopedEdition edition(context);
                 ForwardChangesTracker changes_tracker;
                 size_t timestamp = buffer.timestamp();
-                Vector<Selection> new_sels;
+                SelectionList selections = context.selections();
                 for (auto& sel : selections)
                 {
                     const auto beg = changes_tracker.get_new_coord_tolerant(sel.min());
@@ -614,20 +614,27 @@ void pipe(Context& context, NormalParams params)
 
                     auto new_end = apply_diff(buffer, beg, in, out);
                     if (new_end != beg)
-                        new_sels.push_back(keep_direction({beg, buffer.char_prev(new_end), std::move(sel.captures())}, sel));
+                    {
+                        auto& min = sel.min();
+                        auto& max = sel.max();
+                        min = beg;
+                        max = buffer.char_prev(new_end);
+                    }
                     else
                     {
                         if (new_end != BufferCoord{})
                             new_end = buffer.char_prev(new_end);
-                        new_sels.push_back({new_end, new_end, std::move(sel.captures())});
+                        sel.set(new_end);
                     }
 
                     changes_tracker.update(buffer, timestamp);
                 }
-                context.selections_write_only().set(std::move(new_sels), selections.main_index());
+                selections.force_timestamp(timestamp);
+                context.selections_write_only() = std::move(selections);
             }
             else
             {
+                SelectionList& selections = context.selections();
                 const auto old_main = selections.main_index();
                 for (int i = 0; i < selections.size(); ++i)
                 {
