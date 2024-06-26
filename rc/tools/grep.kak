@@ -28,7 +28,7 @@ define-command -params .. -docstring %{
                 esac
             fi
             $kak_opt_grepcmd "$@" 2>&1 | tr -d '\r'
-        } %arg{@}
+        } -- %arg{@}
         set-option buffer filetype grep
         set-option buffer jump_current_line 0
     }

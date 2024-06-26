@@ -16,7 +16,7 @@ define-command -params .. -docstring %{
         fifo -scroll -name *make* -script %{
             trap - INT QUIT
             $kak_opt_makecmd "$@"
-        } %arg{@} # pass arguments for "$@" above, exit to avoid evaluating them
+        } -- %arg{@}
         set-option buffer filetype make
         set-option buffer jump_current_line 0
     }
