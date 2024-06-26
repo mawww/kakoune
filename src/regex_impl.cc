@@ -753,7 +753,10 @@ private:
                 {
                     auto node = compile_node<direction>(child);
                     if (child != index+1)
-                        m_program.instructions[--split_pos].param.split = CompiledRegex::Param::Split{.offset = offset(node, split_pos), .prioritize_parent = true};
+                    {
+                        --split_pos;
+                        m_program.instructions[split_pos].param.split = {.offset = offset(node, split_pos), .prioritize_parent = true};
+                    }
                     if (get_node(child).children_end != end)
                     {
                         auto jump = push_inst(CompiledRegex::Jump);
