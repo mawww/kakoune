@@ -280,6 +280,8 @@ Token parse_percent_token(ParseState& state, bool throw_on_unterminated)
         if (throw_on_unterminated)
             throw parse_error{format("expected a string delimiter after '%{}'",
                                      type_name)};
+        if (at_end)
+            return {Token::Type::UnknownExpand, type_start - state.str.begin(), type_name.str()};
         return {};
     }
 
@@ -307,7 +309,7 @@ Token parse_percent_token(ParseState& state, bool throw_on_unterminated)
                                      it->opening, it->closing)};
         }
 
-        return {type, byte_pos, std::move(quoted.content), quoted.terminated};
+        return {type, byte_pos, std::move(quoted.content), {{(Codepoint)it->closing, quoted.terminated}}};
     }
     else
     {
@@ -322,7 +324,7 @@ Token parse_percent_token(ParseState& state, bool throw_on_unterminated)
                                      opening_delimiter, opening_delimiter)};
         }
 
-        return {type, byte_pos, std::move(quoted.content), quoted.terminated};
+        return {type, byte_pos, std::move(quoted.content), {{opening_delimiter, quoted.terminated}}};
     }
 }
 
@@ -431,7 +433,7 @@ Optional<Token> CommandParser::read_token(bool throw_on_unterminated)
         return Token{c == '"' ? Token::Type::Expand
                               : Token::Type::RawQuoted,
                      start - line.begin(), std::move(quoted.content),
-                     quoted.terminated};
+                     {{(Codepoint)c, quoted.terminated}}};
     }
     else if (c == '%')
     {
@@ -440,7 +442,7 @@ Optional<Token> CommandParser::read_token(bool throw_on_unterminated)
     }
     else if (is_command_separator(c))
         return Token{Token::Type::CommandSeparator,
-                     ++m_state.pos - line.begin(), {}};
+                     ++m_state.pos - line.begin(), ""};
     else
     {
         if (c == '\\' and m_state.pos + 1 != m_state.str.end())
@@ -659,37 +661,51 @@ static Completions complete_expansion(const Context& context, CompletionFlags fl
                                       Token token, ByteCount start,
                                       ByteCount cursor_pos, ByteCount pos_in_token)
 {
+    CandidateList candidates;
     switch (token.type) {
     case Token::Type::RegisterExpand:
-        return { start, cursor_pos,
-                 RegisterManager::instance().complete_register_name(
-                     token.content, pos_in_token) };
+        candidates = RegisterManager::instance().complete_register_name(token.content, pos_in_token);
+        break;
 
     case Token::Type::OptionExpand:
-        return { start, cursor_pos,
-                 GlobalScope::instance().option_registry().complete_option_name(
-                     token.content, pos_in_token) };
+        candidates = GlobalScope::instance().option_registry().complete_option_name(token.content, pos_in_token);
+        break;
 
     case Token::Type::ShellExpand:
         return offset_pos(shell_complete(context, flags, token.content,
                                          pos_in_token), start);
 
     case Token::Type::ValExpand:
-        return { start, cursor_pos,
-                 ShellManager::instance().complete_env_var(
-                     token.content, pos_in_token) };
+        candidates = ShellManager::instance().complete_env_var(token.content, pos_in_token);
+        break;
 
     case Token::Type::FileExpand:
     {
         const auto& ignored_files = context.options()["ignored_files"].get<Regex>();
-        return { start, cursor_pos, complete_filename(
-                 token.content, ignored_files, pos_in_token, FilenameFlags::Expand) };
+        candidates = complete_filename(token.content, ignored_files, pos_in_token, FilenameFlags::Expand);
+        break;
     }
+
+    case Token::Type::UnknownExpand:
+        return { start, cursor_pos, Kakoune::complete(token.content, cursor_pos, Array{"exp", "file", "opt", "reg", "sh", "val"}) };
 
     default:
         kak_assert(false);
         throw runtime_error("unknown expansion");
     }
+
+    for (auto &c : candidates)
+    {
+        if ((token.type == Token::Type::ValExpand and c.ends_with("_")) // opt_, reg_, client_env_
+            or (token.type == Token::Type::FileExpand and c.ends_with("/")))
+            continue;
+        kak_assert(not token.terminator->present);
+        c += to_string(token.terminator->character);
+    }
+
+    auto completions_flags = token.type == Token::Type::RegisterExpand
+                            ? Completions::Flags::None : Completions::Flags::Menu;
+    return { start, cursor_pos, candidates, completions_flags };
 }
 
 static Completions complete_expand(const Context& context, CompletionFlags flags,
@@ -706,7 +722,7 @@ static Completions complete_expand(const Context& context, CompletionFlags flags
             else
             {
                 auto token = parse_percent_token(state, false);
-                if (token.terminated)
+                if (token.terminator and token.terminator->present)
                     continue;
                 if (token.type == Token::Type::Raw or token.type == Token::Type::RawQuoted)
                     return {};
@@ -771,11 +787,11 @@ Completions CommandManager::Completer::operator()(
     }
 
     if (is_last_token)
-        tokens.push_back({Token::Type::Raw, prefix.length(), {}});
+        tokens.push_back({Token::Type::Raw, prefix.length(), ""});
     kak_assert(not tokens.empty());
     const auto& token = tokens.back();
 
-    if (token.terminated) // do not complete past explicit token close
+    if (token.terminator and token.terminator->present) // do not complete past explicit token close
         return Completions{};
 
     const ByteCount start = token.pos;
@@ -797,6 +813,7 @@ Completions CommandManager::Completer::operator()(
     case Token::Type::ShellExpand:
     case Token::Type::ValExpand:
     case Token::Type::FileExpand:
+    case Token::Type::UnknownExpand:
         return complete_expansion(context, flags, token, start, cursor_pos, pos_in_token);
 
     case Token::Type::Raw:
