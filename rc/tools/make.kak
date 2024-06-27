@@ -12,22 +12,24 @@ define-command -params .. -docstring %{
     make [<arguments>]: make utility wrapper
     All the optional arguments are forwarded to the make utility
 } make %{
-    evaluate-commands -try-client %opt{toolsclient} %{
+    evaluate-commands -try-client %opt{toolsclient} -save-regs a %{
+        set-register a %opt{make_error_pattern} # save current error_pattern
         fifo -scroll -name *make* -script %{
             trap - INT QUIT
             $kak_opt_makecmd "$@"
         } -- %arg{@}
         set-option buffer filetype make
         set-option buffer jump_current_line 0
+        set-option buffer make_error_pattern %reg{a} # set the pattern to the value while firing the make command
     }
 }
 
 add-highlighter shared/make group
-add-highlighter shared/make/ regex "^([^:\n]+):(\d+):(?:(\d+):)?\h+(?:((?:fatal )?error)|(warning)|(note)|(required from(?: here)?))?.*?$" 1:cyan 2:green 3:green 4:red 5:yellow 6:blue 7:yellow
 add-highlighter shared/make/ regex "^\h*(~*(?:(\^)~*)?)$" 1:green 2:cyan+b
 add-highlighter shared/make/ line '%opt{jump_current_line}' default+b
 
 hook -group make-highlight global WinSetOption filetype=make %{
+    add-highlighter -override shared/make/ regex %opt{make_error_pattern} 1:cyan 2:green 3:green 4:red 5:yellow 6:blue 7:yellow
     add-highlighter window/make ref make
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/make }
 }
