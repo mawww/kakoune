@@ -2081,7 +2081,9 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
                 context_wrap_for_buffer(*buffer);
         }
         else
-            for (auto&& name : *bufnames | split<StringView>(','))
+            for (auto&& name : *bufnames
+                             | split<StringView>(',', '\\')
+                             | transform(unescape<',', '\\'>))
                 context_wrap_for_buffer(BufferManager::instance().get_buffer(name));
         return;
     }
