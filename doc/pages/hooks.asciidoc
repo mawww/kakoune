@@ -147,6 +147,11 @@ name. Hooks with no description will always use an empty string.
 *SessionRenamed* `<old name>:<new name>`::
     executed when a session is renamed using the `rename-session` command
 
+*EnterDirectory* `path`::
+    executed on startup and when the current working directory is changed
+    using the `change-directory` command. The hook param is an absolute path
+    to the new working directory.
+
 *RuntimeError* `error message`::
     an error was encountered while executing a user command
 

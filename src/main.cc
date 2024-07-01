@@ -842,6 +842,7 @@ int run_server(StringView session, StringView server_init,
 
     {
         Context empty_context{Context::EmptyContextFlag{}};
+        global_scope.hooks().run_hook(Hook::EnterDirectory, real_path("."), empty_context);
         global_scope.hooks().run_hook(Hook::KakBegin, session, empty_context);
     }
 

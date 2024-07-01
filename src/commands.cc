@@ -2600,13 +2600,15 @@ const CommandDesc change_directory_cmd = {
                                         cursor_pos, FilenameFlags::OnlyDirectories),
                       Completions::Flags::Menu };
         }),
-    [](const ParametersParser& parser, Context&, const ShellContext&)
+    [](const ParametersParser& parser, Context& ctx, const ShellContext&)
     {
         StringView target = parser.positional_count() == 1 ? StringView{parser[0]} : "~";
-        if (chdir(parse_filename(target).c_str()) != 0)
+        auto path = real_path(parse_filename(target));
+        if (chdir(path.c_str()) != 0)
             throw runtime_error(format("unable to change to directory: '{}'", target));
         for (auto& buffer : BufferManager::instance())
             buffer->update_display_name();
+        ctx.hooks().run_hook(Hook::EnterDirectory, path, ctx);
     }
 };
 
