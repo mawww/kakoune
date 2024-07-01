@@ -31,6 +31,7 @@ ParametersParser::ParametersParser(ParameterList params, const ParameterDesc& de
     const bool switches_only_at_start = desc.flags & ParameterDesc::Flags::SwitchesOnlyAtStart;
     const bool ignore_unknown_switches = desc.flags & ParameterDesc::Flags::IgnoreUnknownSwitches;
     bool only_pos = desc.flags & ParameterDesc::Flags::SwitchesAsPositional;
+    bool with_coord = desc.flags & ParameterDesc::Flags::WithCoord;
 
     Vector<bool> switch_seen(desc.switches.size(), false);
     for (size_t i = 0; i < params.size(); ++i)
@@ -39,6 +40,25 @@ ParametersParser::ParametersParser(ParameterList params, const ParameterDesc& de
         {
             m_state = State::Switch;
             only_pos = true;
+        }
+        else if (not only_pos and with_coord and not params[i].empty() and params[i][0_byte] == '+')
+        {
+            m_state = State::Switch;
+            with_coord = false;
+            const auto coord_str = params[i].substr(1_byte);
+            const auto colon = find(coord_str, ':');
+
+            const auto line_str = StringView{coord_str.begin(), colon};
+            const LineCount line = line_str.empty() ? INT_MAX : std::max(1, str_to_int(line_str)) - 1;
+
+            ByteCount column = 0;
+            if (colon != coord_str.end())
+            {
+                const auto column_str = StringView{colon + 1, coord_str.end()};
+                column = column_str.empty() ? INT_MAX : std::max(1, str_to_int(column_str)) - 1;
+            }
+
+            m_coord = BufferCoord{line, column};
         }
         else if (not only_pos and not params[i].empty() and params[i][0_byte] == '-')
         {
