@@ -52,7 +52,13 @@ define-command terminal -params 1.. -docstring %{
 
     See also the 'new' command.
 } %{
-    "%opt{windowing_module}-terminal-%opt{windowing_placement}" %arg{@}
+    try %{
+        "%opt{windowing_module}-terminal-%opt{windowing_placement}" %arg{@}
+    } catch %{
+        # falback to window if other placements not supported
+        # maybe we shall let each windowing_module handle windowing_placement instead?
+        "%opt{windowing_module}-terminal-window" %arg{@}
+    }
 }
 complete-command terminal shell
 
