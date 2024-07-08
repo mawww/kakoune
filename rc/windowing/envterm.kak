@@ -2,7 +2,7 @@ provide-module envterm %{
 
 # ensure that we're running on iTerm
 evaluate-commands %sh{
-    [ -z "${kak_opt_windowing_modules}" ] || [ -z "$kak_env_TERM" ] || echo 'fail $TERM not found'
+    [ -z "${kak_opt_windowing_modules}" ] || ! which "$kak_env_TERM" || echo 'fail $TERM binary not found'
 }
 
 define-command envterm-terminal-window -params 1.. -docstring '
