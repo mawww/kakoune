@@ -140,7 +140,7 @@ name. Hooks with no description will always use an empty string.
 *ClientClose* `client name`::
     executed when a client is closed, after it was removed from the client
     list.
-    
+
 *ClientRenamed* `<old name>:<new name>`::
     executed when a client is renamed using the `rename-client` command
 
