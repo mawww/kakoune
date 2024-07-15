@@ -268,9 +268,12 @@ private:
                 }
                 m_pos = Iterator{it, m_regex};
                 NodeIndex lookaround = alternative(op);
-                if (at_end() or *m_pos++ != ')')
+                if (auto end_pos = m_pos; at_end() or *m_pos++ != ')')
+                {
+                    if (*end_pos == '|')
+                        parse_error("Alternations cannot be used in lookarounds");
                     parse_error("unclosed parenthesis");
-
+                }
                 validate_lookaround(lookaround);
                 return lookaround;
             }
@@ -1608,6 +1611,22 @@ auto test_regex = UnitTest{[]{
         kak_assert(eq(vm.named_captures[1], {"month", 2}));
         kak_assert(eq(vm.named_captures[2], {"day", 3}));
     }
+
+    auto check_parse_error = [](StringView re, StringView expected_error) {
+        try
+        {
+            TestVM<>{re};
+            kak_assert(false);
+        }
+        catch (const regex_error& err)
+        {
+            kak_assert(err.what() == String{"regex parse error: "} + expected_error);
+        }
+    };
+
+    check_parse_error("(?=a*)", "Quantifiers cannot be used in lookarounds at '(?=a*)<<<HERE>>>'");
+    check_parse_error("(?=(a))", "Lookaround can only contain literals, any chars or character classes at '(?=(a))<<<HERE>>>'");
+    check_parse_error("(?=a|b)", "Alternations cannot be used in lookarounds at '(?=a|<<<HERE>>>b)'");
 }};
 
 }
