@@ -31,7 +31,7 @@ const String& StaticRegister::get_main(const Context& context, size_t main_index
 
 void HistoryRegister::set(Context& context, ConstArrayView<String> values, bool restoring)
 {
-    constexpr size_t size_limit = 100;
+    constexpr size_t size_limit = 1000;
 
     if (restoring)
     {
