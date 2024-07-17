@@ -43,6 +43,7 @@ UnitTest test_diff{[]()
 
 }};
 
+#ifdef KAK_DEBUG
 UnitTest* UnitTest::list = nullptr;
 
 void UnitTest::run_all_tests()
@@ -50,5 +51,6 @@ void UnitTest::run_all_tests()
     for (const UnitTest* test = UnitTest::list; test; test = test->next)
         test->func();
 }
+#endif
 
 }
