@@ -46,7 +46,7 @@ macos_task:
           gcc_script:
             - /usr/sbin/softwareupdate --install-rosetta --agree-to-license
             - arch -x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
-            - arch -x86_64 /usr/local/bin/brew install gcc@10
+            - arch -x86_64 /usr/local/bin/brew install gcc@12
           env:
-              CXX: g++-10
+              CXX: g++-12
     test_script: make CXX=$CXX -j$(sysctl -n hw.ncpu) test
