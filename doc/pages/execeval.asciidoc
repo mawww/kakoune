@@ -37,7 +37,7 @@ are then restored when the keys have been executed: */*, *"*, *|*, *^*,
 
 *-buffer* <names>::
     Execute in the context of each buffer specified in the comma separated
-    list *names*. `*` can be used as a *name* to iterate over all non-debug
+    list *names*. '\*' can be used as a *name* to iterate over all non-debug
     buffers.
     (See <<buffers#debug-buffers, `:doc buffers`>>)
 
