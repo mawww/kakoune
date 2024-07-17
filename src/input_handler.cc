@@ -23,6 +23,13 @@
 namespace Kakoune
 {
 
+static void clear_info_and_echo(Context& context)
+{
+    context.print_status({});
+    if (context.has_client())
+        context.client().info_hide();
+}
+
 class InputMode : public RefCountable
 {
 public:
@@ -97,6 +104,8 @@ void InputMode::paste(StringView content)
         context().print_status({error.what().str(), context().faces()["Error"] });
         context().hooks().run_hook(Hook::RuntimeError, error.what(), context());
     }
+
+    clear_info_and_echo(context());
 }
 
 namespace InputModes
@@ -285,9 +294,7 @@ public:
 
         if (m_mouse_handler.handle_key(key, context()))
         {
-            context().print_status({});
-            if (context().has_client())
-                context().client().info_hide();
+            clear_info_and_echo(context());
 
             if (not transient)
                 m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
@@ -334,9 +341,7 @@ public:
                      m_state = State::PopOnEnabled;
             });
 
-            context().print_status({});
-            if (context().has_client())
-                context().client().info_hide();
+            clear_info_and_echo(context());
 
             // Hack to parse keys sent by terminals using the 8th bit to mark the
             // meta key. In normal mode, give priority to a potential alt-key than
