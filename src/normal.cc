@@ -72,8 +72,8 @@ UnitTest test_merge_selection{[] {
     kak_assert(merge({{0, 1}, {0, 2} }, {{0, 1}, {0, 1}}) == Selection{{0, 1}, {0, 1}});
 }};
 
-template<SelectMode mode, typename T>
-void select(Context& context, T func)
+template<typename T>
+void select(Context& context, SelectMode mode, T func)
 {
     ScopedSelectionEdition selection_edition{context};
     auto& selections = context.selections();
@@ -130,15 +130,15 @@ void select(Context& context, T func)
 template<SelectMode mode, Optional<Selection> (*func)(const Context&, const Selection&)>
 void select(Context& context, NormalParams)
 {
-    select<mode>(context, func);
+    select(context, mode, func);
 }
 
-template<SelectMode mode, typename Func>
-void select_and_set_last(Context& context, Func&& func)
+template<typename Func>
+void select_and_set_last(Context& context, SelectMode mode, Func&& func)
 {
     context.set_last_select(
-        [func](Context& context){ select<mode>(context, func); });
-    return select<mode>(context, func);
+        [=](Context& context){ select(context, mode, func); });
+    return select(context, mode, func);
 }
 
 template<SelectMode mode = SelectMode::Replace>
@@ -1289,10 +1289,9 @@ void deindent(Context& context, NormalParams params)
     }
 }
 
-template<ObjectFlags flags, SelectMode mode = SelectMode::Replace>
-void select_object(Context& context, NormalParams params)
+void select_object(Context& context, NormalParams params, ObjectFlags flags, SelectMode mode = SelectMode::Replace)
 {
-    auto get_title = [] {
+    auto get_title = [&] {
         const auto whole_flags = (ObjectFlags::ToBegin | ObjectFlags::ToEnd);
         const bool whole = (flags & whole_flags) == whole_flags;
         return format("{} {}{}surrounding object{}",
@@ -1303,7 +1302,7 @@ void select_object(Context& context, NormalParams params)
     };
 
     on_next_key_with_autoinfo(context,"text-object",  KeymapMode::Object,
-                             [params](Key key, Context& context) {
+                             [=](Key key, Context& context) {
         if (key == Key::Escape)
             return;
 
@@ -1324,13 +1323,13 @@ void select_object(Context& context, NormalParams params)
         };
         auto obj_it = find(selectors | transform(&ObjectType::key), key).base();
         if (obj_it != std::end(selectors))
-            return select_and_set_last<mode>(
-                context, [=](Context& context, Selection& sel) { return obj_it->func(context, sel, count, flags); });
+            return select_and_set_last(
+                context, mode, [=](Context& context, Selection& sel) { return obj_it->func(context, sel, count, flags); });
 
-        static constexpr auto regex_selector = [=](StringView open, StringView close, int count) {
+        static constexpr auto regex_selector = [=](StringView open, StringView close, int count, ObjectFlags flags) {
             return [open=Regex{open, RegexCompileFlags::Backward},
                     close=Regex{close, RegexCompileFlags::Backward},
-                    count](Context& context, Selection& sel) {
+                    count, flags](Context& context, Selection& sel) {
                 return select_surrounding(context, sel, open, close, count, flags);
             };
         };
@@ -1346,7 +1345,7 @@ void select_object(Context& context, NormalParams params)
             context.input_handler().prompt(
                 "object desc:", {}, {}, context.faces()["Prompt"],
                 PromptFlags::None, '_', complete_nothing,
-                [count,info](StringView cmdline, PromptEvent event, Context& context) {
+                [count,info,mode, flags](StringView cmdline, PromptEvent event, Context& context) {
                     if (event != PromptEvent::Change)
                         hide_auto_info_ifn(context, info);
                     if (event != PromptEvent::Validate)
@@ -1360,7 +1359,7 @@ void select_object(Context& context, NormalParams params)
                     if (params[0].empty() or params[1].empty())
                         throw error{0};
 
-                    select_and_set_last<mode>(context, regex_selector(params[0], params[1], count));
+                    select_and_set_last(context, mode, regex_selector(params[0], params[1], count, flags));
                 });
             return;
         }
@@ -1393,13 +1392,13 @@ void select_object(Context& context, NormalParams params)
         };
         if (auto it = find_if(surrounding_pairs, [key](auto s) { return key == s.open or key == s.close or key == s.name; });
             it != std::end(surrounding_pairs))
-            return select_and_set_last<mode>(
-                context, regex_selector(format("\\Q{}", it->open), format("\\Q{}", it->close), count));
+            return select_and_set_last(
+                context, mode, regex_selector(format("\\Q{}", it->open), format("\\Q{}", it->close), count, flags));
 
         if (auto cp = key.codepoint(); cp and is_punctuation(*cp, {}))
         {
             auto re = "\\Q" + to_string(*cp);
-            return select_and_set_last<mode>(context, regex_selector(re, re, count));
+            return select_and_set_last(context, mode, regex_selector(re, re, count, flags));
         }
     }, get_title(),
     build_autoinfo_for_mapping(context, KeymapMode::Object,
@@ -1420,6 +1419,12 @@ void select_object(Context& context, NormalParams params)
          {{'n'},         "number"},
          {{'c'},         "custom object desc"},
          {{alt(';')},    "run command in object context"}}));
+}
+
+template<ObjectFlags flags, SelectMode mode = SelectMode::Replace>
+void select_object(Context& context, NormalParams params)
+{
+    return select_object(context, params, flags, mode);
 }
 
 template<Direction direction, bool half = false>
@@ -1551,8 +1556,8 @@ void select_to_next_char(Context& context, NormalParams params)
             return;
         constexpr auto new_flags = flags & SelectFlags::Extend ? SelectMode::Extend
                                                                : SelectMode::Replace;
-        select_and_set_last<new_flags>(
-            context, [cp=*cp, count=params.count] (auto& context, auto& sel) {
+        select_and_set_last(
+            context, new_flags, [cp=*cp, count=params.count] (auto& context, auto& sel) {
                 auto& func = flags & SelectFlags::Reverse ? select_to_reverse : select_to;
                 return func(context, sel, cp, count, flags & SelectFlags::Inclusive);
             });
