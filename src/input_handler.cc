@@ -1307,7 +1307,7 @@ public:
         }
         else if (key == ctrl('n') or key == ctrl('p') or key.modifiers == Key::Modifiers::MenuSelect)
         {
-            if (m_last_insert and not synthesized)
+            if (m_last_insert)
                 m_last_insert->keys.pop_back();
             bool relative = key.modifiers != Key::Modifiers::MenuSelect;
             int index = relative ? (key == ctrl('n') ? 1 : -1) : key.key;
@@ -1656,20 +1656,22 @@ void InputHandler::handle_key(Key key)
     ++m_handle_key_level;
     auto dec = on_scope_end([this]{ --m_handle_key_level;} );
 
-    if (m_last_insert.recording and m_handle_key_level <= 1)
-        m_last_insert.keys.push_back(key);
+    auto process_key = [&](Key k, bool synthesized) {
+        if (m_last_insert.recording and m_handle_key_level <= 1)
+            m_last_insert.keys.push_back(k);
+        current_mode().handle_key(k, synthesized);
+    };
 
     const auto keymap_mode = current_mode().keymap_mode();
     KeymapManager& keymaps = m_context.keymaps();
     if (keymaps.is_mapped(key, keymap_mode) and not m_context.keymaps_disabled())
     {
         ScopedSetBool noninteractive{context().noninteractive()};
-
         for (auto& k : keymaps.get_mapping_keys(key, keymap_mode))
-            current_mode().handle_key(k, true);
+            process_key(k, true);
     }
     else
-        current_mode().handle_key(key, m_handle_key_level > 1);
+        process_key(key, m_handle_key_level > 1);
 
     // do not record the key that made us enter or leave recording mode,
     // and the ones that are triggered recursively by previous keys.
