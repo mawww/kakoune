@@ -1,6 +1,5 @@
 import gdb.printing
 
-
 class ArrayIterator:
     def __init__(self, data, count):
         self.data = data
@@ -226,3 +225,7 @@ def build_pretty_printer():
     pp.add_printer('Color', '^Kakoune::Color$', Color)
     pp.add_printer('Regex', '^Kakoune::Regex$', Regex)
     return pp
+
+if __name__ == "__main__":
+    print("Adding kakoune pretty printers")
+    gdb.printing.register_pretty_printer(gdb.current_objfile(), build_pretty_printer())
