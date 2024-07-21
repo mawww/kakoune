@@ -383,6 +383,9 @@ void view_commands(Context& context, NormalParams params)
 
         const BufferCoord cursor = context.selections().main().cursor();
         Window& window = context.window();
+        const DisplayCoord max_offset{(window.dimensions().line - 1)/2, (window.dimensions().column - 1)/2};
+        const DisplayCoord scrolloff =
+            std::min(context.options()["scrolloff"].get<DisplayCoord>(), max_offset);
         switch (*cp)
         {
         case 'v':
@@ -394,10 +397,10 @@ void view_commands(Context& context, NormalParams params)
                 context.buffer()[cursor.line].column_count_to(cursor.column));
             break;
         case 't':
-            window.display_line_at(cursor.line, 0);
+            window.display_line_at(cursor.line, scrolloff.line);
             break;
         case 'b':
-            window.display_line_at(cursor.line, window.dimensions().line-1);
+            window.display_line_at(cursor.line, window.dimensions().line-1-scrolloff.line);
             break;
         case '<':
             window.display_column_at(context.buffer()[cursor.line].column_count_to(cursor.column), 0);
