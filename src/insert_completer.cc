@@ -416,7 +416,7 @@ InsertCompleter::~InsertCompleter()
     m_options.unregister_watcher(*this);
 }
 
-void InsertCompleter::select(int index, bool relative, Vector<Key>* keystrokes)
+void InsertCompleter::select(int index, bool relative, FunctionRef<void (Key)> record_key)
 {
     m_enabled = true;
     if (not setup_ifn())
@@ -453,14 +453,13 @@ void InsertCompleter::select(int index, bool relative, Vector<Key>* keystrokes)
         m_context.client().menu_select(m_current_candidate);
     }
 
-    if (keystrokes)
     {
         for (auto i = 0_byte; i < prefix_len; ++i)
-            keystrokes->emplace_back(Key::Backspace);
+            record_key(Key::Backspace);
         for (auto i = 0_byte; i < suffix_len; ++i)
-            keystrokes->emplace_back(Key::Delete);
+            record_key(Key::Delete);
         for (auto& c : candidate.completion)
-            keystrokes->emplace_back(c);
+            record_key(c);
     }
 
     if (not candidate.on_select.empty())

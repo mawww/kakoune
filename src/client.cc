@@ -111,7 +111,7 @@ bool Client::process_pending_inputs()
             else
             {
                 context().ensure_cursor_visible = true;
-                m_input_handler.handle_key(key);
+                m_input_handler.handle_key(key, false);
             }
 
             context().hooks().run_hook(Hook::RawKey, to_string(key), context());

@@ -1601,7 +1601,7 @@ void replay_macro(Context& context, NormalParams params)
     do
     {
         for (auto& key : keys)
-            context.input_handler().handle_key(key);
+            context.input_handler().handle_key(key, true);
     } while (--params.count > 0);
 }
 
@@ -2073,7 +2073,7 @@ void exec_user_mappings(Context& context, NormalParams params)
         ScopedEdition edition(context);
         ScopedSelectionEdition selection_edition{context};
         for (auto& key : context.keymaps().get_mapping_keys(key, KeymapMode::User))
-            context.input_handler().handle_key(key);
+            context.input_handler().handle_key(key, true);
     }, "user mapping",
     build_autoinfo_for_mapping(context, KeymapMode::User, {}));
 }

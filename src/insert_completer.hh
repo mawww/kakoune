@@ -5,6 +5,7 @@
 #include "option.hh"
 #include "display_buffer.hh"
 #include "vector.hh"
+#include "utils.hh"
 
 #include "optional.hh"
 
@@ -78,7 +79,7 @@ public:
     InsertCompleter& operator=(const InsertCompleter&) = delete;
     ~InsertCompleter();
 
-    void select(int index, bool relative, Vector<Key>* keystrokes);
+    void select(int index, bool relative, FunctionRef<void (Key)> record_key);
     void update(bool allow_implicit);
     void try_accept();
     void reset();

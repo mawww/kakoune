@@ -91,7 +91,7 @@ public:
                      Timer::Callback idle_callback = Timer::Callback{});
 
     // process the given key
-    void handle_key(Key key);
+    void handle_key(Key key, bool synthesized);
 
     void refresh_ifn();
 
@@ -131,6 +131,9 @@ private:
     void push_mode(InputMode* new_mode);
     void pop_mode(InputMode* current_mode);
 
+    void record_key(Key key);
+    void drop_last_recorded_key();
+
     struct Insertion{
         NestedBool recording;
         InsertMode mode;
@@ -139,11 +142,11 @@ private:
         int count;
     } m_last_insert = { {}, InsertMode::Insert, {}, false, 1 };
 
-    char   m_recording_reg = 0;
-    String m_recorded_keys;
-    int    m_recording_level = -1;
+    int m_handle_key_level = 0;
 
-    int    m_handle_key_level = 0;
+    char        m_recording_reg = 0;
+    Vector<Key> m_recorded_keys;
+    int         m_recording_level = -1;
 };
 
 enum class AutoInfo

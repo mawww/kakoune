@@ -67,15 +67,12 @@ public:
 protected:
     virtual void on_key(Key key, bool synthesized) = 0;
 
-    void push_mode(InputMode* new_mode)
-    {
-        m_input_handler.push_mode(new_mode);
-    }
+    void push_mode(InputMode* new_mode) { m_input_handler.push_mode(new_mode); }
+    void pop_mode() { m_input_handler.pop_mode(this); }
 
-    void pop_mode()
-    {
-        m_input_handler.pop_mode(this);
-    }
+    void record_key(Key key) { m_input_handler.record_key(key); }
+    void drop_last_recorded_key() { m_input_handler.drop_last_recorded_key(); }
+
 private:
     InputHandler& m_input_handler;
 };
@@ -1307,11 +1304,10 @@ public:
         }
         else if (key == ctrl('n') or key == ctrl('p') or key.modifiers == Key::Modifiers::MenuSelect)
         {
-            if (m_last_insert)
-                m_last_insert->keys.pop_back();
+            drop_last_recorded_key();
             bool relative = key.modifiers != Key::Modifiers::MenuSelect;
             int index = relative ? (key == ctrl('n') ? 1 : -1) : key.key;
-            m_completer.select(index, relative, m_last_insert ? &m_last_insert->keys : nullptr);
+            m_completer.select(index, relative, [&](Key key) { record_key(key); });
             update_completions = false;
         }
         else if (key == ctrl('x'))
@@ -1585,7 +1581,7 @@ void InputHandler::repeat_last_insert()
 
     push_mode(new InputModes::Insert(*this, m_last_insert.mode, m_last_insert.count, nullptr));
     for (auto& key : m_last_insert.keys)
-        handle_key(key);
+        handle_key(key, true);
     kak_assert(dynamic_cast<InputModes::Normal*>(&current_mode()) != nullptr);
 }
 
@@ -1647,18 +1643,16 @@ static bool is_valid(Key key)
     return ((key.modifiers & ~valid_mods) or key.key <= 0x10FFFF);
 }
 
-void InputHandler::handle_key(Key key)
+void InputHandler::handle_key(Key key, bool synthesized)
 {
     if (not is_valid(key))
         return;
 
-    const bool was_recording = is_recording();
     ++m_handle_key_level;
     auto dec = on_scope_end([this]{ --m_handle_key_level;} );
 
-    auto process_key = [&](Key k, bool synthesized) {
-        if (m_last_insert.recording and m_handle_key_level <= 1)
-            m_last_insert.keys.push_back(k);
+    auto process_key = [this](Key k, bool synthesized) {
+        record_key(k);
         current_mode().handle_key(k, synthesized);
     };
 
@@ -1671,18 +1665,36 @@ void InputHandler::handle_key(Key key)
             process_key(k, true);
     }
     else
-        process_key(key, m_handle_key_level > 1);
-
-    // do not record the key that made us enter or leave recording mode,
-    // and the ones that are triggered recursively by previous keys.
-    if (was_recording and is_recording() and m_handle_key_level == m_recording_level)
-        m_recorded_keys += to_string(key);
+        process_key(key, synthesized or m_handle_key_level > 1);
 
     if (m_handle_key_level < m_recording_level)
     {
         write_to_debug_buffer("Macro recording started but not finished");
         m_recording_reg = 0;
         m_recording_level = -1;
+    }
+}
+
+void InputHandler::record_key(Key key)
+{
+    if (m_last_insert.recording and m_handle_key_level <= 1)
+        m_last_insert.keys.push_back(key);
+    if (is_recording() and m_handle_key_level == m_recording_level)
+        m_recorded_keys.push_back(key);
+}
+
+void InputHandler::drop_last_recorded_key()
+{
+    if (m_last_insert.recording and m_handle_key_level <= 1)
+    {
+        kak_assert(not m_last_insert.keys.empty());
+        m_last_insert.keys.pop_back();
+    }
+
+    if (is_recording() and m_handle_key_level == m_recording_level)
+    {
+        kak_assert(not m_recorded_keys.empty());
+        m_recorded_keys.pop_back();
     }
 }
 
@@ -1695,7 +1707,7 @@ void InputHandler::start_recording(char reg)
 {
     kak_assert(m_recording_reg == 0);
     m_recording_level = m_handle_key_level;
-    m_recorded_keys = "";
+    m_recorded_keys.clear();
     m_recording_reg = reg;
 }
 
@@ -1707,10 +1719,17 @@ bool InputHandler::is_recording() const
 void InputHandler::stop_recording()
 {
     kak_assert(m_recording_reg != 0);
-
     if (not m_recorded_keys.empty())
-        RegisterManager::instance()[m_recording_reg].set(
-            context(), {m_recorded_keys});
+    {
+        // Forget the key that got us to exit recording
+        if (m_handle_key_level == m_recording_level)
+            m_recorded_keys.pop_back();
+
+        String keys;
+        for (auto& key : m_recorded_keys)
+            keys += to_string(key);
+        RegisterManager::instance()[m_recording_reg].set(context(), {keys});
+    }
 
     m_recording_reg = 0;
     m_recording_level = -1;

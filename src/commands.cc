@@ -2202,7 +2202,7 @@ const CommandDesc execute_keys_cmd = {
             ScopedSetBool disable_hooks(context.hooks_disabled(), not parser.get_switch("with-hooks"));
 
             for (auto& key : parser | transform(parse_keys) | flatten())
-                context.input_handler().handle_key(key);
+                context.input_handler().handle_key(key, true);
         });
     }
 };
@@ -2675,7 +2675,7 @@ void enter_user_mode(Context& context, String mode_name, KeymapMode mode, bool l
         ScopedEdition edition(context);
 
         for (auto& key : context.keymaps().get_mapping_keys(key, mode))
-            context.input_handler().handle_key(key);
+            context.input_handler().handle_key(key, true);
 
         if (lock)
             enter_user_mode(context, std::move(mode_name), mode, true);
