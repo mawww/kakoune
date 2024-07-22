@@ -310,7 +310,7 @@ are exclusively available to built-in options.
     then rename it to the target file.
 
 *debug* `flags(hooks|shell|profile|keys|commands)`::
-    dump various debug information in the '\*debug*' buffer
+    dump various debug information in the `\*debug*` buffer
 
 *idle_timeout* `int`::
     _default_ 50 +
@@ -400,7 +400,7 @@ status line using the `echo` command:
 echo %opt{BOM}
 --------------
 
-The current values for all options can be dumped to the *\*debug*\* buffer using
+The current values for all options can be dumped to the `\*debug*` buffer using
 the following command:
 
 -------------

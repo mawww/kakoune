@@ -11,7 +11,7 @@ Scratch buffers are useful for volatile data and quick prototyping.
 They are not linked to files, so Kakoune does not warn about unsaved
 changes at exit, and the `:write` command requires an explicit filename.
 
-One particular scratch buffer, named *\*scratch*\*, is automatically created
+One particular scratch buffer, named `\*scratch*`, is automatically created
 when there are no other buffers left in the current session, which is also
 the case when Kakoune starts up without any files to open.
 
@@ -29,7 +29,7 @@ restrictions compared to regular buffers:
 - Hooks are not always run (like the `BufCreate`/`BufClose` hooks).
 - Display profiling is disabled.
 
-A specific *\*debug*\* buffer is used by Kakoune to write errors or
+A specific `\*debug*` buffer is used by Kakoune to write errors or
 warnings.  This is also where the ouput of the `:debug` and the `:echo
 -debug` commands will land.
 
