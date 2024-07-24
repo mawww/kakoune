@@ -823,10 +823,10 @@ constexpr RegexCompileFlags direction_flags(RegexMode mode)
         RegexCompileFlags::None : RegexCompileFlags::Backward | RegexCompileFlags::NoForward;
 }
 
-template<RegexMode mode = RegexMode::Forward, typename T>
-void regex_prompt(Context& context, String prompt, char reg, T func)
+template<typename Func>
+void regex_prompt(Context& context, String prompt, char reg, RegexMode mode, Func func)
 {
-    static_assert(is_direction(mode));
+    kak_assert(is_direction(mode));
     DisplayCoord position = context.has_window() ? context.window().position() : DisplayCoord{};
     SelectionList selections = context.selections();
     auto default_regex = RegisterManager::instance()[reg].get_main(context, context.selections().main_index());
@@ -857,7 +857,7 @@ void regex_prompt(Context& context, String prompt, char reg, T func)
                        [&](auto&& m) { candidates.push_back(m.candidate().str()); return true; });
             return {(int)(word.begin() - regex.begin()), pos,  std::move(candidates) };
         },
-        [=, func=T(std::move(func)), saved_reg=RegisterManager::instance()[reg].save(context),
+        [=, func=std::move(func), saved_reg=RegisterManager::instance()[reg].save(context),
          selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
         (StringView str, PromptEvent event, Context& context) mutable {
             try
@@ -912,20 +912,18 @@ void regex_prompt(Context& context, String prompt, char reg, T func)
         });
 }
 
-template<RegexMode mode>
-void select_next_matches(Context& context, const Regex& regex, int count)
+void select_next_matches(Context& context, const Regex& regex, RegexMode mode, int count)
 {
      auto& selections = context.selections();
      do {
          bool wrapped = false;
          for (auto& sel : selections)
-             sel = keep_direction(find_next_match<mode>(context, sel, regex, wrapped), sel);
+             sel = keep_direction(find_next_match(context, sel, regex, mode, wrapped), sel);
          selections.sort_and_merge_overlapping();
      } while (--count > 0);
 }
 
-template<RegexMode mode>
-void extend_to_next_matches(Context& context, const Regex& regex, int count)
+void extend_to_next_matches(Context& context, const Regex& regex, RegexMode mode, int count)
 {
      Vector<Selection> new_sels;
      auto& selections = context.selections();
@@ -934,7 +932,7 @@ void extend_to_next_matches(Context& context, const Regex& regex, int count)
          size_t main_index = selections.main_index();
          for (auto& sel : selections)
          {
-             auto new_sel = find_next_match<mode>(context, sel, regex, wrapped);
+             auto new_sel = find_next_match(context, sel, regex, mode, wrapped);
              if (not wrapped)
              {
                  new_sels.push_back(sel);
@@ -951,32 +949,29 @@ void extend_to_next_matches(Context& context, const Regex& regex, int count)
      } while (--count > 0);
 }
 
-template<SelectMode mode, RegexMode regex_mode>
-void search(Context& context, NormalParams params)
+void search(Context& context, NormalParams params, SelectMode mode, RegexMode regex_mode)
 {
-    static_assert(is_direction(regex_mode));
-    constexpr StringView prompt = mode == SelectMode::Extend ?
+    kak_assert(is_direction(regex_mode));
+    const StringView prompt = mode == SelectMode::Extend ?
         (regex_mode & RegexMode::Forward ? "search (extend):" : "reverse search (extend):")
       : (regex_mode & RegexMode::Forward ? "search:"          : "reverse search:");
 
     const char reg = to_lower(params.reg ? params.reg : '/');
     const int count = params.count;
 
-    regex_prompt<regex_mode>(context, prompt.str(), reg,
-                 [count]
-                 (const Regex& regex, PromptEvent event, Context& context) {
+    regex_prompt(context, prompt.str(), reg, regex_mode,
+                 [=](const Regex& regex, PromptEvent event, Context& context) {
                      if (regex.empty() or regex.str().empty())
                          return;
 
                      if (mode == SelectMode::Extend)
-                         extend_to_next_matches<regex_mode>(context, regex, count);
+                         extend_to_next_matches(context, regex, regex_mode, count);
                      else
-                         select_next_matches<regex_mode>(context, regex, count);
+                         select_next_matches(context, regex, regex_mode, count);
                  });
 }
 
-template<SelectMode mode, RegexMode regex_mode>
-void search_next(Context& context, NormalParams params)
+void search_next(Context& context, NormalParams params, SelectMode mode, RegexMode regex_mode)
 {
     const char reg = to_lower(params.reg ? params.reg : '/');
     StringView str = RegisterManager::instance()[reg].get(context).front();
@@ -991,12 +986,12 @@ void search_next(Context& context, NormalParams params)
             if (mode == SelectMode::Replace)
             {
                 auto& sel = selections.main();
-                sel = keep_direction(find_next_match<regex_mode>(context, sel, regex, wrapped), sel);
+                sel = keep_direction(find_next_match(context, sel, regex, regex_mode, wrapped), sel);
             }
             else if (mode == SelectMode::Append)
             {
                 auto sel = keep_direction(
-                    find_next_match<regex_mode>(context, selections.main(), regex, wrapped),
+                    find_next_match(context, selections.main(), regex, regex_mode, wrapped),
                     selections.main());
                 selections.push_back(std::move(sel));
                 selections.set_main_index(selections.size() - 1);
@@ -1044,9 +1039,8 @@ void select_regex(Context& context, NormalParams params)
     const int capture = params.count;
     auto prompt = capture ? format("select (capture {}):", capture) :  "select:"_str;
 
-    regex_prompt(context, std::move(prompt), reg,
-                 [capture]
-                 (Regex ex, PromptEvent event, Context& context) {
+    regex_prompt(context, std::move(prompt), reg, RegexMode::Forward,
+                 [capture](Regex ex, PromptEvent event, Context& context) {
         auto& selections = context.selections();
         auto& buffer = selections.buffer();
         if (not ex.empty() and not ex.str().empty())
@@ -1060,9 +1054,8 @@ void split_regex(Context& context, NormalParams params)
     const int capture = params.count;
     auto prompt = capture ? format("split (on capture {}):", (int)capture) :  "split:"_str;
 
-    regex_prompt(context, std::move(prompt), reg,
-                 [capture]
-                 (Regex ex, PromptEvent event, Context& context) {
+    regex_prompt(context, std::move(prompt), reg, RegexMode::Forward,
+                 [capture](Regex ex, PromptEvent event, Context& context) {
         auto& selections = context.selections();
         auto& buffer = selections.buffer();
         if (not ex.empty() and not ex.str().empty())
@@ -1157,7 +1150,7 @@ void keep(Context& context, NormalParams params)
 
     const char reg = to_lower(params.reg ? params.reg : '/');
 
-    regex_prompt(context, prompt.str(), reg,
+    regex_prompt(context, prompt.str(), reg, RegexMode::Forward,
                  [selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
                  (const Regex& regex, PromptEvent event, Context& context) {
         if (regex.empty() or regex.str().empty())
@@ -2379,14 +2372,14 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
     { {'M'}, {"extend to matching character", select<SelectMode::Extend, select_matching<true>>} },
     { {alt('M')}, {"backward extend to matching character", select<SelectMode::Extend, select_matching<false>>} },
 
-    { {'/'}, {"select next given regex match", search<SelectMode::Replace, RegexMode::Forward>} },
-    { {'?'}, {"extend with next given regex match", search<SelectMode::Extend, RegexMode::Forward>} },
-    { {alt('/')}, {"select previous given regex match", search<SelectMode::Replace, RegexMode::Backward>} },
-    { {alt('?')}, {"extend with previous given regex match", search<SelectMode::Extend, RegexMode::Backward>} },
-    { {'n'}, {"select next current search pattern match", search_next<SelectMode::Replace, RegexMode::Forward>} },
-    { {'N'}, {"extend with next current search pattern match", search_next<SelectMode::Append, RegexMode::Forward>} },
-    { {alt('n')}, {"select previous current search pattern match", search_next<SelectMode::Replace, RegexMode::Backward>} },
-    { {alt('N')}, {"extend with previous current search pattern match", search_next<SelectMode::Append, RegexMode::Backward>} },
+    { {'/'}, {"select next given regex match", [](Context& c, NormalParams p) { return search(c, p, SelectMode::Replace, RegexMode::Forward); } } },
+    { {'?'}, {"extend with next given regex match", [](Context& c, NormalParams p) { return search(c, p, SelectMode::Extend, RegexMode::Forward); } } },
+    { {alt('/')}, {"select previous given regex match", [](Context& c, NormalParams p) { return search(c, p, SelectMode::Replace, RegexMode::Backward); } } },
+    { {alt('?')}, {"extend with previous given regex match", [](Context& c, NormalParams p) { return search(c, p, SelectMode::Extend, RegexMode::Backward); } } },
+    { {'n'}, {"select next current search pattern match", [](Context& c, NormalParams p) { return search_next(c, p, SelectMode::Replace, RegexMode::Forward); } } },
+    { {'N'}, {"extend with next current search pattern match", [](Context& c, NormalParams p) { return search_next(c, p, SelectMode::Append, RegexMode::Forward); } } },
+    { {alt('n')}, {"select previous current search pattern match", [](Context& c, NormalParams p) { return search_next(c, p, SelectMode::Replace, RegexMode::Backward); } } },
+    { {alt('N')}, {"extend with previous current search pattern match", [](Context& c, NormalParams p) { return search_next(c, p, SelectMode::Append, RegexMode::Backward); } } },
     { {'*'}, {"set search pattern to main selection content", use_selection_as_search_pattern<true>} },
     { {alt('*')}, {"set search pattern to main selection content, do not detect words", use_selection_as_search_pattern<false>} },
 

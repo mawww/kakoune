@@ -902,11 +902,10 @@ static bool find_prev(const Buffer& buffer, const BufferIterator& pos,
                                  EventManager::handle_urgent_events);
 }
 
-template<RegexMode mode>
-Selection find_next_match(const Context& context, const Selection& sel, const Regex& regex, bool& wrapped)
+Selection find_next_match(const Context& context, const Selection& sel, const Regex& regex, RegexMode mode, bool& wrapped)
 {
-    static_assert(is_direction(mode));
-    constexpr bool forward = mode & RegexMode::Forward;
+    kak_assert(is_direction(mode));
+    const bool forward = mode & RegexMode::Forward;
     auto& buffer = context.buffer();
     MatchResults<BufferIterator> matches;
     auto pos = buffer.iterator_at(forward ? sel.max() : sel.min());
@@ -929,8 +928,6 @@ Selection find_next_match(const Context& context, const Selection& sel, const Re
 
     return {begin.coord(), end.coord(), std::move(captures)};
 }
-template Selection find_next_match<RegexMode::Forward>(const Context&, const Selection&, const Regex&, bool&);
-template Selection find_next_match<RegexMode::Backward>(const Context&, const Selection&, const Regex&, bool&);
 
 Vector<Selection> select_matches(const Buffer& buffer, ConstArrayView<Selection> selections, const Regex& regex, int capture_idx)
 {
