@@ -383,6 +383,10 @@ void view_commands(Context& context, NormalParams params)
 
         const BufferCoord cursor = context.selections().main().cursor();
         Window& window = context.window();
+
+        const DisplayCoord scrolloff = context.options()["scrolloff"].get<DisplayCoord>();
+        const LineCount line_offset{std::min((window.dimensions().line - 1) / 2, scrolloff.line)};
+        const ColumnCount column_offset{std::min((window.dimensions().column - 1) / 2, scrolloff.column)};
         switch (*cp)
         {
         case 'v':
@@ -394,17 +398,18 @@ void view_commands(Context& context, NormalParams params)
                 context.buffer()[cursor.line].column_count_to(cursor.column));
             break;
         case 't':
-            window.display_line_at(cursor.line, 0);
+            window.display_line_at(cursor.line, line_offset);
             break;
         case 'b':
-            window.display_line_at(cursor.line, window.dimensions().line-1);
+            window.display_line_at(cursor.line, window.dimensions().line-1-line_offset);
             break;
         case '<':
-            window.display_column_at(context.buffer()[cursor.line].column_count_to(cursor.column), 0);
+            window.display_column_at(context.buffer()[cursor.line].column_count_to(cursor.column),
+                                    column_offset);
             break;
         case '>':
             window.display_column_at(context.buffer()[cursor.line].column_count_to(cursor.column),
-                                     window.dimensions().column-1);
+                                     window.dimensions().column-1-column_offset);
             break;
         case 'h':
             window.scroll(-std::max<ColumnCount>(1, count));
