@@ -110,7 +110,7 @@ src/kak: src/kak$(tag)
 	ln -sf kak$(tag) $@
 
 src/kak$(tag): src/.version.o $(objects)
-	$(CXX) $(KAK_LDFLAGS) $(KAK_CXXFLAGS) $(KAK_LIBS) $(objects) src/.version.o -o $@
+	$(CXX) $(KAK_LDFLAGS) $(KAK_CXXFLAGS) $(objects) src/.version.o $(KAK_LIBS) -o $@
 
 deps = $(shell touch src/.version$(tag).d && find src -type f -name '.*$(tag).d') # Ensure we find one deps for FreeBSD make
 deps != touch src/.version$(tag).d && find src -type f -name '.*$(tag).d' # Ensure we find one deps for FreeBSD make
