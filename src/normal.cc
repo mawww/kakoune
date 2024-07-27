@@ -1537,10 +1537,9 @@ enum class SelectFlags
 
 constexpr bool with_bit_ops(Meta::Type<SelectFlags>) { return true; }
 
-template<SelectFlags flags>
-void select_to_next_char(Context& context, NormalParams params)
+void select_to_next_char(Context& context, NormalParams params, SelectFlags flags)
 {
-    auto get_title = [] {
+    auto get_title = [=] {
         return format("{} {} {} char",
                       flags & SelectFlags::Extend ? "extend" : "select",
                       flags & SelectFlags::Inclusive ? "onto" : "to",
@@ -1548,18 +1547,24 @@ void select_to_next_char(Context& context, NormalParams params)
     };
 
     on_next_key_with_autoinfo(context, "to-char", KeymapMode::None,
-                             [params](Key key, Context& context) {
+                             [params, flags](Key key, Context& context) {
         auto cp = key.codepoint();
         if (not cp or key == Key::Escape)
             return;
-        constexpr auto new_flags = flags & SelectFlags::Extend ? SelectMode::Extend
+        auto new_flags = flags & SelectFlags::Extend ? SelectMode::Extend
                                                                : SelectMode::Replace;
         select_and_set_last(
-            context, new_flags, [cp=*cp, count=params.count] (auto& context, auto& sel) {
+            context, new_flags, [cp=*cp, count=params.count, flags] (auto& context, auto& sel) {
                 auto& func = flags & SelectFlags::Reverse ? select_to_reverse : select_to;
                 return func(context, sel, cp, count, flags & SelectFlags::Inclusive);
             });
     }, get_title(), "enter char to select to");
+}
+
+template<SelectFlags flags>
+void select_to_next_char(Context& context, NormalParams params)
+{
+    select_to_next_char(context, params, flags);
 }
 
 void start_or_end_macro_recording(Context& context, NormalParams params)
@@ -2116,8 +2121,8 @@ void repeated(Context& context, NormalParams params)
     do { func(context, {0, params.reg}); } while(--params.count > 0);
 }
 
-template<typename Type, Direction direction, SelectMode mode = SelectMode::Replace>
-void move_cursor(Context& context, NormalParams params)
+template<typename Type>
+void move_cursor(Context& context, NormalParams params, Direction direction, SelectMode mode)
 {
     kak_assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
     const Type offset{direction * std::max(params.count,1)};
@@ -2131,6 +2136,12 @@ void move_cursor(Context& context, NormalParams params)
         sel.cursor() = cursor;
     }
     selections.sort_and_merge_overlapping();
+}
+
+template<typename Type, Direction direction, SelectMode mode = SelectMode::Replace>
+void move_cursor(Context& context, NormalParams params)
+{
+    move_cursor<Type>(context, params, direction, mode);
 }
 
 void select_whole_buffer(Context& context, NormalParams)
