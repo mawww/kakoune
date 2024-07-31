@@ -12,7 +12,7 @@ define-command -params .. -docstring %{
     Passing no argument will perform a literal-string grep for the current selection
 } grep %{
     evaluate-commands -try-client %opt{toolsclient} %{
-        fifo -name *grep* -script %{
+        fifo -name *grep* -script %exp{
             trap - INT QUIT
             if [ $# -eq 0 ]; then
                 case "$kak_opt_grepcmd" in
@@ -27,7 +27,7 @@ define-command -params .. -docstring %{
                     ;;
                 esac
             fi
-            $kak_opt_grepcmd "$@" 2>&1 | tr -d '\r'
+            %opt{grepcmd} "$@" 2>&1 | tr -d '\r'
         } -- %arg{@}
         set-option buffer filetype grep
         set-option buffer jump_current_line 0
