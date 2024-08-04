@@ -31,9 +31,6 @@ define-command menu -params 1.. -docstring %{
             printf %s "$2"
             exit
         fi
-        shellquote() {
-            printf "'%s'" "$(printf %s "$1" | sed "s/'/'\\\\''/g; s/§/§§/g; $2")"
-        }
         cases=
         select_cases=
         completion=
@@ -43,43 +40,45 @@ define-command menu -params 1.. -docstring %{
             command=$2
             completion="${completion}${title}${nl}"
             cases="${cases}
-                ($(shellquote "$title" s/¶/¶¶/g))
-                    printf '%s\\n' $(shellquote "$command" s/¶/¶¶/g)
+                $(kak -quote shell -- "$title"))
+                    printf '%s\\n' $(kak -quote shell -- "$command")
                     ;;"
             if $select_cmds; then
                 select_command=$3
                 select_cases="${select_cases}
-                    ($(shellquote "$title" s/¶/¶¶/g))
-                        printf '%s\\n' $(shellquote "$select_command" s/¶/¶¶/g)
+                    $(kak -quote shell -- "$title"))
+                        printf '%s\\n' $(kak -quote shell -- "$select_command")
                         ;;"
             fi
             shift $stride
         done
-        printf "\
-            prompt '' %%§
-                    evaluate-commands %%sh¶
-                        case \"\$kak_text\" in \
-                        %s
-                        (*) echo fail -- no such item: \"'\$(printf %%s \"\$kak_text\" | sed \"s/'/''/g\")'\" ;;
-                        esac
-                    ¶
-                §" "$cases"
+
+        printf "%s" "prompt '' $(kak -quote kakoune -- "
+            evaluate-commands %sh$(kak -quote kakoune -- '
+                case "$kak_text" in
+                '"${cases}"'
+                *) echo fail -- no such item: "$(kak -quote kakoune -- "$kak_text")"
+                esac
+            ')
+        ")"
+
         if $select_cmds; then
-            printf " \
-                    -on-change %%§
-                        evaluate-commands %%sh¶
-                            case \"\$kak_text\" in \
-                            %s
-                            (*) : ;;
-                            esac
-                        ¶
-                    §" "$select_cases"
+            printf "%s" " -on-change $(kak -quote kakoune -- "
+                evaluate-commands %sh$(kak -quote kakoune -- '
+                    case "$kak_text" in
+                    '"$select_cases"'
+                    *) : ;;
+                    esac
+                ')
+           ")"
         fi
+
         if [ -n "$on_abort" ]; then
-            printf " -on-abort '%s'" "$(printf %s "$on_abort" | sed "s/'/''/g")"
+            printf "%s" " -on-abort $(kak -quote kakoune -- "$on_abort")"
         fi
-        printf ' -menu -shell-script-candidates %%§
-                    printf %%s %s
-                §\n' "$(shellquote "$completion")"
+
+        printf "%s\n" " -menu -shell-script-candidates $(kak -quote kakoune -- "
+            printf %s $(kak -quote shell -- "$completion")
+        ")"
     }
 }
