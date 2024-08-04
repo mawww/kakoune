@@ -19,6 +19,9 @@ namespace Kakoune
 
 constexpr Codepoint CompiledRegex::StartDesc::count;
 
+namespace
+{
+
 struct ParsedRegex
 {
     enum Op : char
@@ -73,9 +76,6 @@ struct ParsedRegex
     uint32_t capture_count;
 };
 
-namespace
-{
-
 template<RegexMode mode = RegexMode::Forward>
 struct Children
 {
@@ -123,12 +123,14 @@ struct Children
     const Index m_index;
 };
 
-}
 
 // Recursive descent parser based on naming used in the ECMAScript
 // standard, although the syntax is not fully compatible.
 struct RegexParser
 {
+    static ParsedRegex parse(StringView re) { return RegexParser{re}.m_parsed_regex; }
+
+private:
     RegexParser(StringView re)
         : m_regex{re}, m_pos{re.begin(), re}
     {
@@ -138,11 +140,6 @@ struct RegexParser
         kak_assert(root == 0);
     }
 
-    ParsedRegex get_parsed_regex() { return std::move(m_parsed_regex); }
-
-    static ParsedRegex parse(StringView re) { return RegexParser{re}.get_parsed_regex(); }
-
-private:
     struct InvalidPolicy
     {
         Codepoint operator()(Codepoint cp) const { throw regex_error{"Invalid utf8 in regex"}; }
@@ -1083,6 +1080,8 @@ private:
     RegexCompileFlags m_flags;
     ParsedRegex& m_parsed_regex;
 };
+
+}
 
 String dump_regex(const CompiledRegex& program)
 {
