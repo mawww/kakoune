@@ -148,9 +148,6 @@ define-command -params 1.. \
             exit 1
         }
     }
-    kakquote() {
-        printf "%s" "$1" | sed "s/'/''/g; 1s/^/'/; \$s/\$/'/"
-    }
 
     show_git_cmd_output() {
         local filetype
@@ -255,7 +252,7 @@ define-command -params 1.. \
             n=$#
             eval set -- "$(cat ${kak_response_fifo})" "$@"
             if [ $# -eq $((n+1)) ]; then
-                echo fail -- "$(kakquote "$1")"
+                echo fail -- "$(kak -quote kakoune -- "$1")"
                 exit
             fi
             commit=$1
@@ -266,15 +263,15 @@ define-command -params 1.. \
             # Log commit and file name because they are only echoed briefly
             # and not shown elsewhere (we don't have a :messages buffer).
             message="Blaming $file as of $(git rev-parse --short $commit)"
-            echo "echo -debug -- $(kakquote "$message")"
+            echo "echo -debug -- $(kak -quote kakoune -- "$message")"
             on_close_fifo="
                 execute-keys -client ${kak_client} ${cursor_line}g<a-h>${cursor_column}lh
                 evaluate-commands -client ${kak_client} %{
-                    set-option buffer git_blob $(kakquote "$commit:$file")
-                    git blame $(for arg; do kakquote "$arg"; printf " "; done)
+                    set-option buffer git_blob $(kak -quote kakoune -- "$commit:$file")
+                    git blame $(kak -quote kakoune -- "$@")
                     hook -once window NormalIdle .* %{
                         execute-keys vv
-                        echo -markup -- $(kakquote "{Information}{\\}$message. Press <ret> to jump to blamed commit")
+                        echo -markup -- $(kak -quote kakoune -- "{Information}{\\}$message. Press <ret> to jump to blamed commit")
                     }
                 }
             " show_git_cmd_output show "$commit:$file"
@@ -565,7 +562,7 @@ define-command -params 1.. \
             '
             eval set -- "$(cat ${kak_response_fifo})"
             if [ $# -eq 1 ]; then
-                echo fail -- "$(kakquote "$1")"
+                echo fail -- "$(kak -quote kakoune -- "$1")"
                 exit
             fi
             starting_commit=$1
