@@ -336,7 +336,7 @@ private:
                         node.ignore_case = false;
                     for (CharacterClass &char_class : m_parsed_regex.character_classes)
                         char_class.ignore_case = false;
-                 
+                
                 }
                 return add_node(ParsedRegex::Literal, cp);
         }
