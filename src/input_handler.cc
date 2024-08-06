@@ -127,7 +127,10 @@ struct MouseHandler
 
         Buffer& buffer = context.buffer();
         BufferCoord cursor;
-        constexpr auto modifiers = Key::Modifiers::Control | Key::Modifiers::Alt | Key::Modifiers::Shift | Key::Modifiers::MouseButtonMask;
+        // bits above these potentially store additional information
+        constexpr auto mask = (Key::Modifiers) 0x7FF;
+        constexpr auto modifiers = Key::Modifiers::Control | Key::Modifiers::Alt | Key::Modifiers::Shift | Key::Modifiers::MouseButtonMask | ~mask;
+
         switch ((key.modifiers & ~modifiers).value)
         {
         case Key::Modifiers::MousePress:
@@ -193,7 +196,7 @@ struct MouseHandler
         }
 
         case Key::Modifiers::Scroll:
-            scroll_window(context, static_cast<int32_t>(key.key), m_dragging ? OnHiddenCursor::MoveCursor : OnHiddenCursor::PreserveSelections);
+            scroll_window(context, key.scroll_amount(), m_dragging ? OnHiddenCursor::MoveCursor : OnHiddenCursor::PreserveSelections);
             return true;
 
         default: return false;
