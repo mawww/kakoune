@@ -167,6 +167,7 @@ them:
 * `(?I)` starts case-sensitive matching (default).
 * `(?s)` allows `.` to match newlines (default).
 * `(?S)` prevents `.` from matching newlines.
+* `(?c)` enable smartcase, starts case-insensitive matching unless an uppercase character is present in the pattern.
 
 == Quoting
 
