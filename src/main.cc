@@ -1103,6 +1103,7 @@ int main(int argc, char* argv[])
                    { "debug", { ArgCompleter{}, "initial debug option value" } },
                    { "version", { {}, "display kakoune version and exit" } },
                    { "ro", { {}, "readonly mode" } },
+                   { "quote", { ArgCompleter{}, "echo each argument with the given quoting (raw, kakoune, or shell)" } },
                    { "help", { {}, "display a help message and quit" } } }
     };
 
@@ -1150,6 +1151,13 @@ int main(int argc, char* argv[])
                 if (not valid and clear_sessions)
                     unlink(session_path(session).c_str());
             }
+            return 0;
+        }
+
+        if (auto quoting = parser.get_switch("quote"))
+        {
+            write_stdout(join(parser | transform(quoter(option_from_string(Meta::Type<Quoting>{}, *quoting))),
+                         ' ', false));
             return 0;
         }
 
