@@ -89,8 +89,9 @@ struct Key
     constexpr bool operator==(Key other) const { return val() == other.val(); }
     constexpr auto operator<=>(Key other) const { return val() <=> other.val(); }
 
-    constexpr DisplayCoord coord() const { return {(int)((key & 0xFFFF0000) >> 16), (int)(key & 0x0000FFFF)}; }
+    constexpr DisplayCoord coord() const { return {(int)((int32_t) (key & 0xFFFF0000) >> 16), (int)(key & 0x0000FFFF)}; }
     constexpr MouseButton mouse_button() { return MouseButton{((int)modifiers & (int)Modifiers::MouseButtonMask) >> 6}; }
+    constexpr int scroll_amount() { return (int32_t)modifiers >> 16; }
     static Modifiers to_modifier(MouseButton button) { return Key::Modifiers{((int)button << 6) & (int)Modifiers::MouseButtonMask}; }
 
     Optional<Codepoint> codepoint() const;

@@ -798,9 +798,8 @@ Optional<Key> TerminalUI::get_next_key()
             return Key{mod | Key::to_modifier(button), coord};
         };
 
-        auto mouse_scroll = [this](Key::Modifiers mod, bool down) -> Key {
-            return {mod | Key::Modifiers::Scroll,
-                    (Codepoint)((down ? 1 : -1) * m_wheel_scroll_amount)};
+        auto mouse_scroll = [this](Key::Modifiers mod, Codepoint coord, bool down) -> Key {
+            return {mod | Key::Modifiers::Scroll | (Key::Modifiers)((down ? m_wheel_scroll_amount : -1 * m_wheel_scroll_amount) << 16), coord};
         };
 
         auto masked_key = [&](Codepoint key, Codepoint shifted_key = 0) {
@@ -921,8 +920,8 @@ Optional<Key> TerminalUI::get_next_key()
                 else if (int guess = ffs(m_mouse_state) - 1; 0 <= guess and guess < 3)
                     return mouse_button(mod, Key::MouseButton{guess}, coord, true);
                 break;
-            case 64: return mouse_scroll(mod, false);
-            case 65: return mouse_scroll(mod, true);
+            case 64: return mouse_scroll(mod, coord, false);
+            case 65: return mouse_scroll(mod, coord, true);
             }
             return Key{Key::Modifiers::MousePos, coord};
         }
