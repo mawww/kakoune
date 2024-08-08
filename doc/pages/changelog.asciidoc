@@ -6,6 +6,7 @@ released versions.
 == Development version
 
 * Expose env vars that are mentionned in the arguments passed to shell expansions
+* Support for colored double underlines
 
 == Kakoune 2024.05.18
 

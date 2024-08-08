@@ -33,6 +33,9 @@ attributes::
         *c*:::
             curly underline
             Note: This takes precedence over underline if both are specified.
+        *U*:::
+            double underline
+            Note: This takes precedence over underline and curly underline if also specified.
         *r*:::
             reverse
         *b*:::
