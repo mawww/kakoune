@@ -8,7 +8,7 @@
 #include "optional.hh"
 #include "flags.hh"
 #include "string.hh"
-#include "string_utils.hh"
+#include "format.hh"
 
 #include <functional>
 

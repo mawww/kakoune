@@ -3,7 +3,7 @@
 #include "array_view.hh"
 #include "assert.hh"
 #include "exception.hh"
-#include "string_utils.hh"
+#include "format.hh"
 
 #include <algorithm>
 

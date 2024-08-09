@@ -7,7 +7,7 @@
 #include "file.hh"
 #include "keys.hh"
 #include "ranges.hh"
-#include "string_utils.hh"
+#include "format.hh"
 #include "diff.hh"
 
 #include <algorithm>

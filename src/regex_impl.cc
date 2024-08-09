@@ -6,7 +6,7 @@
 #include "unit_tests.hh"
 #include "utf8.hh"
 #include "utf8_iterator.hh"
-#include "string_utils.hh"
+#include "format.hh"
 #include "vector.hh"
 #include "utils.hh"
 

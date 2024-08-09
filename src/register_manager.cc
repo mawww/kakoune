@@ -3,7 +3,7 @@
 #include "assert.hh"
 #include "context.hh"
 #include "hash_map.hh"
-#include "string_utils.hh"
+#include "format.hh"
 
 namespace Kakoune
 {
