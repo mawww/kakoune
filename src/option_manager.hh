@@ -8,6 +8,7 @@
 #include "ranges.hh"
 #include "utils.hh"
 #include "vector.hh"
+#include "format.hh"
 #include "string_utils.hh"
 
 #include <memory>

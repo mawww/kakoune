@@ -3,6 +3,7 @@
 
 #include "safe_ptr.hh"
 #include "string.hh"
+#include "ranges.hh"
 #include "hash_map.hh"
 
 namespace Kakoune

@@ -9,6 +9,7 @@
 #include "format.hh"
 #include "vector.hh"
 #include "utils.hh"
+#include "ranges.hh"
 
 #include <cstdio>
 #include <cstring>

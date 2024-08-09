@@ -5,6 +5,7 @@
 #include "constexpr_utils.hh"
 #include "context.hh"
 #include "env_vars.hh"
+#include "enum.hh"
 #include "face.hh"
 #include "normal.hh"
 #include "optional.hh"

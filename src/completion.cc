@@ -2,6 +2,7 @@
 #include "file.hh"
 #include "context.hh"
 #include "option_types.hh"
+#include "option_manager.hh"
 #include "regex.hh"
 
 namespace Kakoune

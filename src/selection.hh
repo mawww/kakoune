@@ -1,12 +1,20 @@
 #ifndef selection_hh_INCLUDED
 #define selection_hh_INCLUDED
 
-#include "buffer.hh"
+#include "coord.hh"
+#include "range.hh"
+#include "safe_ptr.hh"
+#include "utils.hh"
+#include "string.hh"
+#include "vector.hh"
 
 #include <limits>
 
 namespace Kakoune
 {
+
+class Buffer;
+using BufferRange = Range<BufferCoord>;
 
 using CaptureList = Vector<String, MemoryDomain::Selections>;
 
@@ -84,10 +92,17 @@ struct SelectionList
 {
     static constexpr MemoryDomain Domain = MemoryDomain::Selections;
 
+    ~SelectionList();
     SelectionList(Buffer& buffer, Selection s);
     SelectionList(Buffer& buffer, Selection s, size_t timestamp);
     SelectionList(Buffer& buffer, Vector<Selection> s);
     SelectionList(Buffer& buffer, Vector<Selection> s, size_t timestamp);
+
+    SelectionList(const SelectionList&);
+    SelectionList(SelectionList&&);
+
+    SelectionList& operator=(const SelectionList&);
+    SelectionList& operator=(SelectionList&&);
 
     void update(bool merge = true);
     void check_invariant() const;
@@ -166,33 +181,7 @@ String selection_to_string(ColumnType column_type, const Buffer& buffer, const S
 
 String selection_list_to_string(ColumnType column_type, const SelectionList& selections, ColumnCount tabstop = -1);
 
-template<typename StringArray>
-SelectionList selection_list_from_strings(Buffer& buffer, ColumnType column_type, StringArray&& descs, size_t timestamp, size_t main, ColumnCount tabstop = -1)
-{
-    if ((column_type != ColumnType::Byte and timestamp != buffer.timestamp()) or timestamp > buffer.timestamp())
-        throw runtime_error{format("invalid timestamp '{}'", timestamp)};
-
-    auto from_string = [&](StringView desc) {
-        return selection_from_string(column_type, buffer, desc, tabstop);
-    };
-
-    auto sels = descs | transform(from_string) | gather<Vector<Selection>>();
-    if (sels.empty())
-        throw runtime_error{"empty selection description"};
-    if (main >= sels.size())
-        throw runtime_error{"invalid main selection index"};
-
-    sort_selections(sels, main);
-    merge_overlapping_selections(sels, main);
-    if (timestamp < buffer.timestamp())
-        update_selections(sels, main, buffer, timestamp);
-    else
-        clamp_selections(sels, buffer);
-
-    SelectionList res{buffer, std::move(sels)};
-    res.set_main_index(main);
-    return res;
-}
+SelectionList selection_list_from_strings(Buffer& buffer, ColumnType column_type, ConstArrayView<String> descs, size_t timestamp, size_t main, ColumnCount tabstop = -1);
 
 }
 

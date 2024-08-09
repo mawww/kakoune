@@ -6,6 +6,7 @@
 #include "exception.hh"
 #include "utils.hh"
 #include "hash_map.hh"
+#include "ranges.hh"
 #include "string.hh"
 #include "vector.hh"
 

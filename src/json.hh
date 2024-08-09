@@ -3,6 +3,7 @@
 
 #include "hash_map.hh"
 #include "string.hh"
+#include "string_utils.hh"
 #include "value.hh"
 
 namespace Kakoune

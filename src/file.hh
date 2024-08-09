@@ -6,6 +6,7 @@
 #include "meta.hh"
 #include "string.hh"
 #include "units.hh"
+#include "constexpr_utils.hh"
 #include "vector.hh"
 
 #include <sys/types.h>

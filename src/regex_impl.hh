@@ -9,6 +9,7 @@
 #include "utils.hh"
 
 #include <bit>
+#include <algorithm>
 
 namespace Kakoune
 {

@@ -1,6 +1,7 @@
 #include "assert.hh"
 
 #include "backtrace.hh"
+#include "format.hh"
 #include "buffer_utils.hh"
 #include "exception.hh"
 

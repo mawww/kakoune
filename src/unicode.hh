@@ -5,7 +5,6 @@
 #include <cwchar>
 
 #include "array_view.hh"
-#include "ranges.hh"
 #include "units.hh"
 
 namespace Kakoune
@@ -75,8 +74,12 @@ enum WordType { Word, WORD };
 template<WordType word_type = Word>
 inline bool is_word(Codepoint c, ConstArrayView<Codepoint> extra_word_chars = {'_'}) noexcept
 {
-    return (c < 128 ? is_basic_alpha(c) or is_basic_digit(c) : iswalnum((wchar_t)c)) or
-           contains(extra_word_chars, c);
+    if (c < 128 ? is_basic_alpha(c) or is_basic_digit(c) : iswalnum((wchar_t)c))
+        return true;
+    for (auto cp : extra_word_chars)
+        if (c == cp)
+            return true;
+    return false;
 }
 
 template<>

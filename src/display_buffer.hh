@@ -7,6 +7,8 @@
 #include "string.hh"
 #include "vector.hh"
 #include "hash_map.hh"
+#include "ranges.hh"
+
 #include <functional>
 
 namespace Kakoune

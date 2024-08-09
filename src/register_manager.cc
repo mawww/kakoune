@@ -4,6 +4,7 @@
 #include "context.hh"
 #include "hash_map.hh"
 #include "format.hh"
+#include "hook_manager.hh"
 
 namespace Kakoune
 {

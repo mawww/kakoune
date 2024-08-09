@@ -1841,7 +1841,7 @@ SelectionList read_selections_from_register(char reg, const Context& context)
     const auto buffer_name = StringView{ content[0].begin (), end_content[1].begin () - 1 };
     Buffer& buffer = BufferManager::instance().get_buffer(buffer_name);
 
-    return selection_list_from_strings(buffer, ColumnType::Byte, content | skip(1), timestamp, main);
+    return selection_list_from_strings(buffer, ColumnType::Byte, content.subrange(1), timestamp, main);
 }
 
 enum class CombineOp
