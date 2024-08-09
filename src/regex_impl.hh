@@ -210,11 +210,12 @@ constexpr bool is_direction(RegexMode mode)
            (mode & ~(RegexMode::Forward | RegexMode::Backward)) == RegexMode{0};
 }
 
-template<typename It, typename=void>
+template<typename It>
 struct SentinelType { using Type = It; };
 
 template<typename It>
-struct SentinelType<It, void_t<typename It::Sentinel>> { using Type = typename It::Sentinel; };
+    requires requires { typename It::Sentinel; }
+struct SentinelType<It> { using Type = typename It::Sentinel; };
 
 template<typename Iterator, RegexMode mode>
     requires (has_direction(mode))
