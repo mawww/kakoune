@@ -3,6 +3,7 @@
 
 #include "option.hh"
 #include "clock.hh"
+#include "option_manager.hh"
 
 namespace Kakoune
 {

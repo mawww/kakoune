@@ -1,6 +1,6 @@
 #include "shell_manager.hh"
 
-#include "buffer_utils.hh"
+#include "debug.hh"
 #include "client.hh"
 #include "clock.hh"
 #include "context.hh"

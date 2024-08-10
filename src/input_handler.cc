@@ -1,7 +1,7 @@
 #include "input_handler.hh"
 
 #include "buffer_manager.hh"
-#include "buffer_utils.hh"
+#include "debug.hh"
 #include "command_manager.hh"
 #include "client.hh"
 #include "event_manager.hh"

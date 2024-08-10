@@ -2,10 +2,11 @@
 
 #include "alias_registry.hh"
 #include "assert.hh"
-#include "buffer_utils.hh"
 #include "context.hh"
+#include "debug.hh"
 #include "flags.hh"
 #include "file.hh"
+#include "hook_manager.hh"
 #include "optional.hh"
 #include "option_types.hh"
 #include "profile.hh"
@@ -13,6 +14,7 @@
 #include "regex.hh"
 #include "register_manager.hh"
 #include "shell_manager.hh"
+#include "scope.hh"
 #include "utils.hh"
 #include "unit_tests.hh"
 

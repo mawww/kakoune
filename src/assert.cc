@@ -2,8 +2,9 @@
 
 #include "backtrace.hh"
 #include "format.hh"
-#include "buffer_utils.hh"
+#include "file.hh"
 #include "exception.hh"
+#include "debug.hh"
 
 #include <sys/types.h>
 #include <unistd.h>

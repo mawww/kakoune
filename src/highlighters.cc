@@ -2,6 +2,7 @@
 
 #include "assert.hh"
 #include "buffer_utils.hh"
+#include "debug.hh"
 #include "changes.hh"
 #include "command_manager.hh"
 #include "context.hh"

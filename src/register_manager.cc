@@ -4,10 +4,21 @@
 #include "context.hh"
 #include "hash_map.hh"
 #include "format.hh"
+#include "ranges.hh"
 #include "hook_manager.hh"
 
 namespace Kakoune
 {
+
+Register::RestoreInfo Register::save(const Context& context)
+{
+    return get(context) | gather<RestoreInfo>();
+}
+
+void Register::restore(Context& context, const RestoreInfo& info)
+{
+    set(context, info, true);
+}
 
 void StaticRegister::set(Context& context, ConstArrayView<String> values, bool)
 {

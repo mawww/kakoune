@@ -8,6 +8,7 @@
 #include "command_manager.hh"
 #include "completion.hh"
 #include "context.hh"
+#include "debug.hh"
 #include "event_manager.hh"
 #include "face_registry.hh"
 #include "file.hh"

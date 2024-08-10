@@ -2,6 +2,7 @@
 
 #include "buffer_manager.hh"
 #include "buffer_utils.hh"
+#include "debug.hh"
 #include "client.hh"
 #include "command_manager.hh"
 #include "changes.hh"

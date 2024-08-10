@@ -1,7 +1,7 @@
 #include "remote.hh"
 
-#include "buffer_manager.hh"
 #include "buffer_utils.hh"
+#include "debug.hh"
 #include "client_manager.hh"
 #include "command_manager.hh"
 #include "display_buffer.hh"
