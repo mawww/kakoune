@@ -275,8 +275,11 @@ of the file onto the filesystem
             embedded quotes.
 
         - *shell*::::
-            also wrap each arguments in single quotes and escape
+            also wrap each argument in single quotes and escape
             embedded quotes in a shell compatible way.
+
+        - *json*::::
+            convert each argument to a json string and join on newline.
 
 *set-face* <scope> <name> <facespec>::
     *alias* face +

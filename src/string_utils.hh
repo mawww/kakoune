@@ -7,6 +7,7 @@
 #include "ranges.hh"
 #include "optional.hh"
 #include "utils.hh"
+#include "json.hh"
 
 namespace Kakoune
 {
@@ -188,11 +189,17 @@ inline String shell_quote(StringView s)
     return format("'{}'", replace(s, "'", R"('\'')"));
 }
 
+inline String json_quote(StringView s)
+{
+    return format("{}", to_json(s));
+}
+
 enum class Quoting
 {
     Raw,
     Kakoune,
-    Shell
+    Shell,
+    Json
 };
 
 constexpr auto enum_desc(Meta::Type<Quoting>)
@@ -200,7 +207,8 @@ constexpr auto enum_desc(Meta::Type<Quoting>)
     return make_array<EnumDesc<Quoting>>({
         { Quoting::Raw, "raw" },
         { Quoting::Kakoune, "kakoune" },
-        { Quoting::Shell, "shell" }
+        { Quoting::Shell, "shell" },
+        { Quoting::Json, "json" }
     });
 }
 
@@ -210,6 +218,7 @@ inline auto quoter(Quoting quoting)
     {
         case Quoting::Kakoune: return &quote;
         case Quoting::Shell: return &shell_quote;
+        case Quoting::Json: return &json_quote;
         case Quoting::Raw:
         default:
             return +[](StringView s) { return s.str(); };
