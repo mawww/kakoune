@@ -5,7 +5,6 @@
 #include <utility>
 #include <iterator>
 #include <numeric>
-#include <tuple>
 
 #include "constexpr_utils.hh"
 
@@ -191,7 +190,13 @@ struct EnumerateView
         Iterator(size_t index, RangeIt it)
             : m_index{index}, m_it{std::move(it)} {}
 
-        decltype(auto) operator*() { return std::tuple<size_t, decltype(*m_it)>(m_index, *m_it); }
+        struct ValueType
+        {
+            size_t index;
+            decltype(*std::declval<RangeIt>()) element;
+        };
+
+        ValueType operator*() { return {m_index, *m_it}; }
         Iterator& operator++() { ++m_index; ++m_it; return *this; }
         Iterator operator++(int) { auto copy = *this; ++(*this); return copy; }
 
