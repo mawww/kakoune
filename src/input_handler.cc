@@ -212,14 +212,6 @@ constexpr StringView register_doc =
 
 class Normal : public InputMode
 {
-    enum class PendingClear
-    {
-        None = 0,
-        Info = 0b01,
-        StatusLine = 0b10
-    };
-    friend constexpr bool with_bit_ops(Meta::Type<PendingClear>) { return true; }
-
 public:
     Normal(InputHandler& input_handler, bool single_command = false)
         : InputMode(input_handler),
@@ -228,13 +220,7 @@ public:
                            Timer::Callback{} : [this](Timer&) {
               RefPtr<InputMode> keep_alive{this}; // hook could trigger pop_mode()
               if (context().has_client())
-              {
-                  if (m_pending_clear & PendingClear::StatusLine)
-                        context().client().print_status({});
-                  if (m_pending_clear & PendingClear::Info)
-                        context().client().info_hide();
-              }
-              m_pending_clear = PendingClear::None;
+                  context().client().clear_pending();
 
               context().hooks().run_hook(Hook::NormalIdle, "", context());
           }},
@@ -381,8 +367,7 @@ public:
         if (enabled() and not transient) // The hook might have changed mode
         {
             if (should_clear and context().has_client())
-                m_pending_clear = (context().client().info_pending() ? PendingClear::None : PendingClear::Info)
-                                | (context().client().status_line_pending() ? PendingClear::None : PendingClear::StatusLine);
+                context().client().schedule_clear();
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
         }
     }
@@ -416,7 +401,7 @@ public:
         if (not (context().flags() & Context::Flags::Draft))
         {
             if (context().has_client())
-                m_pending_clear = PendingClear::Info | PendingClear::StatusLine;
+                context().client().schedule_clear();
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
         }
     }
@@ -434,7 +419,6 @@ private:
     Timer m_idle_timer;
     Timer m_fs_check_timer;
     MouseHandler m_mouse_handler;
-    PendingClear m_pending_clear = PendingClear::None;
 
     enum class State { Normal, SingleCommand, PopOnEnabled };
     State m_state;

@@ -130,6 +130,7 @@ void Client::print_status(DisplayLine status_line)
 {
     m_status_line = std::move(status_line);
     m_ui_pending |= StatusLine;
+    m_pending_clear &= ~PendingClear::StatusLine;
 }
 
 
@@ -467,6 +468,7 @@ void Client::info_show(DisplayLine title, DisplayLineList content, BufferCoord a
     m_info = Info{ std::move(title), std::move(content), anchor, {}, style };
     m_ui_pending |= InfoShow;
     m_ui_pending &= ~InfoHide;
+    m_pending_clear &= ~PendingClear::Info;
 }
 
 void Client::info_show(StringView title, StringView content, BufferCoord anchor, InfoStyle style)
@@ -488,6 +490,23 @@ void Client::info_hide(bool even_modal)
     m_info = Info{};
     m_ui_pending |= InfoHide;
     m_ui_pending &= ~InfoShow;
+}
+
+void Client::schedule_clear()
+{
+    if (not (m_ui_pending & InfoShow))
+        m_pending_clear |= PendingClear::Info;
+    if (not (m_ui_pending & StatusLine))
+        m_pending_clear |= PendingClear::StatusLine;
+}
+
+void Client::clear_pending()
+{
+    if (m_pending_clear & PendingClear::StatusLine)
+        print_status({});
+    if (m_pending_clear & PendingClear::Info)
+        info_hide();
+    m_pending_clear = PendingClear::None;
 }
 
 }

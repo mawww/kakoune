@@ -56,6 +56,9 @@ public:
 
     DisplayCoord dimensions() const;
 
+    void schedule_clear();
+    void clear_pending();
+
     void force_redraw(bool full = false);
     void redraw_ifn();
 
@@ -110,6 +113,16 @@ private:
         Refresh    = 1 << 7,
     };
     int m_ui_pending = 0;
+
+    enum class PendingClear
+    {
+        None = 0,
+        Info = 0b01,
+        StatusLine = 0b10
+    };
+    friend constexpr bool with_bit_ops(Meta::Type<PendingClear>) { return true; }
+    PendingClear m_pending_clear = PendingClear::None;
+
 
     struct Menu
     {
