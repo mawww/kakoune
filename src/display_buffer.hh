@@ -8,6 +8,8 @@
 #include "vector.hh"
 #include "hash_map.hh"
 
+#include <algorithm>
+
 namespace Kakoune
 {
 

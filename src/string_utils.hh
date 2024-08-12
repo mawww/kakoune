@@ -7,7 +7,7 @@
 #include "optional.hh"
 #include "utils.hh"
 #include "format.hh"
-#include "ranges.hh"
+#include "constexpr_utils.hh"
 
 namespace Kakoune
 {
@@ -66,44 +66,6 @@ inline bool prefix_match(StringView str, StringView prefix)
 bool subsequence_match(StringView str, StringView subseq);
 
 String expand_tabs(StringView line, ColumnCount tabstop, ColumnCount col = 0);
-
-struct WrapView
-{
-    struct Iterator
-    {
-        using difference_type = ptrdiff_t;
-        using value_type = StringView;
-        using pointer = StringView*;
-        using reference = StringView&;
-        using iterator_category = std::forward_iterator_tag;
-
-        Iterator(StringView text, ColumnCount max_width);
-
-        Iterator& operator++();
-        Iterator operator++(int) { auto copy = *this; ++(*this); return copy; }
-
-        bool operator==(Iterator other) const { return m_remaining == other.m_remaining and m_current == other.m_current; }
-        StringView operator*() { return m_current; }
-
-    private:
-        StringView m_current;
-        StringView m_remaining;
-        ColumnCount m_max_width;
-    };
-
-    Iterator begin() const { return {text, max_width}; }
-    Iterator end()   const { return {{}, 1}; }
-
-    StringView text;
-    ColumnCount max_width;
-};
-
-inline auto wrap_at(ColumnCount max_width)
-{
-    return ViewFactory{[=](StringView text) {
-        return WrapView{text, max_width};
-    }};
-}
 
 int str_to_int(StringView str); // throws on error
 Optional<int> str_to_int_ifp(StringView str);

@@ -3,6 +3,7 @@
 #include "exception.hh"
 #include "utf8_iterator.hh"
 #include "unit_tests.hh"
+#include "ranges.hh"
 
 #include <charconv>
 
@@ -187,63 +188,6 @@ String expand_tabs(StringView line, ColumnCount tabstop, ColumnCount col)
     return res;
 }
 
-WrapView::Iterator::Iterator(StringView text, ColumnCount max_width)
-  : m_remaining{text}, m_max_width{max_width}
-{
-    if (max_width <= 0)
-        throw runtime_error("Invalid max width");
-    ++*this;
-}
-
-WrapView::Iterator& WrapView::Iterator::operator++()
-{
-    using Utf8It = utf8::iterator<const char*>;
-    Utf8It it{m_remaining.begin(), m_remaining};
-    Utf8It last_word_end = it;
-
-    while (it != m_remaining.end())
-    {
-        const CharCategories cat = categorize(*it, {'_'});
-        if (cat == CharCategories::EndOfLine)
-        {
-            m_current = StringView{m_remaining.begin(), it.base()};
-            m_remaining = StringView{(it+1).base(), m_remaining.end()};
-            return *this;
-        }
-
-        Utf8It word_end = it+1;
-        while (word_end != m_remaining.end() and categorize(*word_end, {'_'}) == cat)
-            ++word_end;
-
-        if (word_end > m_remaining.begin() and
-            utf8::column_distance(m_remaining.begin(), word_end.base()) >= m_max_width)
-        {
-            auto line_end = last_word_end <= m_remaining.begin() ?
-                Utf8It{utf8::advance(m_remaining.begin(), m_remaining.end(), m_max_width), m_remaining}
-              : last_word_end;
-
-            m_current = StringView{m_remaining.begin(), line_end.base()};
-
-            while (line_end != m_remaining.end() and is_horizontal_blank(*line_end))
-                ++line_end;
-
-            if (line_end != m_remaining.end() and *line_end == '\n')
-                ++line_end;
-
-            m_remaining = StringView{line_end.base(), m_remaining.end()};
-            return *this;
-        }
-        if (cat == CharCategories::Word or cat == CharCategories::Punctuation)
-            last_word_end = word_end;
-
-        if (word_end > m_remaining.begin())
-            it = word_end;
-    }
-    m_current = m_remaining;
-    m_remaining = StringView{};
-    return *this;
-}
-
 String double_up(StringView s, StringView characters)
 {
     String res;
@@ -274,21 +218,6 @@ UnitTest test_string{[]()
     kak_assert(StringView{"youpi"}.ends_with("pi"));
     kak_assert(StringView{"youpi"}.ends_with("youpi"));
     kak_assert(not StringView{"youpi"}.ends_with("oup"));
-
-    auto wrapped = "wrap this paragraph\n respecting whitespaces and much_too_long_words" | wrap_at(16) | gather<Vector<String>>();
-    kak_assert(wrapped.size() == 6);
-    kak_assert(wrapped[0] == "wrap this");
-    kak_assert(wrapped[1] == "paragraph");
-    kak_assert(wrapped[2] == " respecting");
-    kak_assert(wrapped[3] == "whitespaces and");
-    kak_assert(wrapped[4] == "much_too_long_wo");
-    kak_assert(wrapped[5] == "rds");
-
-    auto wrapped2 = "error: unknown type" | wrap_at(7) | gather<Vector<String>>();
-    kak_assert(wrapped2.size() == 3);
-    kak_assert(wrapped2[0] == "error:");
-    kak_assert(wrapped2[1] == "unknown");
-    kak_assert(wrapped2[2] == "type");
 
     kak_assert(trim_indent(" ") == "");
     kak_assert(trim_indent("no-indent") == "no-indent");

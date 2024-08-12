@@ -11,6 +11,7 @@
 #include "string_utils.hh"
 #include "format.hh"
 #include "units.hh"
+#include "ranges.hh"
 
 #include <tuple>
 #include <vector>

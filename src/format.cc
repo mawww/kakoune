@@ -3,6 +3,7 @@
 #include "exception.hh"
 #include "string_utils.hh"
 
+#include <algorithm>
 #include <charconv>
 #include <cstdio>
 

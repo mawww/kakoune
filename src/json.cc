@@ -5,6 +5,7 @@
 #include "unit_tests.hh"
 #include "utils.hh"
 
+#include <algorithm>
 #include <cstdio>
 
 namespace Kakoune
