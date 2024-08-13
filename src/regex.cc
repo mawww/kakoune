@@ -1,4 +1,7 @@
 #include "regex.hh"
+
+#include "option_strings.hh"
+#include "quoting.hh"
 #include "ranges.hh"
 #include "string_utils.hh"
 

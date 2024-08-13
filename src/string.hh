@@ -3,6 +3,7 @@
 
 #include <climits>
 #include <cstddef>
+#include <algorithm>
 #include "memory.hh"
 #include "hash.hh"
 #include "units.hh"

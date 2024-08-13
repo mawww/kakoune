@@ -7,6 +7,8 @@
 #include "flags.hh"
 #include "hash_map.hh"
 #include "option.hh"
+#include "option_strings.hh"
+#include "quoting.hh"
 #include "string.hh"
 #include "string_utils.hh"
 #include "format.hh"

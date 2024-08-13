@@ -10,6 +10,7 @@
 #include "optional.hh"
 #include "option_types.hh"
 #include "profile.hh"
+#include "quoting.hh"
 #include "ranges.hh"
 #include "regex.hh"
 #include "register_manager.hh"
