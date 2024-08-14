@@ -5,7 +5,6 @@
 #include "unit_tests.hh"
 
 #include <charconv>
-#include <cstdio>
 
 namespace Kakoune
 {

@@ -4,6 +4,7 @@
 #include "string_utils.hh"
 
 #include <charconv>
+#include <cstdio>
 
 namespace Kakoune
 {
