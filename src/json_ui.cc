@@ -284,12 +284,12 @@ void JsonUI::eval_json(const Value& json)
     }
     else if (method == "scroll")
     {
-        if (params.size() != 1)
-            throw invalid_rpc_request("scroll needs an amount");
-        else if (not params[0].is_a<int>())
-            throw invalid_rpc_request("scroll amount is not an integer");
-        m_on_key({Key::Modifiers::Scroll, (Codepoint)params[0].as<int>()});
-
+        if (params.size() != 3)
+            throw invalid_rpc_request("scroll needs an amount and coordinates");
+        else if (not params[0].is_a<int>() or not params[1].is_a<int>() or not params[2].is_a<int>())
+            throw invalid_rpc_request("scroll parameters are not integers");
+        m_on_key({Key::Modifiers::Scroll | (Key::Modifiers)(params[0].as<int>() << 16),
+                  encode_coord({params[1].as<int>(), params[2].as<int>()})});
     }
     else if (method == "menu_select")
     {
