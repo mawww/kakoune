@@ -829,22 +829,28 @@ int run_server(StringView session, StringView server_init,
                                      "    {}", error.what()));
     }
 
+    {
+        Context empty_context{Context::EmptyContextFlag{}};
+        global_scope.hooks().run_hook(Hook::EnterDirectory, real_path("."), empty_context);
+        global_scope.hooks().run_hook(Hook::KakBegin, session, empty_context);
+    }
+
     if (not server_init.empty()) try
     {
         Context init_context{Context::EmptyContextFlag{}};
         command_manager.execute(server_init, init_context);
+    }
+    catch (const kill_session& kill)
+    {
+        Context empty_context{Context::EmptyContextFlag{}};
+        global_scope.hooks().run_hook(Hook::KakEnd, "", empty_context);
+        return kill.exit_status;
     }
     catch (runtime_error& error)
     {
         startup_error = true;
         write_to_debug_buffer(format("error while running server init commands:\n"
                                      "    {}", error.what()));
-    }
-
-    {
-        Context empty_context{Context::EmptyContextFlag{}};
-        global_scope.hooks().run_hook(Hook::EnterDirectory, real_path("."), empty_context);
-        global_scope.hooks().run_hook(Hook::KakBegin, session, empty_context);
     }
 
     if (not files.empty()) try
