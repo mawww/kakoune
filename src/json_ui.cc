@@ -40,6 +40,7 @@ String to_json(Attribute attributes)
     attrs[] {
         { Attribute::Underline, "underline" },
         { Attribute::CurlyUnderline, "curly_underline" },
+        { Attribute::DoubleUnderline, "double_underline" },
         { Attribute::Reverse, "reverse" },
         { Attribute::Blink, "blink" },
         { Attribute::Bold, "bold" },
