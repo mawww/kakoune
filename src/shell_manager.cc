@@ -10,7 +10,6 @@
 #include "face_registry.hh"
 #include "file.hh"
 #include "flags.hh"
-#include "option.hh"
 #include "option_types.hh"
 #include "regex.hh"
 
@@ -118,7 +117,7 @@ Shell spawn_shell(const char* shell, StringView cmdline,
     if (pid_t pid = vfork())
         return {pid, std::move(stdin_pipe[1]), std::move(stdout_pipe[0]), std::move(stderr_pipe[0])};
 
-    auto renamefd = [](int oldfd, int newfd) {
+    constexpr auto renamefd = [](int oldfd, int newfd) {
         if (oldfd == newfd)
             return;
         dup2(oldfd, newfd);

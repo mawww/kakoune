@@ -1,7 +1,6 @@
 #ifndef completion_hh_INCLUDED
 #define completion_hh_INCLUDED
 
-#include <functional>
 #include <algorithm>
 
 #include "units.hh"

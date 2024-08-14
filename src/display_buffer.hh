@@ -7,9 +7,6 @@
 #include "string.hh"
 #include "vector.hh"
 #include "hash_map.hh"
-#include "ranges.hh"
-
-#include <functional>
 
 namespace Kakoune
 {
@@ -139,7 +136,7 @@ public:
     template<typename It>
     iterator insert(iterator pos, It beg, It end)
     {
-        auto has_buffer_range = std::mem_fn(&DisplayAtom::has_buffer_range);
+        auto has_buffer_range = [](const DisplayAtom& atom) { return atom.has_buffer_range(); };
         auto had_range = any_of(*this, has_buffer_range);
         if (auto first = std::find_if(beg, end, has_buffer_range); first != end)
         {
