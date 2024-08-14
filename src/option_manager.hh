@@ -5,6 +5,8 @@
 #include "exception.hh"
 #include "hash_map.hh"
 #include "option.hh"
+#include "option_strings.hh"
+#include "quoting.hh"
 #include "ranges.hh"
 #include "utils.hh"
 #include "vector.hh"

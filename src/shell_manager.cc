@@ -12,6 +12,7 @@
 #include "flags.hh"
 #include "option.hh"
 #include "option_types.hh"
+#include "quoting.hh"
 #include "regex.hh"
 
 #include <array>

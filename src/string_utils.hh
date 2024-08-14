@@ -110,49 +110,6 @@ Optional<int> str_to_int_ifp(StringView str);
 
 String double_up(StringView s, StringView characters);
 
-inline String quote(StringView s)
-{
-    return format("'{}'", double_up(s, "'"));
-}
-
-inline String shell_quote(StringView s)
-{
-    return format("'{}'", replace(s, "'", R"('\'')"));
-}
-
-enum class Quoting
-{
-    Raw,
-    Kakoune,
-    Shell
-};
-
-constexpr auto enum_desc(Meta::Type<Quoting>)
-{
-    return make_array<EnumDesc<Quoting>>({
-        { Quoting::Raw, "raw" },
-        { Quoting::Kakoune, "kakoune" },
-        { Quoting::Shell, "shell" }
-    });
-}
-
-inline auto quoter(Quoting quoting)
-{
-    switch (quoting)
-    {
-        case Quoting::Kakoune: return &quote;
-        case Quoting::Shell: return &shell_quote;
-        case Quoting::Raw:
-        default:
-            return +[](StringView s) { return s.str(); };
-    }
-}
-
-inline String option_to_string(StringView opt, Quoting quoting) { return quoter(quoting)(opt); }
-inline Vector<String> option_to_strings(StringView opt) { return {opt.str()}; }
-inline String option_from_string(Meta::Type<String>, StringView str) { return str.str(); }
-inline bool option_add(String& opt, StringView val) { opt += val; return not val.empty(); }
-
 }
 
 #endif // string_utils_hh_INCLUDED

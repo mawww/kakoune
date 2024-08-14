@@ -278,6 +278,9 @@ of the file onto the filesystem
             also wrap each arguments in single quotes and escape
             embedded quotes in a shell compatible way.
 
+        - *json*::::
+            convert each argument to a json string and join on newline.
+
 *set-face* <scope> <name> <facespec>::
     *alias* face +
     define a face in *scope*

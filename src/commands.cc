@@ -19,9 +19,11 @@
 #include "insert_completer.hh"
 #include "normal.hh"
 #include "option_manager.hh"
+#include "option_strings.hh"
 #include "option_types.hh"
 #include "parameters_parser.hh"
 #include "profile.hh"
+#include "quoting.hh"
 #include "ranges.hh"
 #include "ranked_match.hh"
 #include "regex.hh"
@@ -1524,7 +1526,7 @@ const CommandDesc echo_cmd = {
     "echo <params>...: display given parameters in the status line",
     ParameterDesc{
         { { "markup", { {}, "parse markup" } },
-          { "quoting", { {arg_completer(Array{"raw", "kakoune", "shell"})}, "quote each argument separately using the given style (raw|kakoune|shell)" } },
+          { "quoting", { {arg_completer(Array{"raw", "kakoune", "shell","json"})}, "quote each argument separately using the given style (raw|kakoune|shell|json)" } },
           { "end-of-line", { {}, "add trailing end-of-line" } },
           { "to-file", { {filename_arg_completer<false>}, "echo contents to given filename" } },
           { "to-shell-script", { ArgCompleter{}, "pipe contents to given shell script" } },
@@ -1538,8 +1540,11 @@ const CommandDesc echo_cmd = {
     {
         String message;
         if (auto quoting = parser.get_switch("quoting"))
-            message = join(parser | transform(quoter(option_from_string(Meta::Type<Quoting>{}, *quoting))),
-                           ' ', false);
+        {
+            auto quoting_type = option_from_string(Meta::Type<Quoting>{}, *quoting);
+            message = join(parser | transform(quoter(quoting_type)),
+                           (quoting_type == Quoting::Json ? '\n' : ' '), false);
+        }
         else
             message = join(parser, ' ', false);
 
