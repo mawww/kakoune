@@ -1,8 +1,6 @@
 #ifndef ref_ptr_hh_INCLUDED
 #define ref_ptr_hh_INCLUDED
 
-#include <utility>
-
 namespace Kakoune
 {
 
@@ -34,7 +32,7 @@ struct RefPtr
     ~RefPtr() noexcept { release(); }
     RefPtr(const RefPtr& other) : m_ptr(other.m_ptr) { acquire(); }
     RefPtr(RefPtr&& other)
-        noexcept(noexcept(std::declval<RefPtr>().moved(nullptr)))
+        noexcept(noexcept(moved(nullptr)))
         : m_ptr(other.m_ptr) { other.m_ptr = nullptr; moved(&other); }
 
     RefPtr& operator=(const RefPtr& other)

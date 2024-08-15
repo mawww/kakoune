@@ -2,7 +2,6 @@
 #define unicode_hh_INCLUDED
 
 #include <cwctype>
-#include <cwchar>
 
 #include "array_view.hh"
 #include "units.hh"
