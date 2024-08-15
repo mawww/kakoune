@@ -6,7 +6,7 @@
 #include "meta.hh"
 #include "unicode.hh"
 #include "vector.hh"
-#include "constexpr_utils.hh"
+#include "array.hh"
 
 namespace Kakoune
 {

@@ -7,7 +7,7 @@
 #include "optional.hh"
 #include "utils.hh"
 #include "format.hh"
-#include "constexpr_utils.hh"
+#include "array.hh"
 
 namespace Kakoune
 {

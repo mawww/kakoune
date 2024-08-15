@@ -6,7 +6,7 @@
 #include <iterator>
 #include <numeric>
 
-#include "constexpr_utils.hh"
+#include "array.hh"
 
 namespace Kakoune
 {

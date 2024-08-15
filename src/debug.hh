@@ -1,7 +1,7 @@
 #ifndef debug_hh_INCLUDED
 #define debug_hh_INCLUDED
 
-#include "constexpr_utils.hh"
+#include "array.hh"
 #include "enum.hh"
 #include "flags.hh"
 
