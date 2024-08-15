@@ -1,7 +1,6 @@
 #include "hook_manager.hh"
 
 #include "debug.hh"
-#include "clock.hh"
 #include "command_manager.hh"
 #include "context.hh"
 #include "display_buffer.hh"

@@ -1,6 +1,5 @@
 #include "terminal_ui.hh"
 
-#include "buffer_utils.hh"
 #include "display_buffer.hh"
 #include "event_manager.hh"
 #include "exception.hh"
@@ -9,6 +8,7 @@
 #include "ranges.hh"
 #include "format.hh"
 #include "diff.hh"
+#include "string_utils.hh"
 
 #include <algorithm>
 

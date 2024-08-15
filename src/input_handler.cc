@@ -1,6 +1,6 @@
 #include "input_handler.hh"
 
-#include "buffer_manager.hh"
+#include "buffer.hh"
 #include "debug.hh"
 #include "command_manager.hh"
 #include "client.hh"
@@ -11,9 +11,7 @@
 #include "option_types.hh"
 #include "regex.hh"
 #include "register_manager.hh"
-#include "hash_map.hh"
 #include "user_interface.hh"
-#include "utf8.hh"
 #include "window.hh"
 #include "word_db.hh"
 

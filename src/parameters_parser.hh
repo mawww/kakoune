@@ -6,7 +6,6 @@
 #include "meta.hh"
 #include "array_view.hh"
 #include "optional.hh"
-#include "flags.hh"
 #include "string.hh"
 #include "format.hh"
 

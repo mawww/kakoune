@@ -1,8 +1,9 @@
 #ifndef profile_hh_INCLUDED
 #define profile_hh_INCLUDED
 
-#include "option.hh"
 #include "clock.hh"
+#include "context.hh"
+#include "debug.hh"
 #include "option_manager.hh"
 
 namespace Kakoune

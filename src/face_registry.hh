@@ -2,7 +2,6 @@
 #define face_registry_hh_INCLUDED
 
 #include "face.hh"
-#include "utils.hh"
 #include "hash_map.hh"
 #include "ranges.hh"
 #include "string.hh"

@@ -3,7 +3,6 @@
 
 #include "constexpr_utils.hh"
 #include "enum.hh"
-#include "flags.hh"
 
 namespace Kakoune
 {

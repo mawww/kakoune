@@ -2,7 +2,6 @@
 
 #include "face_registry.hh"
 #include "context.hh"
-#include "buffer_manager.hh"
 #include "buffer_utils.hh"
 #include "debug.hh"
 #include "file.hh"

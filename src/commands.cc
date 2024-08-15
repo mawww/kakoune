@@ -32,7 +32,6 @@
 #include "user_interface.hh"
 #include "window.hh"
 
-#include <functional>
 #include <utility>
 
 #include <sys/types.h>

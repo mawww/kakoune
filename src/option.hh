@@ -1,10 +1,10 @@
 #ifndef option_hh_INCLUDED
 #define option_hh_INCLUDED
 
-#include "enum.hh"
+#include "exception.hh"
 #include "meta.hh"
+#include "string.hh"
 #include "vector.hh"
-#include "constexpr_utils.hh"
 
 namespace Kakoune
 {

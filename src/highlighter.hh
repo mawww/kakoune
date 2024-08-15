@@ -3,8 +3,6 @@
 
 #include "coord.hh"
 #include "completion.hh"
-#include "exception.hh"
-#include "flags.hh"
 #include "range.hh"
 #include "hash_map.hh"
 #include "array_view.hh"

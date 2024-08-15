@@ -6,7 +6,6 @@
 #include "utils.hh"
 #include "hash_map.hh"
 
-#include <numeric>
 #include <cstring>
 
 namespace Kakoune

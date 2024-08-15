@@ -3,7 +3,6 @@
 #include "assert.hh"
 #include "buffer.hh"
 #include "buffer_utils.hh"
-#include "clock.hh"
 #include "context.hh"
 #include "highlighter.hh"
 #include "hook_manager.hh"
