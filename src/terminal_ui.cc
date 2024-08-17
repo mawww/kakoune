@@ -858,6 +858,8 @@ Optional<Key> TerminalUI::get_next_key()
                 return masked_key(Key::F11 + params[0][0] - 23);
             case 25: case 26:
                 return Key{Key::Modifiers::Shift, Key::F3 + params[0][0] - 25}; // rxvt style
+            case 27:
+                return masked_key(convert(static_cast<Codepoint>(params[2][0])));
             case 28: case 29:
                 return Key{Key::Modifiers::Shift, Key::F5 + params[0][0] - 28}; // rxvt style
             case 31: case 32:
