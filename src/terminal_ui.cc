@@ -703,7 +703,7 @@ Optional<Key> TerminalUI::get_next_key()
     static constexpr auto control = [](char c) { return c & 037; };
 
     auto convert = [this](Codepoint c) -> Codepoint {
-        if (c == control('m') or c == control('j'))
+        if (c == control('m'))
             return Key::Return;
         if (c == control('i'))
             return Key::Tab;
