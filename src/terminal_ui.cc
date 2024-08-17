@@ -882,7 +882,23 @@ Optional<Key> TerminalUI::get_next_key()
             switch (params[0][0])
             {
                 // Treat numpad keys the same as their non-numpad counterparts. Could add a numpad modifier here.
+                case 57399: key = '0'; break;
+                case 57400: key = '1'; break;
+                case 57401: key = '2'; break;
+                case 57402: key = '3'; break;
+                case 57403: key = '4'; break;
+                case 57404: key = '5'; break;
+                case 57405: key = '6'; break;
+                case 57406: key = '7'; break;
+                case 57407: key = '8'; break;
+                case 57408: key = '9'; break;
+                case 57409: key = '.'; break;
+                case 57410: key = '/'; break;
+                case 57411: key = '*'; break;
+                case 57412: key = '-'; break;
+                case 57413: key = '+'; break;
                 case 57414: key = Key::Return; break;
+                case 57415: key = '='; break;
                 case 57417: key = Key::Left; break;
                 case 57418: key = Key::Right; break;
                 case 57419: key = Key::Up; break;
