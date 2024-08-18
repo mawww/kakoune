@@ -6,8 +6,6 @@
 #include "units.hh"
 #include "optional.hh"
 
-#include <cstddef>
-
 namespace Kakoune
 {
 

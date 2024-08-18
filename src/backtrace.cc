@@ -1,7 +1,6 @@
 #include "backtrace.hh"
 
 #include "string.hh"
-#include "format.hh"
 
 #if defined(__GLIBC__) || defined(__APPLE__)
 # include <execinfo.h>

@@ -4,7 +4,6 @@
 #include "selection.hh"
 #include "optional.hh"
 #include "utils.hh"
-#include "flags.hh"
 
 #include <functional>
 

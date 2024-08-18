@@ -1,6 +1,5 @@
 #include "regex_impl.hh"
 
-#include "exception.hh"
 #include "string.hh"
 #include "unicode.hh"
 #include "unit_tests.hh"

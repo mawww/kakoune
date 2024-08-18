@@ -5,8 +5,6 @@
 #include "unit_tests.hh"
 #include "ranges.hh"
 
-#include <charconv>
-
 namespace Kakoune
 {
 

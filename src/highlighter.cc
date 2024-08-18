@@ -1,6 +1,7 @@
 #include "highlighter.hh"
 
 #include "debug.hh"
+#include "flags.hh"
 
 namespace Kakoune
 {

@@ -1,12 +1,9 @@
 #ifndef keymap_manager_hh_INCLUDED
 #define keymap_manager_hh_INCLUDED
 
-#include "array_view.hh"
 #include "keys.hh"
-#include "hash.hh"
 #include "string.hh"
 #include "hash_map.hh"
-#include "utils.hh"
 #include "vector.hh"
 
 namespace Kakoune

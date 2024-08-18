@@ -2,7 +2,6 @@
 
 #include "buffer_utils.hh"
 #include "changes.hh"
-#include "utf8.hh"
 
 namespace Kakoune
 {

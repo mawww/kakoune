@@ -4,12 +4,10 @@
 #include "buffer.hh"
 #include "exception.hh"
 #include "flags.hh"
-#include "option_types.hh"
 #include "event_manager.hh"
 #include "ranked_match.hh"
 #include "regex.hh"
 #include "string.hh"
-#include "unicode.hh"
 
 #include <limits>
 #include <cerrno>

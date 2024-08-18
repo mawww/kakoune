@@ -3,7 +3,6 @@
 
 #include "array.hh"
 #include "enum.hh"
-#include "flags.hh"
 
 namespace Kakoune
 {

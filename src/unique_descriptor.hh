@@ -1,6 +1,8 @@
 #ifndef fd_hh_INCLUDED
 #define fd_hh_INCLUDED
 
+#include <utility>
+
 namespace Kakoune
 {
 

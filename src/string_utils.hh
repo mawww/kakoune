@@ -5,7 +5,6 @@
 #include "enum.hh"
 #include "vector.hh"
 #include "optional.hh"
-#include "utils.hh"
 #include "format.hh"
 #include "array.hh"
 

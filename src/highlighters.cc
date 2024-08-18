@@ -6,7 +6,6 @@
 #include "changes.hh"
 #include "command_manager.hh"
 #include "context.hh"
-#include "clock.hh"
 #include "display_buffer.hh"
 #include "face_registry.hh"
 #include "highlighter_group.hh"

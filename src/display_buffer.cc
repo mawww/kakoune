@@ -2,7 +2,6 @@
 
 #include "assert.hh"
 #include "buffer.hh"
-#include "buffer_utils.hh"
 #include "face_registry.hh"
 #include "utf8.hh"
 

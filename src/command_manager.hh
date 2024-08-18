@@ -1,7 +1,6 @@
 #ifndef command_manager_hh_INCLUDED
 #define command_manager_hh_INCLUDED
 
-#include "coord.hh"
 #include "completion.hh"
 #include "array_view.hh"
 #include "shell_manager.hh"
@@ -12,7 +11,6 @@
 #include "hash_map.hh"
 
 #include <functional>
-#include <initializer_list>
 
 namespace Kakoune
 {

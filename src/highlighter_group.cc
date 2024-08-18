@@ -1,7 +1,9 @@
 #include "highlighter_group.hh"
 
-#include "ranges.hh"
+#include "flags.hh"
 #include "format.hh"
+#include "ranges.hh"
+
 
 namespace Kakoune
 {
