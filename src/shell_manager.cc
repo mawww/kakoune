@@ -197,18 +197,22 @@ FDWatcher make_reader(int fd, String& contents, OnClose&& on_close)
     }};
 }
 
-FDWatcher make_pipe_writer(UniqueFd& fd, StringView contents)
+FDWatcher make_pipe_writer(UniqueFd& fd, const FunctionRef<StringView ()>& generator)
 {
     int flags = fcntl((int)fd, F_GETFL, 0);
     fcntl((int)fd, F_SETFL, flags | O_NONBLOCK);
     return {(int)fd, FdEvents::Write, EventMode::Urgent,
-            [contents, &fd](FDWatcher& watcher, FdEvents, EventMode) mutable {
+            [&generator, &fd, contents=generator()](FDWatcher& watcher, FdEvents, EventMode) mutable {
         while (fd_writable((int)fd))
         {
             ssize_t size = ::write((int)fd, contents.begin(),
                                    (size_t)contents.length());
             if (size > 0)
+            {
                 contents = contents.substr(ByteCount{(int)size});
+                if (contents.empty())
+                    contents = generator();
+            }
             if (size == -1 and (errno == EAGAIN or errno == EWOULDBLOCK))
                 return;
             if (size < 0 or contents.empty())
@@ -263,7 +267,7 @@ struct CommandFifos
 }
 
 std::pair<String, int> ShellManager::eval(
-    StringView cmdline, const Context& context, StringView input,
+    StringView cmdline, const Context& context, FunctionRef<StringView ()> input_generator,
     Flags flags, const ShellContext& shell_context)
 {
     const DebugFlags debug_flags = context.options()["debug"].get<DebugFlags>();
@@ -290,13 +294,13 @@ std::pair<String, int> ShellManager::eval(
     });
 
     auto spawn_time = profile ? Clock::now() : Clock::time_point{};
-    auto shell = spawn_shell(m_shell.c_str(), cmdline, shell_context.params, kak_env, not input.empty());
+    auto shell = spawn_shell(m_shell.c_str(), cmdline, shell_context.params, kak_env, true);
     auto wait_time = Clock::now();
 
     String stdout_contents, stderr_contents;
     auto stdout_reader = make_reader((int)shell.out, stdout_contents, [&](bool){ shell.out.close(); });
     auto stderr_reader = make_reader((int)shell.err, stderr_contents, [&](bool){ shell.err.close(); });
-    auto stdin_writer = make_pipe_writer(shell.in, input);
+    auto stdin_writer = make_pipe_writer(shell.in, input_generator);
 
     // block SIGCHLD to make sure we wont receive it before
     // our call to pselect, that will end up blocking indefinitly.

@@ -350,7 +350,8 @@ void expand_token(Token&& token, const Context& context, const ShellContext& she
     case Token::Type::ShellExpand:
     {
         auto str = ShellManager::instance().eval(
-            content, context, {}, ShellManager::Flags::WaitForStdout,
+            content, context, StringView{},
+            ShellManager::Flags::WaitForStdout,
             shell_context).first;
 
         if (not str.empty() and str.back() == '\n')

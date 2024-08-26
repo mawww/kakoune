@@ -535,9 +535,8 @@ void command(Context& context, NormalParams params)
     command(context, std::move(env_vars), params.reg);
 }
 
-BufferCoord apply_diff(Buffer& buffer, BufferCoord pos, StringView before, StringView after)
+BufferCoord apply_diff(Buffer& buffer, BufferCoord pos, ArrayView<StringView> lines_before, StringView after)
 {
-    const auto lines_before = before | split_after<StringView>('\n') | gather<Vector<StringView>>();
     const auto lines_after = after | split_after<StringView>('\n') | gather<Vector<StringView>>();
 
     auto byte_count = [](auto&& lines, int first, int count) {
@@ -601,26 +600,38 @@ void pipe(Context& context, NormalParams params)
                 SelectionList selections = context.selections();
                 for (auto& sel : selections)
                 {
-                    const auto beg = changes_tracker.get_new_coord_tolerant(sel.min());
-                    const auto end = changes_tracker.get_new_coord_tolerant(sel.max());
+                    const auto first = changes_tracker.get_new_coord_tolerant(sel.min());
+                    const auto last = changes_tracker.get_new_coord_tolerant(sel.max());
 
-                    String in = buffer.string(beg, buffer.char_next(end));
+                    Vector<StringView> in_lines;
+                    for (auto line = first.line; line <= last.line; ++line)
+                    {
+                        auto content = buffer[line];
+                        if (line == last.line)
+                            content = content.substr(0, last.column + utf8::codepoint_size(content[last.column]));
+                        if (line == first.line)
+                            content = content.substr(first.column);
+                        in_lines.push_back(content);
+                    }
+
                     // Needed in case we read selections inside the cmdline
-                    context.selections_write_only().set({keep_direction(Selection{beg, end}, sel)}, 0);
+                    context.selections_write_only().set({keep_direction(Selection{first, last}, sel)}, 0);
 
                     String out = ShellManager::instance().eval(
-                        cmdline, context, in,
-                        ShellManager::Flags::WaitForStdout).first;
+                        cmdline, context,
+                        [it = in_lines.begin(), end = in_lines.end()]() mutable {
+                            return (it != end) ? *it++ : StringView{};
+                        }, ShellManager::Flags::WaitForStdout).first;
 
-                    if (in.back() != '\n' and not out.empty() and out.back() == '\n')
+                    if (in_lines.back().back() != '\n' and not out.empty() and out.back() == '\n')
                         out.resize(out.length()-1, 0);
 
-                    auto new_end = apply_diff(buffer, beg, in, out);
-                    if (new_end != beg)
+                    auto new_end = apply_diff(buffer, first, in_lines, out);
+                    if (new_end != first)
                     {
                         auto& min = sel.min();
                         auto& max = sel.max();
-                        min = beg;
+                        min = first;
                         max = buffer.char_prev(new_end);
                     }
                     else

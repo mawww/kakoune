@@ -277,7 +277,7 @@ struct ShellScriptCompleter
             { { "token_to_complete", to_string(token_to_complete) },
               { "pos_in_token",      to_string(pos_in_token) } }
         };
-        String output = ShellManager::instance().eval(m_shell_script, context, {},
+        String output = ShellManager::instance().eval(m_shell_script, context, StringView{},
                                                       ShellManager::Flags::WaitForStdout,
                                                       shell_context).first;
         CandidateList candidates;
