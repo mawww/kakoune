@@ -3,6 +3,7 @@
 
 // #define SAFE_PTR_TRACK_CALLSTACKS
 
+#include "assert.hh"
 #include "ref_ptr.hh"
 
 #ifdef SAFE_PTR_TRACK_CALLSTACKS

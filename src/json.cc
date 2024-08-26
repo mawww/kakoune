@@ -4,6 +4,7 @@
 #include "string_utils.hh"
 #include "unit_tests.hh"
 #include "utils.hh"
+#include "ranges.hh"
 
 #include <algorithm>
 #include <cstdio>

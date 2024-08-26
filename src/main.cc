@@ -17,6 +17,7 @@
 #include "terminal_ui.hh"
 #include "option_types.hh"
 #include "parameters_parser.hh"
+#include "profile.hh"
 #include "ranges.hh"
 #include "regex.hh"
 #include "register_manager.hh"
@@ -25,6 +26,7 @@
 #include "shared_string.hh"
 #include "shell_manager.hh"
 #include "string.hh"
+#include "unit_tests.hh"
 #include "window.hh"
 
 #include <fcntl.h>
