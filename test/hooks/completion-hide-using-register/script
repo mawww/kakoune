@@ -1,0 +1,7 @@
+ui_out -until '{ "jsonrpc": "2.0", "method": "refresh", "params": [true] }'
+ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "Oe" ] }'
+ui_out -until '{ "jsonrpc": "2.0", "method": "menu_show", "params": [[[{ "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": "echo" }, { "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": " " }, { "face": { "fg": "cyan", "bg": "default", "underline": "default", "attributes": [] }, "contents": "out" }]], { "line": 0, "column": 0 }, { "fg": "white", "bg": "blue", "underline": "default", "attributes": [] }, { "fg": "blue", "bg": "white", "underline": "default", "attributes": [] }, "inline"] }'
+ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "<c-n>" ] }'
+ui_out -until '{ "jsonrpc": "2.0", "method": "menu_select", "params": [1] }'
+ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "<c-r>\"" ] }'
+ui_out -until '{ "jsonrpc": "2.0", "method": "menu_hide", "params": [] }'

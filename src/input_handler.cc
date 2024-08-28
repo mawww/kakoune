@@ -15,6 +15,7 @@
 #include "window.hh"
 #include "word_db.hh"
 
+#include <concepts>
 #include <utility>
 #include <limits>
 
@@ -1310,7 +1311,7 @@ public:
                     auto cp = key.codepoint();
                     if (not cp or key == Key::Escape)
                         return;
-                    insert(RegisterManager::instance()[*cp].get(context()));
+                    insert([&] { return RegisterManager::instance()[*cp].get(context()); });
                 }, "enter register name", register_doc.str());
             update_completions = false;
         }
@@ -1428,6 +1429,13 @@ private:
                                         (size_t index, Selection& sel) {
             Kakoune::insert(buffer, sel, sel.cursor(), strings[std::min(strings.size()-1, index)]);
         }, false);
+    }
+
+    template<std::invocable Func>
+    void insert(Func&& lazy_strings)
+    {
+        m_completer.try_accept();
+        insert(std::forward<Func>(lazy_strings)());
     }
 
     void insert(Codepoint key)
