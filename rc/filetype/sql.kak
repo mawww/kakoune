@@ -4,7 +4,7 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate .*/?(?i)sql %{
+hook global BufCreate .*[.](?i)sql %{
     set-option buffer filetype sql
 }
 
