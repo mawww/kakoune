@@ -1303,15 +1303,19 @@ public:
             selections.sort_and_merge_overlapping();
         }
         else if (auto cp = key.codepoint())
+        {
+            m_completer.try_accept();
             insert(*cp);
+        }
         else if (key == ctrl('r'))
         {
+            m_completer.try_accept();
             on_next_key_with_autoinfo(context(), "register", KeymapMode::None,
                 [this](Key key, Context&) {
                     auto cp = key.codepoint();
                     if (not cp or key == Key::Escape)
                         return;
-                    insert([&] { return RegisterManager::instance()[*cp].get(context()); });
+                    insert(RegisterManager::instance()[*cp].get(context()));
                 }, "enter register name", register_doc.str());
             update_completions = false;
         }
@@ -1359,6 +1363,7 @@ public:
         }
         else if (key == ctrl('v'))
         {
+            m_completer.try_accept();
             on_next_key_with_autoinfo(context(), "raw-insert", KeymapMode::None,
                 [this, transient](Key key, Context&) {
                     if (auto cp = get_raw_codepoint(key))
@@ -1387,6 +1392,7 @@ public:
 
     void paste(StringView content) override
     {
+        m_completer.try_accept();
         insert(ConstArrayView<StringView>{content});
         m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
@@ -1424,18 +1430,11 @@ private:
     template<typename S>
     void insert(ConstArrayView<S> strings)
     {
-        m_completer.try_accept();
+        kak_assert(not m_completer.has_candidate_selected());
         context().selections().for_each([strings, &buffer=context().buffer()]
                                         (size_t index, Selection& sel) {
             Kakoune::insert(buffer, sel, sel.cursor(), strings[std::min(strings.size()-1, index)]);
         }, false);
-    }
-
-    template<std::invocable Func>
-    void insert(Func&& lazy_strings)
-    {
-        m_completer.try_accept();
-        insert(std::forward<Func>(lazy_strings)());
     }
 
     void insert(Codepoint key)

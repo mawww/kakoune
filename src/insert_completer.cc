@@ -481,12 +481,12 @@ auto& get_last(BufferRange& range) { return range.end; }
 
 bool InsertCompleter::has_candidate_selected() const
 {
-    return m_current_candidate >= 0 and m_current_candidate < m_completions.candidates.size() - 1;
+    return m_completions.is_valid() and m_current_candidate >= 0 and m_current_candidate < m_completions.candidates.size() - 1;
 }
 
 void InsertCompleter::try_accept()
 {
-    if (m_completions.is_valid() and has_candidate_selected())
+    if (has_candidate_selected())
         reset();
 }
 
