@@ -269,9 +269,6 @@ struct ShellScriptCompleter
                            CommandParameters params, size_t token_to_complete,
                            ByteCount pos_in_token)
     {
-        if (flags & CompletionFlags::Fast) // no shell on fast completion
-            return Completions{};
-
         ShellContext shell_context{
             params,
             { { "token_to_complete", to_string(token_to_complete) },
