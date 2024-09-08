@@ -153,6 +153,7 @@ private:
     int m_shift_function_key = default_shift_function_key;
 
     bool m_set_title = true;
+    Optional<String> m_title;
 
     struct Synchronized
     {

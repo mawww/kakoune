@@ -609,16 +609,19 @@ void TerminalUI::draw_status(const DisplayLine& status_line,
     if (m_set_title)
     {
         Writer writer{STDOUT_FILENO};
-        constexpr char suffix[] = " - Kakoune\007";
         writer.write("\033]2;");
-        // Fill title escape sequence buffer, removing non ascii characters
-        for (auto& atom : mode_line)
-        {
-            const auto str = atom.content();
+        auto write_escaped = [&](StringView str) {
             for (auto it = str.begin(), end = str.end(); it != end; utf8::to_next(it, end))
                 writer.write((*it >= 0x20 and *it <= 0x7e) ? *it : '?');
+        };
+        if (not m_title)
+        {
+            for (auto& atom : mode_line)
+                write_escaped(atom.content());
         }
-        writer.write(suffix);
+        else
+            write_escaped(*m_title);
+        writer.write(" - Kakoune\007");
     }
 
     m_dirty = true;
@@ -1554,6 +1557,7 @@ void TerminalUI::set_ui_options(const Options& options)
 
     m_status_on_top = find("terminal_status_on_top").map(to_bool).value_or(false);
     m_set_title = find("terminal_set_title").map(to_bool).value_or(true);
+    m_title = find("terminal_title").map([](StringView s) { return String{s}; });
 
     auto synchronized = find("terminal_synchronized").map(to_bool);
     m_synchronized.set = (bool)synchronized;

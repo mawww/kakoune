@@ -595,6 +595,7 @@ void register_options()
                        "    terminal_assistant             clippy|cat|dilbert|none|off\n"
                        "    terminal_status_on_top         bool\n"
                        "    terminal_set_title             bool\n"
+                       "    terminal_title                 str\n"
                        "    terminal_enable_mouse          bool\n"
                        "    terminal_synchronized          bool\n"
                        "    terminal_wheel_scroll_amount   int\n"
