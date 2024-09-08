@@ -544,9 +544,6 @@ Macros use the *@* register by default (See <<registers#,`:doc registers`>>)
 *q*::
     play a recorded macro
 
-*<esc>*::
-    end macro recording
-
 == Jump list
 
 Some commands, like the goto commands, buffer switch or search commands,
