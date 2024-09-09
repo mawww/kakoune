@@ -803,7 +803,7 @@ The following keys are recognized by this mode to help with editing
     select previous completion candidate
 
 *<c-r>*::
-    insert then content of the register given by next key, if next key
+    insert the content of the register given by next key, if next key
     has the Alt modifier, it will insert all values in the register
     joined with spaces, else it will insert the main one
 
