@@ -34,6 +34,7 @@ add-highlighter shared/makefile/content default-region group
 add-highlighter shared/makefile/comment region (?<!\\)(?:\\\\)*(?:^|\h)\K# '$' fill comment
 add-highlighter shared/makefile/evaluate-commands region -recurse \( (?<!\$)(?:\$\$)*\K\$\( \) fill value
 
+add-highlighter shared/makefile/content/ regex ^([a-zA-Z0-9_.-]+): 1:function
 add-highlighter shared/makefile/content/ regex ^\S.*?(::|:|!)\s 0:variable
 add-highlighter shared/makefile/content/ regex [+?:]= 0:operator
 
