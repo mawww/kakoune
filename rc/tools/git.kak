@@ -189,24 +189,6 @@ define-command -params 1.. \
         "
     }
 
-    prepare_git_blame_args='
-        if [ -n "${kak_opt_git_blob}" ]; then {
-            contents_fifo=/dev/null
-            set -- "$@" "${kak_opt_git_blob%%:*}" -- "${kak_opt_git_blob#*:}"
-        } else {
-            contents_fifo=$(mktemp -d "${TMPDIR:-/tmp}"/kak-git.XXXXXXXX)/fifo
-            mkfifo ${contents_fifo}
-            echo >${kak_command_fifo} "evaluate-commands -save-regs | %{
-                set-register | %{
-                    contents=\$(cat; printf .)
-                    ( printf %s \"\${contents%.}\" >${contents_fifo} ) >/dev/null 2>&1 &
-                }
-                execute-keys -client ${kak_client} -draft %{%<a-|><ret>}
-            }"
-            set -- "$@" --contents - -- "${kak_buffile}"
-        } fi
-    '
-
     blame_toggle() {
         echo >${kak_command_fifo} "try %{
             add-highlighter window/git-blame flag-lines Information git_blame_flags
@@ -280,7 +262,21 @@ define-command -params 1.. \
             " show_git_cmd_output show "$commit:$file"
             exit
         } fi
-        eval "$prepare_git_blame_args"
+        if [ -n "${kak_opt_git_blob}" ]; then {
+            set -- "$@" "${kak_opt_git_blob%%:*}" -- "${kak_opt_git_blob#*:}"
+            blame_stdin=/dev/null
+        } else {
+            set -- "$@" --contents - -- "${kak_buffile}" # use stdin to work around git bug
+            blame_stdin=$(mktemp "${TMPDIR:-/tmp}"/kak-git.XXXXXX)
+            echo >${kak_command_fifo} "evaluate-commands -save-regs | %{
+                set-register | %{
+                    cat >${blame_stdin}
+                    : >${kak_response_fifo}
+                }
+                execute-keys -client ${kak_client} -draft %{%<a-|><ret>}
+            }"
+            : <${kak_response_fifo}
+        } fi
         echo 'map window normal <ret> %{:git blame-jump<ret>}'
         echo 'echo -markup {Information}Press <ret> to jump to blamed commit'
         (
@@ -291,7 +287,7 @@ define-command -params 1.. \
                       set-option buffer=$kak_bufname git_blame_index '$kak_timestamp'
                       set-option buffer=$kak_bufname git_blame ''
                   }" | kak -p ${kak_session}
-            if ! stderr=$({ git blame --incremental "$@" <${contents_fifo} | perl -wne '
+            if ! stderr=$({ git blame --incremental "$@" <${blame_stdin} | perl -wne '
                   use POSIX qw(strftime);
                   sub quote {
                       my $SQ = "'\''";
@@ -357,8 +353,8 @@ define-command -params 1.. \
                     }
                 '" | kak -p ${kak_session}
             fi
-            if [ "$contents_fifo" != /dev/null ]; then
-                rm -r $(dirname $contents_fifo)
+            if [ ${blame_stdin} != /dev/null ]; then
+                rm ${blame_stdin}
             fi
         ) > /dev/null 2>&1 < /dev/null &
     }
@@ -578,14 +574,20 @@ define-command -params 1.. \
                 exit
             fi
         } else {
-            set --
-            eval "$prepare_git_blame_args"
-            blame_info=$(git blame --porcelain -L"$cursor_line,$cursor_line" "$@" <${contents_fifo})
-            status=$?
-            if [ "$contents_fifo" != /dev/null ]; then
-                rm -r $(dirname $contents_fifo)
-            fi
-            if [ $status -ne 0 ]; then
+            if [ -n "${kak_opt_git_blob}" ]; then {
+                set -- "${kak_opt_git_blob%%:*}" -- "${kak_opt_git_blob#*:}"
+                blame_stdin=/dev/null
+            } else {
+                set -- --contents - -- "${kak_buffile}" # use stdin to work around git bug
+                blame_stdin=${kak_response_fifo}
+                echo >${kak_command_fifo} "evaluate-commands -save-regs | %{
+                    set-register | %{ cat >${kak_response_fifo} }
+                    execute-keys -client ${kak_client} -draft %{%<a-|><ret>}
+                }"
+            } fi
+            if ! blame_info=$(
+                git blame --porcelain -L"$cursor_line,$cursor_line" "$@" <${blame_stdin})
+            then
                 echo 'echo -markup %{{Error}failed to run git blame, see *debug* buffer}'
                 exit
             fi
