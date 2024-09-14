@@ -374,7 +374,7 @@ define-command -params 1.. \
     update_diff() {
         (
             cd_bufdir
-            git --no-pager diff --no-ext-diff -U0 "$kak_buffile" | perl -e '
+            git diff --no-ext-diff -U0 "$kak_buffile" | perl -e '
             use utf8;
             $flags = $ENV{"kak_timestamp"};
             $add_char = $ENV{"kak_opt_git_diff_add_char"};
