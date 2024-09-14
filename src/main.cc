@@ -48,6 +48,7 @@ struct {
         0,
         "» kak_* appearing in shell arguments will be added to the environment\n"
         "» {+U}double underline{} support\n"
+        "» {+u}git apply{} can stage/revert selected changes to current buffer\n"
     }, {
         20240518,
         "» Fix tests failing on some platforms\n"

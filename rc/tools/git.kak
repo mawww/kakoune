@@ -86,7 +86,8 @@ define-command -params 1.. \
         All the optional arguments are forwarded to the git utility
         Available commands:
             add
-            apply      - alias for "patch git apply"
+            apply      - run "patch git apply [<arguments>]"; if buffile is
+                         tracked, use the changes to selected lines instead
             blame      - toggle blame annotations
             blame-jump - show the commit that added the line at cursor
             checkout
@@ -192,13 +193,15 @@ define-command -params 1.. \
     diff_buffer_against_rev() {
         rev=$1 # empty means index
         shift
-        buffile_relative=${kak_buffile#"$PWD/"}
+        buffile_relative=${kak_buffile#"$(git rev-parse --show-toplevel)/"}
         echo >${kak_command_fifo} "evaluate-commands -save-regs | %{
             set-register | %{ cat >${kak_response_fifo} }
             execute-keys -client ${kak_client} -draft %{%<a-|><ret>}
         }"
-        git show "$rev:./${buffile_relative}" |
-            git diff --no-index - ${kak_response_fifo} "$@"
+        git show "$rev:${buffile_relative}" |
+            diff - ${kak_response_fifo} "$@" |
+            sed -e "1c--- a/$buffile_relative" \
+                -e "2c+++ b/$buffile_relative"
     }
 
     blame_toggle() {
@@ -435,7 +438,7 @@ define-command -params 1.. \
                     }
                 }
             }
-            print "set-option buffer git_diff_flags $flags"
+            print "set-option buffer git_diff_flags $flags\n"
         ' )
     }
 
@@ -728,12 +731,118 @@ define-command -params 1.. \
         ')"
     }
 
-    case "$1" in
-        apply)
-            shift
+    apply_selections() {
+        if [ -z "$(cd_bufdir >/dev/null 2>&1; git ls-files -- ":(literal)${kak_buffile}")" ]; then {
             enquoted="$(printf '"%s" ' "$@")"
             echo "require-module patch"
             echo "patch git apply $enquoted"
+            return
+        } fi
+        base_rev=HEAD
+        index_only=false
+        index=false
+        reverse=false
+        for arg; do
+            case "$arg" in
+                (--cached) index_only=true ; base_rev= ;;
+                (--index) index=true ;;
+                (--reverse|-R) reverse=true ;;
+            esac
+        done
+        if ! $reverse && ! $index_only; then
+            echo "fail %{git apply on buffer contents doesn't make sense without --reverse or --cached}"
+            exit
+        fi
+        cd_bufdir
+        num_inserted=0
+        num_deleted=0
+        for selection_desc in $kak_selections_desc; do {
+            IFS=' .,' read anchor_line _ cursor_line _ <<-EOF
+                $selection_desc
+		EOF
+            if [ $anchor_line -lt $cursor_line ]; then
+                min_line=$anchor_line
+                max_line=$cursor_line
+            else
+                min_line=$cursor_line
+                max_line=$anchor_line
+            fi
+            intended_diff='diff_buffer_against_rev "$base_rev" -u'
+            if $index; then {
+                git update-index --refresh "${kak_buffile}" >/dev/null
+                intended_diff='git diff --no-ext-diff HEAD -- ":(literal)${kak_buffile}"'
+            } elif $index_only && $reverse; then {
+                diff=$(eval "$intended_diff")
+                if [ -n "$diff" ]; then {
+                    # Convert from buffile lines to index lines.
+                    for line in min_line max_line; do {
+                        if ! index_line_or_error_message=$(
+                            eval file_line=\$$line
+                            printf %s "$diff" |
+                                perl "${kak_runtime}/rc/filetype/diff-parse.pl" \
+                                    BEGIN '
+                                        $in_file = ""; # no need to check filename, there is only one
+                                        $in_file_line = '"$file_line"';
+                                    ' END '
+                                        $other_file_line++ if $diff_line_text =~ m{^\+};
+                                        $other_file_line += $in_file_line - $file_line;
+                                        print "$other_file_line\n";
+                                    '
+                        ); then
+                            echo fail "git apply: $index_line_or_error_message"
+                            exit
+                        fi
+                        eval $line=$index_line_or_error_message
+                    } done
+                } fi
+                intended_diff='git diff --no-ext-diff --cached -- ":(literal)${kak_buffile}"'
+            } fi
+            diff=$(eval "$intended_diff" |
+                    perl "${kak_runtime}"/rc/tools/patch-range.pl -line-numbers-from-new-file \
+                        $min_line $max_line sh -c cat -- "$@" # forward any --reverse arg
+                   printf .) # avoid stripping newline
+            diff=${diff%.}
+            if ! printf %s "$diff" | git apply "$@"; then
+                printf >&2 "git apply: error running:\n\$ git apply %s << EOF\n" "$*"
+                printf >&2 %s "$diff"
+                printf >&2 'EOF\n'
+                echo "fail 'git apply: failed to apply selections, see *debug* buffer'"
+                exit
+            fi
+            count() {
+                printf %s "$diff" | awk '
+                    BEGIN { n = 0 }
+                    /^@@/,/^$/ { if ($0 ~ /^'"$1"'/) { n++ } }
+                    END { print n }'
+            }
+            num_inserted=$(( $num_inserted + $(count +) ))
+            num_deleted=$(( $num_deleted + $(count -) ))
+        } done
+        if ! $index_only && ! $kak_modified; then
+            echo edit!
+            echo git update-diff
+        else
+            update_diff
+        fi
+        msg=
+        case $index_only,$reverse,$index in
+            (true,false,*) msg=Staged ;;
+            (true,true,*) msg=Unstaged ;;
+            (false,true,false) msg=Reverted ;;
+            (false,true,true) msg='Unstaged and reverted' ;;
+        esac
+        case $num_inserted,$num_deleted in
+            (*,0) msg="$msg $num_inserted inserted line(s)";;
+            (0,*) msg="$msg $num_deleted deleted line(s)";;
+            (*,*) msg="$msg $num_inserted inserted and $num_deleted deleted lines";;
+        esac
+        echo "echo -markup '{Information}{\\}$msg'"
+    }
+
+    case "$1" in
+        apply)
+            shift
+            apply_selections "$@"
             ;;
         show|show-branch|log|diff|status)
             show_git_cmd_output "$@"
