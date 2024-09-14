@@ -9,8 +9,8 @@ sub quote {
 }
 sub fail {
     my $reason = shift;
-    print "set-register e fail " . quote("diff-parse.pl: $reason");
-    exit;
+    print quote("diff-parse.pl: $reason");
+    exit 1;
 }
 
 my $begin;

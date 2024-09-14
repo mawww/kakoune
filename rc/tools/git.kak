@@ -555,7 +555,8 @@ define-command -params 1.. \
                             $version = "-";
                         } END %{
                             if ($diff_line_text !~ m{^[ -]}) {
-                                print "set-register e fail git blame-jump: recursive blame only works on context or deleted lines";
+                                print quote "git blame-jump: recursive blame only works on context or deleted lines";
+                                exit 1;
                             } else {
                                 if (not defined $commit) {
                                     $commit = "HEAD";

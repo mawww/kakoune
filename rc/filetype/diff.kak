@@ -98,7 +98,11 @@ define-command -hidden diff-parse -params 2.. %{
         set-register e nop
         set-register | %{
             eval set -- "$kak_quoted_reg_a"
-            perl "${kak_runtime}/rc/filetype/diff-parse.pl" "$@" >"$kak_command_fifo"
+            if ! result=$(perl "${kak_runtime}/rc/filetype/diff-parse.pl" "$@"); then
+                printf 'set-register e %s\n' "fail $result"
+            else
+                printf '%s\n' "$result"
+            fi >"$kak_command_fifo"
         }
         execute-keys <a-|><ret>
         %reg{e}
