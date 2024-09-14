@@ -189,6 +189,18 @@ define-command -params 1.. \
         "
     }
 
+    diff_buffer_against_rev() {
+        rev=$1 # empty means index
+        shift
+        buffile_relative=${kak_buffile#"$PWD/"}
+        echo >${kak_command_fifo} "evaluate-commands -save-regs | %{
+            set-register | %{ cat >${kak_response_fifo} }
+            execute-keys -client ${kak_client} -draft %{%<a-|><ret>}
+        }"
+        git show "$rev:./${buffile_relative}" |
+            git diff --no-index - ${kak_response_fifo} "$@"
+    }
+
     blame_toggle() {
         echo >${kak_command_fifo} "try %{
             add-highlighter window/git-blame flag-lines Information git_blame_flags
@@ -370,7 +382,7 @@ define-command -params 1.. \
     update_diff() {
         (
             cd_bufdir
-            git diff --no-ext-diff -U0 "$kak_buffile" | perl -e '
+            diff_buffer_against_rev "" -U0 | perl -e '
             use utf8;
             $flags = $ENV{"kak_timestamp"};
             $add_char = $ENV{"kak_opt_git_diff_add_char"};
