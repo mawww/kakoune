@@ -296,7 +296,9 @@ define-command -params 1.. \
         echo 'echo -markup {Information}Press <ret> to jump to blamed commit'
         (
             trap - INT QUIT
-            cd_bufdir
+            if [ -z "${kak_opt_git_blob}" ]; then
+                cd_bufdir
+            fi
             printf %s "evaluate-commands -client '$kak_client' %{
                       set-option buffer=$kak_bufname git_blame_flags '$kak_timestamp'
                       set-option buffer=$kak_bufname git_blame_index '$kak_timestamp'
