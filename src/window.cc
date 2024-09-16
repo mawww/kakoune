@@ -312,13 +312,13 @@ Optional<DisplayCoord> Window::display_position(BufferCoord coord) const
     return {};
 }
 
-BufferCoord Window::buffer_coord(DisplayCoord coord) const
+Optional<BufferCoord> Window::buffer_coord(DisplayCoord coord) const
 {
     if (m_display_buffer.timestamp() != buffer().timestamp() or
         m_display_buffer.lines().empty())
-        return {0, 0};
+        return {};
     if (coord <= 0_line)
-        coord = {0,0};
+        coord = {};
     if ((size_t)coord.line >= m_display_buffer.lines().size())
         coord = DisplayCoord{(int)m_display_buffer.lines().size()-1, INT_MAX};
 
