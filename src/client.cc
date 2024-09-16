@@ -256,7 +256,7 @@ void Client::redraw_ifn()
     if ((m_ui_pending & MenuShow) or update_menu_anchor)
     {
         auto anchor = m_menu.style == MenuStyle::Inline ?
-            window.display_position(m_menu.anchor) : DisplayCoord{};
+            window.display_coord(m_menu.anchor) : DisplayCoord{};
         if (not (m_ui_pending & MenuShow) and m_menu.ui_anchor != anchor)
             m_ui_pending |= anchor ? (MenuShow | MenuSelect) : MenuHide;
         m_menu.ui_anchor = anchor;
@@ -276,7 +276,7 @@ void Client::redraw_ifn()
     if ((m_ui_pending & InfoShow) or update_info_anchor)
     {
         auto anchor = is_inline(m_info.style) ?
-             window.display_position(m_info.anchor) : DisplayCoord{};
+             window.display_coord(m_info.anchor) : DisplayCoord{};
         if (not (m_ui_pending & MenuShow) and m_info.ui_anchor != anchor)
             m_ui_pending |= anchor ? InfoShow : InfoHide;
         m_info.ui_anchor = anchor;

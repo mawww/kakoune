@@ -296,7 +296,7 @@ BufferCoord find_buffer_coord(const DisplayLine& line, const Buffer& buffer,
 }
 }
 
-Optional<DisplayCoord> Window::display_position(BufferCoord coord) const
+Optional<DisplayCoord> Window::display_coord(BufferCoord coord) const
 {
     if (m_display_buffer.timestamp() != buffer().timestamp())
         return {};
