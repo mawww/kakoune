@@ -63,12 +63,12 @@ public:
                                 const ShellContext& shell_context = {});
 
     std::pair<String, int> eval(StringView cmdline, const Context& context,
-                                StringView stdin,
+                                StringView in,
                                 Flags flags = Flags::WaitForStdout,
                                 const ShellContext& shell_context = {})
     {
         return eval(cmdline, context,
-                    [stdin]() mutable { return std::exchange(stdin, StringView{}); },
+                    [in]() mutable { return std::exchange(in, StringView{}); },
                     flags, shell_context);
     }
 
