@@ -200,8 +200,11 @@ define-command -params 1.. \
         }"
         git show "$rev:${buffile_relative}" |
             diff - ${kak_response_fifo} "$@" |
-            sed -e "1c--- a/$buffile_relative" \
-                -e "2c+++ b/$buffile_relative"
+            awk -v buffile_relative="$buffile_relative" '
+                NR == 1 { print "--- a/" buffile_relative }
+                NR == 2 { print "+++ b/" buffile_relative }
+                NR > 2
+            '
     }
 
     blame_toggle() {
