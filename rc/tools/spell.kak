@@ -87,57 +87,61 @@ define-command spell-clear %{
     unset-option buffer spell_regions
 }
 
-define-command spell-next %{ evaluate-commands %sh{
-    anchor_line="${kak_selection_desc%%.*}"
-    anchor_col="${kak_selection_desc%%,*}"
-    anchor_col="${anchor_col##*.}"
-
-    start_first="${kak_opt_spell_regions%%|*}"
-    start_first="${start_first#* }"
+define-command spell-rel-jump -hidden -params 0..1 %{ evaluate-commands %sh{
+    spell_first="${kak_opt_spell_regions%%|*}"
+    spell_first="${spell_first#* }"
+    spell_last="${kak_opt_spell_regions##* }"
+    spell_last="${spell_last%|*}"
 
     # Make sure properly formatted selection descriptions are in `%opt{spell_regions}`
-    if ! printf %s "${start_first}" | grep -qE '^[0-9]+\.[0-9]+,[0-9]+\.[0-9]+$'; then
+    if ! printf %s "${spell_first}" | grep -qE '^[0-9]+\.[0-9]+,[0-9]+\.[0-9]+$'; then
         exit
     fi
 
-    printf %s "${kak_opt_spell_regions#* }" | awk -v start_first="${start_first}" \
-                                                  -v anchor_line="${anchor_line}" \
-                                                  -v anchor_col="${anchor_col}" '
-        BEGIN {
-            anchor_line = int(anchor_line)
-            anchor_col = int(anchor_col)
-        }
+    get_prev=0
+    if [ "$1" = "-rev" ]; then
+        get_prev=1
+    elif [ -n "$1" ]; then
+        echo "fail -- Unrecognised parameter $(kakquote "$1")"
+    fi
 
-        {
-            for (i = 1; i <= NF; i++) {
-                sel = $i
-                sub(/\|.+$/, "", sel)
-
-                start_line = sel
-                sub(/\..+$/, "", start_line)
-                start_line = int(start_line)
-
-                start_col = sel
-                sub(/,.+$/, "", start_col)
-                sub(/^.+\./, "", start_col)
-                start_col = int(start_col)
-
-                if (start_line < anchor_line \
-                    || (start_line == anchor_line && start_col <= anchor_col))
-                    continue
-
-                target_sel = sel
-                break
+    printf %s "${kak_opt_spell_regions#* }" | \
+        awk -v spell_first="${spell_first}" -v spell_last="${spell_last}" \
+            -v get_prev="${get_prev}" -F '[.,|]' -v RS=" " '
+            BEGIN {
+                split(ENVIRON["kak_selection_desc"], sel)
+                cursor_row = sel[3]
+                cursor_col = sel[4]
+                # reverse order so cursor can be at beginning for spell-prev
+                split(spell_last, tmp)
+                spell_last = tmp[3] "." tmp[4] "," tmp[1] "." tmp[2]
             }
-        }
 
-        END {
-            if (!target_sel)
-                target_sel = start_first
+            {
+                # $1 - $4 is candidate row.col,row.col
+                check_row = $1 > cursor_row
+                check_col = $1 == cursor_row && (get_prev ? $2 >= cursor_col : $2 > cursor_col)
 
-            printf "select %s\n", target_sel
-        }'
+                if (check_row || check_col) {
+                    next_spell = $1 "." $2 "," $3 "." $4
+                    exit
+                }
+                prev_spell = $3 "." $4 "," $1 "." $2
+            }
+
+            END {
+                target_spell = get_prev ? prev_spell : next_spell
+                if (!target_spell)
+                    target_spell = get_prev ? spell_last : spell_first
+
+                printf "select %s\n", target_spell
+            }
+        '
 } }
+
+define-command spell-next %{ spell-rel-jump }
+
+define-command spell-prev %{ spell-rel-jump -rev }
 
 define-command \
     -docstring "Suggest replacement words for the current selection, against the last language used by the spell-check command" \
