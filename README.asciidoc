@@ -73,7 +73,8 @@ Features
    - Piping each selection to external filter
  * Client-Server architecture
    - Multiple clients on the same editing session
-   - Use tmux or your X11 window manager to manage windows
+   - Use tmux, zellij, kitty, wezterm or your X11/Wayland window manager to
+     manage splits/panes by spawning clients connected to the same session
  * Simple interaction with external programs
  * Automatic contextual help
  * Automatic as you type completion
