@@ -105,8 +105,8 @@ Kakoune's dependencies are:
  * A {cpp}20 compliant compiler (GCC >= 10.3 or clang >= 11) along with its
    associated {cpp} standard library (libstdc{pp} >= 10 or libc{pp})
 
-To build, just type *make* in the src directory.
-To generate man pages, type *make man* in the src directory.
+To build, just type *make* in the root directory.
+To generate man pages, type *make man* in the root directory.
 
 Kakoune can be built on Linux, MacOS, and Cygwin. Due to Kakoune relying heavily
 on being in a Unix-like environment, no native Windows version is planned.
