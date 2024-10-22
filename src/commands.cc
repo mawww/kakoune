@@ -259,69 +259,25 @@ static Completions complete_command_name(const Context& context, CompletionFlags
        context, prefix.substr(0, cursor_pos));
 }
 
-struct ShellScriptCompleter
+struct AsyncShellScript
 {
-    ShellScriptCompleter(String shell_script,
-                         Completions::Flags flags = Completions::Flags::None)
+    AsyncShellScript(String shell_script,
+                     Completions::Flags flags = Completions::Flags::None)
       : m_shell_script{std::move(shell_script)}, m_flags(flags) {}
 
-    Completions operator()(const Context& context, CompletionFlags flags,
-                           CommandParameters params, size_t token_to_complete,
-                           ByteCount pos_in_token)
+    AsyncShellScript(const AsyncShellScript& other) : m_shell_script{other.m_shell_script}, m_flags(other.m_flags) {}
+    AsyncShellScript& operator=(const AsyncShellScript& other) {  m_shell_script = other.m_shell_script; m_flags = other.m_flags; return *this; }
+
+protected:
+    void spawn_script(const Context& context, const ShellContext& shell_context, auto&& handle_line)
     {
-        if (flags & CompletionFlags::Fast) // no shell on fast completion
-            return Completions{};
-
-        ShellContext shell_context{
-            params,
-            { { "token_to_complete", to_string(token_to_complete) },
-              { "pos_in_token",      to_string(pos_in_token) } }
-        };
-        String output = ShellManager::instance().eval(m_shell_script, context, StringView{},
-                                                      ShellManager::Flags::WaitForStdout,
-                                                      shell_context).first;
-        CandidateList candidates;
-        for (auto&& candidate : output | split<StringView>('\n')
-                                       | filter([](auto s) { return not s.empty(); }))
-            candidates.push_back(candidate.str());
-
-        return {0_byte, pos_in_token, std::move(candidates), m_flags};
-    }
-private:
-    String m_shell_script;
-    Completions::Flags m_flags;
-};
-
-struct ShellCandidatesCompleter
-{
-    ShellCandidatesCompleter(String shell_script,
-                             Completions::Flags flags = Completions::Flags::None)
-      : m_shell_script{std::move(shell_script)}, m_flags(flags) {}
-
-    ShellCandidatesCompleter(const ShellCandidatesCompleter& other) : m_shell_script{other.m_shell_script}, m_flags(other.m_flags) {}
-    ShellCandidatesCompleter& operator=(const ShellCandidatesCompleter& other) {  m_shell_script = other.m_shell_script; m_flags = other.m_flags; return *this; }
-
-    Completions operator()(const Context& context, CompletionFlags flags,
-                           CommandParameters params, size_t token_to_complete,
-                           ByteCount pos_in_token)
-    {
-        if (m_last_token != token_to_complete)
-        {
-            ShellContext shell_context{
-                params,
-                { { "token_to_complete", to_string(token_to_complete) } }
-            };
-            m_running_script.emplace(ShellManager::instance().spawn(m_shell_script, context, false, shell_context));
-            m_watcher.emplace((int)m_running_script->out, FdEvents::Read, EventMode::Urgent,
-                              [this, &input_handler=context.input_handler()](auto&&... args) { read_candidates(input_handler); });
-            m_candidates.clear();
-            m_last_token = token_to_complete;
-        }
-        return rank_candidates(params[token_to_complete].substr(0, pos_in_token));
+        m_handle_line = handle_line;
+        m_running_script.emplace(ShellManager::instance().spawn(m_shell_script, context, false, shell_context));
+        m_watcher.emplace((int)m_running_script->out, FdEvents::Read, EventMode::Urgent,
+                          [this, &input_handler=context.input_handler()](auto&&... args) { read_stdout(input_handler); });
     }
 
-private:
-    void read_candidates(InputHandler& input_handler)
+    void read_stdout(InputHandler& input_handler)
     {
         char buffer[2048];
         bool closed = false;
@@ -336,21 +292,87 @@ private:
             }
             m_stdout_buffer.insert(m_stdout_buffer.end(), buffer, buffer + size);
         }
-
         auto end = closed ? m_stdout_buffer.end() : find(m_stdout_buffer | reverse(), '\n').base();
         for (auto c : ArrayView(m_stdout_buffer.begin(), end) | split<StringView>('\n')
                                                               | filter([](auto s) { return not s.empty(); }))
-            m_candidates.emplace_back(c.str(), used_letters(c));
+            m_handle_line(c);
+
         m_stdout_buffer.erase(m_stdout_buffer.begin(), end);
 
         input_handler.refresh_ifn();
-        if (not closed)
-            return;
-
-        m_running_script.reset();
-        m_watcher.reset();
+        if (closed)
+        {
+            m_running_script.reset();
+            m_watcher.reset();
+            m_handle_line = {};
+        }
     }
 
+    String m_shell_script;
+    Optional<Shell> m_running_script;
+    Optional<FDWatcher> m_watcher;
+    Vector<char, MemoryDomain::Completion> m_stdout_buffer;
+    std::function<void (StringView)> m_handle_line;
+    Completions::Flags m_flags;
+};
+
+struct ShellScriptCompleter : AsyncShellScript
+{
+    using AsyncShellScript::AsyncShellScript;
+
+    Completions operator()(const Context& context, CompletionFlags flags,
+                           CommandParameters params, size_t token_to_complete,
+                           ByteCount pos_in_token)
+    {
+        CandidateList candidates;
+        if (m_last_token != token_to_complete or pos_in_token != m_last_pos_in_token)
+        {
+            ShellContext shell_context{
+                params,
+                { { "token_to_complete", to_string(token_to_complete) },
+                  { "pos_in_token",      to_string(pos_in_token) } }
+            };
+            spawn_script(context, shell_context, [this](StringView line) { m_candidates.push_back(line.str()); });
+
+            candidates = std::move(m_candidates); // avoid completion menu flicker by keeping the previous result visible
+            m_candidates.clear();
+            m_last_token = token_to_complete;
+            m_last_pos_in_token = pos_in_token;
+        }
+        else
+            candidates = m_candidates;
+
+        return {0_byte, pos_in_token, std::move(candidates), m_flags};
+    }
+
+private:
+    CandidateList m_candidates;
+    int m_last_token = -1;
+    ByteCount m_last_pos_in_token = -1;
+};
+
+struct ShellCandidatesCompleter : AsyncShellScript
+{
+    using AsyncShellScript::AsyncShellScript;
+
+    Completions operator()(const Context& context, CompletionFlags flags,
+                           CommandParameters params, size_t token_to_complete,
+                           ByteCount pos_in_token)
+    {
+        if (m_last_token != token_to_complete)
+        {
+            ShellContext shell_context{
+                params,
+                { { "token_to_complete", to_string(token_to_complete) } }
+            };
+            spawn_script(context, shell_context, [this](StringView line) { m_candidates.emplace_back(line.str(), used_letters(line)); });
+            m_candidates.clear();
+            m_last_token = token_to_complete;
+        }
+        return rank_candidates(params[token_to_complete].substr(0, pos_in_token));
+    }
+
+private:
     Completions rank_candidates(StringView query)
     {
         UsedLetters query_letters = used_letters(query);
@@ -377,13 +399,8 @@ private:
         return Completions{0_byte, query.length(), std::move(res), m_flags};
     }
 
-    String m_shell_script;
-    Vector<char, MemoryDomain::Completion> m_stdout_buffer;
-    Optional<Shell> m_running_script;
-    Optional<FDWatcher> m_watcher;
     Vector<std::pair<String, UsedLetters>, MemoryDomain::Completion> m_candidates;
     int m_last_token = -1;
-    Completions::Flags m_flags;
 };
 
 template<typename Completer>
