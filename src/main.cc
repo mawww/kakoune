@@ -703,7 +703,8 @@ std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
 
     static SignalHandler old_handler = set_signal_handler(SIGTSTP, [](int sig) {
         if (ClientManager::instance().count() == 1 and
-            *ClientManager::instance().begin() == local_client)
+            *ClientManager::instance().begin() == local_client and
+            not Server::instance().is_daemon())
             old_handler(sig);
         else
         {
