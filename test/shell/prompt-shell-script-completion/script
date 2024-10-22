@@ -1,0 +1,5 @@
+ui_out -until '{ "jsonrpc": "2.0", "method": "refresh", "params": [true] }'
+ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ ":foo<ret>b" ] }'
+ui_out -until '{ "jsonrpc": "2.0", "method": "refresh", "params": [false] }'
+ui_out -until '{ "jsonrpc": "2.0", "method": "menu_show", "params": [[[{ "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": "foo" }], [{ "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": "bar" }], [{ "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": "baz" }]], { "line": 0, "column": 0 }, { "fg": "white", "bg": "blue", "underline": "default", "attributes": [] }, { "fg": "blue", "bg": "white", "underline": "default", "attributes": [] }, "prompt"] }'
+ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "<tab><ret>" ] }'
