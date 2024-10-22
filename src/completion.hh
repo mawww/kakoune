@@ -42,22 +42,12 @@ struct Completions
         : candidates(std::move(candidates)), start(start), end(end), flags{flags} {}
 };
 
-enum class CompletionFlags
-{
-    None = 0,
-    Fast = 1 << 0,
-};
-
-constexpr bool with_bit_ops(Meta::Type<CompletionFlags>) { return true; }
-
-inline Completions complete_nothing(const Context&, CompletionFlags,
-                                    StringView, ByteCount cursor_pos)
+inline Completions complete_nothing(const Context&, StringView, ByteCount cursor_pos)
 {
     return {cursor_pos, cursor_pos};
 }
 
-Completions shell_complete(const Context& context, CompletionFlags,
-                           StringView, ByteCount cursor_pos);
+Completions shell_complete(const Context& context, StringView, ByteCount cursor_pos);
 
 inline Completions offset_pos(Completions completion, ByteCount offset)
 {

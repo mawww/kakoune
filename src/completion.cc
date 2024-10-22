@@ -8,8 +8,7 @@
 namespace Kakoune
 {
 
-Completions shell_complete(const Context& context, CompletionFlags flags,
-                           StringView prefix, ByteCount cursor_pos)
+Completions shell_complete(const Context& context, StringView prefix, ByteCount cursor_pos)
 {
     ByteCount word_start = 0;
     ByteCount word_end = 0;

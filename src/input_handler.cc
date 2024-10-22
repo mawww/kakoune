@@ -692,7 +692,7 @@ public:
                            Timer::Callback{} : [this](Timer&) {
                            RefPtr<InputMode> keep_alive{this}; // hook or m_callback could trigger pop_mode()
                            if (m_auto_complete and m_refresh_completion_pending)
-                               refresh_completions(CompletionFlags::Fast);
+                               refresh_completions();
                            if (m_line_changed)
                            {
                                m_callback(m_line_editor.line(), PromptEvent::Change, context());
@@ -829,10 +829,10 @@ public:
             CandidateList& candidates = m_completions.candidates;
 
             if (m_auto_complete and m_refresh_completion_pending)
-                refresh_completions(CompletionFlags::Fast);
+                refresh_completions();
             if (candidates.empty()) // manual completion, we need to ask our completer for completions
             {
-                refresh_completions(CompletionFlags::None);
+                refresh_completions();
                 if ((not m_prefix_in_completions and candidates.size() > 1) or
                     candidates.size() > 2)
                     return;
@@ -890,7 +890,7 @@ public:
                         });
 
                     if (m_explicit_completer)
-                        refresh_completions(CompletionFlags::None);
+                        refresh_completions();
                 }, "enter completion type",
                 "f: filename\n"
                 "w: buffer word\n");
@@ -901,7 +901,7 @@ public:
             m_auto_complete = not m_auto_complete;
 
             if (m_auto_complete)
-                refresh_completions(CompletionFlags::Fast);
+                refresh_completions();
             else if (context().has_client())
             {
                 clear_completions();
@@ -996,7 +996,7 @@ private:
     template<typename Completer>
     void use_explicit_completer(Completer&& completer)
     {
-        m_explicit_completer = [completer](const Context& context, CompletionFlags flags, StringView content, ByteCount cursor_pos) {
+        m_explicit_completer = [completer](const Context& context, StringView content, ByteCount cursor_pos) {
             Optional<Token> last_token;
             CommandParser parser{content.substr(0_byte, cursor_pos)};
             while (auto token = parser.read_token(false))
@@ -1012,7 +1012,7 @@ private:
         };
     }
 
-    void refresh_completions(CompletionFlags flags)
+    void refresh_completions()
     {
         try
         {
@@ -1022,7 +1022,7 @@ private:
                 return;
             m_current_completion = -1;
             const String& line = m_line_editor.line();
-            m_completions = completer(context(), flags, line,
+            m_completions = completer(context(), line,
                                       line.byte_count_to(m_line_editor.cursor_pos()));
             if (not context().has_client())
                 return;

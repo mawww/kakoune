@@ -491,9 +491,9 @@ void command(const Context& context, EnvVarMap env_vars, char reg = 0)
         ":", {}, default_command,
         context.faces()["Prompt"], PromptFlags::DropHistoryEntriesWithBlankPrefix,
         ':',
-        [completer=CommandManager::Completer{}](const Context& context, CompletionFlags flags,
+        [completer=CommandManager::Completer{}](const Context& context,
            StringView cmd_line, ByteCount pos) mutable {
-               return completer(context, flags, cmd_line, pos);
+               return completer(context, cmd_line, pos);
         },
         [env_vars = std::move(env_vars), default_command](StringView cmdline, PromptEvent event, Context& context) {
             if (context.has_client())
@@ -842,7 +842,7 @@ void regex_prompt(Context& context, String prompt, char reg, RegexMode mode, Fun
     context.input_handler().prompt(
         std::move(prompt), {}, default_regex, context.faces()["Prompt"],
         PromptFlags::Search, reg,
-        [](const Context& context, CompletionFlags, StringView regex, ByteCount pos) -> Completions {
+        [](const Context& context, StringView regex, ByteCount pos) -> Completions {
             auto current_word = [](StringView s) {
                 auto it = s.end();
                 while (it != s.begin() and is_word(*(it-1)))

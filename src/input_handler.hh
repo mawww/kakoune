@@ -42,8 +42,7 @@ class InputMode;
 enum class KeymapMode : char;
 enum class CursorMode;
 
-using PromptCompleter = std::function<Completions (const Context&, CompletionFlags,
-                                                   StringView, ByteCount)>;
+using PromptCompleter = std::function<Completions (const Context&, StringView, ByteCount)>;
 enum class InsertMode : unsigned
 {
     Insert,

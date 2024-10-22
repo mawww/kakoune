@@ -40,9 +40,7 @@ struct wrong_argument_count : public parameter_error
 
 class Context;
 struct Completions;
-enum class CompletionFlags;
-using ArgCompleter = std::function<Completions (const Context&, CompletionFlags,
-                                                StringView, ByteCount)>;
+using ArgCompleter = std::function<Completions (const Context&, StringView, ByteCount)>;
 
 struct SwitchDesc
 {
