@@ -179,6 +179,13 @@ ParseResult parse_quoted_balanced(ParseState& state)
     return {String{String::NoCopy{}, {beg, pos - terminated}}, terminated};
 }
 
+bool is_ascii_horizontal_blank(char c)
+{
+    return c == '\t'      or
+           c == '\f'      or
+           c == ' ';
+}
+
 String parse_unquoted(ParseState& state)
 {
     const char* beg = state.pos;
@@ -189,7 +196,7 @@ String parse_unquoted(ParseState& state)
     while (state.pos != end)
     {
         const char c = *state.pos;
-        if (is_command_separator(c) or is_horizontal_blank(c))
+        if (is_command_separator(c) or is_ascii_horizontal_blank(c))
         {
             str += StringView{beg, state.pos};
             if (state.pos != beg and *(state.pos - 1) == '\\')
@@ -235,8 +242,8 @@ void skip_blanks_and_comments(ParseState& state)
 {
     while (state)
     {
-        const Codepoint c = *state.pos;
-        if (is_horizontal_blank(c))
+        const char c = *state.pos;
+        if (is_ascii_horizontal_blank(c))
             ++state.pos;
         else if (c == '\\' and state.pos + 1 != state.str.end() and
                  state.pos[1] == '\n')
