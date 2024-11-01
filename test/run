@@ -197,11 +197,14 @@ ui_out() {
       done
       ;;
     -until-grep)
-      shift
-      while
-        read -r event <&4
-        ! printf %s "$event" | grep "$@"
-      do :; done
+      pattern=$2
+      shift 2
+      while read -r event <&4; do
+        if printf %s "$event" | grep "$pattern"; then
+          [ $# -ne 0 ] && assert_eq "$1" "$event"
+          break
+        fi
+      done
       ;;
     *)
       read -r event <&4
