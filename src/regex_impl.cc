@@ -1594,6 +1594,17 @@ auto test_regex = UnitTest{[]{
     }
 
     {
+        TestVM<RegexMode::Backward | RegexMode::Search> vm{"oo(.{3,4}|f)"};
+        kak_assert(vm.backward_start_desc and vm.backward_start_desc->offset == 4);
+        for (int c = 0; c < CompiledRegex::StartDesc::count; ++c)
+            kak_assert(vm.backward_start_desc->map[c] == (c == 'f' or c == 'o'));
+
+        kak_assert(vm.exec("ooxxx", RegexExecFlags::None));
+        kak_assert(vm.exec("oofx", RegexExecFlags::None));
+        kak_assert(not vm.exec("oox😄", RegexExecFlags::None));
+    }
+
+    {
         auto eq = [](const CompiledRegex::NamedCapture& lhs,
                      const CompiledRegex::NamedCapture& rhs) {
             return lhs.name == rhs.name and

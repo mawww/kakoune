@@ -552,7 +552,7 @@ private:
             {
                 auto prev = utf8::previous(pos, config.end);
                 if (start_desc.map[static_cast<unsigned char>(*prev)])
-                    return pos;
+                    return utf8::advance(pos, start, CharCount(start_desc.offset));
                 pos = prev;
             }
         }
