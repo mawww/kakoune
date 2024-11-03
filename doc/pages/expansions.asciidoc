@@ -443,4 +443,4 @@ cannot contain any special characters that would require quoting.
 == Recursive Expansions
 
 Expansions with the type `exp` expand their content, the same way doubly
-quoted strings do.
+quoted strings do except that double quotes don't need to be escaped.
