@@ -1,0 +1,2 @@
+add-highlighter global/ column 40 "default,green"
+add-highlighter global/ line 2 "default,blue"

@@ -506,10 +506,8 @@ std::unique_ptr<Highlighter> create_line_highlighter(HighlighterParameters param
         for (auto& atom : *it)
         {
             column += atom.length();
-            if (!atom.has_buffer_range())
-                continue;
-
-            kak_assert(atom.begin().line == line);
+            if (atom.has_buffer_range() and atom.begin().line != line)
+                break;
             apply_face(face)(atom);
         }
         const ColumnCount remaining = context.context.window().dimensions().column - column;
