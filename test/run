@@ -180,39 +180,42 @@ ui_in() {
 }
 
 ui_out() {
-  while [ $# -ne 0 ]; do
-    case "$1" in
-    -ignore)
-      shift
-      skip_count=$1
-      while [ $skip_count -gt 0 ]; do
-        read -r event <&4
-        skip_count=$(( skip_count - 1 ))
-      done
-      ;;
-    -until)
-      shift
-      while read -r event <&4; do
-        [ "$event" = "$1" ] && break
-      done
-      ;;
-    -until-grep)
-      pattern=$2
-      shift 2
-      while read -r event <&4; do
-        if printf %s "$event" | grep "$pattern"; then
-          [ $# -ne 0 ] && assert_eq "$1" "$event"
-          break
-        fi
-      done
-      ;;
-    *)
-      read -r event <&4
-      assert_eq "$1" "$event"
-      ;;
-    esac
+  arg=$1
+  shift
+  case "$arg" in
+  -ignore)
+    skip_count=$1
     shift
-  done
+    while [ $skip_count -gt 0 ]; do
+      read -r event <&4
+      skip_count=$(( skip_count - 1 ))
+    done
+    ;;
+  -until)
+    expected=$1
+    shift
+    while read -r event <&4; do
+      [ "$event" = "$expected" ] && break
+    done
+    ;;
+  -until-grep)
+    pattern=$1
+    shift
+    while read -r event <&4; do
+      if printf %s "$event" | grep "$pattern"; then
+        if [ $# -ne 0 ]; then
+            assert_eq "$1" "$event"
+            shift
+        fi
+        break
+      fi
+    done
+    ;;
+  *)
+    read -r event <&4
+    assert_eq "$arg" "$event"
+    ;;
+  esac
 }
 
 main "$@"
