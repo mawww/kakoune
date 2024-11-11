@@ -619,21 +619,21 @@ const String& session_directory()
     return session_dir;
 }
 
-String session_path(StringView session)
+String session_path(StringView session, bool assume_valid)
 {
-    if (not all_of(session, is_identifier))
+    if (not assume_valid and not all_of(session, is_identifier))
         throw runtime_error{format("invalid session name: '{}'", session)};
-    return format("{}/{}", session_directory(), session);
+    String path = format("{}/{}", session_directory(), session);
+    if (not assume_valid and path.length() + 1 > sizeof sockaddr_un{}.sun_path)
+        throw runtime_error{format("socket path too long: '{}'", path)};
+    return path;
 }
 
 static sockaddr_un session_addr(StringView session)
 {
     sockaddr_un addr;
     addr.sun_family = AF_UNIX;
-    String path = session_path(session);
-    if (path.length() + 1 > sizeof addr.sun_path)
-        throw runtime_error{format("socket path too long: '{}'", path)};
-    strcpy(addr.sun_path, path.c_str());
+    strcpy(addr.sun_path, session_path(session).c_str());
     return addr;
 }
 
@@ -889,7 +889,7 @@ Server::Server(String session_name, bool is_daemon)
 
 bool Server::rename_session(StringView name)
 {
-    String old_socket_file = session_path(m_session);
+    String old_socket_file = session_path(m_session, true);
     String new_socket_file = session_path(name);
 
     if (file_exists(new_socket_file))
@@ -906,7 +906,7 @@ void Server::close_session(bool do_unlink)
 {
     if (do_unlink)
     {
-        String socket_file = session_path(m_session);
+        String socket_file = session_path(m_session, true);
         unlink(socket_file.c_str());
     }
     m_listener->close_fd();
