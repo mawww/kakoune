@@ -1,6 +1,7 @@
 #include "buffer_utils.hh"
 
 #include "buffer_manager.hh"
+#include "coord.hh"
 #include "event_manager.hh"
 #include "file.hh"
 #include "selection.hh"
@@ -214,7 +215,7 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
             bool closed = false;
             size_t loop = 0;
             char data[buffer_size];
-            BufferCoord insert_coord = m_buffer.back_coord();
+            Optional<BufferCoord> insert_begin;
             const int fifo = fd();
 
             {
@@ -235,13 +236,19 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
                     if (not m_scroll and (is_first or m_had_trailing_newline))
                         pos = m_buffer.next(pos);
 
-                    pos = m_buffer.insert(pos, StringView(data, data+count)).end;
+                    auto inserted_range = m_buffer.insert(pos, StringView(data, data+count));
+                    if (not insert_begin)
+                        insert_begin = inserted_range.begin;
+                    pos = inserted_range.end;
 
                     bool have_trailing_newline = (data[count-1] == '\n');
                     if (not m_scroll)
                     {
                         if (is_first)
+                        {
                             m_buffer.erase({0,0}, m_buffer.next({0,0}));
+                            --insert_begin->line;
+                        }
                         else if (not m_had_trailing_newline and have_trailing_newline)
                             m_buffer.erase(m_buffer.prev(pos), pos);
                     }
@@ -250,10 +257,10 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
                 while (++loop < max_loop  and fd_readable(fifo));
             }
 
-            if (insert_coord != m_buffer.back_coord())
+            if (insert_begin)
                 m_buffer.run_hook_in_own_context(
                     Hook::BufReadFifo,
-                    selection_to_string(ColumnType::Byte, m_buffer, {insert_coord, m_buffer.back_coord()}));
+                    selection_to_string(ColumnType::Byte, m_buffer, {*insert_begin, m_buffer.back_coord()}));
 
             if (closed)
                 m_buffer.values().erase(fifo_watcher_id); // will delete this

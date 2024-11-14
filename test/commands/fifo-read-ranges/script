@@ -1,0 +1,9 @@
+mkfifo fifo ranges 2>/dev/null
+exec 5>fifo
+echo a >&5
+assert_eq 1.1,1.2 "$(cat ranges)"
+echo b >&5
+assert_eq 2.1,2.2 "$(cat ranges)"
+echo c >&5
+assert_eq 3.1,3.2 "$(cat ranges)"
+exec 5>&-
