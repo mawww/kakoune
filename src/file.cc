@@ -280,9 +280,15 @@ template void write<false>(int fd, StringView data);
 
 void write_to_file(StringView filename, StringView data)
 {
-    const int fd = open(filename.zstr(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
-    if (fd == -1)
-        throw file_access_error(filename, strerror(errno));
+    int fd = -1;
+    const int flags = O_CREAT | O_WRONLY | O_TRUNC | (EventManager::has_instance() ? O_NONBLOCK : 0);
+    while ((fd = open(filename.zstr(), flags, 0644)) == -1)
+    {
+        if (errno == ENXIO and EventManager::has_instance()) // trying to open a FIFO with no readers yet
+            EventManager::instance().handle_next_events(EventMode::Urgent, nullptr, false);
+        else
+            throw file_access_error(filename, strerror(errno));
+    }
     auto close_fd = on_scope_end([fd]{ close(fd); });
     write(fd, data);
 }
