@@ -908,14 +908,16 @@ int run_server(StringView session, StringView server_init,
 
             // Loop so that eventual inputs happening during the processing are handled as
             // well, avoiding unneeded redraws.
-            bool allow_blocking = not client_manager.has_pending_inputs();
+            Optional<std::chrono::nanoseconds> timeout;
+            if (client_manager.has_pending_inputs())
+                timeout = std::chrono::nanoseconds{};
             try
             {
-                while (event_manager.handle_next_events(EventMode::Normal, nullptr, allow_blocking))
+                while (event_manager.handle_next_events(EventMode::Normal, nullptr, timeout))
                 {
                     if (client_manager.process_pending_inputs())
                         break;
-                    allow_blocking = false;
+                    timeout = std::chrono::nanoseconds{};
                 }
             }
             catch (const cancel&) {}

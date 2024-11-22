@@ -269,7 +269,7 @@ void write(int fd, StringView data)
             count -= written;
         }
         else if (errno == EAGAIN and not atomic and EventManager::has_instance())
-            EventManager::instance().handle_next_events(EventMode::Urgent, nullptr, false);
+            EventManager::instance().handle_next_events(EventMode::Urgent, nullptr, std::chrono::nanoseconds{});
         else
             throw file_access_error(format("fd: {}", fd), strerror(errno));
     }
@@ -285,7 +285,7 @@ void write_to_file(StringView filename, StringView data)
     while ((fd = open(filename.zstr(), flags, 0644)) == -1)
     {
         if (errno == ENXIO and EventManager::has_instance()) // trying to open a FIFO with no readers yet
-            EventManager::instance().handle_next_events(EventMode::Urgent, nullptr, false);
+            EventManager::instance().handle_next_events(EventMode::Urgent, nullptr, std::chrono::nanoseconds{1'000'000});
         else
             throw file_access_error(filename, strerror(errno));
     }
