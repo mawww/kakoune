@@ -17,13 +17,13 @@ define-command -params .. -docstring %{
             if [ $# -eq 0 ]; then
                 case "$kak_opt_grepcmd" in
                 ag\ * | git\ grep\ * | grep\ * | rg\ * | ripgrep\ * | ugrep\ * | ug\ *)
-                    set -- -F "$kak_selection"
+                    set -- -F -- "$kak_selection"
                     ;;
                 ack\ *)
-                    set -- -Q "$kak_selection"
+                    set -- -Q -- "$kak_selection"
                     ;;
                 *)
-                    set -- "$kak_selection"
+                    set -- -- "$kak_selection"
                     ;;
                 esac
             fi
