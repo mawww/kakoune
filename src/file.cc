@@ -277,18 +277,25 @@ void write(int fd, StringView data)
 template void write<true>(int fd, StringView data);
 template void write<false>(int fd, StringView data);
 
-
-void write_to_file(StringView filename, StringView data)
+static int create_file(const char* filename)
 {
-    int fd = -1;
+    int fd;
     const int flags = O_CREAT | O_WRONLY | O_TRUNC | (EventManager::has_instance() ? O_NONBLOCK : 0);
-    while ((fd = open(filename.zstr(), flags, 0644)) == -1)
+    while ((fd = open(filename, flags, 0644)) == -1)
     {
         if (errno == ENXIO and EventManager::has_instance()) // trying to open a FIFO with no readers yet
             EventManager::instance().handle_next_events(EventMode::Urgent, nullptr, std::chrono::nanoseconds{1'000'000});
         else
-            throw file_access_error(filename, strerror(errno));
+            return -1;
     }
+    return fd;
+}
+
+void write_to_file(StringView filename, StringView data)
+{
+    int fd = create_file(filename.zstr());
+    if (fd == -1)
+        throw file_access_error(filename, strerror(errno));
     auto close_fd = on_scope_end([fd]{ close(fd); });
     write(fd, data);
 }
@@ -357,7 +364,7 @@ void write_buffer_to_file(Buffer& buffer, StringView filename,
 
     char temp_filename[PATH_MAX];
     const int fd = replace ? open_temp_file(filename, temp_filename)
-                           : open(zfilename, O_CREAT | O_WRONLY | O_TRUNC, 0644);
+                           : create_file(zfilename);
     if (fd == -1)
     {
         auto saved_errno = errno;
