@@ -42,7 +42,8 @@ String read_fd(int fd, bool text = false);
 String read_file(StringView filename, bool text = false);
 template<bool force_blocking = false>
 void write(int fd, StringView data);
-void write_to_file(StringView filename, StringView data);
+class Context;
+void write_to_file(const Context&, StringView filename, StringView data);
 
 struct MappedFile
 {
@@ -76,7 +77,7 @@ enum class WriteFlags
 };
 constexpr bool with_bit_ops(Meta::Type<WriteFlags>) { return true; }
 
-void write_buffer_to_file(Buffer& buffer, StringView filename,
+void write_buffer_to_file(const Context& context, Buffer& buffer, StringView filename,
                           WriteMethod method, WriteFlags flags);
 void write_buffer_to_fd(Buffer& buffer, int fd);
 void write_buffer_to_backup_file(Buffer& buffer);

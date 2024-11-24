@@ -1,5 +1,6 @@
 #include "client.hh"
 
+#include "clock.hh"
 #include "context.hh"
 #include "buffer_utils.hh"
 #include "debug.hh"
@@ -507,6 +508,37 @@ void Client::clear_pending()
     if (m_pending_clear & PendingClear::Info)
         info_hide();
     m_pending_clear = PendingClear::None;
+}
+
+constexpr std::chrono::seconds wait_timeout{1};
+
+BusyIndicator::BusyIndicator(const Context& context,
+                             std::function<DisplayLine(std::chrono::seconds)> status_message,
+                             TimePoint wait_time)
+    : m_context(context),
+      m_timer{wait_time + wait_timeout,
+        [this, status_message = std::move(status_message), wait_time](Timer& timer) {
+            if (not m_context.has_client())
+                return;
+            using namespace std::chrono;
+            const auto now = Clock::now();
+            timer.set_next_date(now + wait_timeout);
+
+            auto& client = m_context.client();
+            if (not m_previous_status)
+                m_previous_status = client.current_status();
+
+            client.print_status(status_message(duration_cast<seconds>(now - wait_time)));
+            client.redraw_ifn();
+        }, EventMode::Urgent} {}
+
+BusyIndicator::~BusyIndicator()
+{
+    if (m_previous_status and std::uncaught_exceptions() == 0) // restore the status line
+    {
+        m_context.print_status(std::move(*m_previous_status));
+        m_context.client().redraw_ifn();
+    }
 }
 
 }

@@ -2,6 +2,7 @@
 #define client_hh_INCLUDED
 
 #include "array.hh"
+#include "clock.hh"
 #include "display_buffer.hh"
 #include "env_vars.hh"
 #include "input_handler.hh"
@@ -164,6 +165,19 @@ constexpr auto enum_desc(Meta::Type<Autoreload>)
         { Autoreload::No, "false" }
     });
 }
+
+class BusyIndicator
+{
+public:
+    BusyIndicator(const Context& context,
+                  std::function<DisplayLine(std::chrono::seconds)> status_message,
+                  TimePoint wait_time = Clock::now());
+    ~BusyIndicator();
+private:
+    const Context& m_context;
+    Timer m_timer;
+    Optional<DisplayLine> m_previous_status;
+};
 
 }
 

@@ -2,6 +2,7 @@
 
 #include "assert.hh"
 #include "buffer.hh"
+#include "client.hh"
 #include "exception.hh"
 #include "flags.hh"
 #include "event_manager.hh"
@@ -277,23 +278,28 @@ void write(int fd, StringView data)
 template void write<true>(int fd, StringView data);
 template void write<false>(int fd, StringView data);
 
-static int create_file(const char* filename)
+static int create_file(const Context& context, const char* filename)
 {
     int fd;
     const int flags = O_CREAT | O_WRONLY | O_TRUNC | (EventManager::has_instance() ? O_NONBLOCK : 0);
+    using namespace std::chrono;
+    BusyIndicator busy_indicator{context, [&](seconds elapsed) {
+        return DisplayLine{format("waiting to open file ({}s)", elapsed.count()),
+                           context.faces()["Information"]};
+    }};
     while ((fd = open(filename, flags, 0644)) == -1)
     {
         if (errno == ENXIO and EventManager::has_instance()) // trying to open a FIFO with no readers yet
-            EventManager::instance().handle_next_events(EventMode::Urgent, nullptr, std::chrono::nanoseconds{1'000'000});
+            EventManager::instance().handle_next_events(EventMode::Urgent, nullptr, nanoseconds{1'000'000});
         else
             return -1;
     }
     return fd;
 }
 
-void write_to_file(StringView filename, StringView data)
+void write_to_file(const Context& context, StringView filename, StringView data)
 {
-    int fd = create_file(filename.zstr());
+    int fd = create_file(context, filename.zstr());
     if (fd == -1)
         throw file_access_error(filename, strerror(errno));
     auto close_fd = on_scope_end([fd]{ close(fd); });
@@ -343,7 +349,7 @@ int open_temp_file(StringView filename)
     return open_temp_file(filename, buffer);
 }
 
-void write_buffer_to_file(Buffer& buffer, StringView filename,
+void write_buffer_to_file(const Context& context, Buffer& buffer, StringView filename,
                           WriteMethod method, WriteFlags flags)
 {
     auto zfilename = filename.zstr();
@@ -364,7 +370,7 @@ void write_buffer_to_file(Buffer& buffer, StringView filename,
 
     char temp_filename[PATH_MAX];
     const int fd = replace ? open_temp_file(filename, temp_filename)
-                           : create_file(zfilename);
+                           : create_file(context, zfilename);
     if (fd == -1)
     {
         auto saved_errno = errno;

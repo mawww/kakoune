@@ -14,6 +14,7 @@
 #include "regex.hh"
 
 #include <array>
+#include <chrono>
 #include <cstring>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -316,24 +317,11 @@ std::pair<String, int> ShellManager::eval(
     bool failed = false;
 
     using namespace std::chrono;
-    static constexpr seconds wait_timeout{1};
-    Optional<DisplayLine> previous_status;
-    Timer wait_timer{wait_time + wait_timeout, [&](Timer& timer) {
-        if (not context.has_client())
-            return;
-
-        const auto now = Clock::now();
-        timer.set_next_date(now + wait_timeout);
-        auto& client = context.client();
-        if (not previous_status)
-            previous_status = client.current_status();
-
-        client.print_status({format("waiting for shell command to finish{} ({}s)",
-                                     terminated ? " (shell terminated)" : "",
-                                     duration_cast<seconds>(now - wait_time).count()),
-                             context.faces()[failed ? "Error" : "Information"]});
-        client.redraw_ifn();
-    }, EventMode::Urgent};
+    BusyIndicator busy_indicator{context, [&](seconds elapsed) {
+        return DisplayLine{format("waiting for shell command to finish{} ({}s)",
+                                  terminated ? " (shell terminated)" : "", elapsed.count()),
+                           context.faces()[failed ? "Error" : "Information"]};
+    }};
 
     bool cancelling = false;
     while (not terminated or shell.in or
@@ -372,12 +360,6 @@ std::pair<String, int> ShellManager::eval(
 
     if (cancelling)
         throw cancel{};
-
-    if (previous_status) // restore the status line
-    {
-        context.print_status(std::move(*previous_status));
-        context.client().redraw_ifn();
-    }
 
     return { std::move(stdout_contents), WIFEXITED(status) ? WEXITSTATUS(status) : -1 };
 }
