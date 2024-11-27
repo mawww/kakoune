@@ -76,7 +76,7 @@ Buffer* open_fifo(StringView name, StringView filename, Buffer::Flags flags, boo
     if (fd < 0)
        throw runtime_error(format("unable to open '{}'", filename));
 
-    return create_fifo_buffer(name.str(), fd, flags, scroll);
+    return create_fifo_buffer(name.str(), fd, flags, scroll ? AutoScroll::Yes : AutoScroll::No);
 }
 
 template<typename... Completers> struct PerArgumentCommandCompleter;

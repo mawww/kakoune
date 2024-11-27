@@ -166,7 +166,7 @@ void reload_file_buffer(Buffer& buffer)
     buffer.flags() &= ~Buffer::Flags::New;
 }
 
-Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll)
+Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, AutoScroll scroll)
 {
     static ValueId fifo_watcher_id = get_free_value_id();
 
@@ -186,7 +186,7 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
 
     struct FifoWatcher : FDWatcher
     {
-        FifoWatcher(int fd, Buffer& buffer, bool scroll)
+        FifoWatcher(int fd, Buffer& buffer, AutoScroll scroll)
             : FDWatcher(fd, FdEvents::Read, EventMode::Normal,
                         [](FDWatcher& watcher, FdEvents, EventMode mode) {
                             if (mode == EventMode::Normal)
@@ -233,7 +233,8 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
 
                     auto pos = m_buffer.back_coord();
                     const bool is_first = pos == BufferCoord{0,0};
-                    if (not m_scroll and (is_first or m_had_trailing_newline))
+                    if ((m_scroll == AutoScroll::No and (is_first or m_had_trailing_newline))
+                        or (m_scroll == AutoScroll::NotInitially and is_first))
                         pos = m_buffer.next(pos);
 
                     auto inserted_range = m_buffer.insert(pos, StringView(data, data+count));
@@ -242,14 +243,17 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
                     pos = inserted_range.end;
 
                     bool have_trailing_newline = (data[count-1] == '\n');
-                    if (not m_scroll)
+                    if (m_scroll != AutoScroll::Yes)
                     {
                         if (is_first)
                         {
                             m_buffer.erase({0,0}, m_buffer.next({0,0}));
                             --insert_begin->line;
+                            if (m_scroll == AutoScroll::NotInitially)
+                                m_buffer.insert(m_buffer.end_coord(), "\n");
                         }
-                        else if (not m_had_trailing_newline and have_trailing_newline)
+                        else if (m_scroll == AutoScroll::No and
+                                 not m_had_trailing_newline and have_trailing_newline)
                             m_buffer.erase(m_buffer.prev(pos), pos);
                     }
                     m_had_trailing_newline = have_trailing_newline;
@@ -270,7 +274,7 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, bool scroll
         }
 
         Buffer& m_buffer;
-        bool m_scroll;
+        AutoScroll m_scroll;
         bool m_had_trailing_newline = false;
     };
 
