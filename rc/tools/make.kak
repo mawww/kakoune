@@ -12,11 +12,13 @@ define-command -params .. -docstring %{
     make [<arguments>]: make utility wrapper
     All the optional arguments are forwarded to the make utility
 } make %{
-    evaluate-commands -try-client %opt{toolsclient} %exp{
-        fifo -scroll -name *make* -script %%{
+    evaluate-commands -try-client %opt{toolsclient} %{
+        fifo -scroll -name *make* -script %{
             trap - INT QUIT
-            %opt{makecmd} "$@"
-        } -- %%arg{@}
+            makecmd=$1
+            shift
+            eval "$makecmd \"\$@\""
+        } -- %opt{makecmd} %arg{@}
         set-option buffer filetype make
         set-option buffer jump_current_line 0
     }
