@@ -490,12 +490,15 @@ private:
         constexpr bool search = mode & RegexMode::Search;
         constexpr bool any_match = mode & RegexMode::AnyMatch;
         uint16_t current_step = -1;
+        constexpr size_t idle_frequency = 255; // Run idle loop every 255 * 65536 == 16M codepoints
+        size_t wrap_count = 0;
         m_found_match = false;
         while (true) // Iterate on all codepoints and once at the end
         {
             if (++current_step == 0)
             {
-                idle_func();
+                if ((++wrap_count % idle_frequency) == 0)
+                    idle_func();
 
                 // We wrapped, avoid potential collision on inst.last_step by resetting them
                 for (auto& inst : forward ? insts.subrange(0, m_program.first_backward_inst)
