@@ -6,6 +6,7 @@
 #include "changes.hh"
 #include "command_manager.hh"
 #include "context.hh"
+#include "coord.hh"
 #include "diff.hh"
 #include "enum.hh"
 #include "face_registry.hh"
@@ -537,8 +538,9 @@ void command(Context& context, NormalParams params)
     command(context, std::move(env_vars), params.reg);
 }
 
-BufferCoord apply_diff(Buffer& buffer, BufferCoord pos, ArrayView<StringView> lines_before, StringView after)
+BufferRange apply_diff(Buffer& buffer, BufferCoord pos, ArrayView<StringView> lines_before, StringView after)
 {
+    BufferCoord first = pos;
     const auto lines_after = after | split_after<StringView>('\n') | gather<Vector<StringView>>();
 
     auto byte_count = [](auto&& lines, int first, int count) {
@@ -546,6 +548,7 @@ BufferCoord apply_diff(Buffer& buffer, BufferCoord pos, ArrayView<StringView> li
                                [](ByteCount l, StringView s) { return l + s.length(); });
     };
 
+    bool tried_to_erase_final_newline = false;
     for_each_diff(lines_before.begin(), (int)lines_before.size(),
                   lines_after.begin(), (int)lines_after.size(),
                   [&, posA = 0, posB = 0](DiffOp op, int len) mutable {
@@ -557,17 +560,28 @@ BufferCoord apply_diff(Buffer& buffer, BufferCoord pos, ArrayView<StringView> li
             posB += len;
             break;
         case DiffOp::Add:
+            if (buffer.is_end(pos) and tried_to_erase_final_newline)
+                pos = buffer.prev(pos);
             pos = buffer.insert(pos, {lines_after[posB].begin(),
                                       lines_after[posB + len - 1].end()}).end;
             posB += len;
             break;
         case DiffOp::Remove:
-            pos = buffer.erase(pos, buffer.advance(pos, byte_count(lines_before, posA, len)));
+        {
+            BufferCoord end = buffer.advance(pos, byte_count(lines_before, posA, len));
+            tried_to_erase_final_newline |= buffer.is_end(end);
+            pos = buffer.erase(pos, end);
             posA += len;
             break;
         }
+        }
     });
-    return pos;
+    if (tried_to_erase_final_newline)
+    {
+        first = std::min(first, buffer.back_coord());
+        pos = buffer.erase(buffer.back_coord(), buffer.end_coord());
+    }
+    return {first, pos};
 }
 
 template<bool replace>
@@ -628,12 +642,12 @@ void pipe(Context& context, NormalParams params)
                     if (in_lines.back().back() != '\n' and not out.empty() and out.back() == '\n')
                         out.resize(out.length()-1, 0);
 
-                    auto new_end = apply_diff(buffer, first, in_lines, out);
-                    if (new_end != first)
+                    auto [new_first, new_end] = apply_diff(buffer, first, in_lines, out);
+                    if (new_first != new_end)
                     {
                         auto& min = sel.min();
                         auto& max = sel.max();
-                        min = first;
+                        min = new_first;
                         max = buffer.char_prev(new_end);
                     }
                     else
