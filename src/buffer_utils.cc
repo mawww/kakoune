@@ -249,7 +249,7 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, AutoScroll 
                         {
                             m_buffer.erase({0,0}, m_buffer.next({0,0}));
                             --insert_begin->line;
-                            if (m_scroll == AutoScroll::NotInitially)
+                            if (m_scroll == AutoScroll::NotInitially and have_trailing_newline)
                                 m_buffer.insert(m_buffer.end_coord(), "\n");
                         }
                         else if (m_scroll == AutoScroll::No and
