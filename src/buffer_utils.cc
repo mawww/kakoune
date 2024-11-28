@@ -263,7 +263,8 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, AutoScroll 
 
             if (insert_begin)
             {
-                auto insert_back = m_had_trailing_newline ? m_buffer.back_coord() : m_buffer.prev(m_buffer.back_coord());
+                auto insert_back = (m_had_trailing_newline and m_scroll == AutoScroll::No)
+                                 ? m_buffer.back_coord() : m_buffer.prev(m_buffer.back_coord());
                 m_buffer.run_hook_in_own_context(
                     Hook::BufReadFifo,
                     selection_to_string(ColumnType::Byte, m_buffer, {*insert_begin, insert_back}));

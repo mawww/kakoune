@@ -1,0 +1,5 @@
+hook global BufReadFifo .* %{
+    echo -to-file ranges %val{hook_param}
+}
+nop %sh{mkfifo fifo 2>/dev/null}
+edit -fifo fifo -scroll *fifo*
