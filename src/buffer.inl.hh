@@ -99,7 +99,7 @@ inline BufferCoord Buffer::end_coord() const
 }
 
 inline BufferIterator::BufferIterator(const Buffer& buffer, BufferCoord coord) noexcept
-    : m_buffer{&buffer}, m_coord{coord},
+    : m_buffer{&buffer}, m_lines{buffer.m_lines}, m_coord{coord},
       m_line{coord.line < buffer.line_count() ? (*m_buffer)[coord.line] : StringView{}} {}
 
 inline bool BufferIterator::operator==(const BufferIterator& iterator) const noexcept
@@ -165,8 +165,8 @@ inline BufferIterator& BufferIterator::operator++()
 {
     if (++m_coord.column == m_line.length())
     {
-        m_line = (++m_coord.line < m_buffer->line_count()) ?
-            (*m_buffer)[m_coord.line] : StringView{};
+        m_line = ((size_t)++m_coord.line < m_lines.size()) ?
+            m_lines[(size_t)m_coord.line]->strview() : StringView{};
         m_coord.column = 0;
     }
     return *this;
@@ -176,7 +176,7 @@ inline BufferIterator& BufferIterator::operator--()
 {
     if (m_coord.column == 0)
     {
-        m_line = (*m_buffer)[--m_coord.line];
+        m_line = m_lines[(size_t)--m_coord.line]->strview();
         m_coord.column = m_line.length() - 1;
     }
     else

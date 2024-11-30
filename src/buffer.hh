@@ -95,6 +95,7 @@ public:
 
 private:
     SafePtr<const Buffer> m_buffer;
+    ArrayView<const StringDataPtr> m_lines;
     BufferCoord m_coord;
     StringView m_line;
 };
@@ -122,6 +123,7 @@ public:
         ReadOnly = 1 << 6,
     };
     friend constexpr bool with_bit_ops(Meta::Type<Flags>) { return true; }
+    friend class BufferIterator;
 
     enum class HistoryId : size_t { First = 0, Invalid = (size_t)-1 };
 
