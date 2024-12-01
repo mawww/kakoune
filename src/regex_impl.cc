@@ -1031,6 +1031,9 @@ private:
             not contains(start_desc.map, false))
             return nullptr;
 
+        if (std::count(std::begin(start_desc.map), std::end(start_desc.map), true) == 1)
+            start_desc.start_byte = find(start_desc.map, true) - std::begin(start_desc.map);
+
         return std::make_unique<CompiledRegex::StartDesc>(start_desc);
     }
 

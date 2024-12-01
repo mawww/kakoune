@@ -156,6 +156,7 @@ struct CompiledRegex : UseMemoryDomain<MemoryDomain::Regex>
     {
         static constexpr Codepoint count = 256;
         using OffsetLimits = std::numeric_limits<uint8_t>;
+        char start_byte = 0;
         uint8_t offset = 0;
         bool map[count];
     };
@@ -270,7 +271,7 @@ public:
         };
 
         Iterator start = forward ? begin : end;
-        if (const auto& start_desc = forward ? m_program.forward_start_desc : m_program.backward_start_desc)
+        if (const auto* start_desc = (forward ? m_program.forward_start_desc : m_program.backward_start_desc).get())
         {
             if (search)
             {
@@ -542,6 +543,26 @@ private:
     static Iterator find_next_start(Iterator start, const ExecConfig& config, const StartDesc& start_desc)
     {
         auto pos = start;
+        if (char start_byte = start_desc.start_byte)
+        {
+            while (pos != config.end)
+            {
+                if constexpr (forward)
+                {
+                    if (*pos == start_byte)
+                       return utf8::advance(pos, start, -CharCount(start_desc.offset));
+                    ++pos;
+                }
+                else
+                {
+                    auto prev = utf8::previous(pos, config.end);
+                    if (*prev == start_byte)
+                       return utf8::advance(pos, start, CharCount(start_desc.offset));
+                    pos = prev;
+                }
+            }
+        }
+
         while (pos != config.end)
         {
             static_assert(StartDesc::count <= 256, "start desc should be ascii only");
