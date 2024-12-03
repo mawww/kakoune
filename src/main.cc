@@ -99,6 +99,7 @@ struct {
         "» prompts auto select {+i}menu{} completions on space\n"
         "» explicit completion support ({+b}<c-x>...{}) in prompts\n"
         "» {+u}write -atomic{} was replaced with {+u}write -method <method>{}\n"
+        "» Added $-register for selection index, starting at zero\n"
     }, {
         20200901,
         "» daemon mode does not fork anymore\n"
@@ -449,6 +450,17 @@ void register_registers()
             StringList res;
             res.reserve(count);
             for (size_t i = 1; i < count+1; ++i)
+                res.push_back(to_string((int)i));
+            return res;
+        }));
+
+    register_manager.add_register('$', make_dyn_reg(
+        "$",
+        [](const Context& context) {
+            const size_t count = context.selections().size();
+            StringList res;
+            res.reserve(count);
+            for (size_t i = 0; i < count; ++i)
                 res.push_back(to_string((int)i));
             return res;
         }));
