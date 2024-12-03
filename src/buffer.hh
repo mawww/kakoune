@@ -66,7 +66,7 @@ public:
 
     BufferIterator() = default;
     BufferIterator(const Buffer& buffer, BufferCoord coord) noexcept;
-    BufferIterator(ArrayView<const StringDataPtr> lines, BufferCoord coord) noexcept;
+    BufferIterator(const StringDataPtr* lines, LineCount line_count, BufferCoord coord) noexcept;
 
     bool operator== (const BufferIterator& iterator) const noexcept;
     auto operator<=>(const BufferIterator& iterator) const noexcept;
@@ -76,7 +76,7 @@ public:
     const char& operator[](size_t n) const noexcept;
     size_t operator- (const BufferIterator& iterator) const;
 
-    explicit operator bool() const { return not m_lines.empty(); }
+    explicit operator bool() const { return m_lines; }
 
     BufferIterator operator+ (ByteCount size) const;
     BufferIterator operator- (ByteCount size) const;
@@ -95,9 +95,10 @@ public:
     using Sentinel = BufferCoord;
 
 private:
-    ArrayView<const StringDataPtr> m_lines;
+    const StringDataPtr* m_lines;
+    [[no_unique_address]] StringView m_line;
+    [[no_unique_address]] LineCount m_line_count;
     BufferCoord m_coord;
-    StringView m_line;
 };
 
 using BufferLines = Vector<StringDataPtr, MemoryDomain::BufferContent>;
