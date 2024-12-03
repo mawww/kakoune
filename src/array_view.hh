@@ -77,6 +77,9 @@ template<typename It>
     requires std::contiguous_iterator<It>
 ArrayView(It begin, It end) -> ArrayView<std::iter_value_t<It>>;
 
+template<typename Container>
+ArrayView(Container& c) -> ArrayView<std::remove_reference_t<decltype(*c.data())>>;
+
 template<typename T>
 using ConstArrayView = ArrayView<const T>;
 

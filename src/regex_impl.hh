@@ -275,7 +275,7 @@ public:
         {
             if (search)
             {
-                start = find_next_start(start, config, *start_desc);
+                start = find_next_start(start, config.end, *start_desc);
                 if (start == config.end) // If start_desc is not null, it means we consume at least one char
                     return false;
             }
@@ -373,8 +373,9 @@ private:
 
     // Steps a thread until it consumes the current character, matches or fail
     [[gnu::always_inline]]
-    void step_thread(const Iterator& pos, Codepoint cp, uint16_t current_step, Thread thread, const ExecConfig& config)
+    void step_next_thread(const Iterator& pos, Codepoint cp, uint16_t current_step, const ExecConfig& config)
     {
+        Thread thread = m_threads.pop_current();
         auto failed = [this, &thread]() {
             release_saves(thread.saves);
         };
@@ -481,9 +482,9 @@ private:
         m_captures = -1;
         m_threads.ensure_initial_capacity();
 
-        ConstArrayView<CompiledRegex::Instruction> insts{m_program.instructions};
-        const auto* first_inst = insts.begin() + (forward ? 0 : m_program.first_backward_inst);
-        m_threads.push_current({first_inst, -1});
+        const auto insts = forward ? ArrayView(m_program.instructions).subrange(0, m_program.first_backward_inst)
+                                   : ArrayView(m_program.instructions).subrange(m_program.first_backward_inst);
+        m_threads.push_current({insts.begin(), -1});
 
         const auto* start_desc = (forward ? m_program.forward_start_desc : m_program.backward_start_desc).get();
         auto next_start = pos;
@@ -502,8 +503,7 @@ private:
                     idle_func();
 
                 // We wrapped, avoid potential collision on inst.last_step by resetting them
-                for (auto& inst : forward ? insts.subrange(0, m_program.first_backward_inst)
-                                          : insts.subrange(m_program.first_backward_inst))
+                for (auto& inst : insts)
                     inst.last_step = 0;
                 current_step = 1; // step 0 is never valid
             }
@@ -512,7 +512,7 @@ private:
             Codepoint cp = codepoint(next, config);
 
             while (not m_threads.current_is_empty())
-                step_thread(pos, cp, current_step, m_threads.pop_current(), config);
+                step_next_thread(pos, cp, current_step, config);
 
             if (pos == config.end or
                 (m_threads.next_is_empty() and (not search or m_found_match)) or
@@ -528,24 +528,24 @@ private:
                 if (start_desc)
                 {
                     if (pos == next_start)
-                        next_start = find_next_start(next, config, *start_desc);
+                        next_start = find_next_start(next, config.end, *start_desc);
                     if (m_threads.next_is_empty())
                         next = next_start;
                 }
                 if (not start_desc or next == next_start)
-                    m_threads.push_next({first_inst, -1});
+                    m_threads.push_next({insts.begin(), -1});
             }
             pos = next;
             m_threads.swap_next();
         }
     }
 
-    static Iterator find_next_start(Iterator start, const ExecConfig& config, const StartDesc& start_desc)
+    static Iterator find_next_start(Iterator start, Sentinel end, const StartDesc& start_desc)
     {
         auto pos = start;
         if (char start_byte = start_desc.start_byte)
         {
-            while (pos != config.end)
+            while (pos != end)
             {
                 if constexpr (forward)
                 {
@@ -555,7 +555,7 @@ private:
                 }
                 else
                 {
-                    auto prev = utf8::previous(pos, config.end);
+                    auto prev = utf8::previous(pos, end);
                     if (*prev == start_byte)
                        return utf8::advance(pos, start, CharCount(start_desc.offset));
                     pos = prev;
@@ -563,7 +563,7 @@ private:
             }
         }
 
-        while (pos != config.end)
+        while (pos != end)
         {
             static_assert(StartDesc::count <= 256, "start desc should be ascii only");
             if constexpr (forward)
@@ -574,7 +574,7 @@ private:
             }
             else
             {
-                auto prev = utf8::previous(pos, config.end);
+                auto prev = utf8::previous(pos, end);
                 if (start_desc.map[static_cast<unsigned char>(*prev)])
                     return utf8::advance(pos, start, CharCount(start_desc.offset));
                 pos = prev;
