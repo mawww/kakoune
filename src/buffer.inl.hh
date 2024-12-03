@@ -27,16 +27,16 @@ inline BufferCoord Buffer::prev(BufferCoord coord) const
     return { coord.line, coord.column - 1 };
 }
 
-inline ByteCount Buffer::distance(BufferCoord begin, BufferCoord end) const
+inline ByteCount Buffer::distance(ArrayView<const StringDataPtr> lines, BufferCoord begin, BufferCoord end)
 {
     if (begin > end)
-        return -distance(end, begin);
+        return -distance(lines, end, begin);
     if (begin.line == end.line)
         return end.column - begin.column;
 
-    ByteCount res = m_lines[begin.line].length() - begin.column;
+    ByteCount res = lines[(size_t)begin.line]->length - begin.column;
     for (LineCount l = begin.line+1; l < end.line; ++l)
-        res += m_lines[l].length();
+        res += lines[(size_t)l]->length;
     res += end.column;
     return res;
 }
@@ -99,18 +99,21 @@ inline BufferCoord Buffer::end_coord() const
 }
 
 inline BufferIterator::BufferIterator(const Buffer& buffer, BufferCoord coord) noexcept
-    : m_buffer{&buffer}, m_lines{buffer.m_lines}, m_coord{coord},
-      m_line{coord.line < buffer.line_count() ? (*m_buffer)[coord.line] : StringView{}} {}
+    : BufferIterator{buffer.m_lines, coord} {}
+
+inline BufferIterator::BufferIterator(ArrayView<const StringDataPtr> lines, BufferCoord coord) noexcept
+    : m_lines{lines}, m_coord{coord},
+      m_line{(size_t)coord.line < m_lines.size() ? m_lines[(size_t)coord.line]->strview() : StringView{}} {}
 
 inline bool BufferIterator::operator==(const BufferIterator& iterator) const noexcept
 {
-    kak_assert(m_buffer == iterator.m_buffer);
+    kak_assert(m_lines.pointer() == iterator.m_lines.pointer());
     return m_coord == iterator.m_coord;
 }
 
 inline auto BufferIterator::operator<=>(const BufferIterator& iterator) const noexcept
 {
-    kak_assert(m_buffer == iterator.m_buffer);
+    kak_assert(m_lines.pointer() == iterator.m_lines.pointer());
     return (m_coord <=> iterator.m_coord);
 }
 
@@ -127,37 +130,38 @@ inline const char& BufferIterator::operator*() const noexcept
 
 inline const char& BufferIterator::operator[](size_t n) const noexcept
 {
-    return m_buffer->byte_at(m_buffer->advance(m_coord, n));
+    auto coord = Buffer::advance(m_lines, m_coord, n);
+    return m_lines[(size_t)coord.line]->strview()[coord.column];
 }
 
 inline size_t BufferIterator::operator-(const BufferIterator& iterator) const
 {
-    kak_assert(m_buffer == iterator.m_buffer);
-    return (size_t)m_buffer->distance(iterator.m_coord, m_coord);
+    kak_assert(m_lines.pointer() == iterator.m_lines.pointer());
+    return (size_t)Buffer::distance(m_lines, iterator.m_coord, m_coord);
 }
 
 inline BufferIterator BufferIterator::operator+(ByteCount size) const
 {
-    kak_assert(m_buffer);
-    return { *m_buffer, m_buffer->advance(m_coord, size) };
+    kak_assert(*this);
+    return { m_lines, Buffer::advance(m_lines, m_coord, size) };
 }
 
 inline BufferIterator BufferIterator::operator-(ByteCount size) const
 {
-    return { *m_buffer, m_buffer->advance(m_coord, -size) };
+    return { m_lines, Buffer::advance(m_lines, m_coord, -size) };
 }
 
 inline BufferIterator& BufferIterator::operator+=(ByteCount size)
 {
-    m_coord = m_buffer->advance(m_coord, size);
-    m_line = (*m_buffer)[m_coord.line];
+    m_coord = Buffer::advance(m_lines, m_coord, size);
+    m_line = m_lines[(size_t)m_coord.line]->strview();
     return *this;
 }
 
 inline BufferIterator& BufferIterator::operator-=(ByteCount size)
 {
-    m_coord = m_buffer->advance(m_coord, -size);
-    m_line = (*m_buffer)[m_coord.line];
+    m_coord = Buffer::advance(m_lines, m_coord, -size);
+    m_line = m_lines[(size_t)m_coord.line]->strview();
     return *this;
 }
 

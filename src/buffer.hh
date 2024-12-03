@@ -64,8 +64,9 @@ public:
     // costly, so this is not strictly random access
     using iterator_category = std::bidirectional_iterator_tag;
 
-    BufferIterator() noexcept : m_buffer{nullptr}, m_line{} {}
+    BufferIterator() = default;
     BufferIterator(const Buffer& buffer, BufferCoord coord) noexcept;
+    BufferIterator(ArrayView<const StringDataPtr> lines, BufferCoord coord) noexcept;
 
     bool operator== (const BufferIterator& iterator) const noexcept;
     auto operator<=>(const BufferIterator& iterator) const noexcept;
@@ -75,7 +76,7 @@ public:
     const char& operator[](size_t n) const noexcept;
     size_t operator- (const BufferIterator& iterator) const;
 
-    explicit operator bool() const { return static_cast<bool>(m_buffer); }
+    explicit operator bool() const { return not m_lines.empty(); }
 
     BufferIterator operator+ (ByteCount size) const;
     BufferIterator operator- (ByteCount size) const;
@@ -94,7 +95,6 @@ public:
     using Sentinel = BufferCoord;
 
 private:
-    SafePtr<const Buffer> m_buffer;
     ArrayView<const StringDataPtr> m_lines;
     BufferCoord m_coord;
     StringView m_line;
@@ -159,9 +159,12 @@ public:
     String         string(BufferCoord begin, BufferCoord end) const;
     StringView     substr(BufferCoord begin, BufferCoord end) const;
 
+    static BufferCoord advance(ArrayView<const StringDataPtr> lines, BufferCoord coord, ByteCount count);
+    static ByteCount   distance(ArrayView<const StringDataPtr> lines, BufferCoord begin, BufferCoord end);
+
     const char&    byte_at(BufferCoord c) const;
-    ByteCount      distance(BufferCoord begin, BufferCoord end) const;
-    BufferCoord    advance(BufferCoord coord, ByteCount count) const;
+    ByteCount      distance(BufferCoord begin, BufferCoord end) const { return distance(m_lines, begin, end); }
+    BufferCoord    advance(BufferCoord coord, ByteCount count) const { return advance(m_lines, coord, count); }
     BufferCoord    next(BufferCoord coord) const;
     BufferCoord    prev(BufferCoord coord) const;
 

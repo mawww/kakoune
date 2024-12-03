@@ -570,17 +570,17 @@ void Buffer::notify_saved(FsStatus status)
     m_fs_status = status;
 }
 
-BufferCoord Buffer::advance(BufferCoord coord, ByteCount count) const
+BufferCoord Buffer::advance(ArrayView<const StringDataPtr> lines, BufferCoord coord, ByteCount count)
 {
     if (count > 0)
     {
         auto line = coord.line;
         count += coord.column;
-        while (count >= m_lines[line].length())
+        while (count >= lines[(size_t)line]->length)
         {
-            count -= m_lines[line++].length();
-            if (line == line_count())
-                return end_coord();
+            count -= lines[(size_t)line++]->length;
+            if ((size_t)line == lines.size())
+                return line;
         }
         return { line, count };
     }
@@ -592,7 +592,7 @@ BufferCoord Buffer::advance(BufferCoord coord, ByteCount count) const
         {
             if (--line < 0)
                 return {0, 0};
-            count += m_lines[line].length();
+            count += lines[(size_t)line]->length;
         }
         return { line, count };
     }
