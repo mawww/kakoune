@@ -16,7 +16,7 @@ public:
     StronglyTypedNumber() = default;
 
     [[gnu::always_inline]]
-    explicit constexpr StronglyTypedNumber(ValueType value)
+    constexpr StronglyTypedNumber(ValueType value)
         : m_value(value)
     {
         static_assert(std::is_base_of<StronglyTypedNumber, RealType>::value,
@@ -82,13 +82,8 @@ public:
     RealType& operator%=(RealType other)
     { m_value %= other.m_value; return static_cast<RealType&>(*this); }
 
-    [[gnu::always_inline]]
-    constexpr friend bool operator==(RealType lhs, RealType rhs)
-    { return lhs.m_value == rhs.m_value; }
-
-    [[gnu::always_inline]]
-    constexpr friend auto operator<=>(RealType lhs, RealType rhs)
-    { return lhs.m_value <=> rhs.m_value; }
+    constexpr friend bool operator==(StronglyTypedNumber lhs, StronglyTypedNumber rhs) = default;
+    constexpr friend auto operator<=>(StronglyTypedNumber lhs, StronglyTypedNumber rhs) = default;
 
     [[gnu::always_inline]]
     constexpr bool operator!() const
@@ -110,10 +105,7 @@ protected:
 
 struct LineCount : public StronglyTypedNumber<LineCount, int>
 {
-    LineCount() = default;
-
-    [[gnu::always_inline]]
-    constexpr LineCount(int value) : StronglyTypedNumber<LineCount>(value) {}
+    using StronglyTypedNumber::StronglyTypedNumber;
 };
 
 [[gnu::always_inline]]
@@ -124,10 +116,7 @@ inline constexpr LineCount operator"" _line(unsigned long long int value)
 
 struct ByteCount : public StronglyTypedNumber<ByteCount, int>
 {
-    ByteCount() = default;
-
-    [[gnu::always_inline]]
-    constexpr ByteCount(int value) : StronglyTypedNumber<ByteCount>(value) {}
+    using StronglyTypedNumber::StronglyTypedNumber;
 };
 
 [[gnu::always_inline]]
@@ -142,10 +131,7 @@ Byte* operator+(Byte* ptr, ByteCount count) { return ptr + (int)count; }
 
 struct CharCount : public StronglyTypedNumber<CharCount, int>
 {
-    CharCount() = default;
-
-    [[gnu::always_inline]]
-    constexpr CharCount(int value) : StronglyTypedNumber<CharCount>(value) {}
+    using StronglyTypedNumber::StronglyTypedNumber;
 };
 
 [[gnu::always_inline]]
@@ -156,10 +142,7 @@ inline constexpr CharCount operator"" _char(unsigned long long int value)
 
 struct ColumnCount : public StronglyTypedNumber<ColumnCount, int>
 {
-    ColumnCount() = default;
-
-    [[gnu::always_inline]]
-    constexpr ColumnCount(int value) : StronglyTypedNumber<ColumnCount>(value) {}
+    using StronglyTypedNumber::StronglyTypedNumber;
 };
 
 [[gnu::always_inline]]
