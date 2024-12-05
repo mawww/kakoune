@@ -130,12 +130,9 @@ struct CompiledRegex : UseMemoryDomain<MemoryDomain::Regex>
     struct Instruction
     {
         Op op;
-        mutable uint16_t last_step; // mutable as used during execution
         Param param;
+        mutable uint64_t last_step; // mutable as used during execution
     };
-#ifndef __ppc__
-    static_assert(sizeof(Instruction) == 8);
-#endif
 
     explicit operator bool() const { return not instructions.empty(); }
 
@@ -358,7 +355,7 @@ private:
 
     // Steps a thread until it consumes the current character, matches or fail
     [[gnu::always_inline]]
-    void step_current_thread(const Iterator& pos, Codepoint cp, uint16_t current_step, const ExecConfig& config)
+    void step_current_thread(const Iterator& pos, Codepoint cp, uint64_t current_step, const ExecConfig& config)
     {
         Thread thread = m_threads.pop_current();
         auto failed = [this, &thread]() {
@@ -482,23 +479,17 @@ private:
 
         const auto insts = forward ? ArrayView(m_program.instructions).subrange(0, m_program.first_backward_inst)
                                    : ArrayView(m_program.instructions).subrange(m_program.first_backward_inst);
+        for (auto& inst : insts)
+            inst.last_step = 0;
         m_threads.push_current({insts.begin(), -1});
 
-        uint16_t current_step = -1;
-        uint8_t idle_count = 0; // Run idle loop every 256 * 65536 == 16M codepoints
+        constexpr uint64_t idle_frequency = 256 * 65536;
+        uint64_t current_step = 0;
         Iterator pos = next_start;
         while (pos != config.end)
         {
-            if (++current_step == 0)
-            {
-                if (++idle_count == 0)
-                    idle_func();
-
-                // We wrapped, avoid potential collision on inst.last_step by resetting them
-                for (auto& inst : insts)
-                    inst.last_step = 0;
-                current_step = 1; // step 0 is never valid
-            }
+            if ((++current_step % idle_frequency) == 0)
+                idle_func();
 
             auto next = pos;
             Codepoint cp = codepoint(next, config);
@@ -525,14 +516,8 @@ private:
             m_threads.swap_next();
         }
 
-        if (++current_step == 0)
-        {
-            for (auto& inst : insts)
-                inst.last_step = 0;
-            current_step = 1; // step 0 is never valid
-        }
         while (not m_threads.current_is_empty())
-            step_current_thread(pos, -1, current_step, config);
+            step_current_thread(pos, -1, -1, config);
     }
 
     static Iterator find_next_start(const Iterator& start, const Sentinel& end, const StartDesc& start_desc)

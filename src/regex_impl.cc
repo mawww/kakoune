@@ -867,7 +867,7 @@ private:
         const auto res = op_count();
         if (res >= max_instructions)
             throw regex_error(format("regex compiled to more than {} instructions", max_instructions));
-        m_program.instructions.push_back({ op, 0, param });
+        m_program.instructions.push_back({ op, param, 0 });
         return OpIndex(res);
     }
 
