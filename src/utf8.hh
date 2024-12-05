@@ -39,21 +39,12 @@ struct Pass
 
 }
 
-// returns the codepoint of the character whose first byte
-// is pointed by it
 template<typename InvalidPolicy = utf8::InvalidPolicy::Pass,
          typename Iterator, typename Sentinel>
-Codepoint read_codepoint(Iterator& it, const Sentinel& end)
+[[gnu::noinline]]
+Codepoint read_codepoint_multibyte(Iterator& it, const Sentinel& end, char byte)
     noexcept(noexcept(InvalidPolicy{}(0)))
 {
-    if (it == end)
-        return InvalidPolicy{}(-1);
-    // According to rfc3629, UTF-8 allows only up to 4 bytes.
-    // (21 bits codepoint)
-    unsigned char byte = read(it);
-    if ((byte & 0x80) == 0) // 0xxxxxxx
-        return byte;
-
     if (it == end)
         return InvalidPolicy{}(byte);
 
@@ -79,6 +70,21 @@ Codepoint read_codepoint(Iterator& it, const Sentinel& end)
         return cp | (read(it) & 0x3F);
     }
     return InvalidPolicy{}(byte);
+}
+
+// returns the codepoint of the character whose first byte
+// is pointed by it
+template<typename InvalidPolicy = utf8::InvalidPolicy::Pass,
+         typename Iterator, typename Sentinel>
+Codepoint read_codepoint(Iterator& it, const Sentinel& end)
+    noexcept(noexcept(InvalidPolicy{}(0)))
+{
+    if (it == end)
+        return InvalidPolicy{}(-1);
+    unsigned char byte = read(it);
+    if ((byte & 0x80) == 0) [[likely]] // 0xxxxxxx
+        return byte;
+    return read_codepoint_multibyte(it, end, byte);
 }
 
 template<typename InvalidPolicy = utf8::InvalidPolicy::Pass,
