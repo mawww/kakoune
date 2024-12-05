@@ -260,8 +260,6 @@ public:
         if (flags & RegexExecFlags::NotInitialNull and begin == end)
             return false;
 
-        constexpr bool search = (mode & RegexMode::Search);
-
         const ExecConfig config{
             Sentinel{forward ? begin : end},
             Sentinel{forward ? end : begin},
@@ -270,24 +268,11 @@ public:
             flags
         };
 
-        Iterator start = forward ? begin : end;
-        if (const auto* start_desc = (forward ? m_program.forward_start_desc : m_program.backward_start_desc).get())
-        {
-            if (search)
-            {
-                start = find_next_start(start, config.end, *start_desc);
-                if (start == config.end) // If start_desc is not null, it means we consume at least one char
-                    return false;
-            }
-            else if (start != config.end)
-            {
-                const unsigned char c = forward ? *start : *utf8::previous(start, config.end);
-                if (not start_desc->map[c])
-                    return false;
-            }
-        }
+        exec_program(forward ? begin : end, config, idle_func);
 
-        return exec_program(std::move(start), config, idle_func);
+        while (not m_threads.next_is_empty())
+            release_saves(m_threads.pop_next().saves);
+        return m_found_match;
     }
 
     ArrayView<const Iterator> captures() const
@@ -475,31 +460,44 @@ private:
         return failed();
     }
 
-    bool exec_program(Iterator pos, const ExecConfig& config, auto&& idle_func)
+    void exec_program(const Iterator& start, const ExecConfig& config, auto&& idle_func)
     {
         kak_assert(m_threads.current_is_empty() and m_threads.next_is_empty());
+        m_threads.ensure_initial_capacity();
         release_saves(m_captures);
         m_captures = -1;
-        m_threads.ensure_initial_capacity();
+        m_found_match = false;
+
+        const auto* start_desc = (forward ? m_program.forward_start_desc : m_program.backward_start_desc).get();
+        Iterator next_start = start;
+        if (start_desc)
+        {
+            if (mode & RegexMode::Search)
+            {
+                next_start = find_next_start(start, config.end, *start_desc);
+                if (next_start == config.end) // If start_desc is not null, it means we consume at least one char
+                    return;
+            }
+            else if (start != config.end)
+            {
+                const unsigned char c = forward ? *start : *utf8::previous(start, config.end);
+                if (not start_desc->map[c])
+                    return;
+            }
+        }
 
         const auto insts = forward ? ArrayView(m_program.instructions).subrange(0, m_program.first_backward_inst)
                                    : ArrayView(m_program.instructions).subrange(m_program.first_backward_inst);
         m_threads.push_current({insts.begin(), -1});
 
-        const auto* start_desc = (forward ? m_program.forward_start_desc : m_program.backward_start_desc).get();
-        auto next_start = pos;
-
-        constexpr bool search = mode & RegexMode::Search;
-        constexpr bool any_match = mode & RegexMode::AnyMatch;
         uint16_t current_step = -1;
-        constexpr size_t idle_frequency = 255; // Run idle loop every 255 * 65536 == 16M codepoints
-        size_t wrap_count = 0;
-        m_found_match = false;
-        while (true) // Iterate on all codepoints and once at the end
+        uint8_t idle_count = 0; // Run idle loop every 256 * 65536 == 16M codepoints
+        auto pos = next_start;
+        while (pos != config.end)
         {
             if (++current_step == 0)
             {
-                if ((++wrap_count % idle_frequency) == 0)
+                if (++idle_count == 0)
                     idle_func();
 
                 // We wrapped, avoid potential collision on inst.last_step by resetting them
@@ -514,16 +512,7 @@ private:
             while (not m_threads.current_is_empty())
                 step_next_thread(pos, cp, current_step, config);
 
-            if (pos == config.end or
-                (m_threads.next_is_empty() and (not search or m_found_match)) or
-                (m_found_match and any_match))
-            {
-                while (not m_threads.next_is_empty())
-                    release_saves(m_threads.pop_next().saves);
-                return m_found_match;
-            }
-
-            if (search and not m_found_match)
+            if ((mode & RegexMode::Search) and not m_found_match)
             {
                 if (start_desc)
                 {
@@ -535,9 +524,21 @@ private:
                 if (not start_desc or next == next_start)
                     m_threads.push_next({insts.begin(), -1});
             }
+            else if (m_threads.next_is_empty() or (m_found_match and (mode & RegexMode::AnyMatch)))
+                return;
+
             pos = next;
             m_threads.swap_next();
         }
+
+        if (++current_step == 0)
+        {
+            for (auto& inst : insts)
+                inst.last_step = 0;
+            current_step = 1; // step 0 is never valid
+        }
+        while (not m_threads.current_is_empty())
+            step_next_thread(pos, -1, current_step, config);
     }
 
     static Iterator find_next_start(const Iterator& start, const Sentinel& end, const StartDesc& start_desc)
