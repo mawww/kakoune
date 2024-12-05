@@ -540,7 +540,7 @@ private:
         }
     }
 
-    static Iterator find_next_start(Iterator start, Sentinel end, const StartDesc& start_desc)
+    static Iterator find_next_start(const Iterator& start, const Sentinel& end, const StartDesc& start_desc)
     {
         auto pos = start;
         if (char start_byte = start_desc.start_byte)
