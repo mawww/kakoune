@@ -678,10 +678,14 @@ private:
         bool current_is_empty() const { return m_current == m_next_begin; }
         bool next_is_empty() const { return m_next_end == m_next_begin; }
 
+        [[gnu::always_inline]]
         void push_current(Thread thread) { m_data[decrement(m_current)] = thread; grow_ifn(true); }
+        [[gnu::always_inline]]
         Thread pop_current() { return m_data[post_increment(m_current)]; }
 
+        [[gnu::always_inline]]
         void push_next(Thread thread) { m_data[post_increment(m_next_end)] = thread; grow_ifn(false); }
+        [[gnu::always_inline]]
         Thread pop_next() { return m_data[decrement(m_next_end)]; }
 
         void swap_next()
@@ -701,11 +705,16 @@ private:
             m_capacity = initial_capacity;
         }
 
+        [[gnu::always_inline]]
         void grow_ifn(bool pushed_current)
         {
-            if (m_current != m_next_end)
-                return;
+            if (m_current == m_next_end)
+                grow(pushed_current);
+        }
 
+        [[gnu::noinline]]
+        void grow(bool pushed_current)
+        {
             const auto new_capacity = m_capacity * 2;
             Thread* new_data = new Thread[new_capacity];
             Thread* old_data = m_data.get();
