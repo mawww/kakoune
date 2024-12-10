@@ -358,7 +358,7 @@ private:
 
     // Steps a thread until it consumes the current character, matches or fail
     [[gnu::always_inline]]
-    void step_next_thread(const Iterator& pos, Codepoint cp, uint16_t current_step, const ExecConfig& config)
+    void step_current_thread(const Iterator& pos, Codepoint cp, uint16_t current_step, const ExecConfig& config)
     {
         Thread thread = m_threads.pop_current();
         auto failed = [this, &thread]() {
@@ -472,18 +472,12 @@ private:
         Iterator next_start = start;
         if (start_desc)
         {
-            if (mode & RegexMode::Search)
-            {
+            if constexpr (mode & RegexMode::Search)
                 next_start = find_next_start(start, config.end, *start_desc);
-                if (next_start == config.end) // If start_desc is not null, it means we consume at least one char
-                    return;
-            }
-            else if (start != config.end)
-            {
-                const unsigned char c = forward ? *start : *utf8::previous(start, config.end);
-                if (not start_desc->map[c])
-                    return;
-            }
+            if (next_start == config.end or // Non null start_desc means we consume at least one char
+                (not (mode & RegexMode::Search) and
+                  not start_desc->map[static_cast<unsigned char>(forward ? *start : *std::prev(start))]))
+                return;
         }
 
         const auto insts = forward ? ArrayView(m_program.instructions).subrange(0, m_program.first_backward_inst)
@@ -492,7 +486,7 @@ private:
 
         uint16_t current_step = -1;
         uint8_t idle_count = 0; // Run idle loop every 256 * 65536 == 16M codepoints
-        auto pos = next_start;
+        Iterator pos = next_start;
         while (pos != config.end)
         {
             if (++current_step == 0)
@@ -510,7 +504,7 @@ private:
             Codepoint cp = codepoint(next, config);
 
             while (not m_threads.current_is_empty())
-                step_next_thread(pos, cp, current_step, config);
+                step_current_thread(pos, cp, current_step, config);
 
             if ((mode & RegexMode::Search) and not m_found_match)
             {
@@ -538,7 +532,7 @@ private:
             current_step = 1; // step 0 is never valid
         }
         while (not m_threads.current_is_empty())
-            step_next_thread(pos, -1, current_step, config);
+            step_current_thread(pos, -1, current_step, config);
     }
 
     static Iterator find_next_start(const Iterator& start, const Sentinel& end, const StartDesc& start_desc)
