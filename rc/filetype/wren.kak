@@ -1,42 +1,45 @@
 provide-module -override wren %§
-	add-highlighter shared/wren regions
-	add-highlighter shared/wren/line_comment region '//' '$' fill comment
-	add-highlighter shared/wren/block_comment region -recurse '/\*' '/\*' '\*/' fill comment
-	add-highlighter shared/wren/raw_string region '"""' '(?<!\\)(?:\\\\)*"""' fill string
-	add-highlighter shared/wren/string region '"' '(?<!\\)(\\\\)*"' group
-	add-highlighter shared/wren/string/ fill string
-	add-highlighter shared/wren/string/ regex '\\([0"\\%abefnrtv]|x[\dA-Fa-f]{2}|u[\dA-Fa-f]{4}|U[\dA-Fa-f]{8})'0:value
-	add-highlighter shared/wren/string/ regex '(?<!\\)%\(.*?\)' 0:value
+    add-highlighter shared/wren regions
 
-	add-highlighter shared/wren/code default-region group
+    add-highlighter shared/wren/line_comment region '//' '$' fill comment
+    add-highlighter shared/wren/block_comment region -recurse '/\*' '/\*' '\*/' fill comment
 
-	add-highlighter shared/wren/code/ regex '(?i)([a-z][\w_]*)\h*(?=[\(\{])' 1:function
-	add-highlighter shared/wren/code/ regex '(?i)([a-z][\w_]*)=\(.*?\)\h*(?=\{)' 1:function
-	add-highlighter shared/wren/code/ regex 'class\h+(?i)([a-z][\w_]*)\h*(?=\{)' 1:type
-	add-highlighter shared/wren/code/ regex 'construct\h+(?i)([a-z][\w_]*)\h*(?=\()' 1:meta
-	add-highlighter shared/wren/code/ regex 'var\h+(?i)([a-z][\w_]*)' 1:variable
+    add-highlighter shared/wren/raw_string region '"""' '(?<!\\)(?:\\\\)*"""' fill string
 
-	add-highlighter shared/wren/code/ regex '\b_[\w_]+' 0:variable
+    add-highlighter shared/wren/string region '"' '(?<!\\)(\\\\)*"' group
+    add-highlighter shared/wren/string/ fill string
+    add-highlighter shared/wren/string/ regex '\\([0"\\%abefnrtv]|x[\dA-Fa-f]{2}|u[\dA-Fa-f]{4}|U[\dA-Fa-f]{8})'0:value
+    add-highlighter shared/wren/string/ regex '(?<!\\)%\(.*?\)' 0:value
 
-	add-highlighter shared/wren/code/ regex '\bimport\b' 0:meta
-	add-highlighter shared/wren/code/ regex '\b(true|false|null)\b' 0:value
-	add-highlighter shared/wren/code/ regex '\b(as|break|class|construct|continue|else|for|foreign|if|in|return|static|super|this|var|while)\b' 0:keyword
-	add-highlighter shared/wren/code/ regex '\b(Bool|Class|Fiber|Fn|List|Map|Null|Num|Object|Range|Sequence|String|System)\b' 0:+b@type
-	add-highlighter shared/wren/code/ regex '(-|!|~|\*|/|%|\+|\.\.\.?|<<|>>|&{1,2}|\^|\|{1,2}|[<>]=?)|\bis\b|[!=]?=|\?|:)' 0:operator
+    add-highlighter shared/wren/code default-region group
 
-	add-highlighter shared/wren/code/ regex 'class\h+([A-Za-z][\w_]*)\h+(is\h+[A-Za-z][\w_]*)\h*(?=\{)' 1:type 2:attribute
+    add-highlighter shared/wren/code/ regex '(?i)([a-z][\w_]*)\h*(?=[\(\{])'         1:function
+    add-highlighter shared/wren/code/ regex '(?i)([a-z][\w_]*)=\(.*?\)\h*(?=\{)'     1:function
+    add-highlighter shared/wren/code/ regex 'class\h+(?i)([a-z][\w_]*)\h*(?=\{)'     1:type
+    add-highlighter shared/wren/code/ regex 'construct\h+(?i)([a-z][\w_]*)\h*(?=\()' 1:meta
+    add-highlighter shared/wren/code/ regex 'var\h+(?i)([a-z][\w_]*)'                1:variable
 
-	add-highlighter shared/wren/code/ regex '\b(?i)-?\d+\b'               0:value
-	add-highlighter shared/wren/code/ regex '\b-?0x(?i)[\da-f]+\b'        0:value
-	add-highlighter shared/wren/code/ regex '\b(?i)-?\d+\.\d+\b'          0:value
-	add-highlighter shared/wren/code/ regex '\b(?i)-?\d+\.\d+e[+-]?\d+\b' 0:value
+    add-highlighter shared/wren/code/ regex '\b_[\w_]+' 0:variable
 
-	add-highlighter shared/wren/code/ regex '^\h*import\h*"(.*?)"' 1:module
-	add-highlighter shared/wren/code/ regex '\bFn\.new\h*(?=\{)' 0:+b@value
+    add-highlighter shared/wren/code/ regex '\bimport\b' 0:meta
+    add-highlighter shared/wren/code/ regex '\b(true|false|null)\b' 0:value
+    add-highlighter shared/wren/code/ regex '\b(as|break|class|construct|continue|else|for|foreign|if|in|return|static|super|this|var|while)\b' 0:keyword
+    add-highlighter shared/wren/code/ regex '\b(Bool|Class|Fiber|Fn|List|Map|Null|Num|Object|Range|Sequence|String|System)\b' 0:+b@type
+    add-highlighter shared/wren/code/ regex '(-|!|~|\*|/|%|\+|\.\.\.?|<<|>>|&{1,2}|\^|\|{1,2}|[<>]=?)|\bis\b|[!=]?=|\?|:)' 0:operator
 
-	declare-option str-list wren_static_words \
-		'import' 'true' 'false' 'null' 'as' 'break' 'class' 'construct' 'continue' 'else' 'for' 'foreign' 'if' 'in' 'return' 'static' 'super' 'this' \
-		'var' 'while' 'Bool' 'Class' 'Fiber' 'Fn' 'List' 'Map' 'Null' 'Num' 'Object' 'Range' 'Sequence' 'String' 'System' 
+    add-highlighter shared/wren/code/ regex 'class\h+([A-Za-z][\w_]*)\h+(is\h+[A-Za-z][\w_]*)\h*(?=\{)' 1:type 2:attribute
+
+    add-highlighter shared/wren/code/ regex '\b(?i)-?\d+\b'               0:value
+    add-highlighter shared/wren/code/ regex '\b-?0x(?i)[\da-f]+\b'        0:value
+    add-highlighter shared/wren/code/ regex '\b(?i)-?\d+\.\d+\b'          0:value
+    add-highlighter shared/wren/code/ regex '\b(?i)-?\d+\.\d+e[+-]?\d+\b' 0:value
+
+    add-highlighter shared/wren/code/ regex '^\h*import\h*"(.*?)"' 1:module
+    add-highlighter shared/wren/code/ regex '\bFn\.new\h*(?=\{)'   0:+b@value
+
+    declare-option str-list wren_static_words \
+        'import' 'true' 'false' 'null' 'as' 'break' 'class' 'construct' 'continue' 'else' 'for' 'foreign' 'if' 'in' 'return' 'static' 'super' 'this' \
+        'var' 'while' 'Bool' 'Class' 'Fiber' 'Fn' 'List' 'Map' 'Null' 'Num' 'Object' 'Range' 'Sequence' 'String' 'System' 
 §
 
 hook global BufCreate (.*/)?.*\.wren %{ set-option buffer filetype wren }
@@ -50,12 +53,12 @@ hook -group wren-highlight global WinSetOption filetype=wren %{
 }
 
 hook global WinSetOption filetype=wren %{
-	require-module wren
+    require-module wren
 
-	set-option window static_words %opt{wren_static_words}
+    set-option window static_words %opt{wren_static_words}
 
-	hook window ModeChange pop:insert:.* -group wren-trim-indent %{ try %{ execute-keys -draft xs^\h+$<ret>d } }
-	hook window InsertChar \n -group wren-indent wren-indent-on-new-line
+    hook window ModeChange pop:insert:.* -group wren-trim-indent %{ try %{ execute-keys -draft xs^\h+$<ret>d } }
+    hook window InsertChar \n -group wren-indent wren-indent-on-new-line
     hook window InsertChar \{ -group wren-indent wren-indent-on-opening-curly-brace
     hook window InsertChar \} -group wren-indent wren-indent-on-closing-curly-brace
     hook window InsertChar \n -group wren-comment-insert wren-insert-comment-on-new-line
@@ -63,7 +66,7 @@ hook global WinSetOption filetype=wren %{
 }
 
 define-command -hidden wren-indent-on-new-line %~
-	evaluate-commands -draft -itersel %=
+    evaluate-commands -draft -itersel %=
         # preserve previous line indent
         try %{ execute-keys -draft <semicolon>K<a-&> }
         # cleanup trailing white spaces on the previous line
@@ -80,7 +83,7 @@ define-command -hidden wren-indent-on-new-line %~
             # deindent closing brace(s) when after cursor
             try %[ execute-keys -draft x <a-k> ^\h*[})] <ret> gh / [})] <ret> m <a-S> 1<a-&> ]
         >
-	=
+    =
 ~
 
 define-command -hidden wren-indent-on-opening-curly-brace %[
