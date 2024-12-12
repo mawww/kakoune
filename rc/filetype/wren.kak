@@ -9,7 +9,7 @@ provide-module -override wren %§
     add-highlighter shared/wren/string region '"' '(?<!\\)(\\\\)*"' group
     add-highlighter shared/wren/string/ fill string
     add-highlighter shared/wren/string/ regex '\\([0"\\%abefnrtv]|x[\dA-Fa-f]{2}|u[\dA-Fa-f]{4}|U[\dA-Fa-f]{8})'0:value
-    add-highlighter shared/wren/string/ regex '(?<!\\)%\(.+\)' 0:value
+    add-highlighter shared/wren/string/ regex '(?<!\\)%\(.*?\)' 0:value
 
     add-highlighter shared/wren/code default-region group
 
