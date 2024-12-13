@@ -290,7 +290,8 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, AutoScroll 
             kak_assert(m_buffer.flags() & Buffer::Flags::Fifo);
             close_fd();
             m_buffer.run_hook_in_own_context(Hook::BufCloseFifo, "");
-            m_buffer.flags() &= ~(Buffer::Flags::Fifo | Buffer::Flags::NoUndo);
+            if (not m_buffer.values().contains(fifo_watcher_id))
+                m_buffer.flags() &= ~(Buffer::Flags::Fifo | Buffer::Flags::NoUndo);
         }
 
         void read_fifo()
