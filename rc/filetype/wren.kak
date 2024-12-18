@@ -35,11 +35,32 @@ provide-module -override wren %§
     add-highlighter shared/wren/code/ regex '\b(?i)-?\d+\.\d+e[+-]?\d+\b' 0:value
 
     add-highlighter shared/wren/code/ regex '^\h*import\h*"(.*?)"' 1:module
-    add-highlighter shared/wren/code/ regex '\bFn\.new\h*(?=\{)'   0:+b@value
+
+    set-face local WrenCore         +b@value
+    set-face local WrenCoreFunction +b@function
+
+    add-highlighter shared/wren/code/ regex '\bFn\.new\h*(?=\{\()'    0:WrenCore
+    add-highlighter shared/wren/code/ regex '\bFiber\.new\h*(?=\{\()' 0:WrenCore
+    add-highlighter shared/wren/code/ regex '\bFiber\.current\b'      0:WrenCore
+    add-highlighter shared/wren/code/ regex '\bSystem\.clock\b'       0:WrenCore
+
+    add-highlighter shared/wren/code/ regex '\bFiber\.(yield|abort|suspend)\h*(?=\{\()' 0:WrenCoreFunction
+    add-highlighter shared/wren/code/ regex '\bSystem\.((print|write)All?)\h*(?=\{\()'  0:WrenCoreFunction
+    add-highlighter shared/wren/code/ regex '\bSystem\.gc\h*(?=\()'                     0:WrenCoreFunction
+
+    add-highlighter shared/wren/code/ regex '\bList\.filled\h*(?=\()'    0:WrenCoreFunction
+    add-highlighter shared/wren/code/ regex '\b(List|Map)\.new\h*(?=\()' 0:WrenCore
+
+    add-highlighter shared/wren/code/ regex '\bNum\.fromString\h*(?=\()' 0:WrenCoreFunction
+    add-highlighter shared/wren/code/ regex \
+        '\bNum\.(infinity|nan|pi|tau|largest|smallest|(min|max)SafeInteger)\b' 0:WrenCore
+
+    add-highlighter shared/wren/code/ regex '\bObject\.same\h*(?=\()'                 0:WrenCoreFunction
+    add-highlighter shared/wren/code/ regex '\bString\.from(Byte|CodePoint)\h*(?=\()' 0:WrenCoreFunction
 
     declare-option str-list wren_static_words \
         'import' 'true' 'false' 'null' 'as' 'break' 'class' 'construct' 'continue' 'else' 'for' 'foreign' 'if' 'in' 'return' 'static' 'super' 'this' \
-        'var' 'while' 'Bool' 'Class' 'Fiber' 'Fn' 'List' 'Map' 'Null' 'Num' 'Object' 'Range' 'Sequence' 'String' 'System' 
+        'var' 'while' 'Bool' 'Class' 'Fiber' 'Fn' 'List' 'Map' 'Null' 'Num' 'Object' 'Range' 'Sequence' 'String' 'System'
 §
 
 hook global BufCreate (.*/)?.*\.wren %{ set-option buffer filetype wren }
