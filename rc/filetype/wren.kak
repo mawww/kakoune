@@ -36,27 +36,24 @@ provide-module -override wren %§
 
     add-highlighter shared/wren/code/ regex '^\h*import\h*"(.*?)"' 1:module
 
-    set-face local WrenCore         +b@value
-    set-face local WrenCoreFunction +b@function
+    add-highlighter shared/wren/code/ regex '\bFn\.new\h*(?=\{\()'    0:+b@value
+    add-highlighter shared/wren/code/ regex '\bFiber\.new\h*(?=\{\()' 0:+b@value
+    add-highlighter shared/wren/code/ regex '\bFiber\.current\b'      0:+b@value
+    add-highlighter shared/wren/code/ regex '\bSystem\.clock\b'       0:+b@value
 
-    add-highlighter shared/wren/code/ regex '\bFn\.new\h*(?=\{\()'    0:WrenCore
-    add-highlighter shared/wren/code/ regex '\bFiber\.new\h*(?=\{\()' 0:WrenCore
-    add-highlighter shared/wren/code/ regex '\bFiber\.current\b'      0:WrenCore
-    add-highlighter shared/wren/code/ regex '\bSystem\.clock\b'       0:WrenCore
+    add-highlighter shared/wren/code/ regex '\bFiber\.(yield|abort|suspend)\h*(?=\{\()' 0:+b@function
+    add-highlighter shared/wren/code/ regex '\bSystem\.((print|write)All?)\h*(?=\{\()'  0:+b@function
+    add-highlighter shared/wren/code/ regex '\bSystem\.gc\h*(?=\()'                     0:+b@function
 
-    add-highlighter shared/wren/code/ regex '\bFiber\.(yield|abort|suspend)\h*(?=\{\()' 0:WrenCoreFunction
-    add-highlighter shared/wren/code/ regex '\bSystem\.((print|write)All?)\h*(?=\{\()'  0:WrenCoreFunction
-    add-highlighter shared/wren/code/ regex '\bSystem\.gc\h*(?=\()'                     0:WrenCoreFunction
+    add-highlighter shared/wren/code/ regex '\bList\.filled\h*(?=\()'    0:+b@function
+    add-highlighter shared/wren/code/ regex '\b(List|Map)\.new\h*(?=\()' 0:+b@value
 
-    add-highlighter shared/wren/code/ regex '\bList\.filled\h*(?=\()'    0:WrenCoreFunction
-    add-highlighter shared/wren/code/ regex '\b(List|Map)\.new\h*(?=\()' 0:WrenCore
-
-    add-highlighter shared/wren/code/ regex '\bNum\.fromString\h*(?=\()' 0:WrenCoreFunction
+    add-highlighter shared/wren/code/ regex '\bNum\.fromString\h*(?=\()' 0:+b@function
     add-highlighter shared/wren/code/ regex \
-        '\bNum\.(infinity|nan|pi|tau|largest|smallest|(min|max)SafeInteger)\b' 0:WrenCore
+        '\bNum\.(infinity|nan|pi|tau|largest|smallest|(min|max)SafeInteger)\b' 0:+b@value
 
-    add-highlighter shared/wren/code/ regex '\bObject\.same\h*(?=\()'                 0:WrenCoreFunction
-    add-highlighter shared/wren/code/ regex '\bString\.from(Byte|CodePoint)\h*(?=\()' 0:WrenCoreFunction
+    add-highlighter shared/wren/code/ regex '\bObject\.same\h*(?=\()'                 0:+b@function
+    add-highlighter shared/wren/code/ regex '\bString\.from(Byte|CodePoint)\h*(?=\()' 0:+b@function
 
     declare-option str-list wren_static_words \
         'import' 'true' 'false' 'null' 'as' 'break' 'class' 'construct' 'continue' 'else' 'for' 'foreign' 'if' 'in' 'return' 'static' 'super' 'this' \
