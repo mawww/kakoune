@@ -36,13 +36,13 @@ provide-module -override wren %§
 
     add-highlighter shared/wren/code/ regex '^\h*import\h*"(.*?)"' 1:module
 
-    add-highlighter shared/wren/code/ regex '\bFn\.new\h*(?=\{\()'    0:+b@value
-    add-highlighter shared/wren/code/ regex '\bFiber\.new\h*(?=\{\()' 0:+b@value
+    add-highlighter shared/wren/code/ regex '\bFn\.new\h*(?=[\{\(])'    0:+b@value
+    add-highlighter shared/wren/code/ regex '\bFiber\.new\h*(?=[\{\(])' 0:+b@value
     add-highlighter shared/wren/code/ regex '\bFiber\.current\b'      0:+b@value
     add-highlighter shared/wren/code/ regex '\bSystem\.clock\b'       0:+b@value
 
-    add-highlighter shared/wren/code/ regex '\bFiber\.(yield|abort|suspend)\h*(?=\{\()' 0:+b@function
-    add-highlighter shared/wren/code/ regex '\bSystem\.((print|write)All?)\h*(?=\{\()'  0:+b@function
+    add-highlighter shared/wren/code/ regex '\bFiber\.(yield|abort|suspend)\h*(?=[\{\(])' 0:+b@function
+    add-highlighter shared/wren/code/ regex '\bSystem\.((print|write)All?)\h*(?=[\{\(])'  0:+b@function
     add-highlighter shared/wren/code/ regex '\bSystem\.gc\h*(?=\()'                     0:+b@function
 
     add-highlighter shared/wren/code/ regex '\bList\.filled\h*(?=\()'    0:+b@function
