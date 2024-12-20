@@ -20,6 +20,23 @@
 namespace Kakoune
 {
 
+void fix_links(BufferLines& lines, StringData* sentinel)
+{
+    StringData* prev = nullptr;
+    for (auto& ptr : lines)
+    {
+        ptr->prev = prev;
+        if (prev)
+            prev->next = ptr.get();
+        prev = ptr.get();
+    }
+    if (prev)
+    {
+        prev->next = sentinel;
+        sentinel->prev = prev;
+    }
+}
+
 Buffer::HistoryNode::HistoryNode(HistoryId parent)
     : parent{parent}, committed{Clock::now()}
 {}
@@ -42,6 +59,7 @@ Buffer::Buffer(String name, Flags flags, BufferLines lines,
                    line->data()[line->length-1] == '\n');
     #endif
     static_cast<BufferLines&>(m_lines) = std::move(lines);
+    fix_links(m_lines, m_sentinel.get());
 
     m_changes.push_back({ Change::Insert, {0,0}, line_count() });
 
@@ -271,6 +289,7 @@ void Buffer::reload(BufferLines lines, ByteOrderMark bom, EolFormat eolformat, F
         m_lines.erase(write_it, m_lines.end());
     }
 
+    fix_links(m_lines, m_sentinel.get());
     commit_undo_group();
 
     options().get_local_option("eolformat").set(eolformat);
@@ -452,6 +471,7 @@ BufferRange Buffer::do_insert(BufferCoord pos, StringView content)
     const auto end = at_end ? line_count()
                             : BufferCoord{ last_line, m_lines[last_line].length() - suffix.length() };
 
+    fix_links(m_lines, m_sentinel.get());
     m_changes.push_back({ Change::Insert, pos, end });
     return {pos, end};
 }
@@ -473,6 +493,7 @@ BufferCoord Buffer::do_erase(BufferCoord begin, BufferCoord end)
     if (new_line)
         m_lines.get_storage(begin.line) = std::move(new_line);
 
+    fix_links(m_lines, m_sentinel.get());
     return begin;
 }
 

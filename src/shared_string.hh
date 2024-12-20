@@ -15,6 +15,8 @@ struct StringData : UseMemoryDomain<MemoryDomain::SharedString>
 {
     uint32_t refcount;
     const int length;
+    StringData* prev = nullptr;
+    StringData* next = nullptr;
 
     [[gnu::always_inline]]
     const char* data() const { return reinterpret_cast<const char*>(this + 1); }
