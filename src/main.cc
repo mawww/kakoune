@@ -882,7 +882,7 @@ int run_server(StringView session, StringView server_init,
             int tty = open("/dev/tty", O_RDONLY);
             dup2(tty, 0);
             close(tty);
-            create_fifo_buffer("*stdin*", fd, Buffer::Flags::None);
+            create_fifo_buffer("*stdin*", fd, Buffer::Flags::None, AutoScroll::NotInitially);
         }
 
         if (not server.is_daemon())
