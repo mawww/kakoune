@@ -41,18 +41,8 @@ struct LineAndColumn
         return *static_cast<EffectiveType*>(this);
     }
 
-    [[gnu::always_inline]]
-    constexpr friend auto operator<=>(const EffectiveType& lhs, const EffectiveType& rhs)
-    {
-        return (lhs.line != rhs.line) ? lhs.line <=> rhs.line
-                                      : lhs.column <=> rhs.column;
-    }
-
-    [[gnu::always_inline]]
-    constexpr friend bool operator==(const EffectiveType& lhs, const EffectiveType& rhs)
-    {
-        return lhs.line == rhs.line and lhs.column == rhs.column;
-    }
+    constexpr friend auto operator<=>(const LineAndColumn& lhs, const LineAndColumn& rhs) = default;
+    constexpr friend bool operator==(const LineAndColumn& lhs, const LineAndColumn& rhs) = default;
 
     friend constexpr size_t hash_value(const EffectiveType& val)
     {
@@ -65,6 +55,9 @@ struct BufferCoord : LineAndColumn<BufferCoord, LineCount, ByteCount>
     [[gnu::always_inline]]
     constexpr BufferCoord(LineCount line = 0, ByteCount column = 0)
         : LineAndColumn{line, column} {}
+
+    constexpr friend auto operator<=>(const BufferCoord& lhs, const BufferCoord& rhs) = default;
+    constexpr friend bool operator==(const BufferCoord& lhs, const BufferCoord& rhs) = default;
 };
 
 struct DisplayCoord : LineAndColumn<DisplayCoord, LineCount, ColumnCount>
@@ -72,6 +65,9 @@ struct DisplayCoord : LineAndColumn<DisplayCoord, LineCount, ColumnCount>
     [[gnu::always_inline]]
     constexpr DisplayCoord(LineCount line = 0, ColumnCount column = 0)
         : LineAndColumn{line, column} {}
+
+    constexpr friend auto operator<=>(const DisplayCoord& lhs, const DisplayCoord& rhs) = default;
+    constexpr friend bool operator==(const DisplayCoord& lhs, const DisplayCoord& rhs) = default;
 
     static constexpr const char* option_type_name = "coord";
 };

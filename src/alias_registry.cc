@@ -1,7 +1,6 @@
 #include "alias_registry.hh"
 
 #include "command_manager.hh"
-#include "ranges.hh"
 
 namespace Kakoune
 {

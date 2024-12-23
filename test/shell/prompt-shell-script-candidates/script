@@ -1,7 +1,5 @@
-ui_out -ignore 7
+ui_out -until '{ "jsonrpc": "2.0", "method": "refresh", "params": [true] }'
 ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ ":foo<ret>b" ] }'
-ui_out -ignore 4
-ui_out '{ "jsonrpc": "2.0", "method": "refresh", "params": [false] }'
-ui_out -ignore 3
-ui_out '{ "jsonrpc": "2.0", "method": "menu_show", "params": [[[{ "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": "bar" }]], { "line": 0, "column": 0 }, { "fg": "white", "bg": "blue", "underline": "default", "attributes": [] }, { "fg": "blue", "bg": "white", "underline": "default", "attributes": [] }, "prompt"] }'
+ui_out -until '{ "jsonrpc": "2.0", "method": "refresh", "params": [false] }'
+ui_out -until '{ "jsonrpc": "2.0", "method": "menu_show", "params": [[[{ "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": "bar" }]], { "line": 0, "column": 0 }, { "fg": "white", "bg": "blue", "underline": "default", "attributes": [] }, { "fg": "blue", "bg": "white", "underline": "default", "attributes": [] }, "prompt"] }'
 ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "<tab><ret>" ] }'

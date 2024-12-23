@@ -1,14 +1,14 @@
 #include "regex_impl.hh"
 
-#include "exception.hh"
 #include "string.hh"
 #include "unicode.hh"
 #include "unit_tests.hh"
 #include "utf8.hh"
 #include "utf8_iterator.hh"
-#include "string_utils.hh"
+#include "format.hh"
 #include "vector.hh"
 #include "utils.hh"
+#include "ranges.hh"
 
 #include <cstdio>
 #include <cstring>
@@ -18,6 +18,9 @@ namespace Kakoune
 {
 
 constexpr Codepoint CompiledRegex::StartDesc::count;
+
+namespace
+{
 
 struct ParsedRegex
 {
@@ -73,9 +76,6 @@ struct ParsedRegex
     uint32_t capture_count;
 };
 
-namespace
-{
-
 template<RegexMode mode = RegexMode::Forward>
 struct Children
 {
@@ -123,12 +123,14 @@ struct Children
     const Index m_index;
 };
 
-}
 
 // Recursive descent parser based on naming used in the ECMAScript
 // standard, although the syntax is not fully compatible.
 struct RegexParser
 {
+    static ParsedRegex parse(StringView re) { return RegexParser{re}.m_parsed_regex; }
+
+private:
     RegexParser(StringView re)
         : m_regex{re}, m_pos{re.begin(), re}
     {
@@ -138,11 +140,6 @@ struct RegexParser
         kak_assert(root == 0);
     }
 
-    ParsedRegex get_parsed_regex() { return std::move(m_parsed_regex); }
-
-    static ParsedRegex parse(StringView re) { return RegexParser{re}.get_parsed_regex(); }
-
-private:
     struct InvalidPolicy
     {
         Codepoint operator()(Codepoint cp) const { throw regex_error{"Invalid utf8 in regex"}; }
@@ -1034,6 +1031,9 @@ private:
             not contains(start_desc.map, false))
             return nullptr;
 
+        if (std::count(std::begin(start_desc.map), std::end(start_desc.map), true) == 1)
+            start_desc.start_byte = find(start_desc.map, true) - std::begin(start_desc.map);
+
         return std::make_unique<CompiledRegex::StartDesc>(start_desc);
     }
 
@@ -1083,6 +1083,8 @@ private:
     RegexCompileFlags m_flags;
     ParsedRegex& m_parsed_regex;
 };
+
+}
 
 String dump_regex(const CompiledRegex& program)
 {
@@ -1592,6 +1594,17 @@ auto test_regex = UnitTest{[]{
         kak_assert(vm.exec("xxxoo", RegexExecFlags::None));
         kak_assert(vm.exec("xfoo", RegexExecFlags::None));
         kak_assert(not vm.exec("😄xoo", RegexExecFlags::None));
+    }
+
+    {
+        TestVM<RegexMode::Backward | RegexMode::Search> vm{"oo(.{3,4}|f)"};
+        kak_assert(vm.backward_start_desc and vm.backward_start_desc->offset == 4);
+        for (int c = 0; c < CompiledRegex::StartDesc::count; ++c)
+            kak_assert(vm.backward_start_desc->map[c] == (c == 'f' or c == 'o'));
+
+        kak_assert(vm.exec("ooxxx", RegexExecFlags::None));
+        kak_assert(vm.exec("oofx", RegexExecFlags::None));
+        kak_assert(not vm.exec("oox😄", RegexExecFlags::None));
     }
 
     {

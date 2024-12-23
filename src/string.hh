@@ -8,6 +8,7 @@
 #include "units.hh"
 #include "utf8.hh"
 
+#include <algorithm>
 
 namespace Kakoune
 {

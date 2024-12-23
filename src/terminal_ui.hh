@@ -6,7 +6,6 @@
 #include "display_buffer.hh"
 #include "event_manager.hh"
 #include "face.hh"
-#include "hash_map.hh"
 #include "optional.hh"
 #include "string.hh"
 #include "user_interface.hh"
@@ -154,6 +153,7 @@ private:
     int m_shift_function_key = default_shift_function_key;
 
     bool m_set_title = true;
+    Optional<String> m_title;
 
     struct Synchronized
     {

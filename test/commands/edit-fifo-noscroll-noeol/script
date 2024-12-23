@@ -1,10 +1,8 @@
-ui_out -ignore 7
+ui_out -until '{ "jsonrpc": "2.0", "method": "refresh", "params": [true] }'
 exec 5>fifo
-ui_out '{ "jsonrpc": "2.0", "method": "refresh", "params": [true] }'
 
 printf '* noeol' >&5
-ui_out '{ "jsonrpc": "2.0", "method": "draw", "params": [[[{ "face": { "fg": "black", "bg": "white", "underline": "default", "attributes": [] }, "contents": "*" }, { "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": " noeol\u000a" }]], { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, { "fg": "blue", "bg": "default", "underline": "default", "attributes": [] }] }'
-ui_out -ignore 2
+ui_out -until '{ "jsonrpc": "2.0", "method": "draw", "params": [[[{ "face": { "fg": "black", "bg": "white", "underline": "default", "attributes": [] }, "contents": "*" }, { "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": " noeol\u000a" }]], { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, { "fg": "blue", "bg": "default", "underline": "default", "attributes": [] }] }'
 
 exec 5>&-
-ui_out '{ "jsonrpc": "2.0", "method": "draw_status", "params": [[], [{ "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": "*fifo* 1:1 " }, { "face": { "fg": "black", "bg": "yellow", "underline": "default", "attributes": [] }, "contents": "[scratch]" }, { "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": " " }, { "face": { "fg": "blue", "bg": "default", "underline": "default", "attributes": [] }, "contents": "1 sel" }, { "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": " - client0@[kak-tests]" }], { "fg": "cyan", "bg": "default", "underline": "default", "attributes": [] }] }'
+ui_out -until '{ "jsonrpc": "2.0", "method": "draw_status", "params": [[], [{ "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": "*fifo* 1:1 " }, { "face": { "fg": "black", "bg": "yellow", "underline": "default", "attributes": [] }, "contents": "[scratch]" }, { "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": " " }, { "face": { "fg": "blue", "bg": "default", "underline": "default", "attributes": [] }, "contents": "1 sel" }, { "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": " - client0@[kak-tests]" }], { "fg": "cyan", "bg": "default", "underline": "default", "attributes": [] }] }'

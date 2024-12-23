@@ -15,7 +15,7 @@ Kakoune won't be able to parse named parameters in requests.
 Here are the data structures used:
 
 * Color: a string, either a named color, or #rrggbb, or 'default'
-* Attribute: one of {underline, reverse, blink, bold, dim, italic, final_fg, final_bg, final_attr}
+* Attribute: one of {underline, curly_underline, double_underline, reverse, blink, bold, dim, italic, final_fg, final_bg, final_attr}
 * Face { Color fg; Color bg; Array<Attribute> attributes; }
 * Atom { Face face; String contents; }
 * Line : Array of Atom
@@ -58,7 +58,8 @@ The requests that the json ui can interpret on stdin are:
 
 * keys(String key1, String key2...): keystrokes
 * resize(int rows, int columns): notify ui resize
-* scroll(int amount): scroll by given line amount
+* scroll(int amount, int line, int colum): scroll by given line amount, line and
+  column relate to cursor position
 * mouse_move(int line, int column): line and column relate to the cursor position.
 * mouse_press(String button, int line, int column): line and column relate to
   cursor position, button can be 'left', 'middle' or 'right'

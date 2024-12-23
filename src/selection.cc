@@ -2,10 +2,11 @@
 
 #include "buffer_utils.hh"
 #include "changes.hh"
-#include "utf8.hh"
 
 namespace Kakoune
 {
+
+SelectionList::~SelectionList() = default;
 
 SelectionList::SelectionList(Buffer& buffer, Selection s, size_t timestamp)
     : m_selections({ std::move(s) }), m_buffer(&buffer), m_timestamp(timestamp)
@@ -26,6 +27,11 @@ SelectionList::SelectionList(Buffer& buffer, Vector<Selection> list, size_t time
 
 SelectionList::SelectionList(Buffer& buffer, Vector<Selection> list)
     : SelectionList(buffer, std::move(list), buffer.timestamp()) {}
+
+SelectionList::SelectionList(const SelectionList&) = default;
+SelectionList::SelectionList(SelectionList&&) = default;
+SelectionList& SelectionList::operator=(const SelectionList&) = default;
+SelectionList& SelectionList::operator=(SelectionList&&) = default;
 
 void SelectionList::remove(size_t index)
 {
@@ -536,6 +542,33 @@ Selection selection_from_string(ColumnType column_type, const Buffer& buffer, St
                                 str_to_int({dot_cursor+1, desc.end()}) - 1);
 
     return Selection{anchor, cursor};
+}
+
+SelectionList selection_list_from_strings(Buffer& buffer, ColumnType column_type, ConstArrayView<String> descs, size_t timestamp, size_t main, ColumnCount tabstop)
+{
+    if ((column_type != ColumnType::Byte and timestamp != buffer.timestamp()) or timestamp > buffer.timestamp())
+        throw runtime_error{format("invalid timestamp '{}'", timestamp)};
+
+    auto from_string = [&](StringView desc) {
+        return selection_from_string(column_type, buffer, desc, tabstop);
+    };
+
+    auto sels = descs | transform(from_string) | gather<Vector<Selection>>();
+    if (sels.empty())
+        throw runtime_error{"empty selection description"};
+    if (main >= sels.size())
+        throw runtime_error{"invalid main selection index"};
+
+    sort_selections(sels, main);
+    merge_overlapping_selections(sels, main);
+    if (timestamp < buffer.timestamp())
+        update_selections(sels, main, buffer, timestamp);
+    else
+        clamp_selections(sels, buffer);
+
+    SelectionList res{buffer, std::move(sels)};
+    res.set_main_index(main);
+    return res;
 }
 
 }

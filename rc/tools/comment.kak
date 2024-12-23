@@ -118,7 +118,7 @@ hook global BufSetOption filetype=perl %{
     set-option buffer comment_block_end ']'
 }
 
-hook global BufSetOption filetype=(pug|zig|cue|hare) %{
+hook global BufSetOption filetype=(pug|zig|cue|hare|gleam) %{
     set-option buffer comment_line '//'
 }
 

@@ -1,7 +1,7 @@
 #include "input_handler.hh"
 
-#include "buffer_manager.hh"
-#include "buffer_utils.hh"
+#include "buffer.hh"
+#include "debug.hh"
 #include "command_manager.hh"
 #include "client.hh"
 #include "event_manager.hh"
@@ -11,24 +11,16 @@
 #include "option_types.hh"
 #include "regex.hh"
 #include "register_manager.hh"
-#include "hash_map.hh"
 #include "user_interface.hh"
-#include "utf8.hh"
 #include "window.hh"
 #include "word_db.hh"
 
+#include <concepts>
 #include <utility>
 #include <limits>
 
 namespace Kakoune
 {
-
-static void clear_info_and_echo(Context& context)
-{
-    context.print_status({});
-    if (context.has_client())
-        context.client().info_hide();
-}
 
 class InputMode : public RefCountable
 {
@@ -58,7 +50,7 @@ public:
     virtual std::pair<CursorMode, DisplayCoord> get_cursor_info() const
     {
         const auto cursor = context().selections().main().cursor();
-        auto coord = context().window().display_position(cursor).value_or(DisplayCoord{});
+        auto coord = context().window().display_coord(cursor).value_or(DisplayCoord{});
         return {CursorMode::Buffer, coord};
     }
 
@@ -101,8 +93,6 @@ void InputMode::paste(StringView content)
         context().print_status({error.what().str(), context().faces()["Error"] });
         context().hooks().run_hook(Hook::RuntimeError, error.what(), context());
     }
-
-    clear_info_and_echo(context());
 }
 
 namespace InputModes
@@ -126,8 +116,10 @@ struct MouseHandler
             return false;
 
         Buffer& buffer = context.buffer();
-        BufferCoord cursor;
-        constexpr auto modifiers = Key::Modifiers::Control | Key::Modifiers::Alt | Key::Modifiers::Shift | Key::Modifiers::MouseButtonMask;
+        // bits above these potentially store additional information
+        constexpr auto mask = (Key::Modifiers) 0x7FF;
+        constexpr auto modifiers = Key::Modifiers::Control | Key::Modifiers::Alt | Key::Modifiers::Shift | Key::Modifiers::MouseButtonMask | ~mask;
+
         switch ((key.modifiers & ~modifiers).value)
         {
         case Key::Modifiers::MousePress:
@@ -135,20 +127,31 @@ struct MouseHandler
             {
             case Key::MouseButton::Right: {
                 m_dragging.reset();
-                cursor = context.window().buffer_coord(key.coord());
+                auto cursor = context.window().buffer_coord(key.coord());
+                if (not cursor)
+                {
+                    context.ensure_cursor_visible = false;
+                    return true;
+                }
                 ScopedSelectionEdition selection_edition{context};
                 auto& selections = context.selections();
                 if (key.modifiers & Key::Modifiers::Control)
-                    selections = {{selections.begin()->anchor(), cursor}};
+                    selections = {{selections.begin()->anchor(), *cursor}};
                 else
-                    selections.main() = {selections.main().anchor(), cursor};
+                    selections.main() = {selections.main().anchor(), *cursor};
                 selections.sort_and_merge_overlapping();
                 return true;
             }
 
             case Key::MouseButton::Left: {
                 m_dragging.reset(new ScopedSelectionEdition{context});
-                m_anchor = context.window().buffer_coord(key.coord());
+                auto anchor = context.window().buffer_coord(key.coord());
+                if (not anchor)
+                {
+                    context.ensure_cursor_visible = false;
+                    return true;
+                }
+                m_anchor = *anchor;
                 if (not (key.modifiers & Key::Modifiers::Control))
                     context.selections_write_only() = { buffer, m_anchor};
                 else
@@ -166,34 +169,34 @@ struct MouseHandler
             }
 
         case Key::Modifiers::MouseRelease: {
-            if (not m_dragging)
+            auto cursor = context.window().buffer_coord(key.coord());
+            if (not m_dragging or not cursor)
             {
                 context.ensure_cursor_visible = false;
                 return true;
             }
             auto& selections = context.selections();
-            cursor = context.window().buffer_coord(key.coord());
-            selections.main() = {buffer.clamp(m_anchor), cursor};
+            selections.main() = {buffer.clamp(m_anchor), *cursor};
             selections.sort_and_merge_overlapping();
             m_dragging.reset();
             return true;
         }
 
         case Key::Modifiers::MousePos: {
-            if (not m_dragging)
+            auto cursor = context.window().buffer_coord(key.coord());
+            if (not m_dragging or not cursor)
             {
                 context.ensure_cursor_visible = false;
                 return true;
             }
-            cursor = context.window().buffer_coord(key.coord());
             auto& selections = context.selections();
-            selections.main() = {buffer.clamp(m_anchor), cursor};
+            selections.main() = {buffer.clamp(m_anchor), *cursor};
             selections.sort_and_merge_overlapping();
             return true;
         }
 
         case Key::Modifiers::Scroll:
-            scroll_window(context, static_cast<int32_t>(key.key), m_dragging ? OnHiddenCursor::MoveCursor : OnHiddenCursor::PreserveSelections);
+            scroll_window(context, key.scroll_amount(), m_dragging ? OnHiddenCursor::MoveCursor : OnHiddenCursor::PreserveSelections);
             return true;
 
         default: return false;
@@ -228,6 +231,9 @@ public:
                        context().flags() & Context::Flags::Draft ?
                            Timer::Callback{} : [this](Timer&) {
               RefPtr<InputMode> keep_alive{this}; // hook could trigger pop_mode()
+              if (context().has_client())
+                  context().client().clear_pending();
+
               context().hooks().run_hook(Hook::NormalIdle, "", context());
           }},
           m_fs_check_timer{TimePoint::max(),
@@ -275,6 +281,8 @@ public:
 
     void on_key(Key key, bool) override
     {
+        bool should_clear = false;
+
         kak_assert(m_state != State::PopOnEnabled);
         ScopedSetBool set_in_on_key{m_in_on_key};
 
@@ -291,7 +299,7 @@ public:
 
         if (m_mouse_handler.handle_key(key, context()))
         {
-            clear_info_and_echo(context());
+            should_clear = true;
 
             if (not transient)
                 m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
@@ -338,7 +346,7 @@ public:
                      m_state = State::PopOnEnabled;
             });
 
-            clear_info_and_echo(context());
+            should_clear = true;
 
             // Hack to parse keys sent by terminals using the 8th bit to mark the
             // meta key. In normal mode, give priority to a potential alt-key than
@@ -369,7 +377,11 @@ public:
 
         context().hooks().run_hook(Hook::NormalKey, to_string(key), context());
         if (enabled() and not transient) // The hook might have changed mode
+        {
+            if (should_clear and context().has_client())
+                context().client().schedule_clear();
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
+        }
     }
 
     ModeInfo mode_info() const override
@@ -393,6 +405,17 @@ public:
             atoms.emplace_back(StringView(m_params.reg).str(), context().faces()["StatusLineValue"]);
         }
         return {atoms, m_params};
+    }
+
+    void paste(StringView content) override
+    {
+        InputMode::paste(content);
+        if (not (context().flags() & Context::Flags::Draft))
+        {
+            if (context().has_client())
+                context().client().schedule_clear();
+            m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
+        }
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Normal; }
@@ -669,7 +692,7 @@ public:
                            Timer::Callback{} : [this](Timer&) {
                            RefPtr<InputMode> keep_alive{this}; // hook or m_callback could trigger pop_mode()
                            if (m_auto_complete and m_refresh_completion_pending)
-                               refresh_completions(CompletionFlags::Fast);
+                               refresh_completions();
                            if (m_line_changed)
                            {
                                m_callback(m_line_editor.line(), PromptEvent::Change, context());
@@ -806,10 +829,10 @@ public:
             CandidateList& candidates = m_completions.candidates;
 
             if (m_auto_complete and m_refresh_completion_pending)
-                refresh_completions(CompletionFlags::Fast);
+                refresh_completions();
             if (candidates.empty()) // manual completion, we need to ask our completer for completions
             {
-                refresh_completions(CompletionFlags::None);
+                refresh_completions();
                 if ((not m_prefix_in_completions and candidates.size() > 1) or
                     candidates.size() > 2)
                     return;
@@ -867,7 +890,7 @@ public:
                         });
 
                     if (m_explicit_completer)
-                        refresh_completions(CompletionFlags::None);
+                        refresh_completions();
                 }, "enter completion type",
                 "f: filename\n"
                 "w: buffer word\n");
@@ -878,7 +901,7 @@ public:
             m_auto_complete = not m_auto_complete;
 
             if (m_auto_complete)
-                refresh_completions(CompletionFlags::Fast);
+                refresh_completions();
             else if (context().has_client())
             {
                 clear_completions();
@@ -973,7 +996,7 @@ private:
     template<typename Completer>
     void use_explicit_completer(Completer&& completer)
     {
-        m_explicit_completer = [completer](const Context& context, CompletionFlags flags, StringView content, ByteCount cursor_pos) {
+        m_explicit_completer = [completer](const Context& context, StringView content, ByteCount cursor_pos) {
             Optional<Token> last_token;
             CommandParser parser{content.substr(0_byte, cursor_pos)};
             while (auto token = parser.read_token(false))
@@ -989,7 +1012,7 @@ private:
         };
     }
 
-    void refresh_completions(CompletionFlags flags)
+    void refresh_completions()
     {
         try
         {
@@ -999,7 +1022,7 @@ private:
                 return;
             m_current_completion = -1;
             const String& line = m_line_editor.line();
-            m_completions = completer(context(), flags, line,
+            m_completions = completer(context(), line,
                                       line.byte_count_to(m_line_editor.cursor_pos()));
             if (not context().has_client())
                 return;
@@ -1290,9 +1313,13 @@ public:
             selections.sort_and_merge_overlapping();
         }
         else if (auto cp = key.codepoint())
+        {
+            m_completer.try_accept();
             insert(*cp);
+        }
         else if (key == ctrl('r'))
         {
+            m_completer.try_accept();
             on_next_key_with_autoinfo(context(), "register", KeymapMode::None,
                 [this](Key key, Context&) {
                     auto cp = key.codepoint();
@@ -1346,6 +1373,7 @@ public:
         }
         else if (key == ctrl('v'))
         {
+            m_completer.try_accept();
             on_next_key_with_autoinfo(context(), "raw-insert", KeymapMode::None,
                 [this, transient](Key key, Context&) {
                     if (auto cp = get_raw_codepoint(key))
@@ -1374,6 +1402,7 @@ public:
 
     void paste(StringView content) override
     {
+        m_completer.try_accept();
         insert(ConstArrayView<StringView>{content});
         m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
@@ -1411,7 +1440,7 @@ private:
     template<typename S>
     void insert(ConstArrayView<S> strings)
     {
-        m_completer.try_accept();
+        kak_assert(not m_completer.has_candidate_selected());
         context().selections().for_each([strings, &buffer=context().buffer()]
                                         (size_t index, Selection& sel) {
             Kakoune::insert(buffer, sel, sel.cursor(), strings[std::min(strings.size()-1, index)]);

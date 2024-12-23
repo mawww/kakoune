@@ -1,6 +1,4 @@
 ui_out -ignore 7
 ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ ":my-command " ] }'
-ui_out -ignore 7
-ui_out '{ "jsonrpc": "2.0", "method": "refresh", "params": [false] }'
-ui_out '{ "jsonrpc": "2.0", "method": "menu_show", "params": [[[{ "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": "aaa" }], [{ "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": "bbb" }], [{ "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": "ccc" }]], { "line": 0, "column": 0 }, { "fg": "white", "bg": "blue", "underline": "default", "attributes": [] }, { "fg": "blue", "bg": "white", "underline": "default", "attributes": [] }, "prompt"] }'
+ui_out -until '{ "jsonrpc": "2.0", "method": "menu_show", "params": [[[{ "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": "aaa" }], [{ "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": "bbb" }], [{ "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": "ccc" }]], { "line": 0, "column": 0 }, { "fg": "white", "bg": "blue", "underline": "default", "attributes": [] }, { "fg": "blue", "bg": "white", "underline": "default", "attributes": [] }, "prompt"] }'
 ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "<s-tab><ret>" ] }'

@@ -7,10 +7,11 @@
 #include "flags.hh"
 #include "hash_map.hh"
 #include "option.hh"
-#include "ranges.hh"
 #include "string.hh"
 #include "string_utils.hh"
+#include "format.hh"
 #include "units.hh"
+#include "ranges.hh"
 
 #include <tuple>
 #include <vector>

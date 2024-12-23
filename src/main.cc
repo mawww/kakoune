@@ -1,12 +1,13 @@
 #include "assert.hh"
 #include "backtrace.hh"
 #include "buffer.hh"
-#include "buffer_manager.hh"
 #include "buffer_utils.hh"
+#include "buffer_manager.hh"
 #include "client_manager.hh"
 #include "command_manager.hh"
 #include "commands.hh"
 #include "context.hh"
+#include "debug.hh"
 #include "event_manager.hh"
 #include "face_registry.hh"
 #include "file.hh"
@@ -27,7 +28,6 @@
 #include "string.hh"
 #include "unit_tests.hh"
 #include "window.hh"
-#include "clock.hh"
 
 #include <fcntl.h>
 #include <locale.h>
@@ -47,6 +47,8 @@ struct {
 } constexpr version_notes[] = { {
         0,
         "» kak_* appearing in shell arguments will be added to the environment\n"
+        "» {+U}double underline{} support\n"
+        "» {+u}git apply{} can stage/revert selected changes to current buffer\n"
     }, {
         20240518,
         "» Fix tests failing on some platforms\n"
@@ -594,6 +596,7 @@ void register_options()
                        "    terminal_assistant             clippy|cat|dilbert|none|off\n"
                        "    terminal_status_on_top         bool\n"
                        "    terminal_set_title             bool\n"
+                       "    terminal_title                 str\n"
                        "    terminal_enable_mouse          bool\n"
                        "    terminal_synchronized          bool\n"
                        "    terminal_wheel_scroll_amount   int\n"
@@ -686,11 +689,22 @@ pid_t fork_server_to_background()
 
 std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
 {
+    if (ui_type == UIType::Terminal and not isatty(0))
+    {
+        // move stdin to another fd, and restore tty as stdin
+        int fd = dup(0);
+        int tty = open("/dev/tty", O_RDONLY);
+        dup2(tty, 0);
+        close(tty);
+        create_fifo_buffer("*stdin*", fd, Buffer::Flags::None, AutoScroll::NotInitially);
+    }
+
     auto ui = make_ui(ui_type);
 
     static SignalHandler old_handler = set_signal_handler(SIGTSTP, [](int sig) {
         if (ClientManager::instance().count() == 1 and
-            *ClientManager::instance().begin() == local_client)
+            *ClientManager::instance().begin() == local_client and
+            not Server::instance().is_daemon())
             old_handler(sig);
         else
         {
@@ -818,22 +832,28 @@ int run_server(StringView session, StringView server_init,
                                      "    {}", error.what()));
     }
 
+    {
+        Context empty_context{Context::EmptyContextFlag{}};
+        global_scope.hooks().run_hook(Hook::EnterDirectory, real_path("."), empty_context);
+        global_scope.hooks().run_hook(Hook::KakBegin, session, empty_context);
+    }
+
     if (not server_init.empty()) try
     {
         Context init_context{Context::EmptyContextFlag{}};
         command_manager.execute(server_init, init_context);
+    }
+    catch (const kill_session& kill)
+    {
+        Context empty_context{Context::EmptyContextFlag{}};
+        global_scope.hooks().run_hook(Hook::KakEnd, "", empty_context);
+        return kill.exit_status;
     }
     catch (runtime_error& error)
     {
         startup_error = true;
         write_to_debug_buffer(format("error while running server init commands:\n"
                                      "    {}", error.what()));
-    }
-
-    {
-        Context empty_context{Context::EmptyContextFlag{}};
-        global_scope.hooks().run_hook(Hook::EnterDirectory, real_path("."), empty_context);
-        global_scope.hooks().run_hook(Hook::KakBegin, session, empty_context);
     }
 
     if (not files.empty()) try
@@ -899,14 +919,16 @@ int run_server(StringView session, StringView server_init,
 
             // Loop so that eventual inputs happening during the processing are handled as
             // well, avoiding unneeded redraws.
-            bool allow_blocking = not client_manager.has_pending_inputs();
+            Optional<std::chrono::nanoseconds> timeout;
+            if (client_manager.has_pending_inputs())
+                timeout = std::chrono::nanoseconds{};
             try
             {
-                while (event_manager.handle_next_events(EventMode::Normal, nullptr, allow_blocking))
+                while (event_manager.handle_next_events(EventMode::Normal, nullptr, timeout))
                 {
                     if (client_manager.process_pending_inputs())
                         break;
-                    allow_blocking = false;
+                    timeout = std::chrono::nanoseconds{};
                 }
             }
             catch (const cancel&) {}
@@ -996,14 +1018,15 @@ int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet, 
             }
         };
 
+        Context empty_context{Context::EmptyContextFlag{}};
         for (auto& file : files)
         {
             Buffer* buffer = open_file_buffer(file, Buffer::Flags::NoHooks);
             if (not suffix_backup.empty())
-                write_buffer_to_file(*buffer, buffer->name() + suffix_backup,
+                write_buffer_to_file(empty_context, *buffer, buffer->name() + suffix_backup,
                                      WriteMethod::Overwrite, WriteFlags::None);
             apply_to_buffer(*buffer);
-            write_buffer_to_file(*buffer, buffer->name(),
+            write_buffer_to_file(empty_context, *buffer, buffer->name(),
                                  WriteMethod::Overwrite, WriteFlags::None);
             buffer_manager.delete_buffer(*buffer);
         }

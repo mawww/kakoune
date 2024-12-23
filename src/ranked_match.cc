@@ -4,6 +4,7 @@
 #include "unit_tests.hh"
 #include "utf8_iterator.hh"
 #include "optional.hh"
+#include "ranges.hh"
 
 #include <algorithm>
 

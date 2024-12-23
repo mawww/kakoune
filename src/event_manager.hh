@@ -4,6 +4,7 @@
 #include "clock.hh"
 #include "meta.hh"
 #include "utils.hh"
+#include "optional.hh"
 #include "vector.hh"
 
 #include <functional>
@@ -87,10 +88,14 @@ private:
 class EventManager : public Singleton<EventManager>
 {
 public:
+    using Nanoseconds = std::chrono::nanoseconds;
+
     EventManager();
     ~EventManager();
 
-    bool handle_next_events(EventMode mode, sigset_t* sigmask = nullptr, bool block = true);
+    // blocks until next event if no timeout given
+    bool handle_next_events(EventMode mode, sigset_t* sigmask = nullptr,
+                            Optional<Nanoseconds> timeout = {});
 
     // force the watchers associated with fd to be executed
     // on next handle_next_events call.

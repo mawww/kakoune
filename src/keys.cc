@@ -5,7 +5,7 @@
 #include "string.hh"
 #include "unit_tests.hh"
 #include "utf8_iterator.hh"
-#include "utils.hh"
+#include "format.hh"
 #include "string_utils.hh"
 
 namespace Kakoune
@@ -196,7 +196,7 @@ String to_string(Key key)
     else if (key.modifiers & Key::Modifiers::MouseRelease)
         res = format("mouse:release:{}:{}.{}", key.mouse_button(), coord.line, coord.column);
     else if (key.modifiers & Key::Modifiers::Scroll)
-        res = format("scroll:{}", static_cast<int>(key.key));
+        res = format("scroll:{}:{}.{}", key.scroll_amount(), coord.line, coord.column);
     else if (key.modifiers & Key::Modifiers::Resize)
         res = format("resize:{}.{}", coord.line, coord.column);
     else

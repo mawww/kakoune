@@ -6,9 +6,8 @@
 #include "meta.hh"
 #include "array_view.hh"
 #include "optional.hh"
-#include "flags.hh"
 #include "string.hh"
-#include "string_utils.hh"
+#include "format.hh"
 
 #include <functional>
 
@@ -41,9 +40,7 @@ struct wrong_argument_count : public parameter_error
 
 class Context;
 struct Completions;
-enum class CompletionFlags;
-using ArgCompleter = std::function<Completions (const Context&, CompletionFlags,
-                                                StringView, ByteCount)>;
+using ArgCompleter = std::function<Completions (const Context&, StringView, ByteCount)>;
 
 struct SwitchDesc
 {

@@ -20,7 +20,6 @@ provide-module eruby %{
   require-module html
   add-highlighter shared/eruby regions
   add-highlighter shared/eruby/html default-region ref html
-  add-highlighter shared/eruby/simple-expression-tag region '<%=' '%>' ref ruby
-  add-highlighter shared/eruby/simple-execution-tag region '<%' '%>' ref ruby
   add-highlighter shared/eruby/simple-comment-tag region '<%#' '%>' fill comment
+  add-highlighter shared/eruby/simple-execution-tag region (?<=<%) '%>' ref ruby
 }

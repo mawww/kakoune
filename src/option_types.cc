@@ -1,4 +1,5 @@
 #include "option_types.hh"
+#include "debug.hh"
 #include "unit_tests.hh"
 
 namespace Kakoune

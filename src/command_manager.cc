@@ -2,10 +2,11 @@
 
 #include "alias_registry.hh"
 #include "assert.hh"
-#include "buffer_utils.hh"
 #include "context.hh"
+#include "debug.hh"
 #include "flags.hh"
 #include "file.hh"
+#include "hook_manager.hh"
 #include "optional.hh"
 #include "option_types.hh"
 #include "profile.hh"
@@ -13,6 +14,7 @@
 #include "regex.hh"
 #include "register_manager.hh"
 #include "shell_manager.hh"
+#include "scope.hh"
 #include "utils.hh"
 #include "unit_tests.hh"
 
@@ -177,6 +179,13 @@ ParseResult parse_quoted_balanced(ParseState& state)
     return {String{String::NoCopy{}, {beg, pos - terminated}}, terminated};
 }
 
+bool is_ascii_horizontal_blank(char c)
+{
+    return c == '\t'      or
+           c == '\f'      or
+           c == ' ';
+}
+
 String parse_unquoted(ParseState& state)
 {
     const char* beg = state.pos;
@@ -187,7 +196,7 @@ String parse_unquoted(ParseState& state)
     while (state.pos != end)
     {
         const char c = *state.pos;
-        if (is_command_separator(c) or is_horizontal_blank(c))
+        if (is_command_separator(c) or is_ascii_horizontal_blank(c))
         {
             str += StringView{beg, state.pos};
             if (state.pos != beg and *(state.pos - 1) == '\\')
@@ -233,8 +242,8 @@ void skip_blanks_and_comments(ParseState& state)
 {
     while (state)
     {
-        const Codepoint c = *state.pos;
-        if (is_horizontal_blank(c))
+        const char c = *state.pos;
+        if (is_ascii_horizontal_blank(c))
             ++state.pos;
         else if (c == '\\' and state.pos + 1 != state.str.end() and
                  state.pos[1] == '\n')
@@ -348,7 +357,8 @@ void expand_token(Token&& token, const Context& context, const ShellContext& she
     case Token::Type::ShellExpand:
     {
         auto str = ShellManager::instance().eval(
-            content, context, {}, ShellManager::Flags::WaitForStdout,
+            content, context, StringView{},
+            ShellManager::Flags::WaitForStdout,
             shell_context).first;
 
         if (not str.empty() and str.back() == '\n')
@@ -655,7 +665,7 @@ Completions CommandManager::complete_module_name(StringView query) const
                                                                | transform(&ModuleMap::Item::key))};
 }
 
-static Completions complete_expansion(const Context& context, CompletionFlags flags,
+static Completions complete_expansion(const Context& context,
                                       Token token, ByteCount start,
                                       ByteCount cursor_pos, ByteCount pos_in_token)
 {
@@ -671,7 +681,7 @@ static Completions complete_expansion(const Context& context, CompletionFlags fl
                      token.content, pos_in_token) };
 
     case Token::Type::ShellExpand:
-        return offset_pos(shell_complete(context, flags, token.content,
+        return offset_pos(shell_complete(context, token.content,
                                          pos_in_token), start);
 
     case Token::Type::ValExpand:
@@ -692,7 +702,7 @@ static Completions complete_expansion(const Context& context, CompletionFlags fl
     }
 }
 
-static Completions complete_expand(const Context& context, CompletionFlags flags,
+static Completions complete_expand(const Context& context,
                                         StringView prefix, ByteCount start,
                                         ByteCount cursor_pos, ByteCount pos_in_token)
 {
@@ -710,7 +720,7 @@ static Completions complete_expand(const Context& context, CompletionFlags flags
                     continue;
                 if (token.type == Token::Type::Raw or token.type == Token::Type::RawQuoted)
                     return {};
-                return complete_expansion(context, flags, token,
+                return complete_expansion(context, token,
                                           start + token.pos, cursor_pos,
                                           pos_in_token - token.pos);
             }
@@ -745,8 +755,7 @@ static Completions requote(Completions completions, Token::Type token_type)
 }
 
 Completions CommandManager::Completer::operator()(
-    const Context& context, CompletionFlags flags,
-    StringView command_line, ByteCount cursor_pos)
+    const Context& context, StringView command_line, ByteCount cursor_pos)
 {
     auto prefix = command_line.substr(0_byte, cursor_pos);
     CommandParser parser{prefix};
@@ -797,7 +806,7 @@ Completions CommandManager::Completer::operator()(
     case Token::Type::ShellExpand:
     case Token::Type::ValExpand:
     case Token::Type::FileExpand:
-        return complete_expansion(context, flags, token, start, cursor_pos, pos_in_token);
+        return complete_expansion(context, token, start, cursor_pos, pos_in_token);
 
     case Token::Type::Raw:
     case Token::Type::RawQuoted:
@@ -837,7 +846,7 @@ Completions CommandManager::Completer::operator()(
                 const auto& switch_desc = command.param_desc.switches.get(raw_params.at(raw_params.size() - 2).substr(1_byte));
                 if (not *switch_desc.arg_completer)
                     return Completions{};
-                return offset_pos(requote((*switch_desc.arg_completer)(context, flags, raw_params.back(), pos_in_token), token.type), start);
+                return offset_pos(requote((*switch_desc.arg_completer)(context, raw_params.back(), pos_in_token), token.type), start);
             }
             case ParametersParser::State::Positional:
                 break;
@@ -849,10 +858,10 @@ Completions CommandManager::Completer::operator()(
         Vector<String> params{parser.begin(), parser.end()};
         auto index = params.size() - 1;
 
-        return offset_pos(requote(m_command_completer(context, flags, params, index, pos_in_token), token.type), start);
+        return offset_pos(requote(m_command_completer(context, params, index, pos_in_token), token.type), start);
     }
     case Token::Type::Expand:
-        return complete_expand(context, flags, token.content, start, cursor_pos, pos_in_token);
+        return complete_expand(context, token.content, start, cursor_pos, pos_in_token);
     default:
         break;
     }
@@ -860,7 +869,7 @@ Completions CommandManager::Completer::operator()(
 }
 
 Completions CommandManager::NestedCompleter::operator()(
-    const Context& context, CompletionFlags flags, CommandParameters params,
+    const Context& context, CommandParameters params,
     size_t token_to_complete, ByteCount pos_in_token)
 {
     StringView prefix = params[token_to_complete].substr(0, pos_in_token);
@@ -878,7 +887,7 @@ Completions CommandManager::NestedCompleter::operator()(
     }
 
     return m_command_completer
-        ? m_command_completer(context, flags, params.subrange(1), token_to_complete-1, pos_in_token)
+        ? m_command_completer(context, params.subrange(1), token_to_complete-1, pos_in_token)
         : Completions{};
 }
 

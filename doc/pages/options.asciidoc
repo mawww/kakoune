@@ -348,6 +348,10 @@ are exclusively available to built-in options.
             if *yes* or *true*, the terminal emulator title will
             be changed
 
+        *terminal_title*:::
+            if set, the terminal title will be set to this string
+            else it will be derived from the modeline.
+
         *terminal_status_on_top*:::
             if *yes*, or *true* the status line will be placed
             at the top of the terminal rather than at the bottom

@@ -1,11 +1,11 @@
 #ifndef hook_manager_hh_INCLUDED
 #define hook_manager_hh_INCLUDED
 
-#include "hash_map.hh"
 #include "completion.hh"
 #include "safe_ptr.hh"
 #include "meta.hh"
 #include "enum.hh"
+#include "array.hh"
 
 #include <memory>
 

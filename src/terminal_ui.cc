@@ -1,14 +1,14 @@
 #include "terminal_ui.hh"
 
-#include "buffer_utils.hh"
 #include "display_buffer.hh"
 #include "event_manager.hh"
 #include "exception.hh"
 #include "file.hh"
 #include "keys.hh"
 #include "ranges.hh"
-#include "string_utils.hh"
+#include "format.hh"
 #include "diff.hh"
+#include "string_utils.hh"
 
 #include <algorithm>
 
@@ -224,7 +224,7 @@ void TerminalUI::Screen::set_face(const Face& face, Writer& writer)
     static constexpr int fg_table[]{ 39, 30, 31, 32, 33, 34, 35, 36, 37, 90, 91, 92, 93, 94, 95, 96, 97 };
     static constexpr int bg_table[]{ 49, 40, 41, 42, 43, 44, 45, 46, 47, 100, 101, 102, 103, 104, 105, 106, 107 };
     static constexpr int ul_table[]{ 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
-    static constexpr const char* attr_table[]{ "0", "4", "4:3", "7", "5", "1", "2", "3", "9" };
+    static constexpr const char* attr_table[]{ "0", "4", "4:3", "21", "7", "5", "1", "2", "3", "9" };
 
     auto set_color = [&](bool fg, const Color& color, bool join) {
         if (join)
@@ -609,16 +609,19 @@ void TerminalUI::draw_status(const DisplayLine& status_line,
     if (m_set_title)
     {
         Writer writer{STDOUT_FILENO};
-        constexpr char suffix[] = " - Kakoune\007";
         writer.write("\033]2;");
-        // Fill title escape sequence buffer, removing non ascii characters
-        for (auto& atom : mode_line)
-        {
-            const auto str = atom.content();
+        auto write_escaped = [&](StringView str) {
             for (auto it = str.begin(), end = str.end(); it != end; utf8::to_next(it, end))
                 writer.write((*it >= 0x20 and *it <= 0x7e) ? *it : '?');
+        };
+        if (not m_title)
+        {
+            for (auto& atom : mode_line)
+                write_escaped(atom.content());
         }
-        writer.write(suffix);
+        else
+            write_escaped(*m_title);
+        writer.write(" - Kakoune\007");
     }
 
     m_dirty = true;
@@ -703,7 +706,7 @@ Optional<Key> TerminalUI::get_next_key()
     static constexpr auto control = [](char c) { return c & 037; };
 
     auto convert = [this](Codepoint c) -> Codepoint {
-        if (c == control('m') or c == control('j'))
+        if (c == control('m'))
             return Key::Return;
         if (c == control('i'))
             return Key::Tab;
@@ -798,9 +801,8 @@ Optional<Key> TerminalUI::get_next_key()
             return Key{mod | Key::to_modifier(button), coord};
         };
 
-        auto mouse_scroll = [this](Key::Modifiers mod, bool down) -> Key {
-            return {mod | Key::Modifiers::Scroll,
-                    (Codepoint)((down ? 1 : -1) * m_wheel_scroll_amount)};
+        auto mouse_scroll = [this](Key::Modifiers mod, Codepoint coord, bool down) -> Key {
+            return {mod | Key::Modifiers::Scroll | (Key::Modifiers)((down ? m_wheel_scroll_amount : -1 * m_wheel_scroll_amount) << 16), coord};
         };
 
         auto masked_key = [&](Codepoint key, Codepoint shifted_key = 0) {
@@ -859,6 +861,8 @@ Optional<Key> TerminalUI::get_next_key()
                 return masked_key(Key::F11 + params[0][0] - 23);
             case 25: case 26:
                 return Key{Key::Modifiers::Shift, Key::F3 + params[0][0] - 25}; // rxvt style
+            case 27:
+                return masked_key(convert(static_cast<Codepoint>(params[2][0])));
             case 28: case 29:
                 return Key{Key::Modifiers::Shift, Key::F5 + params[0][0] - 28}; // rxvt style
             case 31: case 32:
@@ -883,7 +887,23 @@ Optional<Key> TerminalUI::get_next_key()
             switch (params[0][0])
             {
                 // Treat numpad keys the same as their non-numpad counterparts. Could add a numpad modifier here.
+                case 57399: key = '0'; break;
+                case 57400: key = '1'; break;
+                case 57401: key = '2'; break;
+                case 57402: key = '3'; break;
+                case 57403: key = '4'; break;
+                case 57404: key = '5'; break;
+                case 57405: key = '6'; break;
+                case 57406: key = '7'; break;
+                case 57407: key = '8'; break;
+                case 57408: key = '9'; break;
+                case 57409: key = '.'; break;
+                case 57410: key = '/'; break;
+                case 57411: key = '*'; break;
+                case 57412: key = '-'; break;
+                case 57413: key = '+'; break;
                 case 57414: key = Key::Return; break;
+                case 57415: key = '='; break;
                 case 57417: key = Key::Left; break;
                 case 57418: key = Key::Right; break;
                 case 57419: key = Key::Up; break;
@@ -921,8 +941,8 @@ Optional<Key> TerminalUI::get_next_key()
                 else if (int guess = ffs(m_mouse_state) - 1; 0 <= guess and guess < 3)
                     return mouse_button(mod, Key::MouseButton{guess}, coord, true);
                 break;
-            case 64: return mouse_scroll(mod, false);
-            case 65: return mouse_scroll(mod, true);
+            case 64: return mouse_scroll(mod, coord, false);
+            case 65: return mouse_scroll(mod, coord, true);
             }
             return Key{Key::Modifiers::MousePos, coord};
         }
@@ -1537,6 +1557,7 @@ void TerminalUI::set_ui_options(const Options& options)
 
     m_status_on_top = find("terminal_status_on_top").map(to_bool).value_or(false);
     m_set_title = find("terminal_set_title").map(to_bool).value_or(true);
+    m_title = find("terminal_title").map([](StringView s) { return String{s}; });
 
     auto synchronized = find("terminal_synchronized").map(to_bool);
     m_synchronized.set = (bool)synchronized;

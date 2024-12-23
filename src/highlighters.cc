@@ -2,10 +2,10 @@
 
 #include "assert.hh"
 #include "buffer_utils.hh"
+#include "debug.hh"
 #include "changes.hh"
 #include "command_manager.hh"
 #include "context.hh"
-#include "clock.hh"
 #include "display_buffer.hh"
 #include "face_registry.hh"
 #include "highlighter_group.hh"
@@ -506,10 +506,8 @@ std::unique_ptr<Highlighter> create_line_highlighter(HighlighterParameters param
         for (auto& atom : *it)
         {
             column += atom.length();
-            if (!atom.has_buffer_range())
-                continue;
-
-            kak_assert(atom.begin().line == line);
+            if (atom.has_buffer_range() and atom.begin().line != line)
+                break;
             apply_face(face)(atom);
         }
         const ColumnCount remaining = context.context.window().dimensions().column - column;

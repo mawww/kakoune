@@ -2,9 +2,7 @@
 
 #include "buffer.hh"
 #include "line_modification.hh"
-#include "option_types.hh"
 #include "unit_tests.hh"
-#include "utils.hh"
 #include "value.hh"
 
 namespace Kakoune

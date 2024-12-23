@@ -60,7 +60,7 @@ define-command -params ..1 \
                 line_number = $3;
                 out = out "%!" menu_item ": " menu_info "! %!evaluate-commands %# try %& edit -existing %|" edit_path "|; execute-keys %|" line_number "gx| & catch %& fail unable to find tag &; try %& execute-keys %|s\\Q" select "<ret>| & # !"
             }
-            END { print ( length(out) == 0 ? "fail no such tag " ENVIRON["tagname"] : "menu -markup -auto-single " out ) }
+            END { print ( length(out) == 0 ? "fail no such tag " ENVIRON["tagname"] : "menu -auto-single " out ) }
             # Ensure x is an absolute file path, by prepending with tagroot
             function path(x) { return x ~/^\// ? x : tagroot x }'
     ]]

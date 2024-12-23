@@ -2,9 +2,10 @@
 #define input_handler_hh_INCLUDED
 
 #include "completion.hh"
-#include "constexpr_utils.hh"
+#include "array.hh"
 #include "context.hh"
 #include "env_vars.hh"
+#include "enum.hh"
 #include "face.hh"
 #include "normal.hh"
 #include "optional.hh"
@@ -41,8 +42,7 @@ class InputMode;
 enum class KeymapMode : char;
 enum class CursorMode;
 
-using PromptCompleter = std::function<Completions (const Context&, CompletionFlags,
-                                                   StringView, ByteCount)>;
+using PromptCompleter = std::function<Completions (const Context&, StringView, ByteCount)>;
 enum class InsertMode : unsigned
 {
     Insert,

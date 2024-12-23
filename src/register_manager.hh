@@ -24,8 +24,8 @@ public:
     virtual const String& get_main(const Context& context, size_t main_index) = 0;
 
     using RestoreInfo = Vector<String, MemoryDomain::Registers>;
-    RestoreInfo save(const Context& context) { return get(context) | gather<RestoreInfo>(); }
-    void restore(Context& context, const RestoreInfo& info) { set(context, info, true); }
+    RestoreInfo save(const Context& context);
+    void restore(Context& context, const RestoreInfo& info);
 
     NestedBool& modified_hook_disabled() { return m_disable_modified_hook; }
 

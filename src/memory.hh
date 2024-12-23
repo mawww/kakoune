@@ -3,7 +3,6 @@
 
 #include <cstddef>
 #include <new>
-#include <utility>
 
 #include "assert.hh"
 #include "meta.hh"

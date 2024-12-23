@@ -3,7 +3,7 @@
 
 #include "clock.hh"
 #include "coord.hh"
-#include "constexpr_utils.hh"
+#include "array.hh"
 #include "enum.hh"
 #include "file.hh"
 #include "optional.hh"
@@ -64,8 +64,9 @@ public:
     // costly, so this is not strictly random access
     using iterator_category = std::bidirectional_iterator_tag;
 
-    BufferIterator() noexcept : m_buffer{nullptr}, m_line{} {}
+    BufferIterator() = default;
     BufferIterator(const Buffer& buffer, BufferCoord coord) noexcept;
+    BufferIterator(const StringDataPtr* lines, LineCount line_count, BufferCoord coord) noexcept;
 
     bool operator== (const BufferIterator& iterator) const noexcept;
     auto operator<=>(const BufferIterator& iterator) const noexcept;
@@ -75,7 +76,7 @@ public:
     const char& operator[](size_t n) const noexcept;
     size_t operator- (const BufferIterator& iterator) const;
 
-    explicit operator bool() const { return static_cast<bool>(m_buffer); }
+    explicit operator bool() const { return m_lines; }
 
     BufferIterator operator+ (ByteCount size) const;
     BufferIterator operator- (ByteCount size) const;
@@ -94,9 +95,10 @@ public:
     using Sentinel = BufferCoord;
 
 private:
-    SafePtr<const Buffer> m_buffer;
+    const StringDataPtr* m_lines;
+    [[no_unique_address]] StringView m_line;
+    [[no_unique_address]] LineCount m_line_count;
     BufferCoord m_coord;
-    StringView m_line;
 };
 
 using BufferLines = Vector<StringDataPtr, MemoryDomain::BufferContent>;
@@ -122,6 +124,7 @@ public:
         ReadOnly = 1 << 6,
     };
     friend constexpr bool with_bit_ops(Meta::Type<Flags>) { return true; }
+    friend class BufferIterator;
 
     enum class HistoryId : size_t { First = 0, Invalid = (size_t)-1 };
 
@@ -157,9 +160,12 @@ public:
     String         string(BufferCoord begin, BufferCoord end) const;
     StringView     substr(BufferCoord begin, BufferCoord end) const;
 
+    static BufferCoord advance(ArrayView<const StringDataPtr> lines, BufferCoord coord, ByteCount count);
+    static ByteCount   distance(ArrayView<const StringDataPtr> lines, BufferCoord begin, BufferCoord end);
+
     const char&    byte_at(BufferCoord c) const;
-    ByteCount      distance(BufferCoord begin, BufferCoord end) const;
-    BufferCoord    advance(BufferCoord coord, ByteCount count) const;
+    ByteCount      distance(BufferCoord begin, BufferCoord end) const { return distance(m_lines, begin, end); }
+    BufferCoord    advance(BufferCoord coord, ByteCount count) const { return advance(m_lines, coord, count); }
     BufferCoord    next(BufferCoord coord) const;
     BufferCoord    prev(BufferCoord coord) const;
 

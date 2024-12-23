@@ -10,14 +10,19 @@
 namespace Kakoune
 {
 
+class Context;
 class Window;
 class Buffer;
 class Client;
 class Scope;
 class InputHandler;
 class DisplayLine;
-class KeymapManager;
+
 class AliasRegistry;
+class FaceRegistry;
+class OptionManager;
+class KeymapManager;
+class HookManager;
 
 enum Direction { Backward = -1, Forward = 1 };
 
@@ -104,11 +109,11 @@ public:
     Scope& scope(bool allow_local = true) const;
     Scope* local_scope() const { return m_local_scopes.empty() ? nullptr : m_local_scopes.back(); }
 
-    OptionManager& options() const { return scope().options(); }
-    HookManager&   hooks()   const { return scope().hooks(); }
-    KeymapManager& keymaps() const { return scope().keymaps(); }
-    AliasRegistry& aliases() const { return scope().aliases(); }
-    FaceRegistry&  faces(bool allow_local = true) const { return scope(allow_local).faces(); }
+    OptionManager& options() const;
+    HookManager&   hooks()   const;
+    KeymapManager& keymaps() const;
+    AliasRegistry& aliases() const;
+    FaceRegistry&  faces(bool allow_local = true) const;
 
     void print_status(DisplayLine status) const;
 
@@ -132,11 +137,7 @@ public:
     Flags flags() const { return m_flags; }
 
     JumpList& jump_list() { return m_jump_list; }
-    void push_jump(bool force = false)
-    {
-        if (force or not (m_flags & Flags::Draft))
-            m_jump_list.push(selections());
-    }
+    void push_jump(bool force = false);
 
     template<typename Func>
     void set_last_select(Func&& last_select) { m_last_select = std::forward<Func>(last_select); }
@@ -215,12 +216,9 @@ private:
 
 struct ScopedEdition
 {
-    ScopedEdition(Context& context)
-        : m_context{context},
-          m_buffer{context.has_buffer() ? &context.buffer() : nullptr}
-    { if (m_buffer) m_context.begin_edition(); }
-
-    ~ScopedEdition() { if (m_buffer) m_context.end_edition(); }
+    ScopedEdition(Context& context);
+    ~ScopedEdition();
+    ScopedEdition(const ScopedEdition&) = delete;
 
     Context& context() const { return m_context; }
 private:
@@ -230,14 +228,10 @@ private:
 
 struct ScopedSelectionEdition
 {
-    ScopedSelectionEdition(Context& context)
-        : m_context{context},
-          m_buffer{not (m_context.flags() & Context::Flags::Draft) and context.has_buffer() ? &context.buffer() : nullptr}
-    { if (m_buffer) m_context.m_selection_history.begin_edition(); }
-    ScopedSelectionEdition(ScopedSelectionEdition&& other) : m_context{other.m_context}, m_buffer{other.m_buffer}
-    { other.m_buffer = nullptr; }
+    ScopedSelectionEdition(Context& context);
+    ScopedSelectionEdition(ScopedSelectionEdition&& other);
+    ~ScopedSelectionEdition();
 
-    ~ScopedSelectionEdition() { if (m_buffer) m_context.m_selection_history.end_edition(); }
 private:
     Context& m_context;
     SafePtr<Buffer> m_buffer;

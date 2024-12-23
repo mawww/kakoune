@@ -1,10 +1,8 @@
 #include "context.hh"
 
-#include "alias_registry.hh"
 #include "client.hh"
-#include "face_registry.hh"
+#include "scope.hh"
 #include "buffer_manager.hh"
-#include "hook_manager.hh"
 #include "register_manager.hh"
 #include "window.hh"
 
@@ -62,6 +60,12 @@ Scope& Context::scope(bool allow_local) const
     return GlobalScope::instance();
 }
 
+OptionManager& Context::options() const { return scope().options(); }
+HookManager&   Context::hooks()   const { return scope().hooks(); }
+KeymapManager& Context::keymaps() const { return scope().keymaps(); }
+AliasRegistry& Context::aliases() const { return scope().aliases(); }
+FaceRegistry&  Context::faces(bool allow_local) const { return scope(allow_local).faces(); }
+
 void Context::set_client(Client& client)
 {
     kak_assert(not has_client());
@@ -80,6 +84,12 @@ void Context::print_status(DisplayLine status) const
 {
     if (has_client())
         client().print_status(std::move(status));
+}
+
+void Context::push_jump(bool force)
+{
+    if (force or not (m_flags & Flags::Draft))
+        m_jump_list.push(selections());
 }
 
 void JumpList::push(SelectionList jump, Optional<size_t> index)
@@ -428,4 +438,22 @@ void Context::set_name(String name) {
     String old_name = std::exchange(m_name, std::move(name));
     hooks().run_hook(Hook::ClientRenamed, format("{}:{}", old_name, m_name), *this);
 }
+
+ScopedEdition::ScopedEdition(Context& context)
+    : m_context{context},
+      m_buffer{context.has_buffer() ? &context.buffer() : nullptr}
+{ if (m_buffer) m_context.begin_edition(); }
+
+ScopedEdition::~ScopedEdition() { if (m_buffer) m_context.end_edition(); }
+
+ScopedSelectionEdition::ScopedSelectionEdition(Context& context)
+    : m_context{context},
+      m_buffer{not (m_context.flags() & Context::Flags::Draft) and context.has_buffer() ? &context.buffer() : nullptr}
+{ if (m_buffer) m_context.m_selection_history.begin_edition(); }
+
+ScopedSelectionEdition::ScopedSelectionEdition(ScopedSelectionEdition&& other) : m_context{other.m_context}, m_buffer{other.m_buffer}
+{ other.m_buffer = nullptr; }
+
+ScopedSelectionEdition::~ScopedSelectionEdition() { if (m_buffer) m_context.m_selection_history.end_edition(); }
+
 }
