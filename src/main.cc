@@ -689,16 +689,6 @@ pid_t fork_server_to_background()
 
 std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
 {
-    if (ui_type == UIType::Terminal and not isatty(0))
-    {
-        // move stdin to another fd, and restore tty as stdin
-        int fd = dup(0);
-        int tty = open("/dev/tty", O_RDONLY);
-        dup2(tty, 0);
-        close(tty);
-        create_fifo_buffer("*stdin*", fd, Buffer::Flags::None, AutoScroll::NotInitially);
-    }
-
     auto ui = make_ui(ui_type);
 
     static SignalHandler old_handler = set_signal_handler(SIGTSTP, [](int sig) {
@@ -885,6 +875,16 @@ int run_server(StringView session, StringView server_init,
     int exit_status = 0;
     try
     {
+        if (ui_type == UIType::Terminal and not isatty(0))
+        {
+            // move stdin to another fd, and restore tty as stdin
+            int fd = dup(0);
+            int tty = open("/dev/tty", O_RDONLY);
+            dup2(tty, 0);
+            close(tty);
+            create_fifo_buffer("*stdin*", fd, Buffer::Flags::None, AutoScroll::NotInitially);
+        }
+
         if (not server.is_daemon())
         {
             local_client = client_manager.create_client(
