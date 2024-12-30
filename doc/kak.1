@@ -24,6 +24,10 @@
 .Op Ar file ...
 .
 .Nm
+.Fl quote Sy raw|shell|kakoune
+.Op Ar string ...
+.
+.Nm
 .Fl p Ar session_id
 .
 .Nm
@@ -150,6 +154,12 @@ Remove sessions that were terminated in an incorrect state
 Begin in
 .Em readonly mode ,
 all the buffers opened will not be written to disk.
+.
+.It Fl quote Sy raw|shell|kakoune Op Ar string ...
+Escape one or more
+.Ar strings
+for interpolation into kakoune or shell scripts.
+Multiple strings will be escaped first and then joined with spaces inbetween.
 .
 .It Sy + Ns Ar line Ns Oo Sy \&: Ns Ar column Oc | Sy +:
 Specify a target line and column for the first file.
