@@ -312,6 +312,14 @@ nix-env -iA nixpkgs.kakoune
 --------------------------------
 ====
 
+[TIP]
+.pkgsrc (NetBSD, SmartOS, macOS, Linux, etc)
+====
+--------------------------------
+pkg_add kakoune
+--------------------------------
+====
+
 Running
 ~~~~~~~
 
