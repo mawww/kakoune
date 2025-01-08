@@ -1487,7 +1487,7 @@ private:
             LineCount inserted_count = 0;
             for (auto sel : selections)
             {
-                buffer.insert(sel.max().line + inserted_count + 1,
+                buffer.insert({sel.max().line + inserted_count, buffer[sel.max().line].length() - 1},
                               String{'\n', CharCount{count}});
                 for (int i = 0; i < count; ++i)
                     new_sels.push_back({sel.max().line + inserted_count + i + 1});
