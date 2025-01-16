@@ -1482,13 +1482,16 @@ private:
             break;
         case InsertMode::OpenLineBelow:
         {
+            const bool draft = ( context().flags() == Context::Flags::Draft );
             Vector<Selection> new_sels;
             count = count > 0 ? count : 1;
             LineCount inserted_count = 0;
             for (auto sel : selections)
             {
-                buffer.insert({sel.max().line + inserted_count, buffer[sel.max().line].length() - 1},
-                              String{'\n', CharCount{count}});
+                buffer.insert({sel.max().line + inserted_count,
+                              buffer[sel.max().line].length() - 1},
+                              String{'\n', CharCount{count}},
+                              draft);
                 for (int i = 0; i < count; ++i)
                     new_sels.push_back({sel.max().line + inserted_count + i + 1});
                 inserted_count += count;
