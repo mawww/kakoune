@@ -310,7 +310,7 @@ are exclusively available to built-in options.
     then rename it to the target file.
 
 *debug* `flags(hooks|shell|profile|keys|commands)`::
-    dump various debug information in the '\*debug*' buffer
+    dump various debug information in the `\*debug*` buffer
 
 *idle_timeout* `int`::
     _default_ 50 +
@@ -347,6 +347,10 @@ are exclusively available to built-in options.
         *terminal_set_title*:::
             if *yes* or *true*, the terminal emulator title will
             be changed
+
+        *terminal_title*:::
+            if set, the terminal title will be set to this string
+            else it will be derived from the modeline.
 
         *terminal_status_on_top*:::
             if *yes*, or *true* the status line will be placed
@@ -400,7 +404,7 @@ status line using the `echo` command:
 echo %opt{BOM}
 --------------
 
-The current values for all options can be dumped to the *\*debug*\* buffer using
+The current values for all options can be dumped to the `\*debug*` buffer using
 the following command:
 
 -------------

@@ -9,6 +9,7 @@
 #include "utils.hh"
 
 #include <bit>
+#include <algorithm>
 
 namespace Kakoune
 {
@@ -54,11 +55,11 @@ struct CharacterClass
         if (ignore_case)
             cp = to_lower(cp);
 
-        for (auto& range : ranges)
+        for (auto& [min, max] : ranges)
         {
-            if (cp < range.min)
+            if (cp < min)
                 break;
-            else if (cp <= range.max)
+            else if (cp <= max)
                 return not negative;
         }
 
@@ -106,11 +107,11 @@ struct CompiledRegex : UseMemoryDomain<MemoryDomain::Regex>
         } literal;
         int16_t character_class_index;
         CharacterType character_type;
-        int16_t jump_target;
+        int16_t jump_offset;
         int16_t save_index;
         struct Split
         {
-            int16_t target;
+            int16_t offset;
             bool prioritize_parent : 1;
         } split;
         bool line_start;
@@ -155,6 +156,7 @@ struct CompiledRegex : UseMemoryDomain<MemoryDomain::Regex>
     {
         static constexpr Codepoint count = 256;
         using OffsetLimits = std::numeric_limits<uint8_t>;
+        char start_byte = 0;
         uint8_t offset = 0;
         bool map[count];
     };
@@ -210,11 +212,12 @@ constexpr bool is_direction(RegexMode mode)
            (mode & ~(RegexMode::Forward | RegexMode::Backward)) == RegexMode{0};
 }
 
-template<typename It, typename=void>
+template<typename It>
 struct SentinelType { using Type = It; };
 
 template<typename It>
-struct SentinelType<It, void_t<typename It::Sentinel>> { using Type = typename It::Sentinel; };
+    requires requires { typename It::Sentinel; }
+struct SentinelType<It> { using Type = typename It::Sentinel; };
 
 template<typename Iterator, RegexMode mode>
     requires (has_direction(mode))
@@ -257,8 +260,6 @@ public:
         if (flags & RegexExecFlags::NotInitialNull and begin == end)
             return false;
 
-        constexpr bool search = (mode & RegexMode::Search);
-
         const ExecConfig config{
             Sentinel{forward ? begin : end},
             Sentinel{forward ? end : begin},
@@ -267,24 +268,11 @@ public:
             flags
         };
 
-        Iterator start = forward ? begin : end;
-        if (const auto& start_desc = forward ? m_program.forward_start_desc : m_program.backward_start_desc)
-        {
-            if (search)
-            {
-                start = find_next_start(start, config, *start_desc);
-                if (start == config.end) // If start_desc is not null, it means we consume at least one char
-                    return false;
-            }
-            else if (start != config.end)
-            {
-                const unsigned char c = forward ? *start : *utf8::previous(start, config.end);
-                if (not start_desc->map[c])
-                    return false;
-            }
-        }
+        exec_program(forward ? begin : end, config, idle_func);
 
-        return exec_program(std::move(start), config, idle_func);
+        while (not m_threads.next_is_empty())
+            release_saves(m_threads.pop_next().saves);
+        return m_found_match;
     }
 
     ArrayView<const Iterator> captures() const
@@ -351,10 +339,10 @@ private:
             --saves.refcount;
     };
 
-    struct alignas(int32_t) Thread
+    struct Thread
     {
-        int16_t inst;
-        int16_t saves;
+        const CompiledRegex::Instruction* inst;
+        int saves;
     };
 
     using StartDesc = CompiledRegex::StartDesc;
@@ -370,9 +358,9 @@ private:
 
     // Steps a thread until it consumes the current character, matches or fail
     [[gnu::always_inline]]
-    void step_thread(const CompiledRegex::Instruction* instructions, const Iterator& pos, Codepoint cp,
-                     uint16_t current_step, Thread thread, const ExecConfig& config)
+    void step_current_thread(const Iterator& pos, Codepoint cp, uint16_t current_step, const ExecConfig& config)
     {
+        Thread thread = m_threads.pop_current();
         auto failed = [this, &thread]() {
             release_saves(thread.saves);
         };
@@ -382,7 +370,7 @@ private:
 
         while (true)
         {
-            auto& inst = instructions[thread.inst++];
+            auto& inst = *thread.inst++;
             // if this instruction was already executed for this step in another thread,
             // then this thread is redundant and can be dropped
             if (inst.last_step == current_step)
@@ -416,19 +404,20 @@ private:
                         return consumed();
                     return failed();
                 case CompiledRegex::CharClass:
-                    if (pos == config.end)
-                        return failed();
-                    return m_program.character_classes[inst.param.character_class_index].matches(cp) ? consumed() : failed();
+                    if (pos != config.end and
+                        m_program.character_classes[inst.param.character_class_index].matches(cp))
+                        return consumed();
+                    return failed();
                 case CompiledRegex::CharType:
-                    if (pos == config.end)
-                        return failed();
-                    return is_ctype(inst.param.character_type, cp) ? consumed() : failed();
+                    if (pos != config.end and is_ctype(inst.param.character_type, cp))
+                        return consumed();
+                    return failed();
                 case CompiledRegex::Jump:
-                    thread.inst = inst.param.jump_target;
+                    thread.inst = &inst + inst.param.jump_offset;
                     break;
                 case CompiledRegex::Split:
-                    if (auto target = inst.param.split.target;
-                        instructions[target].last_step != current_step)
+                    if (auto* target = &inst + inst.param.split.offset;
+                        target->last_step != current_step)
                     {
                         if (thread.saves >= 0)
                             ++m_saves[thread.saves].refcount;
@@ -471,33 +460,42 @@ private:
         return failed();
     }
 
-    bool exec_program(Iterator pos, const ExecConfig& config, auto&& idle_func)
+    void exec_program(const Iterator& start, const ExecConfig& config, auto&& idle_func)
     {
         kak_assert(m_threads.current_is_empty() and m_threads.next_is_empty());
+        m_threads.ensure_initial_capacity();
         release_saves(m_captures);
         m_captures = -1;
-        m_threads.ensure_initial_capacity();
-
-        const int16_t first_inst = forward ? 0 : m_program.first_backward_inst;
-        m_threads.push_current({first_inst, -1});
+        m_found_match = false;
 
         const auto* start_desc = (forward ? m_program.forward_start_desc : m_program.backward_start_desc).get();
-        auto next_start = pos;
+        Iterator next_start = start;
+        if (start_desc)
+        {
+            if constexpr (mode & RegexMode::Search)
+                next_start = find_next_start(start, config.end, *start_desc);
+            if (next_start == config.end or // Non null start_desc means we consume at least one char
+                (not (mode & RegexMode::Search) and
+                  not start_desc->map[static_cast<unsigned char>(forward ? *start : *std::prev(start))]))
+                return;
+        }
 
-        constexpr bool search = mode & RegexMode::Search;
-        constexpr bool any_match = mode & RegexMode::AnyMatch;
-        ConstArrayView<CompiledRegex::Instruction> insts{m_program.instructions};
+        const auto insts = forward ? ArrayView(m_program.instructions).subrange(0, m_program.first_backward_inst)
+                                   : ArrayView(m_program.instructions).subrange(m_program.first_backward_inst);
+        m_threads.push_current({insts.begin(), -1});
+
         uint16_t current_step = -1;
-        m_found_match = false;
-        while (true) // Iterate on all codepoints and once at the end
+        uint8_t idle_count = 0; // Run idle loop every 256 * 65536 == 16M codepoints
+        Iterator pos = next_start;
+        while (pos != config.end)
         {
             if (++current_step == 0)
             {
-                idle_func();
+                if (++idle_count == 0)
+                    idle_func();
 
                 // We wrapped, avoid potential collision on inst.last_step by resetting them
-                for (auto& inst : forward ? insts.subrange(0, m_program.first_backward_inst)
-                                          : insts.subrange(m_program.first_backward_inst))
+                for (auto& inst : insts)
                     inst.last_step = 0;
                 current_step = 1; // step 0 is never valid
             }
@@ -506,38 +504,61 @@ private:
             Codepoint cp = codepoint(next, config);
 
             while (not m_threads.current_is_empty())
-                step_thread(insts.pointer(), pos, cp, current_step, m_threads.pop_current(), config);
+                step_current_thread(pos, cp, current_step, config);
 
-            if (pos == config.end or
-                (m_threads.next_is_empty() and (not search or m_found_match)) or
-                (m_found_match and any_match))
-            {
-                while (not m_threads.next_is_empty())
-                    release_saves(m_threads.pop_next().saves);
-                return m_found_match;
-            }
-
-            if (search and not m_found_match)
+            if ((mode & RegexMode::Search) and not m_found_match)
             {
                 if (start_desc)
                 {
                     if (pos == next_start)
-                        next_start = find_next_start(next, config, *start_desc);
+                        next_start = find_next_start(next, config.end, *start_desc);
                     if (m_threads.next_is_empty())
                         next = next_start;
                 }
                 if (not start_desc or next == next_start)
-                    m_threads.push_next({first_inst, -1});
+                    m_threads.push_next({insts.begin(), -1});
             }
+            else if (m_threads.next_is_empty() or (m_found_match and (mode & RegexMode::AnyMatch)))
+                return;
+
             pos = next;
             m_threads.swap_next();
         }
+
+        if (++current_step == 0)
+        {
+            for (auto& inst : insts)
+                inst.last_step = 0;
+            current_step = 1; // step 0 is never valid
+        }
+        while (not m_threads.current_is_empty())
+            step_current_thread(pos, -1, current_step, config);
     }
 
-    static Iterator find_next_start(Iterator start, const ExecConfig& config, const StartDesc& start_desc)
+    static Iterator find_next_start(const Iterator& start, const Sentinel& end, const StartDesc& start_desc)
     {
         auto pos = start;
-        while (pos != config.end)
+        if (char start_byte = start_desc.start_byte)
+        {
+            while (pos != end)
+            {
+                if constexpr (forward)
+                {
+                    if (*pos == start_byte)
+                       return utf8::advance(pos, start, -CharCount(start_desc.offset));
+                    ++pos;
+                }
+                else
+                {
+                    auto prev = utf8::previous(pos, end);
+                    if (*prev == start_byte)
+                       return utf8::advance(pos, start, CharCount(start_desc.offset));
+                    pos = prev;
+                }
+            }
+        }
+
+        while (pos != end)
         {
             static_assert(StartDesc::count <= 256, "start desc should be ascii only");
             if constexpr (forward)
@@ -548,9 +569,9 @@ private:
             }
             else
             {
-                auto prev = utf8::previous(pos, config.end);
+                auto prev = utf8::previous(pos, end);
                 if (start_desc.map[static_cast<unsigned char>(*prev)])
-                    return pos;
+                    return utf8::advance(pos, start, CharCount(start_desc.offset));
                 pos = prev;
             }
         }
@@ -652,10 +673,14 @@ private:
         bool current_is_empty() const { return m_current == m_next_begin; }
         bool next_is_empty() const { return m_next_end == m_next_begin; }
 
+        [[gnu::always_inline]]
         void push_current(Thread thread) { m_data[decrement(m_current)] = thread; grow_ifn(true); }
+        [[gnu::always_inline]]
         Thread pop_current() { return m_data[post_increment(m_current)]; }
 
+        [[gnu::always_inline]]
         void push_next(Thread thread) { m_data[post_increment(m_next_end)] = thread; grow_ifn(false); }
+        [[gnu::always_inline]]
         Thread pop_next() { return m_data[decrement(m_next_end)]; }
 
         void swap_next()
@@ -675,11 +700,16 @@ private:
             m_capacity = initial_capacity;
         }
 
+        [[gnu::always_inline]]
         void grow_ifn(bool pushed_current)
         {
-            if (m_current != m_next_end)
-                return;
+            if (m_current == m_next_end)
+                grow(pushed_current);
+        }
 
+        [[gnu::noinline]]
+        void grow(bool pushed_current)
+        {
             const auto new_capacity = m_capacity * 2;
             Thread* new_data = new Thread[new_capacity];
             Thread* old_data = m_data.get();

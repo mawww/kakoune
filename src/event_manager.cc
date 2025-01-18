@@ -73,7 +73,7 @@ EventManager::~EventManager()
     kak_assert(m_timers.empty());
 }
 
-bool EventManager::handle_next_events(EventMode mode, sigset_t* sigmask, bool block)
+bool EventManager::handle_next_events(EventMode mode, sigset_t* sigmask, Optional<Nanoseconds> timeout)
 {
     int max_fd = 0;
     fd_set rfds, wfds, efds;
@@ -97,12 +97,10 @@ bool EventManager::handle_next_events(EventMode mode, sigset_t* sigmask, bool bl
             FD_SET(fd, &efds);
     }
 
-    bool with_timeout = false;
     if (m_has_forced_fd)
-        block = false;
+        timeout.reset();
 
-    timespec ts{};
-    if (block and not m_timers.empty())
+    if (not m_timers.empty())
     {
         auto next_date = (*std::min_element(
             m_timers.begin(), m_timers.end(), [](Timer* lhs, Timer* rhs) {
@@ -111,15 +109,16 @@ bool EventManager::handle_next_events(EventMode mode, sigset_t* sigmask, bool bl
 
         if (next_date != TimePoint::max())
         {
-            with_timeout = true;
-            using namespace std::chrono; using ns = std::chrono::nanoseconds;
-            auto nsecs = std::max(ns(0), duration_cast<ns>(next_date - Clock::now()));
-            auto secs = duration_cast<seconds>(nsecs);
-            ts = timespec{ (time_t)secs.count(), (long)(nsecs - secs).count() };
+            auto remaining = std::max(Nanoseconds(0),
+                                      std::chrono::duration_cast<Nanoseconds>(next_date - Clock::now()));
+            timeout = timeout ? std::min(*timeout, remaining) : remaining;
         }
     }
-    int res = pselect(max_fd + 1, &rfds, &wfds, &efds,
-                      not block or with_timeout ? &ts : nullptr, sigmask);
+    auto ts = timeout.map([](auto nsecs) {
+        auto secs = std::chrono::duration_cast<std::chrono::seconds>(nsecs);
+        return timespec{(time_t)secs.count(), (long)(nsecs - secs).count()};
+    });
+    int res = pselect(max_fd + 1, &rfds, &wfds, &efds, ts ? &*ts : nullptr, sigmask);
 
     // copy forced fds *after* select, so that signal handlers can write to
     // m_forced_fd, interupt select, and directly be serviced.
@@ -164,7 +163,7 @@ void EventManager::force_signal(int fd)
 void EventManager::handle_urgent_events()
 {
     if (has_instance())
-        instance().handle_next_events(EventMode::Urgent, nullptr, false);
+        instance().handle_next_events(EventMode::Urgent, nullptr, Nanoseconds{});
 }
 
 

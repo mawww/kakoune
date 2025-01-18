@@ -1,3 +1,4 @@
+set-option global autocomplete prompt
 define-command foo %{
-    prompt -shell-script-completion %{ printf 'foo\nbar\nhaz\n' } ': ' %{exec i %val{text} <esc>}
+    prompt -shell-script-completion %{ printf 'foo\nbar\nbaz\n' } ': ' %{exec i %val{text} <esc>}
 }

@@ -16,7 +16,7 @@ hook global BufSetOption filetype=asciidoc %{
     set-option buffer comment_block_end '////'
 }
 
-hook global BufSetOption filetype=(c|cpp|dart|gluon|go|java|javascript|objc|odin|php|pony|protobuf|rust|sass|scala|scss|swift|typescript|groovy) %{
+hook global BufSetOption filetype=(c|cpp|dart|gluon|go|java|javascript|objc|odin|php|pony|protobuf|rust|sass|scala|scss|swift|typescript|typst|groovy) %{
     set-option buffer comment_line '//'
     set-option buffer comment_block_begin '/*'
     set-option buffer comment_block_end '*/'
@@ -75,7 +75,7 @@ hook global BufSetOption filetype=(html|xml) %{
     set-option buffer comment_block_end '-->'
 }
 
-hook global BufSetOption filetype=(latex|mercury) %{
+hook global BufSetOption filetype=(erlang|latex|mercury) %{
     set-option buffer comment_line '%'
 }
 
@@ -118,7 +118,7 @@ hook global BufSetOption filetype=perl %{
     set-option buffer comment_block_end ']'
 }
 
-hook global BufSetOption filetype=(pug|zig|cue|hare) %{
+hook global BufSetOption filetype=(pug|zig|cue|hare|gleam) %{
     set-option buffer comment_line '//'
 }
 

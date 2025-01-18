@@ -1,7 +1,6 @@
 #ifndef command_manager_hh_INCLUDED
 #define command_manager_hh_INCLUDED
 
-#include "coord.hh"
 #include "completion.hh"
 #include "array_view.hh"
 #include "shell_manager.hh"
@@ -12,7 +11,6 @@
 #include "hash_map.hh"
 
 #include <functional>
-#include <initializer_list>
 
 namespace Kakoune
 {
@@ -24,7 +22,6 @@ using CommandFunc = std::function<void (const ParametersParser& parser,
                                         const ShellContext& shell_context)>;
 
 using CommandCompleter = std::function<Completions (const Context& context,
-                                                    CompletionFlags,
                                                     CommandParameters,
                                                     size_t, ByteCount)>;
 
@@ -120,7 +117,7 @@ public:
 
     struct Completer
     {
-        Completions operator()(const Context& context, CompletionFlags flags,
+        Completions operator()(const Context& context,
                               StringView command_line, ByteCount cursor_pos);
 
     private:
@@ -130,8 +127,8 @@ public:
 
     struct NestedCompleter
     {
-        Completions operator()(const Context& context, CompletionFlags flags,
-                               CommandParameters params, size_t token_to_complete, ByteCount pos_in_token);
+        Completions operator()(const Context& context, CommandParameters params,
+                               size_t token_to_complete, ByteCount pos_in_token);
 
     private:
         String m_last_complete_command;

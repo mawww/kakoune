@@ -34,7 +34,7 @@ define-command diff-jump -params .. -docstring %{
         set-register c %val{cursor_column}
         # If there is a "diff" line, we don't need to look further back.
         try %{
-            execute-keys %{<a-l><semicolon><a-?>^(?:> )*diff\b<ret>x}
+            execute-keys %{,<a-l><semicolon><a-?>^(?:> )*diff\b<ret>x}
         } catch %{
             # A single file diff won't have a diff line. Start parsing from
             # the buffer start, so we can tell if +++/--- lines are headers
@@ -98,7 +98,11 @@ define-command -hidden diff-parse -params 2.. %{
         set-register e nop
         set-register | %{
             eval set -- "$kak_quoted_reg_a"
-            perl "${kak_runtime}/rc/filetype/diff-parse.pl" "$@" >"$kak_command_fifo"
+            if ! result=$(perl "${kak_runtime}/rc/filetype/diff-parse.pl" "$@"); then
+                printf 'set-register e %s\n' "fail $result"
+            else
+                printf '%s\n' "$result"
+            fi >"$kak_command_fifo"
         }
         execute-keys <a-|><ret>
         %reg{e}

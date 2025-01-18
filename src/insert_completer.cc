@@ -2,6 +2,7 @@
 
 #include "buffer_manager.hh"
 #include "buffer_utils.hh"
+#include "debug.hh"
 #include "client.hh"
 #include "command_manager.hh"
 #include "changes.hh"
@@ -16,7 +17,6 @@
 #include "utf8_iterator.hh"
 #include "user_interface.hh"
 
-#include <numeric>
 #include <utility>
 
 namespace Kakoune
@@ -416,7 +416,7 @@ InsertCompleter::~InsertCompleter()
     m_options.unregister_watcher(*this);
 }
 
-void InsertCompleter::select(int index, bool relative, Vector<Key>* keystrokes)
+void InsertCompleter::select(int index, bool relative, FunctionRef<void (Key)> record_key)
 {
     m_enabled = true;
     if (not setup_ifn())
@@ -453,14 +453,13 @@ void InsertCompleter::select(int index, bool relative, Vector<Key>* keystrokes)
         m_context.client().menu_select(m_current_candidate);
     }
 
-    if (keystrokes)
     {
         for (auto i = 0_byte; i < prefix_len; ++i)
-            keystrokes->emplace_back(Key::Backspace);
+            record_key(Key::Backspace);
         for (auto i = 0_byte; i < suffix_len; ++i)
-            keystrokes->emplace_back(Key::Delete);
+            record_key(Key::Delete);
         for (auto& c : candidate.completion)
-            keystrokes->emplace_back(c);
+            record_key(c);
     }
 
     if (not candidate.on_select.empty())
@@ -482,12 +481,12 @@ auto& get_last(BufferRange& range) { return range.end; }
 
 bool InsertCompleter::has_candidate_selected() const
 {
-    return m_current_candidate >= 0 and m_current_candidate < m_completions.candidates.size() - 1;
+    return m_completions.is_valid() and m_current_candidate >= 0 and m_current_candidate < m_completions.candidates.size() - 1;
 }
 
 void InsertCompleter::try_accept()
 {
-    if (m_completions.is_valid() and has_candidate_selected())
+    if (has_candidate_selected())
         reset();
 }
 

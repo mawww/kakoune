@@ -133,9 +133,9 @@ be used:
 *<F1>*, *<F2>*, ...*<F12>*::
     Function keys.
 
-*<semicolon>*, *<percent>*::
-    The *;* and *%* characters, these keys allow reducing the amount of
-    backslash escaping in scripts (for example, `exec \%` becomes `exec
+*<semicolon>*, *<percent>*, *<quote>*, *<dquote>*::
+    The *;*, *%*, *'* and *"* characters, these keys allow reducing the amount
+    of backslash escaping in scripts (for example, `exec \%` becomes `exec
     <percent>`)
 
 NOTE: Although Kakoune allows many key combinations to be mapped, not every

@@ -1,12 +1,13 @@
 #include "assert.hh"
 
 #include "backtrace.hh"
-#include "buffer_utils.hh"
+#include "format.hh"
+#include "file.hh"
 #include "exception.hh"
+#include "debug.hh"
 
 #include <sys/types.h>
 #include <unistd.h>
-#include <signal.h>
 
 namespace Kakoune
 {

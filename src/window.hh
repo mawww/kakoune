@@ -37,8 +37,8 @@ public:
 
     const DisplayBuffer& update_display_buffer(const Context& context);
 
-    Optional<DisplayCoord> display_position(BufferCoord coord) const;
-    BufferCoord buffer_coord(DisplayCoord coord) const;
+    Optional<DisplayCoord> display_coord(BufferCoord coord) const;
+    Optional<BufferCoord> buffer_coord(DisplayCoord coord) const;
 
     Buffer& buffer() const { return *m_buffer; }
 

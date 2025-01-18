@@ -26,7 +26,7 @@ Scopes are named as follows:
     In other terms, a window is *not* a client (like a terminal or GUI)
     but one of many 'views' into a buffer.
 
-    There is a N:1 relationship between windows and buffers; once a 
+    There is a N:1 relationship between windows and buffers; once a
     window is linked to a buffer, the window's buffer never changes.
     Windows store a set of selections and the scroll position.
 

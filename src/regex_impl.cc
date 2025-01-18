@@ -1,14 +1,14 @@
 #include "regex_impl.hh"
 
-#include "exception.hh"
 #include "string.hh"
 #include "unicode.hh"
 #include "unit_tests.hh"
 #include "utf8.hh"
 #include "utf8_iterator.hh"
-#include "string_utils.hh"
+#include "format.hh"
 #include "vector.hh"
 #include "utils.hh"
+#include "ranges.hh"
 
 #include <cstdio>
 #include <cstring>
@@ -18,6 +18,9 @@ namespace Kakoune
 {
 
 constexpr Codepoint CompiledRegex::StartDesc::count;
+
+namespace
+{
 
 struct ParsedRegex
 {
@@ -73,9 +76,6 @@ struct ParsedRegex
     uint32_t capture_count;
 };
 
-namespace
-{
-
 template<RegexMode mode = RegexMode::Forward>
 struct Children
 {
@@ -123,12 +123,14 @@ struct Children
     const Index m_index;
 };
 
-}
 
 // Recursive descent parser based on naming used in the ECMAScript
 // standard, although the syntax is not fully compatible.
 struct RegexParser
 {
+    static ParsedRegex parse(StringView re) { return RegexParser{re}.m_parsed_regex; }
+
+private:
     RegexParser(StringView re)
         : m_regex{re}, m_pos{re.begin(), re}
     {
@@ -138,11 +140,6 @@ struct RegexParser
         kak_assert(root == 0);
     }
 
-    ParsedRegex get_parsed_regex() { return std::move(m_parsed_regex); }
-
-    static ParsedRegex parse(StringView re) { return RegexParser{re}.get_parsed_regex(); }
-
-private:
     struct InvalidPolicy
     {
         Codepoint operator()(Codepoint cp) const { throw regex_error{"Invalid utf8 in regex"}; }
@@ -268,9 +265,12 @@ private:
                 }
                 m_pos = Iterator{it, m_regex};
                 NodeIndex lookaround = alternative(op);
-                if (at_end() or *m_pos++ != ')')
+                if (auto end_pos = m_pos; at_end() or *m_pos++ != ')')
+                {
+                    if (*end_pos == '|')
+                        parse_error("Alternations cannot be used in lookarounds");
                     parse_error("unclosed parenthesis");
-
+                }
                 validate_lookaround(lookaround);
                 return lookaround;
             }
@@ -706,7 +706,7 @@ private:
     {
         auto& node = get_node(index);
 
-        const uint32_t start_pos = (uint32_t)m_program.instructions.size();
+        const OpIndex start_pos = op_count();
         const bool ignore_case = node.ignore_case;
 
         const bool save = (node.op == ParsedRegex::Alternation or node.op == ParsedRegex::Sequence) and
@@ -746,14 +746,17 @@ private:
                     if (child != index+1)
                         push_inst(CompiledRegex::Split);
                 }
-                auto split_pos = m_program.instructions.size();
+                auto split_pos = op_count();
 
                 const auto end = node.children_end;
                 for (auto child : Children<>{m_parsed_regex, index})
                 {
                     auto node = compile_node<direction>(child);
                     if (child != index+1)
-                        m_program.instructions[--split_pos].param.split = CompiledRegex::Param::Split{.target = node, .prioritize_parent = true};
+                    {
+                        --split_pos;
+                        m_program.instructions[split_pos].param.split = {.offset = offset(node, split_pos), .prioritize_parent = true};
+                    }
                     if (get_node(child).children_end != end)
                     {
                         auto jump = push_inst(CompiledRegex::Jump);
@@ -801,8 +804,8 @@ private:
                 break;
         }
 
-        for (auto& offset : goto_inner_end_offsets)
-            m_program.instructions[offset].param.jump_target = m_program.instructions.size();
+        for (auto& index : goto_inner_end_offsets)
+            m_program.instructions[index].param.jump_offset = offset(op_count(), index);
 
         if (save)
             push_inst(CompiledRegex::Save, {.save_index=int16_t(node.value * 2 + (forward ? 1 : 0))});
@@ -810,19 +813,29 @@ private:
         return start_pos;
     }
 
+    OpIndex op_count() const
+    {
+        return static_cast<OpIndex>(m_program.instructions.size());
+    }
+
+    static OpIndex offset(OpIndex to, OpIndex from)
+    {
+        return static_cast<OpIndex>(to - from);
+    }
+
     template<RegexMode direction>
     OpIndex compile_node(ParsedRegex::NodeIndex index)
     {
         auto& node = get_node(index);
 
-        const OpIndex start_pos = (OpIndex)m_program.instructions.size();
+        const OpIndex start_pos = op_count();
         Vector<OpIndex> goto_ends;
 
         auto& quantifier = node.quantifier;
 
         if (quantifier.allows_none())
         {
-            auto split_pos = push_inst(CompiledRegex::Split, {.split={.target=0, .prioritize_parent=quantifier.greedy}});
+            auto split_pos = push_inst(CompiledRegex::Split, {.split={.offset=0, .prioritize_parent=quantifier.greedy}});
             goto_ends.push_back(split_pos);
         }
 
@@ -832,18 +845,18 @@ private:
             inner_pos = compile_node_inner<direction>(index);
 
         if (quantifier.allows_infinite_repeat())
-            push_inst(CompiledRegex::Split, {.split = {.target=inner_pos, .prioritize_parent=not quantifier.greedy}});
+            push_inst(CompiledRegex::Split, {.split = {.offset=offset(inner_pos, op_count()), .prioritize_parent=not quantifier.greedy}});
         // Write the node as an optional match for the min -> max counts
         else for (int i = std::max((int16_t)1, quantifier.min); // STILL UGLY !
                   i < quantifier.max; ++i)
         {
-            auto split_pos = push_inst(CompiledRegex::Split, {.split={.target=0, .prioritize_parent=quantifier.greedy}});
+            auto split_pos = push_inst(CompiledRegex::Split, {.split={.offset=0, .prioritize_parent=quantifier.greedy}});
             goto_ends.push_back(split_pos);
             compile_node_inner<direction>(index);
         }
 
-        for (auto offset : goto_ends)
-            m_program.instructions[offset].param.split.target = m_program.instructions.size();
+        for (auto index : goto_ends)
+            m_program.instructions[index].param.split.offset = offset(op_count(), index);
 
         return start_pos;
     }
@@ -851,7 +864,7 @@ private:
     OpIndex push_inst(CompiledRegex::Op op, CompiledRegex::Param param = {})
     {
         constexpr auto max_instructions = std::numeric_limits<OpIndex>::max();
-        const auto res = m_program.instructions.size();
+        const auto res = op_count();
         if (res >= max_instructions)
             throw regex_error(format("regex compiled to more than {} instructions", max_instructions));
         m_program.instructions.push_back({ op, 0, param });
@@ -1018,6 +1031,9 @@ private:
             not contains(start_desc.map, false))
             return nullptr;
 
+        if (std::count(std::begin(start_desc.map), std::end(start_desc.map), true) == 1)
+            start_desc.start_byte = find(start_desc.map, true) - std::begin(start_desc.map);
+
         return std::make_unique<CompiledRegex::StartDesc>(start_desc);
     }
 
@@ -1031,7 +1047,7 @@ private:
         {
             auto& inst = m_program.instructions[i];
             if (is_jump(inst.op))
-                m_program.instructions[inst.param.jump_target].last_step = 0xffff; // tag as jump target
+                m_program.instructions[i + inst.param.jump_offset].last_step = 0xffff; // tag as jump target
         }
 
         for (auto block_begin = begin; block_begin < end; )
@@ -1068,14 +1084,16 @@ private:
     ParsedRegex& m_parsed_regex;
 };
 
+}
+
 String dump_regex(const CompiledRegex& program)
 {
     String res;
-    int count = 0;
+    int index = 0;
     for (auto& inst : program.instructions)
     {
         char buf[20];
-        format_to(buf, " {:03}     ", count++);
+        format_to(buf, " {:03}     ", index);
         res += buf;
         switch (inst.op)
         {
@@ -1095,13 +1113,13 @@ String dump_regex(const CompiledRegex& program)
                 res += format("character type {}\n", to_underlying(inst.param.character_type));
                 break;
             case CompiledRegex::Jump:
-                res += format("jump {}\n", inst.param.jump_target);
+                res += format("jump {} ({:03})\n", inst.param.jump_offset, index + inst.param.jump_offset);
                 break;
             case CompiledRegex::Split:
             {
-                res += format("split (prioritize {}) {}\n",
+                res += format("split (prioritize {}) {} ({:03})\n",
                               (inst.param.split.prioritize_parent) ? "parent" : "child",
-                              inst.param.split.target);
+                              inst.param.split.offset, index + inst.param.split.offset);
                 break;
             }
             case CompiledRegex::Save:
@@ -1135,6 +1153,7 @@ String dump_regex(const CompiledRegex& program)
             case CompiledRegex::Match:
                 res += "match\n";
         }
+        ++index;
     }
     auto dump_start_desc = [&](const CompiledRegex::StartDesc& desc, StringView name) {
         res += name + " start desc: [";
@@ -1578,6 +1597,17 @@ auto test_regex = UnitTest{[]{
     }
 
     {
+        TestVM<RegexMode::Backward | RegexMode::Search> vm{"oo(.{3,4}|f)"};
+        kak_assert(vm.backward_start_desc and vm.backward_start_desc->offset == 4);
+        for (int c = 0; c < CompiledRegex::StartDesc::count; ++c)
+            kak_assert(vm.backward_start_desc->map[c] == (c == 'f' or c == 'o'));
+
+        kak_assert(vm.exec("ooxxx", RegexExecFlags::None));
+        kak_assert(vm.exec("oofx", RegexExecFlags::None));
+        kak_assert(not vm.exec("oox😄", RegexExecFlags::None));
+    }
+
+    {
         auto eq = [](const CompiledRegex::NamedCapture& lhs,
                      const CompiledRegex::NamedCapture& rhs) {
             return lhs.name == rhs.name and
@@ -1594,6 +1624,22 @@ auto test_regex = UnitTest{[]{
         kak_assert(eq(vm.named_captures[1], {"month", 2}));
         kak_assert(eq(vm.named_captures[2], {"day", 3}));
     }
+
+    auto check_parse_error = [](StringView re, StringView expected_error) {
+        try
+        {
+            TestVM<>{re};
+            kak_assert(false);
+        }
+        catch (const regex_error& err)
+        {
+            kak_assert(err.what() == String{"regex parse error: "} + expected_error);
+        }
+    };
+
+    check_parse_error("(?=a*)", "Quantifiers cannot be used in lookarounds at '(?=a*)<<<HERE>>>'");
+    check_parse_error("(?=(a))", "Lookaround can only contain literals, any chars or character classes at '(?=(a))<<<HERE>>>'");
+    check_parse_error("(?=a|b)", "Alternations cannot be used in lookarounds at '(?=a|<<<HERE>>>b)'");
 }};
 
 }

@@ -1,6 +1,8 @@
 #ifndef range_hh_INCLUDED
 #define range_hh_INCLUDED
 
+#include <cstddef>
+
 namespace Kakoune
 {
 

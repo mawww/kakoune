@@ -2,7 +2,7 @@
 
 #include "exception.hh"
 #include "ranges.hh"
-#include "string_utils.hh"
+#include "format.hh"
 
 namespace Kakoune
 {
@@ -50,6 +50,7 @@ FaceSpec parse_face(StringView facedesc)
             {
                 case 'u': face.attributes |= Attribute::Underline; break;
                 case 'c': face.attributes |= Attribute::CurlyUnderline; break;
+                case 'U': face.attributes |= Attribute::DoubleUnderline; break;
                 case 'r': face.attributes |= Attribute::Reverse; break;
                 case 'b': face.attributes |= Attribute::Bold; break;
                 case 'B': face.attributes |= Attribute::Blink; break;
@@ -78,6 +79,7 @@ String to_string(Attribute attributes)
     attrs[] {
         { Attribute::Underline, "u" },
         { Attribute::CurlyUnderline, "c" },
+        { Attribute::DoubleUnderline, "U" },
         { Attribute::Reverse, "r" },
         { Attribute::Blink, "B" },
         { Attribute::Bold, "b" },

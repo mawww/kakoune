@@ -110,7 +110,7 @@ src/kak: src/kak$(tag)
 	ln -sf kak$(tag) $@
 
 src/kak$(tag): src/.version.o $(objects)
-	$(CXX) $(KAK_LDFLAGS) $(KAK_CXXFLAGS) $(KAK_LIBS) $(objects) src/.version.o -o $@
+	$(CXX) $(KAK_LDFLAGS) $(KAK_CXXFLAGS) $(objects) src/.version.o $(KAK_LIBS) -o $@
 
 deps = $(shell touch src/.version$(tag).d && find src -type f -name '.*$(tag).d') # Ensure we find one deps for FreeBSD make
 deps != touch src/.version$(tag).d && find src -type f -name '.*$(tag).d' # Ensure we find one deps for FreeBSD make
@@ -201,11 +201,11 @@ install: src/kak installdirs install-debug-$(debug) install-gzip-man-$(gzip_man)
 	cp doc/pages/*.asciidoc $(sharedir)/doc
 	chmod 0644 $(sharedir)/doc/*.asciidoc
 
-install-gzip-man-yes: gzip-man-yes
+install-gzip-man-yes: gzip-man-yes installdirs
 	cp -f doc/kak.1.gz $(mandir)
 	chmod 0644 $(mandir)/kak.1.gz
 
-install-gzip-man-no: gzip-man-no
+install-gzip-man-no: gzip-man-no installdirs
 	cp -f doc/kak.1 $(mandir)
 	chmod 0644 $(mandir)/kak.1
 

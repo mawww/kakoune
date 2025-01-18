@@ -6,12 +6,16 @@ namespace Kakoune
 
 struct UnitTest
 {
+#ifdef KAK_DEBUG
     UnitTest(void (*func)()) : func(func), next(list) { list = this; }
     void (*func)();
     const UnitTest* next;
 
     static void run_all_tests();
     static UnitTest* list;
+#else
+    UnitTest(void (*func)()) {}
+#endif
 };
 
 }

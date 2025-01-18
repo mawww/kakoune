@@ -1,5 +1,6 @@
 #include "shared_string.hh"
-#include "buffer_utils.hh"
+#include "debug.hh"
+#include "format.hh"
 
 namespace Kakoune
 {

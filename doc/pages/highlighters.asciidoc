@@ -41,22 +41,27 @@ highlighter is replaced with the new one.
     using the `Whitespace` face, with the following *options*:
 
     *-lf* <separator>:::
-        a one character long separator that will replace line feeds
+        a one character long separator that will replace line feeds,
+        or an empty string to ignore them.
 
     *-spc* <separator>:::
-        a one character long separator that will replace spaces
+        a one character long separator that will replace spaces,
+        or an empty string to ignore them.
 
     *-nbsp* <separator>:::
-        a one character long separator that will replace non-breakable spaces
+        a one character long separator that will replace non-breakable spaces,
+        or an empty string to ignore them.
 
     *-tab* <separator>:::
-        a one character long separator that will replace tabulations
+        a one character long separator that will replace tabulations,
+        or an empty string to ignore them.
 
     *-tabpad* <separator>:::
         a one character long separator that will be appended to tabulations to honor the *tabstop* option
 
     *-indent* <separator>:::
-        a one character long separator that will replace the first space in indentation according to the *indentwidth* option
+        a one character long separator that will replace the first space in indentation 
+        according to the *indentwidth* option, or an empty string to ignore them.
         This will use the `WhitespaceIndent` face.
 
     *-only-trailing*:::

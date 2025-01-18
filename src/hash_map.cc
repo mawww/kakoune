@@ -2,10 +2,12 @@
 
 #include "clock.hh"
 #include "string.hh"
-#include "buffer_utils.hh"
 #include "unit_tests.hh"
+#include "format.hh"
+#include "debug.hh"
 
 #include <random>
+#include <algorithm>
 #include <unordered_map>
 
 namespace Kakoune

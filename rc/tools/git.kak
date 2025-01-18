@@ -86,7 +86,8 @@ define-command -params 1.. \
         All the optional arguments are forwarded to the git utility
         Available commands:
             add
-            apply      - alias for "patch git apply"
+            apply      - run "patch git apply [<arguments>]"; if buffile is
+                         tracked, use the changes to selected lines instead
             blame      - toggle blame annotations
             blame-jump - show the commit that added the line at cursor
             checkout
@@ -189,23 +190,22 @@ define-command -params 1.. \
         "
     }
 
-    prepare_git_blame_args='
-        if [ -n "${kak_opt_git_blob}" ]; then {
-            contents_fifo=/dev/null
-            set -- "$@" "${kak_opt_git_blob%%:*}" -- "${kak_opt_git_blob#*:}"
-        } else {
-            contents_fifo=$(mktemp -d "${TMPDIR:-/tmp}"/kak-git.XXXXXXXX)/fifo
-            mkfifo ${contents_fifo}
-            echo >${kak_command_fifo} "evaluate-commands -save-regs | %{
-                set-register | %{
-                    contents=\$(cat; printf .)
-                    ( printf %s \"\${contents%.}\" >${contents_fifo} ) >/dev/null 2>&1 &
-                }
-                execute-keys -client ${kak_client} -draft %{%<a-|><ret>}
-            }"
-            set -- "$@" --contents - -- "${kak_buffile}"
-        } fi
-    '
+    diff_buffer_against_rev() {
+        rev=$1 # empty means index
+        shift
+        buffile_relative=${kak_buffile#"$(git rev-parse --show-toplevel)/"}
+        echo >${kak_command_fifo} "evaluate-commands -save-regs | %{
+            set-register | %{ cat >${kak_response_fifo} }
+            execute-keys -draft %{%<a-|><ret>}
+        }"
+        git show "$rev:${buffile_relative}" |
+            diff - ${kak_response_fifo} "$@" |
+            awk -v buffile_relative="$buffile_relative" '
+                NR == 1 { print "--- a/" buffile_relative }
+                NR == 2 { print "+++ b/" buffile_relative }
+                NR > 2
+            '
+    }
 
     blame_toggle() {
         echo >${kak_command_fifo} "try %{
@@ -280,18 +280,34 @@ define-command -params 1.. \
             " show_git_cmd_output show "$commit:$file"
             exit
         } fi
-        eval "$prepare_git_blame_args"
+        if [ -n "${kak_opt_git_blob}" ]; then {
+            set -- "$@" "${kak_opt_git_blob%%:*}" -- "${kak_opt_git_blob#*:}"
+            blame_stdin=/dev/null
+        } else {
+            set -- "$@" --contents - -- "${kak_buffile}" # use stdin to work around git bug
+            blame_stdin=$(mktemp "${TMPDIR:-/tmp}"/kak-git.XXXXXX)
+            echo >${kak_command_fifo} "evaluate-commands -save-regs | %{
+                set-register | %{
+                    cat >${blame_stdin}
+                    : >${kak_response_fifo}
+                }
+                execute-keys -client ${kak_client} -draft %{%<a-|><ret>}
+            }"
+            : <${kak_response_fifo}
+        } fi
         echo 'map window normal <ret> %{:git blame-jump<ret>}'
         echo 'echo -markup {Information}Press <ret> to jump to blamed commit'
         (
             trap - INT QUIT
-            cd_bufdir
+            if [ -z "${kak_opt_git_blob}" ]; then
+                cd_bufdir
+            fi
             printf %s "evaluate-commands -client '$kak_client' %{
                       set-option buffer=$kak_bufname git_blame_flags '$kak_timestamp'
                       set-option buffer=$kak_bufname git_blame_index '$kak_timestamp'
                       set-option buffer=$kak_bufname git_blame ''
                   }" | kak -p ${kak_session}
-            if ! stderr=$({ git blame --incremental "$@" <${contents_fifo} | perl -wne '
+            if ! stderr=$({ git blame --incremental "$@" <${blame_stdin} | perl -wne '
                   use POSIX qw(strftime);
                   sub quote {
                       my $SQ = "'\''";
@@ -357,8 +373,8 @@ define-command -params 1.. \
                     }
                 '" | kak -p ${kak_session}
             fi
-            if [ "$contents_fifo" != /dev/null ]; then
-                rm -r $(dirname $contents_fifo)
+            if [ ${blame_stdin} != /dev/null ]; then
+                rm ${blame_stdin}
             fi
         ) > /dev/null 2>&1 < /dev/null &
     }
@@ -374,7 +390,7 @@ define-command -params 1.. \
     update_diff() {
         (
             cd_bufdir
-            git --no-pager diff --no-ext-diff -U0 "$kak_buffile" | perl -e '
+            diff_buffer_against_rev "" -U0 | perl -e '
             use utf8;
             $flags = $ENV{"kak_timestamp"};
             $add_char = $ENV{"kak_opt_git_diff_add_char"};
@@ -427,7 +443,7 @@ define-command -params 1.. \
                     }
                 }
             }
-            print "set-option buffer git_diff_flags $flags"
+            print "set-option buffer git_diff_flags $flags\n"
         ' )
     }
 
@@ -547,7 +563,8 @@ define-command -params 1.. \
                             $version = "-";
                         } END %{
                             if ($diff_line_text !~ m{^[ -]}) {
-                                print "set-register e fail git blame-jump: recursive blame only works on context or deleted lines";
+                                print quote "git blame-jump: recursive blame only works on context or deleted lines";
+                                exit 1;
                             } else {
                                 if (not defined $commit) {
                                     $commit = "HEAD";
@@ -578,14 +595,20 @@ define-command -params 1.. \
                 exit
             fi
         } else {
-            set --
-            eval "$prepare_git_blame_args"
-            blame_info=$(git blame --porcelain -L"$cursor_line,$cursor_line" "$@" <${contents_fifo})
-            status=$?
-            if [ "$contents_fifo" != /dev/null ]; then
-                rm -r $(dirname $contents_fifo)
-            fi
-            if [ $status -ne 0 ]; then
+            if [ -n "${kak_opt_git_blob}" ]; then {
+                set -- "${kak_opt_git_blob%%:*}" -- "${kak_opt_git_blob#*:}"
+                blame_stdin=/dev/null
+            } else {
+                set -- --contents - -- "${kak_buffile}" # use stdin to work around git bug
+                blame_stdin=${kak_response_fifo}
+                echo >${kak_command_fifo} "evaluate-commands -save-regs | %{
+                    set-register | %{ cat >${kak_response_fifo} }
+                    execute-keys -client ${kak_client} -draft %{%<a-|><ret>}
+                }"
+            } fi
+            if ! blame_info=$(
+                git blame --porcelain -L"$cursor_line,$cursor_line" "$@" <${blame_stdin})
+            then
                 echo 'echo -markup %{{Error}failed to run git blame, see *debug* buffer}'
                 exit
             fi
@@ -713,12 +736,118 @@ define-command -params 1.. \
         ')"
     }
 
-    case "$1" in
-        apply)
-            shift
+    apply_selections() {
+        if [ -z "$(cd_bufdir >/dev/null 2>&1; git ls-files -- ":(literal)${kak_buffile}")" ]; then {
             enquoted="$(printf '"%s" ' "$@")"
             echo "require-module patch"
             echo "patch git apply $enquoted"
+            return
+        } fi
+        base_rev=HEAD
+        index_only=false
+        index=false
+        reverse=false
+        for arg; do
+            case "$arg" in
+                (--cached) index_only=true ; base_rev= ;;
+                (--index) index=true ;;
+                (--reverse|-R) reverse=true ;;
+            esac
+        done
+        if ! $reverse && ! $index_only; then
+            echo "fail %{git apply on buffer contents doesn't make sense without --reverse or --cached}"
+            exit
+        fi
+        cd_bufdir
+        num_inserted=0
+        num_deleted=0
+        for selection_desc in $kak_selections_desc; do {
+            IFS=' .,' read anchor_line _ cursor_line _ <<-EOF
+                $selection_desc
+		EOF
+            if [ $anchor_line -lt $cursor_line ]; then
+                min_line=$anchor_line
+                max_line=$cursor_line
+            else
+                min_line=$cursor_line
+                max_line=$anchor_line
+            fi
+            intended_diff='diff_buffer_against_rev "$base_rev" -u'
+            if $index; then {
+                git update-index --refresh "${kak_buffile}" >/dev/null
+                intended_diff='git diff --no-ext-diff HEAD -- ":(literal)${kak_buffile}"'
+            } elif $index_only && $reverse; then {
+                diff=$(eval "$intended_diff")
+                if [ -n "$diff" ]; then {
+                    # Convert from buffile lines to index lines.
+                    for line in min_line max_line; do {
+                        if ! index_line_or_error_message=$(
+                            eval file_line=\$$line
+                            printf %s "$diff" |
+                                perl "${kak_runtime}/rc/filetype/diff-parse.pl" \
+                                    BEGIN '
+                                        $in_file = ""; # no need to check filename, there is only one
+                                        $in_file_line = '"$file_line"';
+                                    ' END '
+                                        $other_file_line++ if $diff_line_text =~ m{^\+};
+                                        $other_file_line += $in_file_line - $file_line;
+                                        print "$other_file_line\n";
+                                    '
+                        ); then
+                            echo fail "git apply: $index_line_or_error_message"
+                            exit
+                        fi
+                        eval $line=$index_line_or_error_message
+                    } done
+                } fi
+                intended_diff='git diff --no-ext-diff --cached -- ":(literal)${kak_buffile}"'
+            } fi
+            diff=$(eval "$intended_diff" |
+                    perl "${kak_runtime}"/rc/tools/patch-range.pl -line-numbers-from-new-file \
+                        $min_line $max_line sh -c cat -- "$@" # forward any --reverse arg
+                   printf .) # avoid stripping newline
+            diff=${diff%.}
+            if ! printf %s "$diff" | git apply "$@"; then
+                printf >&2 "git apply: error running:\n\$ git apply %s << EOF\n" "$*"
+                printf >&2 %s "$diff"
+                printf >&2 'EOF\n'
+                echo "fail 'git apply: failed to apply selections, see *debug* buffer'"
+                exit
+            fi
+            count() {
+                printf %s "$diff" | awk '
+                    BEGIN { n = 0 }
+                    /^@@/,/^$/ { if ($0 ~ /^'"$1"'/) { n++ } }
+                    END { print n }'
+            }
+            num_inserted=$(( $num_inserted + $(count +) ))
+            num_deleted=$(( $num_deleted + $(count -) ))
+        } done
+        if ! $index_only && ! $kak_modified; then
+            echo edit!
+            echo git update-diff
+        else
+            update_diff
+        fi
+        msg=
+        case $index_only,$reverse,$index in
+            (true,false,*) msg=Staged ;;
+            (true,true,*) msg=Unstaged ;;
+            (false,true,false) msg=Reverted ;;
+            (false,true,true) msg='Unstaged and reverted' ;;
+        esac
+        case $num_inserted,$num_deleted in
+            (*,0) msg="$msg $num_inserted inserted line(s)";;
+            (0,*) msg="$msg $num_deleted deleted line(s)";;
+            (*,*) msg="$msg $num_inserted inserted and $num_deleted deleted lines";;
+        esac
+        echo "echo -markup '{Information}{\\}$msg'"
+    }
+
+    case "$1" in
+        apply)
+            shift
+            apply_selections "$@"
             ;;
         show|show-branch|log|diff|status)
             show_git_cmd_output "$@"

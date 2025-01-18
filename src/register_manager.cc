@@ -3,10 +3,22 @@
 #include "assert.hh"
 #include "context.hh"
 #include "hash_map.hh"
-#include "string_utils.hh"
+#include "format.hh"
+#include "ranges.hh"
+#include "hook_manager.hh"
 
 namespace Kakoune
 {
+
+Register::RestoreInfo Register::save(const Context& context)
+{
+    return get(context) | gather<RestoreInfo>();
+}
+
+void Register::restore(Context& context, const RestoreInfo& info)
+{
+    set(context, info, true);
+}
 
 void StaticRegister::set(Context& context, ConstArrayView<String> values, bool)
 {
@@ -31,7 +43,7 @@ const String& StaticRegister::get_main(const Context& context, size_t main_index
 
 void HistoryRegister::set(Context& context, ConstArrayView<String> values, bool restoring)
 {
-    constexpr size_t size_limit = 100;
+    constexpr size_t size_limit = 1000;
 
     if (restoring)
     {
@@ -40,7 +52,7 @@ void HistoryRegister::set(Context& context, ConstArrayView<String> values, bool 
         return;
     }
 
-    for (auto&& entry : values | reverse()) 
+    for (auto&& entry : values | reverse())
     {
         m_content.erase(std::remove(m_content.begin(), m_content.end(), entry), m_content.end());
         m_content.insert(m_content.begin(), entry);

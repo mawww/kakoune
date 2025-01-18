@@ -9,8 +9,8 @@ sub quote {
 }
 sub fail {
     my $reason = shift;
-    print "set-register e fail " . quote("diff-parse.pl: $reason");
-    exit;
+    print quote("diff-parse.pl: $reason");
+    exit 1;
 }
 
 my $begin;
@@ -45,13 +45,15 @@ our $version = "+";
 
 eval $begin if defined $begin;
 
-$in_file = "$directory/$in_file" if defined $in_file;
+$in_file = "$directory/$in_file" if defined $in_file && $in_file ne "";
 
 # Outputs
 our $diff_line = 0;
 our $commit;
 our $file;
 our $file_line;
+our $other_file;
+our $other_file_line;
 our $diff_line_text;
 
 my $other_version;
@@ -63,8 +65,6 @@ if ($version eq "+") {
 my $is_recursive_diff = 0;
 my $state = "header";
 my $fallback_file;
-my $other_file;
-my $other_file_line;
 
 sub strip {
     my $is_recursive_diff = shift;
@@ -127,7 +127,7 @@ while (<STDIN>) {
            $other_file_line++ if defined $other_file_line;
         }
     }
-    if (defined $in_file and defined $file and $file eq $in_file) {
+    if (defined $in_file and defined $file and ($in_file eq "" or $file eq $in_file)) {
         if (defined $in_file_line and defined $file_line and $file_line >= $in_file_line) {
             last;
         }

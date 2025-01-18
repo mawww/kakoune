@@ -1,6 +1,6 @@
 #include "shell_manager.hh"
 
-#include "buffer_utils.hh"
+#include "debug.hh"
 #include "client.hh"
 #include "clock.hh"
 #include "context.hh"
@@ -10,11 +10,11 @@
 #include "face_registry.hh"
 #include "file.hh"
 #include "flags.hh"
-#include "option.hh"
 #include "option_types.hh"
 #include "regex.hh"
 
 #include <array>
+#include <chrono>
 #include <cstring>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -118,7 +118,7 @@ Shell spawn_shell(const char* shell, StringView cmdline,
     if (pid_t pid = vfork())
         return {pid, std::move(stdin_pipe[1]), std::move(stdout_pipe[0]), std::move(stderr_pipe[0])};
 
-    auto renamefd = [](int oldfd, int newfd) {
+    constexpr auto renamefd = [](int oldfd, int newfd) {
         if (oldfd == newfd)
             return;
         dup2(oldfd, newfd);
@@ -141,30 +141,35 @@ Shell spawn_shell(const char* shell, StringView cmdline,
 }
 
 template<typename GetValue>
-Vector<String> generate_env(StringView cmdline, const Context& context, GetValue&& get_value)
+Vector<String> generate_env(StringView cmdline, ConstArrayView<String> params, const Context& context, GetValue&& get_value)
 {
     static const Regex re(R"(\bkak_(quoted_)?(\w+)\b)");
 
     Vector<String> env;
-    for (auto&& match : RegexIterator{cmdline.begin(), cmdline.end(), re})
-    {
-        StringView name{match[2].first, match[2].second};
-        StringView shell_name{match[0].first, match[0].second};
-
-        auto match_name = [&](const String& s) {
-            return s.substr(0_byte, shell_name.length()) == shell_name and
-                   s.substr(shell_name.length(), 1_byte) == "=";
-        };
-        if (any_of(env, match_name))
-            continue;
-
-        try
+    auto add_matches = [&](StringView s) {
+        for (auto&& match : RegexIterator{s.begin(), s.end(), re})
         {
-            StringView quoted{match[1].first, match[1].second};
-            Quoting quoting = match[1].matched ? Quoting::Shell : Quoting::Raw;
-            env.push_back(format("kak_{}{}={}", quoted, name, get_value(name, quoting)));
-        } catch (runtime_error&) {}
-    }
+            StringView name{match[2].first, match[2].second};
+            StringView shell_name{match[0].first, match[0].second};
+
+            auto match_name = [&](const String& s) {
+                return s.substr(0_byte, shell_name.length()) == shell_name and
+                       s.substr(shell_name.length(), 1_byte) == "=";
+            };
+            if (any_of(env, match_name))
+                continue;
+
+            try
+            {
+                StringView quoted{match[1].first, match[1].second};
+                Quoting quoting = match[1].matched ? Quoting::Shell : Quoting::Raw;
+                env.push_back(format("kak_{}{}={}", quoted, name, get_value(name, quoting)));
+            } catch (runtime_error&) {}
+        }
+    };
+    add_matches(cmdline);
+    for (auto&& param : params)
+        add_matches(param);
 
     return env;
 }
@@ -193,18 +198,22 @@ FDWatcher make_reader(int fd, String& contents, OnClose&& on_close)
     }};
 }
 
-FDWatcher make_pipe_writer(UniqueFd& fd, StringView contents)
+FDWatcher make_pipe_writer(UniqueFd& fd, const FunctionRef<StringView ()>& generator)
 {
     int flags = fcntl((int)fd, F_GETFL, 0);
     fcntl((int)fd, F_SETFL, flags | O_NONBLOCK);
     return {(int)fd, FdEvents::Write, EventMode::Urgent,
-            [contents, &fd](FDWatcher& watcher, FdEvents, EventMode) mutable {
+            [&generator, &fd, contents=generator()](FDWatcher& watcher, FdEvents, EventMode) mutable {
         while (fd_writable((int)fd))
         {
             ssize_t size = ::write((int)fd, contents.begin(),
                                    (size_t)contents.length());
             if (size > 0)
+            {
                 contents = contents.substr(ByteCount{(int)size});
+                if (contents.empty())
+                    contents = generator();
+            }
             if (size == -1 and (errno == EAGAIN or errno == EWOULDBLOCK))
                 return;
             if (size < 0 or contents.empty())
@@ -259,19 +268,19 @@ struct CommandFifos
 }
 
 std::pair<String, int> ShellManager::eval(
-    StringView cmdline, const Context& context, StringView input,
+    StringView cmdline, const Context& context, FunctionRef<StringView ()> input_generator,
     Flags flags, const ShellContext& shell_context)
 {
     const DebugFlags debug_flags = context.options()["debug"].get<DebugFlags>();
     const bool profile = debug_flags & DebugFlags::Profile;
     if (debug_flags & DebugFlags::Shell)
-        write_to_debug_buffer(format("shell:\n{}\n----\n", cmdline));
+        write_to_debug_buffer(format("shell:\n{}\n----\nargs: {}\n----\n", cmdline, join(shell_context.params | transform(shell_quote), ' ')));
 
     auto start_time = profile ? Clock::now() : Clock::time_point{};
 
     Optional<CommandFifos> command_fifos;
 
-    auto kak_env = generate_env(cmdline, context, [&](StringView name, Quoting quoting) {
+    auto kak_env = generate_env(cmdline, shell_context.params, context, [&](StringView name, Quoting quoting) {
         if (name == "command_fifo" or name == "response_fifo")
         {
             if (not command_fifos)
@@ -286,13 +295,13 @@ std::pair<String, int> ShellManager::eval(
     });
 
     auto spawn_time = profile ? Clock::now() : Clock::time_point{};
-    auto shell = spawn_shell(m_shell.c_str(), cmdline, shell_context.params, kak_env, not input.empty());
+    auto shell = spawn_shell(m_shell.c_str(), cmdline, shell_context.params, kak_env, true);
     auto wait_time = Clock::now();
 
     String stdout_contents, stderr_contents;
     auto stdout_reader = make_reader((int)shell.out, stdout_contents, [&](bool){ shell.out.close(); });
     auto stderr_reader = make_reader((int)shell.err, stderr_contents, [&](bool){ shell.err.close(); });
-    auto stdin_writer = make_pipe_writer(shell.in, input);
+    auto stdin_writer = make_pipe_writer(shell.in, input_generator);
 
     // block SIGCHLD to make sure we wont receive it before
     // our call to pselect, that will end up blocking indefinitly.
@@ -308,24 +317,11 @@ std::pair<String, int> ShellManager::eval(
     bool failed = false;
 
     using namespace std::chrono;
-    static constexpr seconds wait_timeout{1};
-    Optional<DisplayLine> previous_status;
-    Timer wait_timer{wait_time + wait_timeout, [&](Timer& timer) {
-        if (not context.has_client())
-            return;
-
-        const auto now = Clock::now();
-        timer.set_next_date(now + wait_timeout);
-        auto& client = context.client();
-        if (not previous_status)
-            previous_status = client.current_status();
-
-        client.print_status({format("waiting for shell command to finish{} ({}s)",
-                                     terminated ? " (shell terminated)" : "",
-                                     duration_cast<seconds>(now - wait_time).count()),
-                             context.faces()[failed ? "Error" : "Information"]});
-        client.redraw_ifn();
-    }, EventMode::Urgent};
+    BusyIndicator busy_indicator{context, [&](seconds elapsed) {
+        return DisplayLine{format("waiting for shell command to finish{} ({}s)",
+                                  terminated ? " (shell terminated)" : "", elapsed.count()),
+                           context.faces()[failed ? "Error" : "Information"]};
+    }};
 
     bool cancelling = false;
     while (not terminated or shell.in or
@@ -365,19 +361,13 @@ std::pair<String, int> ShellManager::eval(
     if (cancelling)
         throw cancel{};
 
-    if (previous_status) // restore the status line
-    {
-        context.print_status(std::move(*previous_status));
-        context.client().redraw_ifn();
-    }
-
     return { std::move(stdout_contents), WIFEXITED(status) ? WEXITSTATUS(status) : -1 };
 }
 
 Shell ShellManager::spawn(StringView cmdline, const Context& context,
                           bool open_stdin, const ShellContext& shell_context)
 {
-    auto kak_env = generate_env(cmdline, context, [&](StringView name, Quoting quoting) {
+    auto kak_env = generate_env(cmdline, shell_context.params, context, [&](StringView name, Quoting quoting) {
         if (auto it = shell_context.env_vars.find(name); it != shell_context.env_vars.end())
             return it->value;
         return join(get_val(name, context) | transform(quoter(quoting)), ' ', false);

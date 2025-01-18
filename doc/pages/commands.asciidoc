@@ -48,7 +48,7 @@ of the file onto the filesystem
     *-scratch*:::
         Creates a new buffer named <filename>, which doesn't correspond to any
         file on disk. If no filename is given, the buffer name will be
-        generated based on format `\*scratch-$ID\*`, where `$ID` is an
+        generated based on format `\*scratch-$ID*`, where `$ID` is an
         integer automatically incremented for new buffers.
         (See <<buffers#scratch-buffers,`:doc buffers scratch-buffers`>>)
 
@@ -254,7 +254,7 @@ of the file onto the filesystem
         <<faces#markup-strings,`:doc faces markup-strings`>>)
 
     *-debug*:::
-        print the given text to the *\*debug** buffer
+        print the given text to the `\*debug*` buffer
 
     *-to-file* <filename>:::
         write the given text to the given file on the host
@@ -415,7 +415,7 @@ but not really useful in that context.
     matches the current buffer timestamp (or is not specified).
 
 *debug* {info,buffers,options,memory,shared-strings,profile-hash-maps,faces,mappings}::
-    print some debug information in the *\*debug** buffer
+    print some debug information in the `\*debug*` buffer
 
 == Module commands
 

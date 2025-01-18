@@ -1,11 +1,11 @@
 #ifndef hook_manager_hh_INCLUDED
 #define hook_manager_hh_INCLUDED
 
-#include "hash_map.hh"
 #include "completion.hh"
 #include "safe_ptr.hh"
 #include "meta.hh"
 #include "enum.hh"
+#include "array.hh"
 
 #include <memory>
 
@@ -50,6 +50,7 @@ enum class Hook
     NextKeyIdle,
     NormalKey,
     ModeChange,
+    EnterDirectory,
     RawKey,
     RegisterModified,
     WinClose,
@@ -97,6 +98,7 @@ constexpr auto enum_desc(Meta::Type<Hook>)
         {Hook::NextKeyIdle, "NextKeyIdle"},
         {Hook::NormalKey, "NormalKey"},
         {Hook::ModeChange, "ModeChange"},
+        {Hook::EnterDirectory, "EnterDirectory"},
         {Hook::RawKey, "RawKey"},
         {Hook::RegisterModified, "RegisterModified"},
         {Hook::WinClose, "WinClose"},

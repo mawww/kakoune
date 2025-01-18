@@ -1,11 +1,9 @@
 #include "keymap_manager.hh"
 
-#include "array_view.hh"
 #include "assert.hh"
 #include "exception.hh"
-#include "string_utils.hh"
-
-#include <algorithm>
+#include "format.hh"
+#include "ranges.hh"
 
 namespace Kakoune
 {

@@ -5,6 +5,7 @@
 #include "option.hh"
 #include "display_buffer.hh"
 #include "vector.hh"
+#include "utils.hh"
 
 #include "optional.hh"
 
@@ -78,7 +79,7 @@ public:
     InsertCompleter& operator=(const InsertCompleter&) = delete;
     ~InsertCompleter();
 
-    void select(int index, bool relative, Vector<Key>* keystrokes);
+    void select(int index, bool relative, FunctionRef<void (Key)> record_key);
     void update(bool allow_implicit);
     void try_accept();
     void reset();
@@ -89,6 +90,8 @@ public:
     void explicit_line_buffer_complete();
     void explicit_line_all_complete();
 
+    bool has_candidate_selected() const;
+
 private:
     bool setup_ifn();
 
@@ -97,7 +100,6 @@ private:
     void on_option_changed(const Option& opt) override;
 
     void menu_show();
-    bool has_candidate_selected() const;
 
     Context&            m_context;
     OptionManager&      m_options;

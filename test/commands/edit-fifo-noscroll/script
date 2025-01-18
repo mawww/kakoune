@@ -2,11 +2,11 @@ ui_out -until '{ "jsonrpc": "2.0", "method": "refresh", "params": [true] }'
 exec 5>fifo
 
 echo '* line1' >&5
-ui_out '{ "jsonrpc": "2.0", "method": "draw", "params": [[[{ "face": { "fg": "black", "bg": "white", "underline": "default", "attributes": [] }, "contents": "*" }, { "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": " line1\u000a" }]], { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, { "fg": "blue", "bg": "default", "underline": "default", "attributes": [] }] }'
+ui_out -until '{ "jsonrpc": "2.0", "method": "draw", "params": [[[{ "face": { "fg": "black", "bg": "white", "underline": "default", "attributes": [] }, "contents": "*" }, { "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": " line1\u000a" }]], { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, { "fg": "blue", "bg": "default", "underline": "default", "attributes": [] }] }'
 ui_out -until '{ "jsonrpc": "2.0", "method": "refresh", "params": [false] }'
 
 echo '* line2' >&5
-ui_out '{ "jsonrpc": "2.0", "method": "draw", "params": [[[{ "face": { "fg": "black", "bg": "white", "underline": "default", "attributes": [] }, "contents": "*" }, { "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": " line1\u000a" }], [{ "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": "* line2\u000a" }]], { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, { "fg": "blue", "bg": "default", "underline": "default", "attributes": [] }] }'
+ui_out -until '{ "jsonrpc": "2.0", "method": "draw", "params": [[[{ "face": { "fg": "black", "bg": "white", "underline": "default", "attributes": [] }, "contents": "*" }, { "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": " line1\u000a" }], [{ "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": "* line2\u000a" }]], { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, { "fg": "blue", "bg": "default", "underline": "default", "attributes": [] }] }'
 ui_out -until '{ "jsonrpc": "2.0", "method": "refresh", "params": [false] }'
 
 dd if=/dev/zero bs=2049 count=1 2>/dev/null | sed s/././g >&5

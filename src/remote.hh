@@ -46,7 +46,7 @@ private:
 void send_command(StringView session, StringView command);
 String get_user_name();
 const String& session_directory();
-String session_path(StringView session);
+String session_path(StringView session, bool assume_valid = false);
 
 struct Server : public Singleton<Server>
 {

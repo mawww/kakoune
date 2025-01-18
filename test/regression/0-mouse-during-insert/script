@@ -1,6 +1,6 @@
 ui_out -ignore 7
 ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "i" ] }'
-ui_out -ignore 4
+ui_out -ignore 3
 ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "a" ] }'
 ui_out -ignore 4
 ui_in '{ "jsonrpc": "2.0", "method": "mouse_press", "params": [ "left", 0, 2 ] }'
