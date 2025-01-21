@@ -240,12 +240,14 @@ void update_selections(Vector<Selection>& selections, size_t& main, const Buffer
 
         if (forward_end >= backward_end)
         {
-            update_forward({ change_it, forward_end }, selections);
+            if (change_it->type != Buffer::Change::Draft)
+                update_forward({ change_it, forward_end }, selections);
             change_it = forward_end;
         }
         else
         {
-            update_backward({ change_it, backward_end }, selections);
+            if (change_it->type != Buffer::Change::Draft)
+                update_backward({ change_it, backward_end }, selections);
             change_it = backward_end;
         }
         kak_assert(std::is_sorted(selections.begin(), selections.end(),
