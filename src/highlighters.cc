@@ -961,21 +961,23 @@ const HighlighterDesc show_whitespace_desc = {
         { "lf",     { ArgCompleter{}, "replace line feeds with the given character" } },
         { "nbsp",   { ArgCompleter{}, "replace non-breakable spaces with the given character" } },
         { "indent", { ArgCompleter{}, "replace first space of every indent with the given character according to `indentwidth`" } },
+        { "no-indent-skip", { {}, "don't skip first column when displaying indents" } },
         { "only-trailing", { {}, "only highlighting trailing whitespaces" } } },
         ParameterDesc::Flags::None, 0, 0
     }
 };
 struct ShowWhitespacesHighlighter : Highlighter
 {
-    ShowWhitespacesHighlighter(String tab, String tabpad, String spc, String lf, String nbsp, String indent, bool only_trailing)
+    ShowWhitespacesHighlighter(String tab, String tabpad, String spc, String lf, String nbsp, String indent, bool no_indent_skip, bool only_trailing)
       : Highlighter{HighlightPass::Move}, m_tab{std::move(tab)}, m_tabpad{std::move(tabpad)},
-        m_spc{std::move(spc)}, m_lf{std::move(lf)}, m_nbsp{std::move(nbsp)}, m_indent{std::move(indent)}, m_only_trailing{std::move(only_trailing)}
+        m_spc{std::move(spc)}, m_lf{std::move(lf)}, m_nbsp{std::move(nbsp)}, m_indent{std::move(indent)}, m_no_indent_skip{std::move(no_indent_skip)}, m_only_trailing{std::move(only_trailing)}
     {}
 
     static std::unique_ptr<Highlighter> create(HighlighterParameters params, Highlighter*)
     {
         ParametersParser parser(params, show_whitespace_desc.params);
 
+        bool no_indent_skip = (bool) parser.get_switch("no-indent-skip");
         bool only_trailing = (bool) parser.get_switch("only-trailing");
         auto get_param = [&](StringView param,  StringView fallback) {
             StringView value = parser.get_switch(param).value_or(fallback);
@@ -986,7 +988,7 @@ struct ShowWhitespacesHighlighter : Highlighter
 
         return std::make_unique<ShowWhitespacesHighlighter>(
             get_param("tab", "→"), get_param("tabpad", " "), get_param("spc", "·"),
-            get_param("lf", "¬"), get_param("nbsp", "⍽"), get_param("indent", "│"), only_trailing);
+            get_param("lf", "¬"), get_param("nbsp", "⍽"), get_param("indent", "│"), no_indent_skip, only_trailing);
     }
 
 private:
@@ -1045,7 +1047,7 @@ private:
                         }
                         else if (cp == ' ' and is_indentation and indentwidth > 0 and not m_indent.empty()) {
                             const ColumnCount column = get_column(buffer, tabstop, coord);
-                            if (column % indentwidth == 0 and column != 0) {
+                            if (column % indentwidth == 0 and ((column != 0) or m_no_indent_skip)) {
                                 atom_it->replace(m_indent);
                                 face = indentface;
                             }
@@ -1073,7 +1075,7 @@ private:
     }
 
     const String m_tab, m_tabpad, m_spc, m_lf, m_nbsp, m_indent;
-    const bool m_only_trailing;
+    const bool m_no_indent_skip, m_only_trailing;
 };
 
 const HighlighterDesc line_numbers_desc = {
