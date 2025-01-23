@@ -64,6 +64,9 @@ highlighter is replaced with the new one.
         according to the *indentwidth* option, or an empty string to ignore them.
         This will use the `WhitespaceIndent` face.
 
+    *-no-indent-skip*:::
+        don't omit the indent character for the leftmost column
+
     *-only-trailing*:::
         only highlight whitespaces at the end of the line
 
