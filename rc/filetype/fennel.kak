@@ -59,8 +59,8 @@ evaluate-commands %sh{
     "
 }
 
-add-highlighter shared/fennel/code/operator regex (\.|\?\.|\+|\.\.|\^|-|\*|%|/|>|<|>=|<=|=|\.\.\.|:|->|->>|-\?>|-\?>>) 0:operator
-add-highlighter shared/fennel/code/value regex \b(false|nil|true|[0-9]+(:?\.[0-9])?(:?[eE]-?[0-9]+)?|0x[0-9a-fA-F])\b 0:value
+add-highlighter shared/fennel/code/operator regex (\.|\?\.|\+|\^|-|\*|%|/|>|<|>=|<=|=|not=|:|->|->>|-\?>|-\?>>)\s+|\.\.\.? 0:operator
+add-highlighter shared/fennel/code/value regex (\b(false|nil|true)\b|-?\b[0-9][_0-9]*(:?\.[_0-9]+)?(:?[eE]-?[_0-9]+)?|0x[0-9a-fA-F]\b) 0:value
 add-highlighter shared/fennel/code/function_declaration regex \((?:fn|lambda|λ)\s+([\S]+) 1:function
 add-highlighter shared/fennel/code/method_call regex (?:\w+|\$[0-9]{0,1}):(\S+)\b 1:function
 
