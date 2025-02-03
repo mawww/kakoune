@@ -30,7 +30,7 @@ void on_assert_failed(const char* message);
                          "\" at " __FILE__ ":" TOSTRING(__LINE__)); \
     } catch (exception_type &err) {}
 #else
-    #define kak_assert(...) do { (void)sizeof(__VA_ARGS__); } while(false)
+    #define kak_assert(...) do { (void)alignof(decltype(__VA_ARGS__)); } while(false)
     #define kak_expect_throw(_, ...) do { (void)sizeof(__VA_ARGS__); } while(false)
 #endif
 
