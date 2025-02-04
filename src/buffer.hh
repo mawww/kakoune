@@ -66,17 +66,17 @@ public:
 
     BufferIterator() = default;
     BufferIterator(const Buffer& buffer, BufferCoord coord) noexcept;
-    BufferIterator(const StringData* line, BufferCoord coord) noexcept;
+    BufferIterator(const StringDataPtr* lines, LineCount line_count, BufferCoord coord) noexcept;
 
     bool operator== (const BufferIterator& iterator) const noexcept;
     auto operator<=>(const BufferIterator& iterator) const noexcept;
     bool operator== (const BufferCoord& coord) const noexcept;
 
-    const char& operator*() const noexcept;
+    const char& operator* () const noexcept;
     const char& operator[](size_t n) const noexcept;
     size_t operator- (const BufferIterator& iterator) const;
 
-    explicit operator bool() const { return m_line; }
+    explicit operator bool() const { return m_lines; }
 
     BufferIterator operator+ (ByteCount size) const;
     BufferIterator operator- (ByteCount size) const;
@@ -95,7 +95,9 @@ public:
     using Sentinel = BufferCoord;
 
 private:
-    const StringData* m_line;
+    const StringDataPtr* m_lines;
+    [[no_unique_address]] StringView m_line;
+    [[no_unique_address]] LineCount m_line_count;
     BufferCoord m_coord;
 };
 
@@ -186,7 +188,7 @@ public:
     { return m_lines[line]; }
 
     const StringDataPtr& line_storage(LineCount line) const
-    { return line == line_count() ? m_sentinel : m_lines.get_storage(line); }
+    { return m_lines.get_storage(line); }
 
     // returns an iterator at given coordinates. clamp line_and_column
     BufferIterator iterator_at(BufferCoord coord) const;
@@ -287,7 +289,6 @@ private:
         StringView back() const { return BufferLines::back()->strview(); }
     };
     LineList m_lines;
-    StringDataPtr m_sentinel = StringData::create("");
 
     String m_name;
     String m_display_name;
