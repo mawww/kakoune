@@ -75,6 +75,11 @@ hook global BufSetOption filetype=(html|xml) %{
     set-option buffer comment_block_end '-->'
 }
 
+hook global BufSetOption filetype=julia %{
+    set-option buffer comment_block_begin '#='
+    set-option buffer comment_block_end '=#'
+}
+
 hook global BufSetOption filetype=(erlang|latex|mercury) %{
     set-option buffer comment_line '%'
 }
