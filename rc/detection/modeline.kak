@@ -12,8 +12,6 @@ declare-option -docstring "amount of lines that will be checked at the beginning
 
 define-command -hidden modeline-parse-impl %{
     evaluate-commands %sh{
-        kakquote() { printf "%s" "$*" | sed "s/'/''/g; 1s/^/'/; \$s/\$/'/"; }
-
         # Translate a vim option into the corresponding kakoune one
         translate_opt_vim() {
             local key="$1"
@@ -54,7 +52,7 @@ define-command -hidden modeline-parse-impl %{
                     return;;
             esac
 
-            printf 'set-option buffer %s %s\n' "${key}" "$(kakquote "${value}")"
+            printf 'set-option buffer %s %s\n' "${key}" "$(kak -quote kakoune -- "${value}")"
         }
 
         # Pass a few whitelisted options to kakoune directly
@@ -64,19 +62,19 @@ define-command -hidden modeline-parse-impl %{
 
             case "${key}" in
                 scrolloff|tabstop|indentwidth|autowrap_column|eolformat|filetype|BOM|spell_lang);;
-                *) printf 'echo -debug %s' "$(kakquote "Unsupported kakoune variable: ${key}")" \
+                *) printf 'echo -debug %s' "$(kak -quote kakoune -- "Unsupported kakoune variable: ${key}")" \
                        | kak -p "${kak_session}"
                    return;;
             esac
 
-            printf 'set-option buffer %s %s\n' "${key}" "$(kakquote "${value}")"
+            printf 'set-option buffer %s %s\n' "${key}" "$(kak -quote kakoune -- "${value}")"
         }
 
         case "${kak_selection}" in
             *vi:*|*vim:*) type_selection="vim";;
             *kak:*|*kakoune:*) type_selection="kakoune";;
             *)
-                printf 'fail %s\n' "$(kakquote "Unsupported modeline format: ${kak_selection}")"
+                printf 'fail %s\n' "$(kak -quote kakoune -- "Unsupported modeline format: ${kak_selection}")"
                 exit 1 ;;
         esac
 
