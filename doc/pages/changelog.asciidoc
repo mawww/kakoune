@@ -6,15 +6,9 @@ released versions.
 == Development version
 
 * Expose env vars that are mentioned in the arguments passed to shell expansions
-
 * Support for colored double underlines
-
 * `git apply` can now operate on selected changes in the current buffer's
   file (useful for quick (un)staging and reverting)
-
-* `prompt -history-register` switch to specify which register to use for
-  a prompt history.
-
 
 == Kakoune 2024.05.18
 

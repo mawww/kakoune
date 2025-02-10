@@ -2269,7 +2269,6 @@ const CommandDesc prompt_cmd = {
           { "shell-completion", { {}, "use shell command completion for prompt" } },
           { "shell-script-completion", { ArgCompleter{}, "use shell command completion for prompt" } },
           { "shell-script-candidates", { ArgCompleter{}, "use shell command completion for prompt" } },
-          { "history-register", { ArgCompleter{}, "register to read and store history to, default to '_'"} },
           { "on-change", { ArgCompleter{}, "command to execute whenever the prompt changes" } },
           { "on-abort", { ArgCompleter{}, "command to execute whenever the prompt is canceled" } } },
         ParameterDesc::Flags::None, 2, 2
@@ -2289,11 +2288,9 @@ const CommandDesc prompt_cmd = {
         const auto flags = parser.get_switch("password") ?
             PromptFlags::Password : PromptFlags::None;
 
-        auto history_register = RegisterManager::parse_register_name(parser.get_switch("history-register").value_or("_"));
-
         context.input_handler().prompt(
             parser[0], initstr.str(), {}, context.faces()["Prompt"],
-            flags, history_register, std::move(completer),
+            flags, '_', std::move(completer),
             [command,
              on_change = parser.get_switch("on-change").value_or("").str(),
              on_abort = parser.get_switch("on-abort").value_or("").str(),
