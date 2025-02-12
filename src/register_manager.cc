@@ -70,7 +70,7 @@ const String& HistoryRegister::get_main(const Context&, size_t)
     return m_content.empty() ? String::ms_empty : m_content.front();
 }
 
-static const HashMap<StringView, Codepoint> reg_names {
+static const HashMap<StringView, char> reg_names {
     { "slash", '/' },
     { "dquote", '"' },
     { "pipe", '|' },
@@ -83,18 +83,23 @@ static const HashMap<StringView, Codepoint> reg_names {
     { "colon", ':' }
 };
 
-Register& RegisterManager::operator[](StringView reg) const
+char RegisterManager::parse_register_name(StringView reg)
 {
     if (reg.length() == 1)
-        return (*this)[reg[0_byte]];
+        return reg[0_byte];
 
     auto it = reg_names.find(reg);
     if (it == reg_names.end())
         throw runtime_error(format("no such register: '{}'", reg));
-    return (*this)[it->value];
+    return it->value;
 }
 
-Register& RegisterManager::operator[](Codepoint c) const
+Register& RegisterManager::operator[](StringView reg) const
+{
+    return (*this)[parse_register_name(reg)];
+}
+
+Register& RegisterManager::operator[](char c) const
 {
     c = to_lower(c);
     auto it = m_registers.find(c);
@@ -104,7 +109,7 @@ Register& RegisterManager::operator[](Codepoint c) const
     return *(it->value);
 }
 
-void RegisterManager::add_register(Codepoint c, std::unique_ptr<Register> reg)
+void RegisterManager::add_register(char c, std::unique_ptr<Register> reg)
 {
     auto& reg_ptr = m_registers[c];
     kak_assert(not reg_ptr);

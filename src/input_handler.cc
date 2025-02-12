@@ -764,15 +764,17 @@ public:
             on_next_key_with_autoinfo(context(), "register", KeymapMode::None,
                 [this](Key key, Context&) {
                     const bool joined = (bool)(key.modifiers & Key::Modifiers::Alt);
-                    key.modifiers &= ~Key::Modifiers::Alt;
+                    const bool quoted = (bool)(key.modifiers & Key::Modifiers::Control);
+                    key.modifiers &= ~(Key::Modifiers::Alt | Key::Modifiers::Control);
 
                     auto cp = key.codepoint();
                     if (not cp or key == Key::Escape)
                         return;
 
+                    auto* quoter = Kakoune::quoter(quoted ? Quoting::Kakoune : Quoting::Raw);
                     m_line_editor.insert(
-                        joined ? join(RegisterManager::instance()[*cp].get(context()), ' ', false)
-                               : context().main_sel_register_value(String{*cp}));
+                        joined ? join(RegisterManager::instance()[*cp].get(context()) | transform(quoter), ' ', false)
+                               : quoter(context().main_sel_register_value(String{*cp})));
 
                     display();
                     m_line_changed = true;

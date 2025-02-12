@@ -118,16 +118,17 @@ public:
 class RegisterManager : public Singleton<RegisterManager>
 {
 public:
+    static char parse_register_name(StringView reg);
     Register& operator[](StringView reg) const;
-    Register& operator[](Codepoint c) const;
-    void add_register(Codepoint c, std::unique_ptr<Register> reg);
+    Register& operator[](char c) const;
+    void add_register(char c, std::unique_ptr<Register> reg);
     CandidateList complete_register_name(StringView prefix, ByteCount cursor_pos) const;
 
     auto begin() const { return m_registers.begin(); }
     auto end() const { return m_registers.end(); }
 
 protected:
-    HashMap<Codepoint, std::unique_ptr<Register>, MemoryDomain::Registers> m_registers;
+    HashMap<char, std::unique_ptr<Register>, MemoryDomain::Registers> m_registers;
 };
 
 }

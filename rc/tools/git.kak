@@ -308,6 +308,7 @@ define-command -params 1.. \
                       set-option buffer=$kak_bufname git_blame ''
                   }" | kak -p ${kak_session}
             if ! stderr=$({ git blame --incremental "$@" <${blame_stdin} | perl -wne '
+                  BEGIN {
                   use POSIX qw(strftime);
                   sub quote {
                       my $SQ = "'\''";
@@ -341,6 +342,7 @@ define-command -params 1.. \
                       $raw_blame = "";
                       $last_sent = $now;
                   }
+                  }
                   $raw_blame .= $_;
                   chomp;
                   if (m/^([0-9a-f]+) ([0-9]+) ([0-9]+) ([0-9]+)/) {
@@ -356,7 +358,12 @@ define-command -params 1.. \
                       $authors{$sha} = substr($_,7);
                       $authors{$sha} = "Not Committed Yet" if $authors{$sha} eq "External file (--contents)";
                   }
-                  if (m/^author-time ([0-9]*)/) { $dates{$sha} = strftime("%F %T", localtime $1) }
+                  if (m/^author-time ([0-9]*)/) { $author_time = $1; }
+                  if (m/^author-tz ([+-])(\d\d)/) {
+                      my $sign = $1 eq "+" ? "-" : "+";
+                      local $ENV{"TZ"} = "UTC${sign}$2";
+                      $dates{$sha} = strftime("%F %T", localtime $author_time);
+                  }
                   END { send_flags(1); }'
             } 2>&1); then
                 escape2() { printf %s "$*" | sed "s/'/''''/g"; }
@@ -683,7 +690,12 @@ define-command -params 1.. \
             }
             if (m/^filename /) { $old_filenames{$sha} = substr($_,9) }
             if (m/^author /) { $authors{$sha} = substr($_,7) }
-            if (m/^author-time ([0-9]*)/) { $dates{$sha} = strftime("%F", localtime $1) }
+            if (m/^author-time ([0-9]*)/) { $author_time = $1; }
+            if (m/^author-tz ([+-])(\d\d)/) {
+                my $sign = $1 eq "+" ? "-" : "+";
+                local $ENV{"TZ"} = "UTC${sign}$2";
+                $dates{$sha} = strftime("%F", localtime $author_time);
+            }
             if (m/^summary /) { $summaries{$sha} = substr($_,8) }
             END {
                 if (@blame_index and not defined $target_in_blame) {
