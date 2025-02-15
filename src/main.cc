@@ -49,7 +49,6 @@ struct {
         "» kak_* appearing in shell arguments will be added to the environment\n"
         "» {+U}double underline{} support\n"
         "» {+u}git apply{} can stage/revert selected changes to current buffer\n"
-        "» {+u}prompt -history-register{} switch\n"
     }, {
         20240518,
         "» Fix tests failing on some platforms\n"
@@ -607,7 +606,7 @@ void register_options()
                        "    terminal_info_max_width        int\n",
                        UserInterface::Options{});
     reg.declare_option("modelinefmt", "format string used to generate the modeline",
-                       "%val{bufname} %val{cursor_line}:%val{cursor_char_column} {{busy_indicator}} {{context_info}} {{mode_info}} - %val{client}@[%val{session}]"_str);
+                       "%val{bufname} %val{cursor_line}:%val{cursor_char_column} {{context_info}} {{mode_info}} - %val{client}@[%val{session}]"_str);
 
     reg.declare_option("debug", "various debug flags", DebugFlags::None);
     reg.declare_option("readonly", "prevent buffers from being modified", false);
