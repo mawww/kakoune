@@ -576,7 +576,7 @@ define-command -params 1.. \
                             if (not defined $commit) {
                                 $commit = "HEAD";
                             } else {
-                                $commit = "$commit~" if $diff_line_text =~ m{^[- ]};
+                                $commit = "$commit~";
                             }
                             printf "echo -to-file '${kak_response_fifo}' -quoting shell %s %s %d %d",
                                     $commit, quote($file), $file_line, ('$cursor_column' - 1);
