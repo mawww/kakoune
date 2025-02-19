@@ -73,7 +73,7 @@ public:
     { other.m_valid = false; }
 
     [[gnu::always_inline]]
-    ~OnScopeEnd() noexcept(noexcept(std::declval<T>()())) { if (m_valid) m_func(); }
+    ~OnScopeEnd() noexcept(noexcept(m_func())) { if (m_valid) m_func(); }
 
 private:
     bool m_valid;

@@ -70,9 +70,7 @@ CandidateList complete_command(StringView prefix, ByteCount cursor_pos)
     {
         Vector<String> files;
         list_files(dirname, [&](StringView filename, const struct stat& st) {
-            bool executable = (st.st_mode & S_IXUSR)
-                            | (st.st_mode & S_IXGRP)
-                            | (st.st_mode & S_IXOTH);
+            bool executable = st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH);
             if (S_ISDIR(st.st_mode) or (S_ISREG(st.st_mode) and executable))
                 files.push_back(filename.str());
         });
@@ -109,9 +107,7 @@ CandidateList complete_command(StringView prefix, ByteCount cursor_pos)
         {
             cache.commands.clear();
             list_files(dirname, [&](StringView filename, const struct stat& st) {
-                bool executable = (st.st_mode & S_IXUSR)
-                                | (st.st_mode & S_IXGRP)
-                                | (st.st_mode & S_IXOTH);
+                bool executable = st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH);
                 if (S_ISREG(st.st_mode) and executable)
                     cache.commands.push_back(filename.str());
             });
