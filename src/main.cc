@@ -1154,14 +1154,16 @@ int main(int argc, char* argv[])
         const bool clear_sessions = (bool)parser.get_switch("clear");
         if (list_sessions or clear_sessions)
         {
-            for (auto& session : list_files(session_directory()))
-            {
+            list_files(session_directory(), [&](StringView session, auto&) {
+                if (session.substr(0_byte, 1_byte) == ".")
+                    return;
+
                 const bool valid = check_session(session);
                 if (list_sessions)
                     write_stdout(format("{}{}\n", session, valid ? "" : " (dead)"));
                 if (not valid and clear_sessions)
                     unlink(session_path(session).c_str());
-            }
+            });
             return 0;
         }
 

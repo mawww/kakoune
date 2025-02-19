@@ -1,15 +1,11 @@
 #include "file.hh"
 
 #include "assert.hh"
-#include "flags.hh"
 #include "event_manager.hh"
-#include "ranked_match.hh"
-#include "regex.hh"
 #include "string.hh"
 #include "string_utils.hh"
 #include "format.hh"
 #include "ranges.hh"
-#include "hash_map.hh"
 
 #include <limits>
 #include <cerrno>
@@ -370,18 +366,16 @@ void make_directory(StringView dir, mode_t mode)
     }
 }
 
-template<MemoryDomain domain = MemoryDomain::Undefined, typename Filter>
-Vector<String, domain> list_files(StringView dirname, Filter filter)
+void list_files(StringView dirname, FunctionRef<void (StringView, const struct stat&)> callback)
 {
     char buffer[PATH_MAX+1];
     format_to(buffer, "{}", dirname);
     DIR* dir = opendir(dirname.empty() ? "./" : buffer);
     if (not dir)
-        return {};
+        return;
 
     auto close_dir = on_scope_end([dir]{ closedir(dir); });
 
-    Vector<String, domain> result;
     while (dirent* entry = readdir(dir))
     {
         StringView filename = entry->d_name;
@@ -391,147 +385,13 @@ Vector<String, domain> list_files(StringView dirname, Filter filter)
         struct stat st;
         auto fmt_str = (dirname.empty() or dirname.back() == '/') ? "{}{}" : "{}/{}";
         format_to(buffer, fmt_str, dirname, filename);
-        if (stat(buffer, &st) != 0 or not filter(*entry, st))
+        if (stat(buffer, &st) != 0)
             continue;
 
         if (S_ISDIR(st.st_mode))
             filename = format_to(buffer, "{}/", filename);
-        result.push_back(filename.str());
+        callback(filename, st);
     }
-    return result;
-}
-
-template<MemoryDomain domain = MemoryDomain::Undefined>
-Vector<String, domain> list_files(StringView directory)
-{
-    return list_files(directory, [](const dirent& entry, const struct stat&) {
-                          return StringView{entry.d_name}.substr(0_byte, 1_byte) != ".";
-                      });
-}
-
-Vector<String> list_files(StringView directory)
-{
-    return list_files<>(directory);
-}
-
-static CandidateList candidates(ConstArrayView<RankedMatch> matches, StringView dirname)
-{
-    CandidateList res;
-    res.reserve(matches.size());
-    for (auto& match : matches)
-        res.push_back(dirname + match.candidate());
-    return res;
-}
-
-CandidateList complete_filename(StringView prefix, const Regex& ignored_regex,
-                                ByteCount cursor_pos, FilenameFlags flags)
-{
-    prefix = prefix.substr(0, cursor_pos);
-    auto [dirname, fileprefix] = split_path(prefix);
-    auto parsed_dirname = parse_filename(dirname);
-
-    Optional<ThreadedRegexVM<const char*, RegexMode::Forward | RegexMode::AnyMatch | RegexMode::NoSaves>> vm;
-    if (not ignored_regex.empty())
-    {
-        vm.emplace(*ignored_regex.impl());
-        if (vm->exec(fileprefix.begin(), fileprefix.end(), fileprefix.begin(), fileprefix.end(), RegexExecFlags::None))
-            vm.reset();
-    }
-
-    const bool only_dirs = (flags & FilenameFlags::OnlyDirectories);
-
-    auto filter = [&vm, only_dirs](const dirent& entry, struct stat& st)
-    {
-        StringView name{entry.d_name};
-        return (not vm or not vm->exec(name.begin(), name.end(), name.begin(), name.end(), RegexExecFlags::None)) and
-               (not only_dirs or S_ISDIR(st.st_mode));
-    };
-    auto files = list_files(parsed_dirname, filter);
-    Vector<RankedMatch> matches;
-    for (auto& file : files)
-    {
-        if (RankedMatch match{file, fileprefix})
-            matches.push_back(match);
-    }
-    // Hack: when completing directories, also echo back the query if it
-    // is a valid directory. This enables menu completion to select the
-    // directory instead of a child.
-    if (only_dirs and not dirname.empty() and dirname.back() == '/' and fileprefix.empty()
-        and /* exists on disk */ not files.empty())
-    {
-        matches.push_back(RankedMatch{fileprefix, fileprefix});
-    }
-    std::sort(matches.begin(), matches.end());
-    const bool expand = (flags & FilenameFlags::Expand);
-    return candidates(matches, expand ? parsed_dirname : dirname);
-}
-
-CandidateList complete_command(StringView prefix, ByteCount cursor_pos)
-{
-    String real_prefix = parse_filename(prefix.substr(0, cursor_pos));
-    auto [dirname, fileprefix] = split_path(real_prefix);
-
-    if (not dirname.empty())
-    {
-        auto filter = [](const dirent& entry, const struct stat& st)
-        {
-            bool executable = (st.st_mode & S_IXUSR)
-                            | (st.st_mode & S_IXGRP)
-                            | (st.st_mode & S_IXOTH);
-            return S_ISDIR(st.st_mode) or (S_ISREG(st.st_mode) and executable);
-        };
-        auto files = list_files(dirname, filter);
-        Vector<RankedMatch> matches;
-        for (auto& file : files)
-        {
-            if (RankedMatch match{file, fileprefix})
-                matches.push_back(match);
-        }
-        std::sort(matches.begin(), matches.end());
-        return candidates(matches, dirname);
-    }
-
-    using TimeSpec = decltype(stat::st_mtim);
-
-    struct CommandCache
-    {
-        TimeSpec mtim = {};
-        Vector<String, MemoryDomain::Completion> commands;
-    };
-    static HashMap<String, CommandCache, MemoryDomain::Commands> command_cache;
-
-    Vector<RankedMatch> matches;
-    for (auto dir : StringView{getenv("PATH")} | split<StringView>(':'))
-    {
-        auto dirname = ((not dir.empty() and dir.back() == '/') ? dir.substr(0, dir.length()-1) : dir).str();
-
-        struct stat st;
-        if (stat(dirname.c_str(), &st))
-            continue;
-
-        auto& cache = command_cache[dirname];
-        if (memcmp(&cache.mtim, &st.st_mtim, sizeof(TimeSpec)) != 0)
-        {
-            auto filter = [](const dirent& entry, const struct stat& st) {
-                bool executable = (st.st_mode & S_IXUSR)
-                                | (st.st_mode & S_IXGRP)
-                                | (st.st_mode & S_IXOTH);
-                return S_ISREG(st.st_mode) and executable;
-            };
-
-            cache.commands = list_files<MemoryDomain::Completion>(dirname, filter);
-            memcpy(&cache.mtim, &st.st_mtim, sizeof(TimeSpec));
-        }
-        for (auto& cmd : cache.commands)
-        {
-            if (RankedMatch match{cmd, fileprefix})
-                matches.push_back(match);
-        }
-    }
-    std::sort(matches.begin(), matches.end());
-    auto it = std::unique(matches.begin(), matches.end());
-    matches.erase(it, matches.end());
-    return candidates(matches, "");
 }
 
 timespec get_fs_timestamp(StringView filename)

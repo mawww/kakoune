@@ -12,6 +12,7 @@ namespace Kakoune
 {
 
 class Context;
+class Regex;
 
 using CandidateList = Vector<String, MemoryDomain::Completion>;
 
@@ -46,6 +47,20 @@ inline Completions complete_nothing(const Context&, StringView, ByteCount cursor
 {
     return {cursor_pos, cursor_pos};
 }
+
+enum class FilenameFlags
+{
+    None = 0,
+    OnlyDirectories = 1 << 0,
+    Expand = 1 << 1
+};
+constexpr bool with_bit_ops(Meta::Type<FilenameFlags>) { return true; }
+
+CandidateList complete_filename(StringView prefix, const Regex& ignore_regex,
+                                ByteCount cursor_pos = -1,
+                                FilenameFlags flags = FilenameFlags::None);
+
+CandidateList complete_command(StringView prefix, ByteCount cursor_pos = -1);
 
 Completions shell_complete(const Context& context, StringView, ByteCount cursor_pos);
 

@@ -8,7 +8,7 @@
 #include "meta.hh"
 #include "string.hh"
 #include "units.hh"
-#include "vector.hh"
+#include "utils.hh"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -17,17 +17,11 @@
 namespace Kakoune
 {
 
-class String;
-class Regex;
-
 struct file_access_error : runtime_error
 {
     file_access_error(StringView filename, StringView error_desc);
     file_access_error(int fd, StringView error_desc);
 };
-
-
-using CandidateList = Vector<String, MemoryDomain::Completion>;
 
 // parse ~/ and %/ in filename and returns the translated filename
 String parse_filename(StringView filename, StringView buf_dir = {});
@@ -82,7 +76,7 @@ String find_file(StringView filename, StringView buf_dir, ConstArrayView<String>
 bool file_exists(StringView filename);
 bool regular_file_exists(StringView filename);
 
-Vector<String> list_files(StringView directory);
+void list_files(StringView directory, FunctionRef<void (StringView, const struct stat&)> callback);
 
 void make_directory(StringView dir, mode_t mode);
 
@@ -102,20 +96,6 @@ constexpr bool operator==(const timespec& lhs, const timespec& rhs)
 {
     return lhs.tv_sec == rhs.tv_sec and lhs.tv_nsec == rhs.tv_nsec;
 }
-
-enum class FilenameFlags
-{
-    None = 0,
-    OnlyDirectories = 1 << 0,
-    Expand = 1 << 1
-};
-constexpr bool with_bit_ops(Meta::Type<FilenameFlags>) { return true; }
-
-CandidateList complete_filename(StringView prefix, const Regex& ignore_regex,
-                                ByteCount cursor_pos = -1,
-                                FilenameFlags flags = FilenameFlags::None);
-
-CandidateList complete_command(StringView prefix, ByteCount cursor_pos = -1);
 
 template<bool atomic, int buffer_size = 4096>
 struct BufferedWriter
