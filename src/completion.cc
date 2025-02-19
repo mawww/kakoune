@@ -5,6 +5,10 @@
 #include "option_manager.hh"
 #include "regex.hh"
 
+#if defined(__APPLE__)
+#define st_mtim st_mtimespec
+#endif
+
 namespace Kakoune
 {
 
