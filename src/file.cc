@@ -1,14 +1,15 @@
 #include "file.hh"
 
 #include "assert.hh"
-#include "buffer.hh"
-#include "client.hh"
-#include "exception.hh"
 #include "flags.hh"
 #include "event_manager.hh"
 #include "ranked_match.hh"
 #include "regex.hh"
 #include "string.hh"
+#include "string_utils.hh"
+#include "format.hh"
+#include "ranges.hh"
+#include "hash_map.hh"
 
 #include <limits>
 #include <cerrno>
@@ -40,16 +41,12 @@
 namespace Kakoune
 {
 
-struct file_access_error : runtime_error
-{
-public:
-    file_access_error(StringView filename,
-                      StringView error_desc)
-        : runtime_error(format("{}: {}", filename, error_desc)) {}
+file_access_error::file_access_error(StringView filename,
+                                     StringView error_desc)
+    : runtime_error(format("{}: {}", filename, error_desc)) {}
 
-    file_access_error(int fd, StringView error_desc)
-        : runtime_error(format("fd {}: {}", fd, error_desc)) {}
-};
+file_access_error::file_access_error(int fd, StringView error_desc)
+    : runtime_error(format("fd {}: {}", fd, error_desc)) {}
 
 String parse_filename(StringView filename, StringView buf_dir)
 {
@@ -272,62 +269,34 @@ void write(int fd, StringView data)
         else if (errno == EAGAIN and not atomic and EventManager::has_instance())
             EventManager::instance().handle_next_events(EventMode::Urgent, nullptr, std::chrono::nanoseconds{});
         else
-            throw file_access_error(format("fd: {}", fd), strerror(errno));
+            throw file_access_error(fd, strerror(errno));
     }
 }
 template void write<true>(int fd, StringView data);
 template void write<false>(int fd, StringView data);
 
-static int create_file(const Context& context, const char* filename)
+int create_file(const char* filename)
 {
     int fd;
     const int flags = O_CREAT | O_WRONLY | O_TRUNC | (EventManager::has_instance() ? O_NONBLOCK : 0);
-    using namespace std::chrono;
-    BusyIndicator busy_indicator{context, [&](seconds elapsed) {
-        return DisplayLine{format("waiting to open file ({}s)", elapsed.count()),
-                           context.faces()["Information"]};
-    }};
     while ((fd = open(filename, flags, 0644)) == -1)
     {
         if (errno == ENXIO and EventManager::has_instance()) // trying to open a FIFO with no readers yet
-            EventManager::instance().handle_next_events(EventMode::Urgent, nullptr, nanoseconds{1'000'000});
+            EventManager::instance().handle_next_events(EventMode::Urgent, nullptr,
+                                                        std::chrono::nanoseconds{1'000'000});
         else
             return -1;
     }
     return fd;
 }
 
-void write_to_file(const Context& context, StringView filename, StringView data)
+void write_to_file(StringView filename, StringView data)
 {
-    int fd = create_file(context, filename.zstr());
+    int fd = create_file(filename.zstr());
     if (fd == -1)
         throw file_access_error(filename, strerror(errno));
     auto close_fd = on_scope_end([fd]{ close(fd); });
     write(fd, data);
-}
-
-void write_buffer_to_fd(Buffer& buffer, int fd)
-{
-    auto eolformat = buffer.options()["eolformat"].get<EolFormat>();
-    StringView eoldata;
-    if (eolformat == EolFormat::Crlf)
-        eoldata = "\r\n";
-    else
-        eoldata = "\n";
-
-
-    BufferedWriter<false> writer{fd};
-    if (buffer.options()["BOM"].get<ByteOrderMark>() == ByteOrderMark::Utf8)
-        writer.write("\xEF\xBB\xBF");
-
-    for (LineCount i = 0; i < buffer.line_count(); ++i)
-    {
-        // end of lines are written according to eolformat but always
-        // stored as \n
-        StringView linedata = buffer[i];
-        writer.write(linedata.substr(0, linedata.length()-1));
-        writer.write(eoldata);
-    }
 }
 
 int open_temp_file(StringView filename, char (&buffer)[PATH_MAX])
@@ -347,72 +316,6 @@ int open_temp_file(StringView filename)
 {
     char buffer[PATH_MAX];
     return open_temp_file(filename, buffer);
-}
-
-void write_buffer_to_file(const Context& context, Buffer& buffer, StringView filename,
-                          WriteMethod method, WriteFlags flags)
-{
-    auto zfilename = filename.zstr();
-    struct stat st;
-
-    bool replace = method == WriteMethod::Replace;
-    bool force = flags & WriteFlags::Force;
-
-    if ((replace or force) and (::stat(zfilename, &st) != 0 or
-                                (st.st_mode & S_IFMT) != S_IFREG))
-    {
-        force = false;
-        replace = false;
-    }
-
-    if (force and ::chmod(zfilename, st.st_mode | S_IWUSR) < 0)
-        throw runtime_error(format("unable to change file permissions: {}", strerror(errno)));
-
-    char temp_filename[PATH_MAX];
-    const int fd = replace ? open_temp_file(filename, temp_filename)
-                           : create_file(context, zfilename);
-    if (fd == -1)
-    {
-        auto saved_errno = errno;
-        if (force)
-            ::chmod(zfilename, st.st_mode);
-        throw file_access_error(filename, strerror(saved_errno));
-    }
-
-    {
-        auto close_fd = on_scope_end([fd]{ close(fd); });
-        write_buffer_to_fd(buffer, fd);
-        if (flags & WriteFlags::Sync)
-            ::fsync(fd);
-    }
-
-    if (replace and geteuid() == 0 and ::chown(temp_filename, st.st_uid, st.st_gid) < 0)
-        throw runtime_error(format("unable to set replacement file ownership: {}", strerror(errno)));
-    if (replace and ::chmod(temp_filename, st.st_mode) < 0)
-        throw runtime_error(format("unable to set replacement file permissions: {}", strerror(errno)));
-    if (force and not replace and ::chmod(zfilename, st.st_mode) < 0)
-        throw runtime_error(format("unable to restore file permissions: {}", strerror(errno)));
-
-    if (replace and rename(temp_filename, zfilename) != 0)
-    {
-        if (force)
-            ::chmod(zfilename, st.st_mode);
-        throw runtime_error("replacing file failed");
-    }
-
-    if ((buffer.flags() & Buffer::Flags::File) and
-        real_path(filename) == real_path(buffer.name()))
-        buffer.notify_saved(get_fs_status(real_path(filename)));
-}
-
-void write_buffer_to_backup_file(Buffer& buffer)
-{
-    const int fd = open_temp_file(buffer.name());
-    if (fd >= 0)
-    {
-        write_buffer_to_fd(buffer, fd);
-        close(fd);
-    }
 }
 
 String find_file(StringView filename, StringView buf_dir, ConstArrayView<String> paths)

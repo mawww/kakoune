@@ -1007,15 +1007,14 @@ int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet, 
             }
         };
 
-        Context empty_context{Context::EmptyContextFlag{}};
         for (auto& file : files)
         {
             Buffer* buffer = open_file_buffer(file, Buffer::Flags::NoHooks);
             if (not suffix_backup.empty())
-                write_buffer_to_file(empty_context, *buffer, buffer->name() + suffix_backup,
+                write_buffer_to_file(*buffer, buffer->name() + suffix_backup,
                                      WriteMethod::Overwrite, WriteFlags::None);
             apply_to_buffer(*buffer);
-            write_buffer_to_file(empty_context, *buffer, buffer->name(),
+            write_buffer_to_file(*buffer, buffer->name(),
                                  WriteMethod::Overwrite, WriteFlags::None);
             buffer_manager.delete_buffer(*buffer);
         }

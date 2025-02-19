@@ -81,6 +81,20 @@ Buffer* open_or_create_file_buffer(StringView filename,
                                    Buffer::Flags flags = Buffer::Flags::None);
 void reload_file_buffer(Buffer& buffer);
 
+enum class WriteFlags
+{
+    None  = 0,
+    Force = 0b01,
+    Sync  = 0b10
+};
+constexpr bool with_bit_ops(Meta::Type<WriteFlags>) { return true; }
+
+void write_buffer_to_file(Buffer& buffer, StringView filename,
+                          WriteMethod method, WriteFlags flags);
+void write_buffer_to_fd(Buffer& buffer, int fd);
+void write_buffer_to_backup_file(Buffer& buffer);
+
+
 void write_to_debug_buffer(StringView str);
 
 Vector<String> history_as_strings(const Vector<Buffer::HistoryNode>& history);

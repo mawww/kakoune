@@ -50,8 +50,6 @@ constexpr auto enum_desc(Meta::Type<ByteOrderMark>)
 
 class Buffer;
 
-constexpr timespec InvalidTime = { -1, -1 };
-
 // A BufferIterator permits to iterate over the characters of a buffer
 class BufferIterator
 {

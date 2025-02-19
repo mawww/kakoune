@@ -4,7 +4,7 @@
 #include "buffer.hh"
 #include "client_manager.hh"
 #include "exception.hh"
-#include "file.hh"
+#include "buffer_utils.hh"
 #include "ranges.hh"
 #include "string.hh"
 #include "regex.hh"

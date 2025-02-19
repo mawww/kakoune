@@ -166,6 +166,96 @@ void reload_file_buffer(Buffer& buffer)
     buffer.flags() &= ~Buffer::Flags::New;
 }
 
+void write_buffer_to_fd(Buffer& buffer, int fd)
+{
+    auto eolformat = buffer.options()["eolformat"].get<EolFormat>();
+    StringView eoldata;
+    if (eolformat == EolFormat::Crlf)
+        eoldata = "\r\n";
+    else
+        eoldata = "\n";
+
+
+    BufferedWriter<false> writer{fd};
+    if (buffer.options()["BOM"].get<ByteOrderMark>() == ByteOrderMark::Utf8)
+        writer.write("\xEF\xBB\xBF");
+
+    for (LineCount i = 0; i < buffer.line_count(); ++i)
+    {
+        // end of lines are written according to eolformat but always
+        // stored as \n
+        StringView linedata = buffer[i];
+        writer.write(linedata.substr(0, linedata.length()-1));
+        writer.write(eoldata);
+    }
+}
+
+void write_buffer_to_file(Buffer& buffer, StringView filename,
+                          WriteMethod method, WriteFlags flags)
+{
+    auto zfilename = filename.zstr();
+    struct stat st;
+
+    bool replace = method == WriteMethod::Replace;
+    bool force = flags & WriteFlags::Force;
+
+    if ((replace or force) and (::stat(zfilename, &st) != 0 or
+                                (st.st_mode & S_IFMT) != S_IFREG))
+    {
+        force = false;
+        replace = false;
+    }
+
+    if (force and ::chmod(zfilename, st.st_mode | S_IWUSR) < 0)
+        throw runtime_error(format("unable to change file permissions: {}", strerror(errno)));
+
+    char temp_filename[PATH_MAX];
+    const int fd = replace ? open_temp_file(filename, temp_filename)
+                           : create_file(zfilename);
+    if (fd == -1)
+    {
+        auto saved_errno = errno;
+        if (force)
+            ::chmod(zfilename, st.st_mode);
+        throw file_access_error(filename, strerror(saved_errno));
+    }
+
+    {
+        auto close_fd = on_scope_end([fd]{ close(fd); });
+        write_buffer_to_fd(buffer, fd);
+        if (flags & WriteFlags::Sync)
+            ::fsync(fd);
+    }
+
+    if (replace and geteuid() == 0 and ::chown(temp_filename, st.st_uid, st.st_gid) < 0)
+        throw runtime_error(format("unable to set replacement file ownership: {}", strerror(errno)));
+    if (replace and ::chmod(temp_filename, st.st_mode) < 0)
+        throw runtime_error(format("unable to set replacement file permissions: {}", strerror(errno)));
+    if (force and not replace and ::chmod(zfilename, st.st_mode) < 0)
+        throw runtime_error(format("unable to restore file permissions: {}", strerror(errno)));
+
+    if (replace and rename(temp_filename, zfilename) != 0)
+    {
+        if (force)
+            ::chmod(zfilename, st.st_mode);
+        throw runtime_error("replacing file failed");
+    }
+
+    if ((buffer.flags() & Buffer::Flags::File) and
+        real_path(filename) == real_path(buffer.name()))
+        buffer.notify_saved(get_fs_status(real_path(filename)));
+}
+
+void write_buffer_to_backup_file(Buffer& buffer)
+{
+    const int fd = open_temp_file(buffer.name());
+    if (fd >= 0)
+    {
+        write_buffer_to_fd(buffer, fd);
+        close(fd);
+    }
+}
+
 Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, AutoScroll scroll)
 {
     static ValueId fifo_watcher_id = get_free_value_id();
