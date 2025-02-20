@@ -2,10 +2,10 @@ declare-option -docstring "name of the client in which documentation is to be di
     str docsclient
 
 declare-option -docstring "git diff added character" \
-    str git_diff_add_char "▏"
+    str git_diff_add_char "▊"
 
 declare-option -docstring "git diff modified character" \
-    str git_diff_mod_char "▏"
+    str git_diff_mod_char "▊"
 
 declare-option -docstring "git diff deleted character" \
     str git_diff_del_char "_"
