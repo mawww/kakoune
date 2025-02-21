@@ -179,6 +179,10 @@ If unset,
 .Pa $XDG_CONFIG_HOME/kak
 is used.
 .
+.It Ev KAKOUNE_RUNTIME
+Overrides the location of the directory containing the Kakoune support files.
+If unset, location is determined from Kakoune's binary location.
+.
 .It Ev XDG_CONFIG_HOME
 Path to the user's configuration directory.
 If unset,
@@ -198,7 +202,9 @@ In the paths documented below,
 refers to the runtime directory, whose value is determined in relation
 to the path to
 .Nm Ap s
-binary location:
+binary location if 
+.Pa $KAKOUNE_RUNTIME
+is not set:
 .Pa <rtdir>
 =
 .Pa <path_to_kak_binary>/../share/kak .
