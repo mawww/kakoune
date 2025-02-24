@@ -50,8 +50,8 @@ add-highlighter shared/lua/code/variable regex \b\w*\b 0:variable # Everything i
 add-highlighter shared/lua/code/function_declaration regex \b(?:function\h+)(?:\w+\h*\.\h*)*([a-zA-Z_]\w*)\( 1:function
 add-highlighter shared/lua/code/function_call regex \b([a-zA-Z_]\w*)\h*(?=[\(\{]) 1:function
 add-highlighter shared/lua/code/keyword regex \b(break|do|else|elseif|end|for|function|goto|if|in|local|repeat|return|then|until|while)\b 0:keyword
-add-highlighter shared/lua/code/value regex \b(false|nil|true|self|[0-9]+(:?\.[0-9])?(:?[eE]-?[0-9]+)?|0x[0-9a-fA-F])\b 0:value
-add-highlighter shared/lua/code/symbolic_operator regex (\+|-|\*|/|%|\^|==?|~=|<=?|>=?|\.\.|\.\.\.|#) 0:operator
+add-highlighter shared/lua/code/value regex \b(false|nil|true|self|[0-9]+(:?\.[0-9])?(:?[eE]-?[0-9]+)?|0x[0-9a-fA-F]+)\b 0:value
+add-highlighter shared/lua/code/symbolic_operator regex (\+|-|\*|/|%|\^|==?|~=|<=?|>=?|\.\.\.?|#) 0:operator
 add-highlighter shared/lua/code/keyword_operator regex \b(and|or|not)\b 0:operator
 add-highlighter shared/lua/code/module regex \b(_G|_ENV)\b 0:module
 add-highlighter shared/lua/code/attribute regex \B(<[a-zA-Z_]\w*>)\B 0:attribute
@@ -118,7 +118,7 @@ define-command -hidden lua-indent-on-new-line %[
             , Kx \
             <a-K>\A\h*--<ret> \
             <a-K>\A[^\n]*\b(end|until)\b<ret> \
-            <a-k>\A(\h*\b(do|else|elseif|for|function|if|repeat|while)\b|[^\n]*[({]$|[^\n]*\bfunction\b\h*[(])<ret> \
+            <a-k>\A(\h*\b(do|else|elseif|for|(local\h+)?function|if|repeat|while)\b|[^\n]*[({]$|[^\n]*\bfunction\b\h*[(])<ret> \
             <a-:><semicolon><a-gt>
         ]
     ]
@@ -136,7 +136,7 @@ define-command -hidden lua-insert-on-new-line %[
                 # check that starts with a block keyword that is not closed on the same line
                 execute-keys -draft \
                     kx \
-                    <a-k>^\h*\b(else|elseif|do|for|function|if|while)\b|[^\n]\bfunction\b\h*[(]<ret> \
+                    <a-k>^\h*\b(else|elseif|do|for|(local\h+)?function|if|while)\b|[^\n]\bfunction\b\h*[(]<ret> \
                     <a-K>\bend\b<ret>
                 # check that the block is empty and is not closed on a different line
                 execute-keys -draft <a-a>i <a-K>^[^\n]+\n[^\n]+\n<ret> jx <a-K>^<c-r>x\b(else|elseif|end)\b<ret>
