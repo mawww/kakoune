@@ -311,5 +311,6 @@ with open("doc_gen/antora-playbook.yml", "w") as f:
 # Finally, generate the documentation,
 # results will be saved to the output directory
 # as specified in the `antora-playbook.yml`.
-subprocess.run(["antora", "generate", "doc_gen/antora-playbook.yml"])
+use_npx = shutil.which("antora") is None and shutil.which("npx") is not None
+subprocess.run((["npx"] if use_npx else []) + ["antora", "generate", "doc_gen/antora-playbook.yml"])
 subprocess.run(["xdg-open", "./doc_gen/build/Kakoune/latest/index.html"])
