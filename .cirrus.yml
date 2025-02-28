@@ -1,6 +1,6 @@
 freebsd_task:
     freebsd_instance:
-        image_family: freebsd-13-3
+        image_family: freebsd-14-2
     matrix:
         - name: freebsd_clang
           env:
@@ -39,9 +39,9 @@ macos_task:
         image: ghcr.io/cirruslabs/macos-ventura-base:latest
     matrix:
         - name: macos_clang
-          clang_script: brew install llvm@13
+          clang_script: brew install llvm
           env:
-              CXX: /opt/homebrew/opt/llvm@13/bin/clang++
+              CXX: /opt/homebrew/opt/llvm/bin/clang++
         - name: macos_gcc
           gcc_script:
             - /usr/sbin/softwareupdate --install-rosetta --agree-to-license
