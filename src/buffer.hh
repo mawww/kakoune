@@ -140,7 +140,7 @@ public:
     bool set_name(String name);
     void update_display_name();
 
-    BufferRange insert(BufferCoord pos, StringView content);
+    BufferRange insert(BufferCoord pos, StringView content, bool draft = false);
     BufferCoord erase(BufferCoord begin, BufferCoord end);
     BufferRange replace(BufferCoord begin, BufferCoord end, StringView content);
 
@@ -218,7 +218,7 @@ public:
 
     struct Change
     {
-        enum Type : char { Insert, Erase };
+        enum Type : char { Insert, Erase, Draft };
         Type type;
         BufferCoord begin;
         BufferCoord end;
@@ -263,7 +263,7 @@ public:
 private:
     void on_option_changed(const Option& option) override;
 
-    BufferRange do_insert(BufferCoord pos, StringView content);
+    BufferRange do_insert(BufferCoord pos, StringView content, bool draft = false);
     BufferCoord do_erase(BufferCoord begin, BufferCoord end);
 
     void apply_modification(const Modification& modification);
