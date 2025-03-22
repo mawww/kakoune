@@ -376,12 +376,10 @@ public:
         }
 
         context().hooks().run_hook(Hook::NormalKey, to_string(key), context());
+        if (should_clear and not transient and context().has_client())
+            context().client().schedule_clear();
         if (enabled() and not transient) // The hook might have changed mode
-        {
-            if (should_clear and context().has_client())
-                context().client().schedule_clear();
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
-        }
     }
 
     ModeInfo mode_info() const override
@@ -1184,6 +1182,8 @@ public:
           m_idle_timer{TimePoint::max(), context().flags() & Context::Flags::Draft ?
                        Timer::Callback{} : [this](Timer&) {
                            RefPtr<InputMode> keep_alive{this}; // hook could trigger pop_mode()
+                           if (context().has_client())
+                               context().client().clear_pending();
                            m_completer.update(m_auto_complete);
                            context().hooks().run_hook(Hook::InsertIdle, "", context());
                        }},
