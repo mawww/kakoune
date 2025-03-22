@@ -124,7 +124,7 @@ using the built-in `:doc` command.
      `---' `---'    cursor, use `<a-;>`, and to collapse the selection onto
                     its anchor, use `;`.
 
-                    Moreover, not only Kakoune expands the principle of
+                    Moreover, not only does Kakoune expand the principle of
                     "cursor" by introducing selections, but it also allows
         .---,       multiple selections within the same buffer. This makes
         | % |       it very convenient to modify text in multiple locations
