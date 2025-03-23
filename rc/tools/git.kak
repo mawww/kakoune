@@ -229,7 +229,10 @@ define-command -params 1.. \
                     }
                     require-module diff
                     try %{
-                        diff-parse END %{
+                        diff-parse BEGIN %{
+                            $directory = qx(git rev-parse --show-toplevel);
+                            chomp $directory;
+                        } END %{
                             my $filename = $other_file;
                             my $line = $other_file_line;
                             if (not defined $commit) {
@@ -246,8 +249,10 @@ define-command -params 1.. \
                                 $line = $file_line;
                             }
                             $line = $line or 1;
-                            printf "echo -to-file '${kak_response_fifo}' -quoting shell %s %s %d %d",
-                                $commit, quote($filename), $line, ('${kak_cursor_column}' - 1);
+                            my $filename_relative = substr($filename, length "$directory/");
+                            printf "echo -to-file '${kak_response_fifo}' -quoting shell %s %s %s %d %d",
+                               $commit, quote($filename), quote($filename_relative),
+                               $line, ('${kak_cursor_column}' - 1);
                         }
                     } catch %{
                         echo -to-file '${kak_response_fifo}' -quoting shell -- %val{error}
@@ -261,25 +266,26 @@ define-command -params 1.. \
                 exit
             fi
             commit=$1
-            file=${2#"$PWD/"}
-            cursor_line=$3
-            cursor_column=$4
-            shift 4
+            file_absolute=$2
+            file_relative=$3
+            cursor_line=$4
+            cursor_column=$5
+            shift 5
             # Log commit and file name because they are only echoed briefly
             # and not shown elsewhere (we don't have a :messages buffer).
-            message="Blaming $file as of $(git rev-parse --short $commit)"
+            message="Blaming $file_relative as of $(git rev-parse --short $commit)"
             echo "echo -debug -- $(kakquote "$message")"
             on_close_fifo="
                 execute-keys -client ${kak_client} ${cursor_line}g<a-h>${cursor_column}lh
                 evaluate-commands -client ${kak_client} %{
-                    set-option buffer git_blob $(kakquote "$commit:$file")
+                    set-option buffer git_blob $(kakquote "$commit:$file_absolute")
                     git blame $(for arg; do kakquote "$arg"; printf " "; done)
                     hook -once window NormalIdle .* %{
                         execute-keys vv
                         echo -markup -- $(kakquote "{Information}{\\}$message. Press <ret> to jump to blamed commit")
                     }
                 }
-            " show_git_cmd_output show "$commit:$file"
+            " show_git_cmd_output show "$commit:$file_relative"
             exit
         } fi
         if [ -n "${kak_opt_git_blob}" ]; then {
@@ -570,6 +576,8 @@ define-command -params 1.. \
                     try %{
                         diff-parse BEGIN %{
                             $version = "-";
+                            $directory = qx(git rev-parse --show-toplevel);
+                            chomp $directory;
                         } END %{
                             if ($diff_line_text !~ m{^[ -]}) {
                                 print quote "git blame-jump: recursive blame only works on context or deleted lines";
