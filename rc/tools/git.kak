@@ -144,9 +144,13 @@ define-command -params 1.. \
   git %{ evaluate-commands %sh{
     cd_bufdir() {
         dirname_buffer="${kak_buffile%/*}"
+        if [ "${dirname_buffer}" = "${kak_buffile}" ]; then
+            printf 'fail git: cannot operate on scratch buffer: %s\n' "${kak_buffile}"
+            return 1
+        fi
         cd "${dirname_buffer}" 2>/dev/null || {
-            printf 'fail Unable to change the current working directory to: %s\n' "${dirname_buffer}"
-            exit 1
+            printf 'fail git: unable to change the current working directory to: %s\n' "${dirname_buffer}"
+            return 1
         }
     }
     kakquote() {
@@ -292,6 +296,11 @@ define-command -params 1.. \
             set -- "$@" "${kak_opt_git_blob%%:*}" -- "${kak_opt_git_blob#*:}"
             blame_stdin=/dev/null
         } else {
+            if ! error=$(cd_bufdir); then
+                echo 'remove-highlighter window/git-blame'
+                printf %s\\n "$error"
+                exit
+            fi
             set -- "$@" --contents - -- "${kak_buffile}" # use stdin to work around git bug
             blame_stdin=$(mktemp "${TMPDIR:-/tmp}"/kak-git.XXXXXX)
             echo >${kak_command_fifo} "evaluate-commands -save-regs | %{
@@ -307,9 +316,6 @@ define-command -params 1.. \
         echo 'echo -markup {Information}Press <ret> to jump to blamed commit'
         (
             trap - INT QUIT
-            if [ -z "${kak_opt_git_blob}" ]; then
-                cd_bufdir
-            fi
             printf %s "evaluate-commands -client '$kak_client' %{
                       set-option buffer=$kak_bufname git_blame_flags '$kak_timestamp'
                       set-option buffer=$kak_bufname git_blame_index '$kak_timestamp'
@@ -404,7 +410,7 @@ define-command -params 1.. \
 
     update_diff() {
         (
-            cd_bufdir
+            cd_bufdir || exit
             diff_buffer_against_rev "" -U0 | perl -e '
             use utf8;
             $flags = $ENV{"kak_timestamp"};
@@ -758,7 +764,7 @@ define-command -params 1.. \
     }
 
     apply_selections() {
-        if [ -z "$(cd_bufdir >/dev/null 2>&1; git ls-files -- ":(literal)${kak_buffile}")" ]; then {
+        if [ -z "$(cd_bufdir >/dev/null 2>&1 && git ls-files -- ":(literal)${kak_buffile}")" ]; then {
             enquoted="$(printf '"%s" ' "$@")"
             echo "require-module patch"
             echo "patch git apply $enquoted"
@@ -779,7 +785,7 @@ define-command -params 1.. \
             echo "fail %{git apply on buffer contents doesn't make sense without --reverse or --cached}"
             exit
         fi
-        cd_bufdir
+        cd_bufdir || exit
         num_inserted=0
         num_deleted=0
         for selection_desc in $kak_selections_desc; do {
