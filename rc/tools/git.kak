@@ -195,6 +195,9 @@ define-command -params 1.. \
     }
 
     diff_buffer_against_rev() {
+        if ! command -v diff >/dev/null; then
+            echo >${kak_command_fifo} "fail diff: command not found"
+        fi
         rev=$1 # empty means index
         shift
         buffile_relative=${kak_buffile#"$(git rev-parse --show-toplevel)/"}
