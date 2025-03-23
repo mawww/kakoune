@@ -561,6 +561,10 @@ define-command -params 1.. \
     }
 
     blame_jump() {
+        if [ -z "${kak_client}" ]; then
+            echo fail git blame-jump: no client in context
+            exit
+        fi
         echo >${kak_command_fifo} "echo -to-file ${kak_response_fifo} -- %opt{git_blame}"
         blame_info=$(cat < ${kak_response_fifo})
         blame_index=
