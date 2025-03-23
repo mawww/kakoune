@@ -91,7 +91,7 @@ public:
                      Timer::Callback idle_callback = Timer::Callback{});
 
     // process the given key
-    void handle_key(Key key, bool synthesized);
+    void handle_key(Key key, bool synthesized = true);
 
     void refresh_ifn();
 

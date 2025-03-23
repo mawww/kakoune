@@ -1612,7 +1612,7 @@ void InputHandler::repeat_last_insert()
 
     push_mode(new InputModes::Insert(*this, m_last_insert.mode, m_last_insert.count, nullptr));
     for (auto& key : m_last_insert.keys)
-        handle_key(key, true);
+        handle_key(key);
     kak_assert(dynamic_cast<InputModes::Normal*>(&current_mode()) != nullptr);
 }
 

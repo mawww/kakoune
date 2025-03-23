@@ -112,7 +112,7 @@ bool Client::process_pending_inputs()
             else
             {
                 context().ensure_cursor_visible = true;
-                m_input_handler.handle_key(key, false);
+                m_input_handler.handle_key(key, /*synthesized=*/false);
             }
 
             context().hooks().run_hook(Hook::RawKey, to_string(key), context());

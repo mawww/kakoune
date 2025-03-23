@@ -997,7 +997,7 @@ int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet, 
                 };
 
                 for (auto& key : keys)
-                    input_handler.handle_key(key, true);
+                    input_handler.handle_key(key);
             }
             catch (runtime_error& err)
             {
