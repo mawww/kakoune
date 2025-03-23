@@ -30,8 +30,9 @@ public:
     InputMode(const InputMode&) = delete;
     InputMode& operator=(const InputMode&) = delete;
 
-    void handle_key(Key key, bool synthesized) { RefPtr<InputMode> keep_alive{this}; on_key(key, synthesized); }
+    void handle_key(Key key) { RefPtr<InputMode> keep_alive{this}; on_key(key); }
     virtual void paste(StringView content);
+    virtual void on_raw_key() {}
 
     virtual void on_enabled(bool from_pop) {}
     virtual void on_disabled(bool from_push) {}
@@ -57,7 +58,7 @@ public:
     using Insertion = InputHandler::Insertion;
 
 protected:
-    virtual void on_key(Key key, bool synthesized) = 0;
+    virtual void on_key(Key key) = 0;
 
     void push_mode(InputMode* new_mode) { m_input_handler.push_mode(new_mode); }
     void pop_mode() { m_input_handler.pop_mode(this); }
@@ -279,7 +280,7 @@ public:
         }
     }
 
-    void on_key(Key key, bool) override
+    void on_key(Key key) override
     {
         bool should_clear = false;
 
@@ -682,7 +683,6 @@ public:
           m_empty_text{std::move(emptystr)},
           // This prompt may outlive local scopes so ignore local faces.
           m_line_editor{context().faces(false)}, m_flags(flags),
-          m_was_interactive{not context().noninteractive()},
           m_history{RegisterManager::instance()[history_register]},
           m_current_history{-1},
           m_auto_complete{context().options()["autocomplete"].get<AutoComplete>() & AutoComplete::Prompt},
@@ -702,11 +702,9 @@ public:
         m_line_editor.reset(std::move(initstr), m_empty_text);
     }
 
-    void on_key(Key key, bool synthesized) override
+    void on_key(Key key) override
     {
         const String& line = m_line_editor.line();
-        if (not synthesized)
-            m_was_interactive = true;
 
         auto can_auto_insert_completion = [&] {
             const bool has_completions = not m_completions.candidates.empty();
@@ -968,6 +966,10 @@ public:
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
     }
 
+    void on_raw_key() override {
+        m_was_interactive = true;
+    }
+
     void set_prompt_face(Face face)
     {
         if (face != m_prompt_face)
@@ -1117,7 +1119,7 @@ private:
     LineEditor     m_line_editor;
     bool           m_line_changed = false;
     PromptFlags    m_flags;
-    bool           m_was_interactive;
+    bool           m_was_interactive = false;
     Register&      m_history;
     int            m_current_history;
     bool           m_auto_complete;
@@ -1143,7 +1145,7 @@ public:
         : InputMode(input_handler), m_name{std::move(name)}, m_callback(std::move(callback)), m_keymap_mode(keymap_mode),
           m_idle_timer{Clock::now() + get_idle_timeout(context()), std::move(idle_callback)} {}
 
-    void on_key(Key key, bool) override
+    void on_key(Key key) override
     {
         // maintain hooks disabled in the callback if they were before pop_mode
         ScopedSetBool disable_hooks(context().hooks_disabled(),
@@ -1229,7 +1231,7 @@ public:
         }
     }
 
-    void on_key(Key key, bool synthesized) override
+    void on_key(Key key) override
     {
         auto& buffer = context().buffer();
 
@@ -1682,21 +1684,23 @@ void InputHandler::handle_key(Key key, bool synthesized)
     ++m_handle_key_level;
     auto dec = on_scope_end([this]{ --m_handle_key_level;} );
 
-    auto process_key = [this](Key k, bool synthesized) {
+    if (not synthesized)
+        current_mode().on_raw_key();
+
+    auto process_key = [this](Key k) {
         record_key(k);
-        current_mode().handle_key(k, synthesized);
+        current_mode().handle_key(k);
     };
 
     const auto keymap_mode = current_mode().keymap_mode();
     KeymapManager& keymaps = m_context.keymaps();
     if (keymaps.is_mapped(key, keymap_mode) and not m_context.keymaps_disabled())
     {
-        ScopedSetBool noninteractive{context().noninteractive()};
         for (auto& k : keymaps.get_mapping_keys(key, keymap_mode))
-            process_key(k, true);
+            process_key(k);
     }
     else
-        process_key(key, synthesized or m_handle_key_level > 1);
+        process_key(key);
 
     if (m_handle_key_level < m_recording_level)
     {

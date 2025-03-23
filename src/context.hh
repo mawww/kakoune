@@ -131,9 +131,6 @@ public:
     NestedBool& keymaps_disabled() { return m_keymaps_disabled; }
     const NestedBool& keymaps_disabled() const { return m_keymaps_disabled; }
 
-    NestedBool& noninteractive() { return m_noninteractive; }
-    const NestedBool& noninteractive() const { return m_noninteractive; }
-
     Flags flags() const { return m_flags; }
 
     JumpList& jump_list() { return m_jump_list; }
@@ -211,7 +208,6 @@ private:
 
     NestedBool m_hooks_disabled;
     NestedBool m_keymaps_disabled;
-    NestedBool m_noninteractive;
 };
 
 struct ScopedEdition

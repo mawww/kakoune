@@ -1,0 +1,3 @@
+map global normal <c-1> %{:nop }
+map global prompt <c-2> %{hello}
+map global prompt <c-j> <ret>

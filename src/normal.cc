@@ -2078,7 +2078,6 @@ void exec_user_mappings(Context& context, NormalParams params)
             return;
 
         ScopedSetBool disable_keymaps(context.keymaps_disabled());
-        ScopedSetBool noninteractive(context.noninteractive());
 
         InputHandler::ScopedForceNormal force_normal{context.input_handler(), params};
 
