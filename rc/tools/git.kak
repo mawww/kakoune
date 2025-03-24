@@ -201,10 +201,7 @@ define-command -params 1.. \
         rev=$1 # empty means index
         shift
         buffile_relative=${kak_buffile#"$(git rev-parse --show-toplevel)/"}
-        echo >${kak_command_fifo} "evaluate-commands -save-regs | %{
-            set-register | %{ cat >${kak_response_fifo} }
-            execute-keys -draft %{%<a-|><ret>}
-        }"
+        echo >${kak_command_fifo} "evaluate-commands -no-hooks write ${kak_response_fifo}"
         git show "$rev:${buffile_relative}" |
             diff - ${kak_response_fifo} "$@" |
             awk -v buffile_relative="$buffile_relative" '
@@ -304,13 +301,10 @@ define-command -params 1.. \
             fi
             set -- "$@" --contents - -- "${kak_buffile}" # use stdin to work around git bug
             blame_stdin=$(mktemp "${TMPDIR:-/tmp}"/kak-git.XXXXXX)
-            echo >${kak_command_fifo} "evaluate-commands -save-regs | %{
-                set-register | %{
-                    cat >${blame_stdin}
-                    : >${kak_response_fifo}
-                }
-                execute-keys -client ${kak_client} -draft %{%<a-|><ret>}
-            }"
+            echo >${kak_command_fifo} "
+                evaluate-commands -no-hooks write -force ${blame_stdin}
+                echo -to-file ${kak_response_fifo}
+            "
             : <${kak_response_fifo}
         } fi
         echo 'map window normal <ret> %{:git blame-jump<ret>}'
@@ -626,10 +620,7 @@ define-command -params 1.. \
             } else {
                 set -- --contents - -- "${kak_buffile}" # use stdin to work around git bug
                 blame_stdin=${kak_response_fifo}
-                echo >${kak_command_fifo} "evaluate-commands -save-regs | %{
-                    set-register | %{ cat >${kak_response_fifo} }
-                    execute-keys -client ${kak_client} -draft %{%<a-|><ret>}
-                }"
+                echo >${kak_command_fifo} "evaluate-commands -no-hooks write ${kak_response_fifo}"
             } fi
             if ! blame_info=$(
                 git blame --porcelain -L"$cursor_line,$cursor_line" "$@" <${blame_stdin})
