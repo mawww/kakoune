@@ -287,10 +287,8 @@ define-command -params 1.. \
                 evaluate-commands -client ${kak_client} %{
                     set-option buffer git_blob $(kakquote "$commit:$file_absolute")
                     git blame $(for arg; do kakquote "$arg"; printf " "; done)
-                    hook -once window NormalIdle .* %{
-                        execute-keys vv
-                        echo -markup -- $(kakquote "{Information}{\\}$message. Press <ret> to jump to blamed commit")
-                    }
+                    echo -markup -- $(kakquote "{Information}{\\}$message. Press <ret> to jump to blamed commit")
+                    hook -once window NormalIdle .* %{ execute-keys vv }
                 }
             " show_git_cmd_output show "$commit:$file_relative"
             exit
@@ -754,11 +752,9 @@ define-command -params 1.. \
                         } END $SQ$SQ
                             print \"execute-keys -client $ENV{client} \${diff_line}g<a-h>$ENV{cursor_column}l;\";
                             printf \"evaluate-commands -client $ENV{client} $SQ$SQ$SQ$SQ
-                                hook -once window NormalIdle .* $SQ$SQ$SQ$SQ$SQ$SQ$SQ$SQ
-                                    execute-keys vv
-                                    echo -markup -- %s
-                                $SQ$SQ$SQ$SQ$SQ$SQ$SQ$SQ
-                            $SQ$SQ$SQ$SQ ;\"," . escape(escape(perlquote(escape(escape(quote($info)))))) . ";
+                                echo -markup -- %s
+                                hook -once window NormalIdle .* %%{ execute-keys vv }
+                            $SQ$SQ$SQ$SQ ;\"," . escape(escape(perlquote(escape(quote($info))))) . ";
                         $SQ$SQ
                     $SQ
                 ";
