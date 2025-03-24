@@ -392,9 +392,7 @@ define-command -params 1.. \
                     echo -debug failed to run git blame
                     echo -debug git stderr: <<<
                     echo -debug ''$(escape2 "$stderr")>>>''
-                    hook -once buffer NormalIdle .* %{
-                        echo -markup %{{Error}failed to run git blame, see *debug* buffer}
-                    }
+                    echo -markup %{{Error}failed to run git blame, see *debug* buffer}
                 '" | kak -p ${kak_session}
             fi
             if [ ${blame_stdin} != /dev/null ]; then
