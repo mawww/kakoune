@@ -975,7 +975,6 @@ Vector<Selection> split_on_matches(const Buffer& buffer, ConstArrayView<Selectio
 
     Vector<Selection> result;
     auto buf_end = buffer.end();
-    auto buf_begin = buffer.begin();
     ThreadedRegexVM<BufferIterator, RegexMode::Forward | RegexMode::Search> vm{*regex.impl()};
     for (auto& sel : selections)
     {
