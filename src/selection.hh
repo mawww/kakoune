@@ -67,6 +67,8 @@ struct Selection : BasicSelection
     CaptureList& captures() { return m_captures; }
     const CaptureList& captures() const { return m_captures; }
 
+    friend bool operator==(const Selection&, const Selection&) = default;
+
 private:
     CaptureList m_captures;
 };
