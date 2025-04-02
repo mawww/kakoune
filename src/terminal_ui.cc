@@ -569,8 +569,7 @@ static const DisplayLine empty_line = { String(" "), {} };
 void TerminalUI::draw(const DisplayBuffer& display_buffer,
                       const Range<LineCount> range,
                       const LineCount buffer_line_count,
-                      const Vector<Selection>::const_iterator selections_begin,
-                      const Vector<Selection>::const_iterator selections_end,
+                      const Vector<LineCount> selection_lines,
                       const Face& default_face,
                       const Face& padding_face,
                       const Face& scroll_bar_gutter_face,
@@ -584,6 +583,8 @@ void TerminalUI::draw(const DisplayBuffer& display_buffer,
     // [start_line, end_line]
 
     // buffer_line_count is the number of lines in the buffer
+
+    std::cerr << "range:" << (int)range.begin << ", " << (int)range.end << std::endl;
 
     check_resize();
 
@@ -604,10 +605,8 @@ void TerminalUI::draw(const DisplayBuffer& display_buffer,
     {
         std::fill(m_scroll_bar_scratch.begin(), m_scroll_bar_scratch.end(), 0);
 
-        for (auto sel = selections_begin; sel != selections_end; ++sel) {
-            auto sel_line = sel->min().line * m_dimensions.line / buffer_line_count;
-            m_scroll_bar_scratch[(int)sel_line]++;
-        }
+        for (const LineCount selection_line : selection_lines)
+            m_scroll_bar_scratch[(int) (selection_line * m_dimensions.line / buffer_line_count)]++;
 
         const auto mark_height = min(div_round_up(sq(m_dimensions.line), buffer_line_count), m_dimensions.line);
         const auto mark_line = range.begin * (m_dimensions.line - mark_height) / max(1_line, buffer_line_count - (range.end - range.begin + 1));

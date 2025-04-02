@@ -250,11 +250,15 @@ void Client::redraw_ifn()
 
     if (m_ui_pending & Draw) {
         auto& db = window.update_display_buffer(context());
+        auto selections = context().selections();
+        auto sel = selections.begin();
+        Vector<LineCount> selection_lines;
+        selection_lines.reserve(selections.size());
+        std::generate_n(std::back_inserter(selection_lines), selections.size(), [&sel] { return (sel++)->min().line; });
         m_ui->draw(db,
                    {db.range().begin.line, db.range().end.line},
                    context().buffer().line_count(),
-                   context().selections().begin(),
-                   context().selections().end(),
+                   selection_lines,
                    faces["Default"], faces["BufferPadding"],
                    faces["ScrollBarGutter"], faces["ScrollBarHandle"]);
     }
