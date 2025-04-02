@@ -4,7 +4,6 @@
 #include "assert.hh"
 #include "unicode.hh"
 #include "units.hh"
-#include "optional.hh"
 
 namespace Kakoune
 {
@@ -263,14 +262,13 @@ Iterator character_start(Iterator it, const Sentinel& begin) noexcept
     return it;
 }
 
-// returns an optional iterator to the first byte of the previous character
-// or no value if it is at begin
-template<typename Iterator, typename Sentinel>
-static Optional<Codepoint> prev_codepoint(Iterator it, const Sentinel& begin) noexcept
+template<typename InvalidPolicy = utf8::InvalidPolicy::Pass,
+         typename Iterator, typename Sentinel>
+Codepoint prev_codepoint(Iterator it, const Sentinel& begin) noexcept
 {
     if (it <= begin)
-        return {};
-    return codepoint(character_start(it -1, begin), it);
+        return InvalidPolicy{}(-1);
+    return codepoint<InvalidPolicy>(character_start(it -1, begin), it);
 }
 
 

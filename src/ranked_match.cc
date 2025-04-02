@@ -261,8 +261,8 @@ bool RankedMatch::operator<(const RankedMatch& other) const
         const auto cp2 = utf8::read_codepoint(it2, end2);
         if (cp1 != cp2)
         {
-            const auto cplast1 = utf8::prev_codepoint(itsave1, begin1).value_or(Codepoint{0});
-            const auto cplast2 = utf8::prev_codepoint(itsave2, begin2).value_or(Codepoint{0});
+            const auto cplast1 = utf8::prev_codepoint(itsave1, begin1);
+            const auto cplast2 = utf8::prev_codepoint(itsave2, begin2);
             const bool is_wb1 = is_word_boundary(cplast1, cp1);
             const bool is_wb2 = is_word_boundary(cplast2, cp2);
             if (is_wb1 != is_wb2)
