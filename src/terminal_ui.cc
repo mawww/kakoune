@@ -596,7 +596,7 @@ void TerminalUI::draw(const DisplayBuffer& display_buffer,
         for (const LineCount selection_line : selection_lines)
             m_scroll_bar_scratch[(int) (selection_line * m_dimensions.line / buffer_line_count)]++;
 
-        const auto mark_height = min(div_round_up(sq(m_dimensions.line), buffer_line_count), m_dimensions.line);
+        const auto mark_height = clamp(sq(m_dimensions.line) / buffer_line_count, 1_line, m_dimensions.line);
         const auto mark_line = range.begin * (m_dimensions.line - mark_height) / max(1_line, buffer_line_count - (range.end - range.begin + 1));
 
         for (auto line = 0_line; line < m_dimensions.line; ++line) {
@@ -694,7 +694,7 @@ void TerminalUI::check_resize(bool force)
 
     if (m_scroll_bar) {
         m_dimensions -= {0_line, 1_col};
-        m_scroll_bar_scratch.resize(m_dimensions.line)
+        m_scroll_bar_scratch.resize((size_t)m_dimensions.line);
     }
 
     // if (char* csr = tigetstr((char*)"csr"))
