@@ -603,7 +603,8 @@ void register_options()
                        "    terminal_shift_function_key    int\n"
                        "    terminal_padding_char          codepoint\n"
                        "    terminal_padding_fill          bool\n"
-                       "    terminal_info_max_width        int\n",
+                       "    terminal_info_max_width        int\n"
+                       "    terminal_info_inline_borders   bool\n",
                        UserInterface::Options{});
     reg.declare_option("modelinefmt", "format string used to generate the modeline",
                        "%val{bufname} %val{cursor_line}:%val{cursor_char_column} {{context_info}} {{mode_info}} - %val{client}@[%val{session}]"_str);
