@@ -149,7 +149,6 @@ the user interface:
 *ScrollBarHandle*::
     Face applied on the scroll bar's handle.
 
-
 === Built-in highlighter faces
 
 The following faces are used by built-in highlighters if enabled.
