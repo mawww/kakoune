@@ -692,8 +692,10 @@ void TerminalUI::check_resize(bool force)
 
     m_dimensions = terminal_size - 1_line;
 
-    if (m_scroll_bar)
+    if (m_scroll_bar) {
         m_dimensions -= {0_line, 1_col};
+        m_scroll_bar_scratch.resize(m_dimensions.line)
+    }
 
     // if (char* csr = tigetstr((char*)"csr"))
     //     putp(tparm(csr, 0, ws.ws_row));
