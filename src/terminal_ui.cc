@@ -562,6 +562,15 @@ T div_round_up(T a, T b)
     return (a - T(1)) / b + T(1);
 }
 
+template<typename T>
+T scale_to(T val, Range<T> from, Range<T> to)
+{
+    T from_size = from.end - from.begin;
+    T to_size = to.end - to.begin;
+
+    return ((val - from.begin) * to_size + from_size / 2) / from_size + to.begin;
+}
+
 static const DisplayLine empty_line = { String(" "), {} };
 
 
@@ -591,25 +600,28 @@ void TerminalUI::draw(const DisplayBuffer& display_buffer,
 
     if (m_scroll_bar)
     {
+        Range<LineCount> gutter_range = {0_line, m_dimensions.line - 1};
+        Range<LineCount> buffer_range = {0_line, max(m_dimensions.line - 1, buffer_line_count)};
+
         std::fill(m_scroll_bar_scratch.begin(), m_scroll_bar_scratch.end(), 0);
 
         for (const LineCount selection_line : selection_lines)
-            m_scroll_bar_scratch[(int) (selection_line * m_dimensions.line / buffer_line_count)]++;
+            m_scroll_bar_scratch[(int) scale_to(selection_line, buffer_range, gutter_range)]++;
 
-        const auto mark_height = clamp(sq(m_dimensions.line) / buffer_line_count, 1_line, m_dimensions.line);
-        const auto mark_line = range.begin * (m_dimensions.line - mark_height) / max(1_line, buffer_line_count - (range.end - range.begin + 1));
+        const auto mark_begin = scale_to(range.begin, buffer_range, gutter_range);
+        const auto mark_end = scale_to(range.end, buffer_range, gutter_range);
 
         for (auto line = 0_line; line < m_dimensions.line; ++line) {
-            const bool is_mark = line >= mark_line and line < mark_line + mark_height;
-            String sel;
+            const bool is_mark = line >= mark_begin and line <= mark_end;
+            String selections;
             switch (m_scroll_bar_scratch[(int)line]) {
-                case 0: sel = " "; break;
-                case 1: sel = "-"; break;
-                case 2: sel = "="; break;
-                default: sel = "≡"; break;
+                case 0: selections = " "; break;
+                case 1: selections = "-"; break;
+                case 2: selections = "="; break;
+                default: selections = "≡"; break;
             }
 
-            m_window.draw({line + line_offset, m_window.size.column - 1}, DisplayAtom(sel), is_mark ? scroll_bar_handle_face : scroll_bar_gutter_face);
+            m_window.draw({line + line_offset, m_window.size.column - 1}, DisplayAtom(selections), is_mark ? scroll_bar_handle_face : scroll_bar_gutter_face);
         }
     }
 
