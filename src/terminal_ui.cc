@@ -12,7 +12,6 @@
 
 #include <algorithm>
 
-#include <iostream>
 #include <fcntl.h>
 #include <csignal>
 #include <sys/ioctl.h>
@@ -575,17 +574,6 @@ void TerminalUI::draw(const DisplayBuffer& display_buffer,
                       const Face& scroll_bar_gutter_face,
                       const Face& scroll_bar_handle_face)
 {
-    // m_dimensions is the size of the display buffer
-    // the same size as the terminal minus the status bar line
-    // and scroll bar column (if enabled).
-
-    // range is 0-indexed inclusive range of what is being displayed in the buffer.
-    // [start_line, end_line]
-
-    // buffer_line_count is the number of lines in the buffer
-
-    std::cerr << "range:" << (int)range.begin << ", " << (int)range.end << std::endl;
-
     check_resize();
 
     const DisplayCoord dim = dimensions();
@@ -624,8 +612,6 @@ void TerminalUI::draw(const DisplayBuffer& display_buffer,
             m_window.draw({line + line_offset, m_window.size.column - 1}, DisplayAtom(sel), is_mark ? scroll_bar_handle_face : scroll_bar_gutter_face);
         }
     }
-
-    // m_window.draw({line_index - 1, dim.column}, { { "░", {} } }, {});
 
     m_dirty = true;
 }
