@@ -3,7 +3,6 @@
 #include "buffer_manager.hh"
 #include "buffer_utils.hh"
 #include "debug.hh"
-#include "client.hh"
 #include "command_manager.hh"
 #include "changes.hh"
 #include "context.hh"
@@ -13,6 +12,7 @@
 #include "regex.hh"
 #include "window.hh"
 #include "word_db.hh"
+#include "word_splitter.hh"
 #include "option_types.hh"
 #include "utf8_iterator.hh"
 #include "user_interface.hh"
@@ -87,7 +87,7 @@ InsertCompletion complete_word(const SelectionList& sels,
     for (int i = 0; i < sels.size(); ++i)
     {
         int len = 0;
-        auto is_short_enough_word = [&] (Codepoint c) { return len++ < WordDB::max_word_len && is_word_pred(c); };
+        auto is_short_enough_word = [&] (Codepoint c) { return len++ < WordSplitter::max_word_len && is_word_pred(c); };
 
         Utf8It end{buffer.iterator_at(sels[i].cursor()), buffer};
         Utf8It begin = end-1;
@@ -103,7 +103,7 @@ InsertCompletion complete_word(const SelectionList& sels,
 
         skip_while(end, buffer.end(), is_short_enough_word);
 
-        if (len <= WordDB::max_word_len)
+        if (len <= WordSplitter::max_word_len)
         {
             StringView word = buffer.substr(begin.base().coord(), end.base().coord());
             ++sel_word_counts[word];

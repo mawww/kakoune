@@ -54,6 +54,7 @@ private:
     StringView m_candidate{};
     bool m_matches = false;
     Flags m_flags = Flags::None;
+    int m_full_word_match_count = 0;
     int m_word_boundary_match_count = 0;
     int m_max_index = 0;
     size_t m_input_sequence_number = 0;

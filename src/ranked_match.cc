@@ -5,6 +5,7 @@
 #include "utf8_iterator.hh"
 #include "optional.hh"
 #include "ranges.hh"
+#include "word_splitter.hh"
 
 #include <algorithm>
 
@@ -66,6 +67,25 @@ static int count_word_boundaries_match(StringView candidate, StringView query)
         }
         if (query_it == query.end())
             break;
+    }
+    return count;
+}
+
+static int count_full_word_match(StringView candidate, StringView query)
+{
+    int count = 0;
+    WordSplitter query_words{query, {}};
+    WordSplitter candidate_words{candidate, {}};
+    for (auto query_word : query_words)
+    {
+        for (auto word : candidate_words)
+        {
+            if (word == query_word)
+            {
+                ++count;
+                break;
+            }
+        }
     }
     return count;
 }
@@ -168,6 +188,7 @@ RankedMatch::RankedMatch(StringView candidate, StringView query, TestFunc func)
         }
     }
 
+    m_full_word_match_count = count_full_word_match(candidate, query);
     m_word_boundary_match_count = count_word_boundaries_match(candidate, query);
     if (m_word_boundary_match_count == query.length())
         m_flags |= Flags::OnlyWordBoundary;
@@ -206,6 +227,9 @@ bool RankedMatch::operator<(const RankedMatch& other) const
     if (not (m_flags & (Flags::Prefix | Flags::SingleWord)) and
         m_word_boundary_match_count != other.m_word_boundary_match_count)
         return m_word_boundary_match_count > other.m_word_boundary_match_count;
+
+    if (m_full_word_match_count != other.m_full_word_match_count)
+        return m_full_word_match_count > other.m_full_word_match_count;
 
     if (m_max_index != other.m_max_index)
         return m_max_index < other.m_max_index;
@@ -288,6 +312,8 @@ UnitTest test_ranked_match{[] {
     kak_assert(preferred("foo_bar", "test_foo_bar", "foo_test_bar"));
     kak_assert(preferred("rm.cc", "src/ranked_match.cc", "test/README.asciidoc"));
     kak_assert(preferred("luaremote", "src/script/LuaRemote.cpp", "tests/TestLuaRemote.cpp"));
+    kak_assert(preferred("lang/haystack/needle.c", "git.evilcorp.com/language/haystack/aaa/needle.c", "git.evilcorp.com/aaa/ng/wrong-haystack/needle.cpp"));
+    kak_assert(preferred("evilcorp-lint/bar.go", "scripts/evilcorp-lint/foo/bar.go", "src/evilcorp-client/foo/bar.go"));
 }};
 
 UnitTest test_used_letters{[]()
