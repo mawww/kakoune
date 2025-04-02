@@ -398,6 +398,8 @@ public:
     void info_hide() override;
 
     void draw(const DisplayBuffer& display_buffer,
+              const Range<LineCount> range,
+              const LineCount buffer_line_count,
               const Face& default_face,
               const Face& padding_face) override;
 
@@ -562,10 +564,12 @@ void RemoteUI::info_hide()
 }
 
 void RemoteUI::draw(const DisplayBuffer& display_buffer,
+                    const Range<LineCount> range,
+                    const LineCount buffer_line_count,
                     const Face& default_face,
                     const Face& padding_face)
 {
-    send_message(MessageType::Draw, display_buffer, default_face, padding_face);
+    send_message(MessageType::Draw, display_buffer, range.begin, range.end, buffer_line_count, default_face, padding_face);
 }
 
 void RemoteUI::draw_status(const DisplayLine& status_line,

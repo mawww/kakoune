@@ -12,6 +12,7 @@
 
 #include <algorithm>
 
+#include <iostream>
 #include <fcntl.h>
 #include <csignal>
 #include <sys/ioctl.h>
@@ -556,12 +557,30 @@ void TerminalUI::refresh(bool force)
     m_dirty = false;
 }
 
+template<typename T>
+T div_round_up(T a, T b)
+{
+    return (a - T(1)) / b + T(1);
+}
+
 static const DisplayLine empty_line = { String(" "), {} };
 
+
 void TerminalUI::draw(const DisplayBuffer& display_buffer,
+                      const Range<LineCount> range,
+                      const LineCount buffer_line_count,
                       const Face& default_face,
                       const Face& padding_face)
 {
+    // m_dimensions is the size of the display buffer
+    // the same size as the terminal minus the status bar line
+    // and scroll bar column (if enabled).
+
+    // range is 0-indexed inclusive range of what is being displayed in the buffer.
+    // [start_line, end_line]
+
+    // buffer_line_count is the number of lines in the buffer
+
     check_resize();
 
     const DisplayCoord dim = dimensions();
@@ -577,6 +596,23 @@ void TerminalUI::draw(const DisplayBuffer& display_buffer,
     while (line_index < dim.line + line_offset)
         m_window.draw(line_index++, padding, face);
 
+    std::cerr << "mdims:" << (int) m_dimensions.line << " " << (int) m_dimensions.column << std::endl;
+    std::cerr << "range:" << (int) range.begin << " " << (int) range.end << std::endl;
+    std::cerr << "buflc:" << (int) buffer_line_count << std::endl;
+
+    if (m_scroll_bar)
+    {
+        const auto mark_height = min(div_round_up(sq(m_dimensions.line), buffer_line_count), m_dimensions.line);
+        const auto mark_line = range.begin * (m_dimensions.line - mark_height) / max(1_line, buffer_line_count - (range.end - range.begin + 1));
+
+        for (auto line = 0_line; line < m_dimensions.line; ++line) {
+            const bool is_mark = line >= mark_line and line < mark_line + mark_height;
+            m_window.draw({line + line_offset, m_window.size.column - 1}, DisplayAtom(is_mark ? "█" : "░"), default_face);
+        }
+    }
+
+    // m_window.draw({line_index - 1, dim.column}, { { "░", {} } }, {});
+
     m_dirty = true;
 }
 
@@ -589,10 +625,10 @@ void TerminalUI::draw_status(const DisplayLine& status_line,
 
     const auto mode_len = mode_line.length();
     m_status_len = status_line.length();
-    const auto remaining = m_dimensions.column - m_status_len;
+    const auto remaining = m_dimensions.column - m_status_len + 1;
     if (mode_len < remaining)
     {
-        ColumnCount col = m_dimensions.column - mode_len;
+        ColumnCount col = m_dimensions.column - mode_len + 1;
         m_window.draw({status_line_pos, col}, mode_line.atoms(), default_face);
     }
     else if (remaining > 2)
@@ -602,7 +638,7 @@ void TerminalUI::draw_status(const DisplayLine& status_line,
         trimmed_mode_line.insert(trimmed_mode_line.begin(), { "…", {} });
         kak_assert(trimmed_mode_line.length() == remaining - 1);
 
-        ColumnCount col = m_dimensions.column - remaining + 1;
+        ColumnCount col = m_dimensions.column - remaining + 2;
         m_window.draw({status_line_pos, col}, trimmed_mode_line.atoms(), default_face);
     }
 
@@ -655,6 +691,9 @@ void TerminalUI::check_resize(bool force)
     kak_assert(m_window);
 
     m_dimensions = terminal_size - 1_line;
+
+    if (m_scroll_bar)
+        m_dimensions -= {0_line, 1_col};
 
     // if (char* csr = tigetstr((char*)"csr"))
     //     putp(tparm(csr, 0, ws.ws_row));
@@ -1022,12 +1061,6 @@ Optional<Key> TerminalUI::get_next_key()
         return Key{Key::Invalid};
     }
     return parse_key(*c);
-}
-
-template<typename T>
-T div_round_up(T a, T b)
-{
-    return (a - T(1)) / b + T(1);
 }
 
 void TerminalUI::draw_menu()
@@ -1574,6 +1607,8 @@ void TerminalUI::set_ui_options(const Options& options)
 
     m_padding_char = find("terminal_padding_char").map([](StringView s) { return s.column_length() < 1 ? ' ' : s[0_char]; }).value_or(Codepoint{'~'});
     m_padding_fill = find("terminal_padding_fill").map(to_bool).value_or(false);
+
+    m_scroll_bar = find("terminal_scroll_bar").map(to_bool).value_or(false);
 
     m_info_max_width = find("terminal_info_max_width").map(str_to_int_ifp).value_or(0);
 }
