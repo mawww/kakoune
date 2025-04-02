@@ -253,7 +253,10 @@ void Client::redraw_ifn()
         m_ui->draw(db,
                    {db.range().begin.line, db.range().end.line},
                    context().buffer().line_count(),
-                   faces["Default"], faces["BufferPadding"]);
+                   context().selections().begin(),
+                   context().selections().end(),
+                   faces["Default"], faces["BufferPadding"],
+                   faces["ScrollBarGutter"], faces["ScrollBarHandle"]);
     }
 
     const bool update_menu_anchor = (m_ui_pending & Draw) and not (m_ui_pending & MenuHide) and

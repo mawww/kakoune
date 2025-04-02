@@ -4,6 +4,7 @@
 #include "array_view.hh"
 #include "hash_map.hh"
 #include "range.hh"
+#include "selection.hh"
 #include "units.hh"
 
 #include <functional>
@@ -69,8 +70,12 @@ public:
     virtual void draw(const DisplayBuffer& display_buffer,
                       const Range<LineCount> range,
                       const LineCount buffer_line_count,
+                      const Vector<Selection>::const_iterator selections_begin,
+                      const Vector<Selection>::const_iterator selections_end,
                       const Face& default_face,
-                      const Face& padding_face) = 0;
+                      const Face& padding_face,
+                      const Face& scroll_bar_gutter_face,
+                      const Face& scroll_bar_handle_face) = 0;
 
     virtual void draw_status(const DisplayLine& status_line,
                              const DisplayLine& mode_line,

@@ -148,10 +148,14 @@ JsonUI::JsonUI()
 void JsonUI::draw(const DisplayBuffer& display_buffer,
                   const Range<LineCount> range,
                   const LineCount buffer_line_count,
+                  const Vector<Selection>::const_iterator selections_begin,
+                  const Vector<Selection>::const_iterator selections_end,
                   const Face& default_face,
-                  const Face& padding_face)
+                  const Face& padding_face,
+                  const Face& scroll_bar_gutter_face,
+                  const Face& scroll_bar_handle_face)
 {
-    rpc_call("draw", display_buffer.lines(), range.begin, range.end, buffer_line_count, default_face, padding_face);
+    rpc_call("draw", display_buffer.lines(), range.begin, range.end, buffer_line_count, default_face, padding_face, scroll_bar_gutter_face, scroll_bar_handle_face);
 }
 
 void JsonUI::draw_status(const DisplayLine& status_line,

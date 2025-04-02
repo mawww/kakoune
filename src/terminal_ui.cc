@@ -12,6 +12,7 @@
 
 #include <algorithm>
 
+#include <iostream>
 #include <fcntl.h>
 #include <csignal>
 #include <sys/ioctl.h>
@@ -568,8 +569,12 @@ static const DisplayLine empty_line = { String(" "), {} };
 void TerminalUI::draw(const DisplayBuffer& display_buffer,
                       const Range<LineCount> range,
                       const LineCount buffer_line_count,
+                      const Vector<Selection>::const_iterator selections_begin,
+                      const Vector<Selection>::const_iterator selections_end,
                       const Face& default_face,
-                      const Face& padding_face)
+                      const Face& padding_face,
+                      const Face& scroll_bar_gutter_face,
+                      const Face& scroll_bar_handle_face)
 {
     // m_dimensions is the size of the display buffer
     // the same size as the terminal minus the status bar line
@@ -597,12 +602,27 @@ void TerminalUI::draw(const DisplayBuffer& display_buffer,
 
     if (m_scroll_bar)
     {
+        std::fill(m_scroll_bar_scratch.begin(), m_scroll_bar_scratch.end(), 0);
+
+        for (auto sel = selections_begin; sel != selections_end; ++sel) {
+            auto sel_line = sel->min().line * m_dimensions.line / buffer_line_count;
+            m_scroll_bar_scratch[(int)sel_line]++;
+        }
+
         const auto mark_height = min(div_round_up(sq(m_dimensions.line), buffer_line_count), m_dimensions.line);
         const auto mark_line = range.begin * (m_dimensions.line - mark_height) / max(1_line, buffer_line_count - (range.end - range.begin + 1));
 
         for (auto line = 0_line; line < m_dimensions.line; ++line) {
             const bool is_mark = line >= mark_line and line < mark_line + mark_height;
-            m_window.draw({line + line_offset, m_window.size.column - 1}, DisplayAtom(is_mark ? "█" : "░"), default_face);
+            String sel;
+            switch (m_scroll_bar_scratch[(int)line]) {
+                case 0: sel = " "; break;
+                case 1: sel = "-"; break;
+                case 2: sel = "="; break;
+                default: sel = "≡"; break;
+            }
+
+            m_window.draw({line + line_offset, m_window.size.column - 1}, DisplayAtom(sel), is_mark ? scroll_bar_handle_face : scroll_bar_gutter_face);
         }
     }
 
@@ -1603,9 +1623,10 @@ void TerminalUI::set_ui_options(const Options& options)
     m_padding_char = find("terminal_padding_char").map([](StringView s) { return s.column_length() < 1 ? ' ' : s[0_char]; }).value_or(Codepoint{'~'});
     m_padding_fill = find("terminal_padding_fill").map(to_bool).value_or(false);
 
-    m_scroll_bar = find("terminal_scroll_bar").map(to_bool).value_or(false);
-
     m_info_max_width = find("terminal_info_max_width").map(str_to_int_ifp).value_or(0);
+
+    m_scroll_bar = find("terminal_scroll_bar").map(to_bool).value_or(false);
+    m_scroll_bar_scratch.resize((size_t)m_dimensions.line);
 }
 
 }
