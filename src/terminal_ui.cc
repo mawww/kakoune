@@ -12,7 +12,6 @@
 
 #include <algorithm>
 
-#include <iostream>
 #include <fcntl.h>
 #include <csignal>
 #include <sys/ioctl.h>
@@ -595,10 +594,6 @@ void TerminalUI::draw(const DisplayBuffer& display_buffer,
 
     while (line_index < dim.line + line_offset)
         m_window.draw(line_index++, padding, face);
-
-    std::cerr << "mdims:" << (int) m_dimensions.line << " " << (int) m_dimensions.column << std::endl;
-    std::cerr << "range:" << (int) range.begin << " " << (int) range.end << std::endl;
-    std::cerr << "buflc:" << (int) buffer_line_count << std::endl;
 
     if (m_scroll_bar)
     {
