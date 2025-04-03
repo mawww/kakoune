@@ -52,7 +52,7 @@ add-highlighter shared/zig/character/ regex '(?:\\n|\\r|\\t|\\\\|\\''|\\"|\\x[0-
 add-highlighter shared/zig/multiline_string region '\\\\' '$' fill string
 
 # attributes
-add-highlighter shared/zig/code/ regex '\b(?:const|var|extern|packed|export|pub|noalias|inline|noinline|comptime|callconv|volatile|allowzero|align|linksection|threadlocal)\b' 0:attribute
+add-highlighter shared/zig/code/ regex '\b(?:const|var|extern|packed|export|pub|noalias|inline|noinline|comptime|callconv|volatile|allowzero|addrspace|align|linksection|threadlocal)\b' 0:attribute
 # structures
 add-highlighter shared/zig/code/ regex '\b(?:struct|enum|union|error|opaque)\b' 0:attribute
 
@@ -90,7 +90,7 @@ add-highlighter shared/zig/code/ regex '\b0x[0-9a-fA-F]+\.?[eE][-+]?[0-9a-fA-F]+
 add-highlighter shared/zig/code/ regex '(?:\+|-|\*|/|%|=|<|>|&|\||\^|~|\?|!)' 0:operator
 
 # builtin functions
-add-highlighter shared/zig/code/ regex "@(?:addWithOverflow|as|atomicLoad|atomicStore|bitCast|breakpoint|trap|alignCast|alignOf|cDefine|cImport|cInclude|cUndef|clz|cmpxchgWeak|cmpxchgStrong|compileError|compileLog|constCast|ctz|disableInstrumentation|popCount|divExact|divFloor|divTrunc|embedFile|export|extern|tagName|TagType|errorName|call|errorReturnTrace|fence|fieldParentPtr|field|unionInit|frameAddress|import|inComptime|newStackCall|asyncCall|ptrFromInt|max|min|memcpy|memset|mod|mulAdd|mulWithOverflow|splat|src|bitOffsetOf|byteOffsetOf|offsetOf|OpaqueType|panic|prefetch|ptrCast|intFromPtr|rem|returnAddress|branchHint|Type|shuffle|reduce|select|setRuntimeSafety|setEvalBranchQuota|setFloatMode|shlExact|This|hasDecl|hasField|shlWithOverflow|shrExact|sizeOf|bitSizeOf|sqrt|byteSwap|subWithOverflow|intCast|floatCast|floatFromInt|intFromFloat|intFromBool|errSetCast|truncate|typeInfo|typeName|TypeOf|atomicRmw|errorFromInt|intFromError|enumFromInt|intFromEnum|setAlignStack|frame|Frame|frameSize|bitReverse|Vector|volatileCast|sin|cos|tan|exp|exp2|log|log2|log10|abs|floor|ceil|trunc|wasmMemorySize|wasmMemoryGrow|round)\b" 0:meta
+add-highlighter shared/zig/code/ regex "@(?:addrSpaceCast|addWithOverflow|alignCast|alignOf|as|atomicLoad|atomicRmw|atomicStore|bitCast|bitOffsetOf|bitSizeOf|branchHint|breakpoint|mulAdd|byteSwap|bitReverse|offsetOf|call|cDefine|cImport|cInclude|clz|cmpxchgStrong|cmpxchgWeak|compileError|compileLog|constCast|ctz|cUndef|cVaArg|cVaCopy|cVaEnd|cVaStart|disableInstrumentation|disableIntrinsics|divExact|divFloor|divTrunc|embedFile|enumFromInt|errorFromInt|errorName|errorReturnTrace|errorCast|export|extern|field|fieldParentPtr|FieldType|floatCast|floatFromInt|frameAddress|hasDecl|hasField|import|inComptime|intCast|intFromBool|intFromEnum|intFromError|intFromFloat|intFromPtr|max|memcpy|memset|min|wasmMemorySize|wasmMemoryGrow|mod|mulWithOverflow|panic|popCount|prefetch|ptrCast|ptrFromInt|rem|returnAddress|select|setEvalBranchQuota|setFloatMode|setRuntimeSafety|shlExact|shlWithOverflow|shrExact|shuffle|sizeOf|splat|reduce|src|sqrt|sin|cos|tan|exp|exp2|log|log2|log10|abs|floor|ceil|trunc|round|subWithOverflow|tagName|This|trap|truncate|Type|typeInfo|typeName|TypeOf|unionInit|Vector|volatileCast|workGroupId|workGroupSize|workItemId)\b" 0:meta
 
 # Commands
 # ‾‾‾‾‾‾‾‾
