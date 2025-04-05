@@ -557,12 +557,6 @@ void TerminalUI::refresh(bool force)
 }
 
 template<typename T>
-T div_round_up(T a, T b)
-{
-    return (a - T(1)) / b + T(1);
-}
-
-template<typename T>
 T scale_to(T val, Range<T> from, Range<T> to)
 {
     T from_size = from.end - from.begin + 1;
@@ -1077,6 +1071,12 @@ Optional<Key> TerminalUI::get_next_key()
         return Key{Key::Invalid};
     }
     return parse_key(*c);
+}
+
+template<typename T>
+T div_round_up(T a, T b)
+{
+    return (a - T(1)) / b + T(1);
 }
 
 void TerminalUI::draw_menu()
