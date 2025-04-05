@@ -151,6 +151,7 @@ private:
         None              = 0,
         IgnoreCase        = 1 << 0,
         DotMatchesNewLine = 1 << 1,
+        SmartCase         = 1 << 2,
     };
     friend constexpr bool with_bit_ops(Meta::Type<Flags>) { return true; }
 
@@ -210,6 +211,7 @@ private:
                     case 'I': m_flags &= ~Flags::IgnoreCase; break;
                     case 's': m_flags |= Flags::DotMatchesNewLine; break;
                     case 'S': m_flags &= ~Flags::DotMatchesNewLine; break;
+                    case 'c': m_flags |= Flags::SmartCase | Flags::IgnoreCase; break;
                     case ')':
                         m_pos = Iterator{it, m_regex};
                         return true;
@@ -326,6 +328,14 @@ private:
                 if (contains(StringView{"^$.*+?[]{}"}, cp) or (cp >= 0xF0000 and cp <= 0xFFFFF))
                     parse_error(format("unexpected '{}'", cp));
                 ++m_pos;
+                if (is_upper(cp) && (m_flags & Flags::SmartCase)) {
+                    m_flags &= ~Flags::IgnoreCase;
+                    for (ParsedRegex::Node &node : m_parsed_regex.nodes)
+                        node.ignore_case = false;
+                    for (CharacterClass &char_class : m_parsed_regex.character_classes)
+                        char_class.ignore_case = false;
+                
+                }
                 return add_node(ParsedRegex::Literal, cp);
         }
     }
