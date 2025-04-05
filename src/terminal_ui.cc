@@ -565,8 +565,8 @@ T div_round_up(T a, T b)
 template<typename T>
 T scale_to(T val, Range<T> from, Range<T> to)
 {
-    T from_size = from.end - from.begin;
-    T to_size = to.end - to.begin;
+    T from_size = from.end - from.begin + 1;
+    T to_size = to.end - to.begin + 1;
 
     return ((val - from.begin) * to_size + from_size / 2) / from_size + to.begin;
 }
@@ -595,13 +595,15 @@ void TerminalUI::draw(const DisplayBuffer& display_buffer,
 
     DisplayAtom padding{String{m_padding_char, m_padding_fill ? dim.column : 1}};
 
+    const auto lines_remaining = (dim.line + line_offset) - line_index;
+
     while (line_index < dim.line + line_offset)
         m_window.draw(line_index++, padding, face);
 
     if (m_scroll_bar)
     {
-        Range<LineCount> gutter_range = {0_line, m_dimensions.line - 1};
-        Range<LineCount> buffer_range = {0_line, max(m_dimensions.line - 1, buffer_line_count)};
+        Range<LineCount> gutter_range = {0_line, dim.line - 1};
+        Range<LineCount> buffer_range = {0_line, buffer_line_count - 1 + dim.line - 1};
 
         std::fill(m_scroll_bar_scratch.begin(), m_scroll_bar_scratch.end(), 0);
 
@@ -609,9 +611,9 @@ void TerminalUI::draw(const DisplayBuffer& display_buffer,
             m_scroll_bar_scratch[(int) scale_to(selection_line, buffer_range, gutter_range)]++;
 
         const auto mark_begin = scale_to(range.begin, buffer_range, gutter_range);
-        const auto mark_end = scale_to(range.end, buffer_range, gutter_range);
+        const auto mark_end = scale_to(range.end + lines_remaining, buffer_range, gutter_range);
 
-        for (auto line = 0_line; line < m_dimensions.line; ++line) {
+        for (auto line = 0_line; line < dim.line; ++line) {
             const bool is_mark = line >= mark_begin and line <= mark_end;
             String selections;
             switch (m_scroll_bar_scratch[(int)line]) {
