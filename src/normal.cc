@@ -1610,6 +1610,7 @@ void replay_macro(Context& context, NormalParams params)
     auto keys = parse_keys(reg_val[0]);
     ScopedEdition edition(context);
     ScopedSelectionEdition selection_edition{context};
+    ScopedSetBool disable_keymaps(context.keymaps_disabled());
     do
     {
         for (auto& key : keys)
