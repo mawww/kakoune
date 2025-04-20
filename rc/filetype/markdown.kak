@@ -4,7 +4,7 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate .*[.](markdown|md|mkd) %{
+hook global BufCreate .*[.](markdown|md|mkd|Rmd) %{
     set-option buffer filetype markdown
 }
 
@@ -96,7 +96,7 @@ define-command markdown-load-languages -params 1 %{
         execute-keys "%arg{1}1s```\h*\{?[.=]?(\w+)\}?<ret>"
         evaluate-commands -itersel %{ try %{
             require-module %val{selection}
-            add-highlighter "shared/markdown/codeblock/%val{selection}" region -match-capture "^(\h*)```\h*(%val{selection}\b|\{[.=]?%val{selection}\})" ^(\h*)``` regions
+            add-highlighter "shared/markdown/codeblock/%val{selection}" region -match-capture "^(\h*)```\h*(%val{selection}\b|\{[.=]?%val{selection}(?:[\h,][^\{\}]*)?\})" ^(\h*)``` regions
             add-highlighter "shared/markdown/codeblock/%val{selection}/" default-region fill meta
             add-highlighter "shared/markdown/codeblock/%val{selection}/inner" region \A\h*```[^\n]*\K (?=```) ref %val{selection}
             add-highlighter "shared/markdown/listblock/codeblock/%val{selection}" region -match-capture "^(\h*)```\h*(%val{selection}\b|\{[.=]?%val{selection}\})" ^(\h*)``` regions
