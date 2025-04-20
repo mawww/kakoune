@@ -589,8 +589,6 @@ void TerminalUI::draw(const DisplayBuffer& display_buffer,
 
     DisplayAtom padding{String{m_padding_char, m_padding_fill ? dim.column : 1}};
 
-    const auto lines_remaining = (dim.line + line_offset) - line_index;
-
     while (line_index < dim.line + line_offset)
         m_window.draw(line_index++, padding, face);
 
@@ -604,8 +602,12 @@ void TerminalUI::draw(const DisplayBuffer& display_buffer,
         for (const LineCount selection_line : selection_lines)
             m_scroll_bar_scratch[(int) scale_to(selection_line, buffer_range, gutter_range)]++;
 
+        const auto padding_lines = (dim.line + line_offset) - line_index;
+        const auto visible_lines = range.end - range.begin + padding_lines;
+        const auto mark_height = scale_to(visible_lines, buffer_range, gutter_range);
+
         const auto mark_begin = scale_to(range.begin, buffer_range, gutter_range);
-        const auto mark_end = scale_to(range.end + lines_remaining, buffer_range, gutter_range);
+        const auto mark_end = mark_begin + mark_height;
 
         for (auto line = 0_line; line < dim.line; ++line) {
             const bool is_mark = line >= mark_begin and line <= mark_end;
