@@ -47,19 +47,21 @@ add-highlighter shared/moon/comment       region '--' '$'             fill comme
 add-highlighter shared/moon/double_string/base default-region fill string
 add-highlighter shared/moon/double_string/interpolation region -recurse \{ \Q#{ \} fill meta
 
-add-highlighter shared/moon/code/ regex (?<=\w)\\\w+ 0:function
+add-highlighter shared/moon/code/ regex \\\w+ 0:function
 add-highlighter shared/moon/code/ regex (\+|-|\*|/|%|\^|==?|[~!]=|<=?|>=?|\.\.\.?|#|!) 0:operator
 add-highlighter shared/moon/code/ regex [-=]> 0:function
-add-highlighter shared/moon/code/ regex (?:\b\w+:) 0:variable
-add-highlighter shared/moon/code/ regex (?:\W\K[@:]\w+) 0:variable
-add-highlighter shared/moon/code/ regex (?:\W\K[@:]__(name|class|inherited):?) 0:meta
-add-highlighter shared/moon/code/ regex \W\K@@\w+(?!:) 0:meta
+add-highlighter shared/moon/code/ regex \b\w+: 0:variable
+add-highlighter shared/moon/code/ regex (?<!\w)\K[@:]\w+ 0:variable
+add-highlighter shared/moon/code/ regex (?<!\w)\K[@:]__(name|class|inherited):? 0:meta
+add-highlighter shared/moon/code/ regex (?<!\w)@@(\w+:?)? 0:meta
 add-highlighter shared/moon/code/ regex \w+\h*(?=\() 0:function
 add-highlighter shared/moon/code/ regex \b(and|break|class|continue|do|else(if)?|export|extends|for|from|if|import|in|local|not|or|return|switch|then|unless|using|when|while|with)\b 0:keyword
 add-highlighter shared/moon/code/ regex \b(true|false|nil|super|self)\b 0:value
 add-highlighter shared/moon/code/ regex \b([0-9]+(:?\.[0-9])?(:?[eE]-?[0-9]+)?|0x[0-9a-fA-F]+)\b 0:value
 add-highlighter shared/moon/code/ regex class(\h+\w+)?(?:\h+extends(\h+\w+))?\h*$ 1:type 2:attribute
 add-highlighter shared/moon/code/ regex \b(_G|_ENV)\b 0:module
+add-highlighter shared/moon/code/ regex ^\h*export\h+[\*^]\h*$ 0:meta
+add-highlighter shared/moon/code/ regex ^\h*local\h+\*\h*$ 0:meta
 
 # Commands
 # ‾‾‾‾‾‾‾‾
