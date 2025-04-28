@@ -98,7 +98,6 @@ add-highlighter shared/rust/code/char_character         regex "'([^\\]|\\(.|x[0-
 # TODO highlight error for unicode or single escape by  te character
 add-highlighter shared/rust/code/byte_character         regex b'([\x00-\x5B\x5D-\x7F]|\\(.|x[0-9a-fA-F]{2}))' 0:value
 add-highlighter shared/rust/code/builtin_types          regex \b(?:u8|u16|u32|u64|u128|usize|i8|i16|i32|i64|i128|isize|f32|f64|bool|char|str|Self)\b 0:type
-add-highlighter shared/rust/code/return                 regex \breturn\b 0:meta
 
 add-highlighter shared/rust/code/enum                   regex \b(Option|Result)\b 0:type
 add-highlighter shared/rust/code/enum_variant           regex \b(Some|None|Ok|Err)\b 0:value
