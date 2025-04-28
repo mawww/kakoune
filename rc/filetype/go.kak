@@ -135,7 +135,15 @@ define-command -hidden go-indent-on-closing-curly-brace %[
 define-command -hidden go-insert-comment-on-new-line %[
     evaluate-commands -no-hooks -draft -itersel %[
         # copy // comments prefix and following white spaces
-        try %{ execute-keys -draft <semicolon><c-s>kx s ^\h*\K/{2,}\h* <ret> y<c-o>P<esc> }
+        try %{
+            execute-keys -draft <semicolon><c-s>kx s ^\h*\K/{2,}\h* <ret> y<c-o>P<esc>
+            # check for empty comments and delete them
+            try %{
+                execute-keys kx<a-K>^\h*//+\h*$<ret>
+            } catch %{
+                execute-keys Jx_d
+            }
+        }
     ]
 ]
 
