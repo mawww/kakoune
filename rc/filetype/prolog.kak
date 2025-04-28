@@ -30,7 +30,8 @@ provide-module prolog %[
 add-highlighter shared/prolog regions
 add-highlighter shared/prolog/default default-region group
 
-add-highlighter shared/prolog/comment region '(?<!)%' '$' fill comment
+add-highlighter shared/prolog/comment region /\* \*/ fill comment
+add-highlighter shared/prolog/comment_line region '%' $ fill comment
 add-highlighter shared/prolog/attribute_atom_single_quoted region %{-'} %{(?<!\\)(?:\\\\)*'(?=[\( \.])} fill builtin
 add-highlighter shared/prolog/attribute region '\b-[a-z][\w@]*(?=[\( \.])' '\K' fill builtin
 add-highlighter shared/prolog/atom_single_quoted region %{'} %{(?<!\\)(?:\\\\)*'} fill type
