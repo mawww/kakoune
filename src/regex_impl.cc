@@ -434,7 +434,6 @@ private:
     {
         CharacterClass character_class;
 
-        character_class.ignore_case = (m_flags & Flags::IgnoreCase);
         character_class.negative = m_pos != m_regex.end() and *m_pos == '^';
         if (character_class.negative)
             ++m_pos;
@@ -504,15 +503,6 @@ private:
         if (at_end())
             parse_error("unclosed character class");
         ++m_pos;
-
-        if (character_class.ignore_case)
-        {
-            for (auto& range : character_class.ranges)
-            {
-                range.min = to_lower(range.min);
-                range.max = to_lower(range.max);
-            }
-        }
 
         normalize_ranges(character_class.ranges);
 
@@ -729,7 +719,7 @@ private:
                 push_inst(CompiledRegex::AnyCharExceptNewLine);
                 break;
             case ParsedRegex::CharClass:
-                push_inst(CompiledRegex::CharClass, {.character_class_index=int16_t(node.value)});
+                push_inst(CompiledRegex::CharClass, {.character_class={.index=int16_t(node.value), .ignore_case=ignore_case}});
                 break;
             case ParsedRegex::CharType:
                 push_inst(CompiledRegex::CharType, {.character_type=CharacterType{(unsigned char)node.value}});
@@ -955,7 +945,7 @@ private:
                 auto& character_class = m_parsed_regex.character_classes[node.value];
                 if (character_class.ctypes == CharacterType::None and
                     not character_class.negative and
-                    not character_class.ignore_case)
+                    not node.ignore_case)
                 {
                     for (auto& range : character_class.ranges)
                     {
@@ -970,7 +960,7 @@ private:
                 {
                     for (Codepoint cp = 0; cp < single_byte_limit; ++cp)
                     {
-                        if (start_desc.map[cp] or character_class.matches(cp))
+                        if (start_desc.map[cp] or character_class.matches(cp, node.ignore_case))
                             start_desc.map[cp] = true;
                     }
                 }
@@ -1108,7 +1098,7 @@ String dump_regex(const CompiledRegex& program)
                 res += "anything but newline\n";
                 break;
             case CompiledRegex::CharClass:
-                res += format("character class {}\n", inst.param.character_class_index);
+                res += format("character class {}\n", inst.param.character_class.index);
                 break;
             case CompiledRegex::CharType:
                 res += format("character type {}\n", to_underlying(inst.param.character_type));
@@ -1406,6 +1396,18 @@ auto test_regex = UnitTest{[]{
     {
         TestVM<> vm{R"((?i)[a-z]+)"};
         kak_assert(vm.exec("ABC"));
+    }
+
+    {
+        TestVM<> vm{R"((?i)[@-C]+)"};
+        kak_assert(vm.exec("aBc"));
+        kak_assert(not vm.exec("aBc_"));
+    }
+
+    {
+        TestVM<> vm{R"((?i)[@-_])"};
+        kak_assert(vm.exec("A"));
+        kak_assert(vm.exec("a"));
     }
 
     {
