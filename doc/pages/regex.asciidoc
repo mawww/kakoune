@@ -165,6 +165,8 @@ them:
 
 * `(?i)` starts case-insensitive matching.
 * `(?I)` starts case-sensitive matching (default).
+* `(?c)` starts smart-case matching - same as case-insensitive matching
+         unless the pattern contains an uppercase character.
 * `(?s)` allows `.` to match newlines (default).
 * `(?S)` prevents `.` from matching newlines.
 

@@ -151,6 +151,7 @@ private:
         None              = 0,
         IgnoreCase        = 1 << 0,
         DotMatchesNewLine = 1 << 1,
+        SmartCase         = 1 << 2,
     };
     friend constexpr bool with_bit_ops(Meta::Type<Flags>) { return true; }
 
@@ -206,10 +207,20 @@ private:
                 auto m = *it++;
                 switch (m)
                 {
-                    case 'i': m_flags |= Flags::IgnoreCase; break;
-                    case 'I': m_flags &= ~Flags::IgnoreCase; break;
+                    case 'i':
+                        m_flags |= Flags::IgnoreCase;
+                        m_flags &= ~Flags::SmartCase;
+                        break;
+                    case 'I':
+                        m_flags &= ~Flags::IgnoreCase;
+                        m_flags &= ~Flags::SmartCase;
+                        break;
                     case 's': m_flags |= Flags::DotMatchesNewLine; break;
                     case 'S': m_flags &= ~Flags::DotMatchesNewLine; break;
+                    case 'c':
+                         m_flags |= Flags::SmartCase | Flags::IgnoreCase;
+                         m_smartcase_start_index = m_parsed_regex.nodes.size();
+                         break;
                     case ')':
                         m_pos = Iterator{it, m_regex};
                         return true;
@@ -582,6 +593,28 @@ private:
         if (res == max_nodes)
             parse_error(format("regex parsed to more than {} ast nodes", max_nodes));
         const NodeIndex next = res+1;
+
+        if (m_flags & Flags::SmartCase)
+        {
+            bool ignore_case = true;
+            if (op == ParsedRegex::Literal and is_upper(value))
+                ignore_case = false;
+            else if (op == ParsedRegex::CharClass)
+                for (auto& [min, max] : m_parsed_regex.character_classes[value].ranges)
+                    if (is_upper(min) or is_upper(max))
+                    {
+                        ignore_case = false;
+                        break;
+                    }
+            if (not ignore_case)
+            {
+                for (auto i = m_smartcase_start_index; i < m_parsed_regex.nodes.size(); ++i)
+                    m_parsed_regex.nodes[i].ignore_case = false;
+                m_flags &= ~(Flags::SmartCase | Flags::IgnoreCase);
+                m_smartcase_start_index = -1;
+            }
+        }
+
         m_parsed_regex.nodes.push_back({op, m_flags & Flags::IgnoreCase, next, value, quantifier});
         return res;
     }
@@ -625,6 +658,8 @@ private:
     Iterator m_pos;
 
     Flags m_flags = Flags::DotMatchesNewLine;
+
+    ParsedRegex::NodeIndex m_smartcase_start_index = -1;
 
     static constexpr struct CharacterClassEscape {
         Codepoint cp;
@@ -1408,6 +1443,66 @@ auto test_regex = UnitTest{[]{
         TestVM<> vm{R"((?i)[@-_])"};
         kak_assert(vm.exec("A"));
         kak_assert(vm.exec("a"));
+    }
+
+    {
+        TestVM<> vm{R"((?i)[@-C]+)"};
+        kak_assert(vm.exec("aBc"));
+        kak_assert(not vm.exec("aBc_"));
+    }
+
+    {
+        TestVM<> vm{R"((?i)[@-_])"};
+        kak_assert(vm.exec("A"));
+        kak_assert(vm.exec("a"));
+    }
+
+    {
+        TestVM<> vm{R"((?c)foobar)"};
+        kak_assert(vm.exec("foobar"));
+        kak_assert(vm.exec("fooBar"));
+        kak_assert(vm.exec("FOOBAR"));
+    }
+
+    {
+        TestVM<> vm{R"((?c)fooBar)"};
+        kak_assert(not vm.exec("foobar"));
+        kak_assert(vm.exec("fooBar"));
+        kak_assert(not vm.exec("FOOBAR"));
+    }
+
+    {
+        TestVM<> vm{R"((?c)foo\x42ar)"};
+        kak_assert(not vm.exec("foobar"));
+        kak_assert(vm.exec("fooBar"));
+        kak_assert(not vm.exec("FOOBAR"));
+    }
+
+    {
+        TestVM<> vm{R"((?c)foo[B]ar)"};
+        kak_assert(not vm.exec("foobar"));
+        kak_assert(vm.exec("fooBar"));
+        kak_assert(not vm.exec("FOOBAR"));
+    }
+
+    {
+        TestVM<> vm{R"((?c)foo[\x42]ar)"};
+        kak_assert(not vm.exec("foobar"));
+        kak_assert(vm.exec("fooBar"));
+        kak_assert(not vm.exec("FOOBAR"));
+    }
+
+    {
+        TestVM<> vm{R"((?c)foo[a-cQ]ar)"};
+        kak_assert(vm.exec("foobar"));
+        kak_assert(not vm.exec("fooBar"));
+        kak_assert(not vm.exec("FOObAR"));
+    }
+
+    {
+        TestVM<> vm{R"((?c)foo(?i)BAR(?c)baZ)"};
+        kak_assert(vm.exec("FooBarbaZ"));
+        kak_assert(not vm.exec("FooBarbaz"));
     }
 
     {
