@@ -47,8 +47,23 @@ add-highlighter shared/moon/comment       region '--' '$'             fill comme
 add-highlighter shared/moon/double_string/base default-region fill string
 add-highlighter shared/moon/double_string/interpolation region -recurse \{ \Q#{ \} fill meta
 
-add-highlighter shared/moon/code/ regex ([.\\](?=[A-Za-z]))|(\b[A-Za-z]\w*:)|(\b[A-Za-z]\w*\K!+)|(\W\K[@:][A-Za-z]\w*) 0:variable
-add-highlighter shared/moon/code/ regex \b(and|break|catch|class|continue|do|else(if)?|export|extends|false|finally|for|from|if|import|in|local|nil|not|or|return|super|switch|then|true|try|unless|using|when|while|with)\b 0:keyword
+add-highlighter shared/moon/code/ regex \\\w+ 0:function
+add-highlighter shared/moon/code/ regex [\W\)\}]\h+\K\.\w+ 0:function
+add-highlighter shared/moon/code/ regex (\+|-|\*|/|%|\^|==?|[~!]=|<=?|>=?|\.\.\.?|#|!) 0:operator
+add-highlighter shared/moon/code/ regex [-=]> 0:function
+add-highlighter shared/moon/code/ regex \b\w+: 0:variable
+add-highlighter shared/moon/code/ regex \w+\h*(?=[\(!]) 0:function
+add-highlighter shared/moon/code/ regex (?<!\w)[@:]\w+ 0:variable
+add-highlighter shared/moon/code/ regex (?<!\w)[@:]__(name|class|inherited):? 0:meta
+add-highlighter shared/moon/code/ regex (?<!\w)@@(\w+:?)? 0:meta
+add-highlighter shared/moon/code/ regex (\w+)\h*=\h*(?:\(.*?\)\h*)?[-=]> 1:function
+add-highlighter shared/moon/code/ regex \b(and|break|class|continue|do|else(if)?|export|extends|for|from|if|import|in|local|not|or|return|switch|then|unless|using|when|while|with)\b 0:keyword
+add-highlighter shared/moon/code/ regex \b(true|false|nil|super|self)\b 0:value
+add-highlighter shared/moon/code/ regex \b([0-9]+(:?\.[0-9])?(:?[eE]-?[0-9]+)?|0x[0-9a-fA-F]+)\b 0:value
+add-highlighter shared/moon/code/ regex class(\h+\w+)?(?:\h+extends(\h+\w+))?\h*$ 1:type 2:attribute
+add-highlighter shared/moon/code/ regex \b(_G|_ENV)\b 0:module
+add-highlighter shared/moon/code/ regex ^\h*export\h+[\*^]\h*$ 0:meta
+add-highlighter shared/moon/code/ regex ^\h*local\h+\*\h*$ 0:meta
 
 # Commands
 # ‾‾‾‾‾‾‾‾
@@ -92,8 +107,6 @@ define-command -hidden moon-indent-on-char %{
         try %{ execute-keys -draft x <a-k> ^ \h * (else(if)?) $ <ret> <a-semicolon> <a-?> ^ \h * (if|unless|when) <ret> s \A | \z <ret> ) <a-&> }
         # align _when_ to _switch_ then indent
         try %{ execute-keys -draft x <a-k> ^ \h * (when) $ <ret> <a-semicolon> <a-?> ^ \h * (switch) <ret> s \A | \z <ret> ) <a-&> ) , <gt> }
-        # align _catch_ and _finally_ to _try_
-        try %{ execute-keys -draft x <a-k> ^ \h * (catch|finally) $ <ret> <a-semicolon> <a-?> ^ \h * (try) <ret> s \A | \z <ret> ) <a-&> }
     }
 }
 
