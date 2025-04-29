@@ -3,6 +3,9 @@
 
 #include "array_view.hh"
 #include "hash_map.hh"
+#include "range.hh"
+#include "selection.hh"
+#include "units.hh"
 
 #include <functional>
 
@@ -65,8 +68,13 @@ public:
     virtual void info_hide() = 0;
 
     virtual void draw(const DisplayBuffer& display_buffer,
+                      const Range<LineCount> range,
+                      const LineCount buffer_line_count,
+                      Vector<LineCount> selection_lines,
                       const Face& default_face,
-                      const Face& padding_face) = 0;
+                      const Face& padding_face,
+                      const Face& scroll_bar_gutter_face,
+                      const Face& scroll_bar_handle_face) = 0;
 
     virtual void draw_status(const DisplayLine& status_line,
                              const DisplayLine& mode_line,
