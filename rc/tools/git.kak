@@ -542,29 +542,93 @@ define-command -params 1.. \
     }
 
     commit() {
-        # Handle case where message needs not to be edited
-        if grep -E -q -e "-m|-F|-C|--message=.*|--file=.*|--reuse-message=.*|--no-edit|--fixup.*|--squash.*"; then
-            if git commit "$@" > /dev/null 2>&1; then
-                echo 'echo -markup "{Information}Commit succeeded"'
-            else
-                echo 'fail Commit failed'
-            fi
-            exit
-        fi <<-EOF
-			$@
-		EOF
+        if ! fifo_dir="$(mktemp -d "${TMPDIR:-/tmp}/kak-git-XXXXXX")" ||
+           ! mkfifo "${fifo_dir}/response_fifo"
+        then
+            echo "fail %{failed to run git commit (see *debug* buffer)}"
+            [ -n "${fifo_dir}" ] && rmdir "${fifo_dir}"
+            exit 1
+        fi
+        {
+            trap 'rm -r "${fifo_dir}"' EXIT INT
+            GIT_EDITOR='
+                die() {
+                    printf "%s\n" "$*" >&2
+                    exit 1
+                }
 
-        # fails, and generate COMMIT_EDITMSG
-        GIT_EDITOR='' EDITOR='' git commit "$@" > /dev/null 2>&1
-        msgfile="$(git rev-parse --git-dir)/COMMIT_EDITMSG"
-        printf %s "edit '$msgfile'
-              hook buffer BufWritePost '.*\Q$msgfile\E' %{ evaluate-commands %sh{
-                  if git commit -F '$msgfile' --cleanup=strip $* > /dev/null; then
-                     printf %s 'evaluate-commands -client $kak_client echo -markup %{{Information}Commit succeeded}; delete-buffer'
-                  else
-                     printf 'evaluate-commands -client %s fail Commit failed\n' "$kak_client"
-                  fi
-              } }"
+                # Nested levels of kakoune single quote quoting
+                SQ="'\''"
+                Q1="${SQ}"
+                Q2="${Q1}${Q1}"
+                Q3="${Q2}${Q2}"
+                kak_quote() {
+                    level=${2:-1}
+                    Q="${Q1}"
+                    while [ ${level} -gt 1 ]; do
+                        Q="${Q}${Q}"
+                        level=$((${level} - 1))
+                    done
+
+                    printf "%s\n" "$1" |
+                        sed "s/${SQ}/${Q}${Q}/g; 1s/^/${Q}/; \$s/\$/${Q}/"
+                }
+
+                editor() {
+                    response_fifo="${fifo_dir}/response_fifo" &&
+                    # The quoting here is slightly awkward but it is works when
+                    # the path of the file being edited contains single quotes
+                    # or unbalanced braces.
+                    printf %s "
+                        try ${Q1}
+                            eval -client $(kak_quote "${kak_client}" 2) ${Q2}
+                                edit $(kak_quote "$1" 3)
+                                hook buffer BufWritePost .* ${Q3}
+                                    echo -to-file $(kak_quote "${response_fifo}" 4) -end-of-line false
+                                    remove-hooks buffer giteditor
+                                    delete-buffer
+                                ${Q3}
+                                hook -group giteditor buffer BufClose .* ${Q3}
+                                    echo -to-file $(kak_quote "${response_fifo}" 4) -end-of-line true
+                                ${Q3}
+                            ${Q2}
+                        ${Q1} catch ${Q1}
+                            echo -to-file $(kak_quote "${response_fifo}" 2) -end-of-line failed
+                        ${Q1}" | kak -p "${kak_session}" ||
+                            die "could not contact kak session ${kak_session}"
+                    # wait for the user to edit the commit message
+                    read cancelled <"${response_fifo}"
+                    if [ "${cancelled}" = true ]; then
+                        >"${fifo_dir}/cancelled"
+                        die "editing cancelled"
+                    elif [ "${cancelled}" != false ]; then
+                        die "could not open file ${SQ}$1${SQ}"
+                    fi
+                }; editor'
+            export fifo_dir GIT_EDITOR
+            failed=0
+            if err="$(git commit "$@" 2>&1)"; then
+                cmd="eval -try-client '${kak_client}' %{
+                    echo -markup '{Information}Commit succeeded'
+                }"
+            elif [ -f "${fifo_dir}/cancelled" ]; then
+                cmd="eval -try-client '${kak_client}' %{
+                    echo -markup '{Information}Commit cancelled'
+                }"
+            else
+                failed=1
+                cmd="eval -try-client '${kak_client}' %{
+                    try %{
+                        edit! -fifo $(kakquote "${fifo_dir}/response_fifo") '*git-commit*'
+                    }
+                    echo -markup '{Error}Commit failed'
+                }"
+            fi
+            printf %s "${cmd}" | kak -p "${kak_session}"
+            if [ ${failed} = 1 ]; then
+                printf %s "$err" >"${fifo_dir}/response_fifo"
+            fi
+        } 2>/dev/null 1>&2 </dev/null &
     }
 
     blame_jump() {
