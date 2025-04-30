@@ -1,0 +1,50 @@
+die() {
+    printf "%s\n" "$*" >&2
+    exit 1
+}
+
+# Nested levels of kakoune single quote quoting
+kak_quote() {
+    level=${2:-1}
+    Q="'"
+    while [ ${level} -gt 1 ]; do
+        Q="${Q}${Q}"
+        level=$((${level} - 1))
+    done
+
+    printf "%s\n" "$1" | sed "s/'/${Q}${Q}/g; 1s/^/${Q}/; \$s/\$/${Q}/"
+}
+
+[ $# -eq 4 ] ||
+    die "usage: blocking-editor-in-client <fifo-dir> <kak-session> <kak-client> <filename>"
+
+fifo_dir="$1"
+kak_session="$2"
+kak_client="$3"
+filename="$4"
+response_fifo="${fifo_dir}/response_fifo" &&
+printf %s "
+    try '
+        eval -client ${kak_client} ''
+            edit $(kak_quote "${filename}" 3)
+            hook buffer BufWritePost .* ''''
+                echo -to-file $(kak_quote "${response_fifo}" 4) -end-of-line edited
+                remove-hooks buffer giteditor
+                delete-buffer
+            ''''
+            hook -group giteditor buffer BufClose .* ''''
+                echo -to-file $(kak_quote "${response_fifo}" 4) -end-of-line cancelled
+            ''''
+        ''
+    ' catch '
+        echo -to-file $(kak_quote "${response_fifo}" 2) -end-of-line failed
+    '" | kak -p "${kak_session}" ||
+        die "could not contact kak session ${kak_session}"
+# wait for the user to edit the commit message
+read status <"${response_fifo}"
+if [ "${status}" = cancelled ]; then
+    >"${fifo_dir}/cancelled"
+    die "editing cancelled"
+elif [ "${status}" != edited ]; then
+    die "could not open file '${filename}'"
+fi
