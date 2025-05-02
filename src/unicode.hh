@@ -96,7 +96,7 @@ inline bool is_punctuation(Codepoint c, ConstArrayView<Codepoint> extra_word_cha
 inline bool is_identifier(Codepoint c) noexcept
 {
     return is_basic_alpha(c) or is_basic_digit(c) or
-           c == '_' or c == '-';
+           c == '_' or c == '-' or c == '.';
 }
 
 inline ColumnCount codepoint_width(Codepoint c) noexcept
