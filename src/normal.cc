@@ -918,7 +918,7 @@ void regex_prompt(Context& context, String prompt, char reg, RegexMode mode, Fun
                 if (event == PromptEvent::Validate)
                     throw;
             }
-        });
+        }, true);
 }
 
 void select_next_matches(Context& context, const Regex& regex, RegexMode mode, int count)
