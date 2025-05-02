@@ -71,6 +71,9 @@ contain some special data
 *#* (hash)::
     selection indices (first selection has 1, second has 2, ...)
 
+*$* (dollar)::
+    zero indexed selection indices (first selection has 0, second has 1, ...)
+
 *_* (underscore)::
     null register, always empty
 
