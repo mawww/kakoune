@@ -408,7 +408,7 @@ void Buffer::check_invariant() const
 #endif
 }
 
-BufferRange Buffer::do_insert(BufferCoord pos, StringView content)
+BufferRange Buffer::do_insert(BufferCoord pos, StringView content, bool draft)
 {
     kak_assert(is_valid(pos));
 
@@ -452,7 +452,7 @@ BufferRange Buffer::do_insert(BufferCoord pos, StringView content)
     const auto end = at_end ? line_count()
                             : BufferCoord{ last_line, m_lines[last_line].length() - suffix.length() };
 
-    m_changes.push_back({ Change::Insert, pos, end });
+    m_changes.push_back({ draft ? Change::Draft : Change::Insert, pos, end });
     return {pos, end};
 }
 
@@ -499,7 +499,7 @@ void Buffer::apply_modification(const Modification& modification)
     }
 }
 
-BufferRange Buffer::insert(BufferCoord pos, StringView content)
+BufferRange Buffer::insert(BufferCoord pos, StringView content, bool draft)
 {
     throw_if_read_only();
 
@@ -515,7 +515,7 @@ BufferRange Buffer::insert(BufferCoord pos, StringView content)
 
     if (not (m_flags & Flags::NoUndo))
         m_current_undo_group.push_back({Modification::Insert, pos, real_content});
-    return do_insert(pos, real_content->strview());
+    return do_insert(pos, real_content->strview(), draft);
 }
 
 BufferCoord Buffer::erase(BufferCoord begin, BufferCoord end)
