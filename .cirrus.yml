@@ -1,3 +1,4 @@
+# TODO move to Github Actions after https://github.com/actions/runner/issues/385
 freebsd_task:
     freebsd_instance:
         image_family: freebsd-14-2
@@ -12,41 +13,3 @@ freebsd_task:
     test_script: make CXX=$CXX -j$(sysctl -n hw.ncpu) test
     env:
         LC_ALL: en_US.UTF-8
-
-linux_task:
-    locales_script:
-        - apt-get update && apt-get -y install locales
-        - echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
-        - locale-gen en_US.UTF-8
-    matrix:
-        - name: linux_clang
-          container:
-              image: silkeh/clang:13
-          env:
-              CXX: clang++
-        - name: linux_gcc
-          container:
-              image: gcc:10
-              memory: 8G
-          env:
-              CXX: g++
-    test_script: make CXX=$CXX -j$(nproc) test
-    env:
-        LC_ALL: en_US.UTF-8
-
-macos_task:
-    macos_instance:
-        image: ghcr.io/cirruslabs/macos-ventura-base:latest
-    matrix:
-        - name: macos_clang
-          clang_script: brew install llvm
-          env:
-              CXX: /opt/homebrew/opt/llvm/bin/clang++
-        - name: macos_gcc
-          gcc_script:
-            - /usr/sbin/softwareupdate --install-rosetta --agree-to-license
-            - arch -x86_64 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
-            - arch -x86_64 /usr/local/bin/brew install gcc@12
-          env:
-              CXX: g++-12
-    test_script: make CXX=$CXX -j$(sysctl -n hw.ncpu) test

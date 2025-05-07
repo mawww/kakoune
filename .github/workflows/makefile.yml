@@ -1,0 +1,44 @@
+name: Makefile CI
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu, macos]
+        toolchain: [gcc, llvm]
+        include:
+          - os: ubuntu
+            toolchain: gcc
+            install_cmd: |
+              sudo apt update
+              sudo apt install g++
+            CXX: g++
+          - os: ubuntu
+            toolchain: llvm
+            install_cmd: |
+              sudo apt update
+              sudo apt install clang
+            CXX: clang++
+          - os: macos
+            toolchain: gcc
+            install_cmd: |
+              brew update
+              brew install gcc
+            CXX: g++
+          - os: macos
+            toolchain: llvm
+            install_cmd: |
+              brew update
+              brew install llvm
+            CXX: clang++
+    runs-on: ${{ matrix.os }}-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install dependencies
+      run: ${{ matrix.install_cmd }}
+    - name: Build and test
+      run: make CXX=${{ matrix.CXX }} -j$(nproc 2>/dev/null || sysctl -n hw.ncpu) test
