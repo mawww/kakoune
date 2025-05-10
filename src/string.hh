@@ -184,7 +184,7 @@ public:
         Data& operator=(const Data& other);
         Data& operator=(Data&& other) noexcept;
 
-        bool is_long() const { return (u.l.mode& Long::active_mask) > 0; }
+        bool is_long() const { return (u.l.mode & Long::active_mask) != 0; }
         size_t size() const { return is_long() ? u.l.size : (Short::capacity - u.s.remaining_size); }
         size_t capacity() const { return is_long() ? u.l.capacity : Short::capacity; }
 
