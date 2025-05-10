@@ -947,7 +947,7 @@ void extend_to_next_matches(Context& context, const Regex& regex, RegexMode mode
                  new_sels.push_back(sel);
                  merge_selections(new_sels.back(), new_sel);
              }
-             else if (new_sels.size() <= main_index)
+             else if (new_sels.size() <= main_index and main_index != 0)
                  --main_index;
          }
          if (new_sels.empty())
