@@ -394,18 +394,18 @@ void SelectionList::for_each(ApplyFunc func, bool may_append)
     }
     else
     {
+        ForwardChangesTracker changes_tracker;
         for (size_t index = 0; index < m_selections.size(); ++index)
         {
-            ForwardChangesTracker changes_tracker;
-            func(index, m_selections[index]);
+            auto& sel = m_selections[index];
+
+            sel.anchor() = changes_tracker.get_new_coord_tolerant(sel.anchor());
+            sel.cursor() = changes_tracker.get_new_coord_tolerant(sel.cursor());
+            kak_assert(m_buffer->is_valid(sel.anchor()) and m_buffer->is_valid(sel.cursor()));
+
+            func(index, sel);
+
             changes_tracker.update(*m_buffer, m_timestamp);
-            for (size_t i = index + 1; i < m_selections.size(); ++i)
-            {
-                auto& sel = m_selections[i];
-                sel.anchor() = changes_tracker.get_new_coord_tolerant(sel.anchor());
-                sel.cursor() = changes_tracker.get_new_coord_tolerant(sel.cursor());
-                kak_assert(m_buffer->is_valid(sel.anchor()) and m_buffer->is_valid(sel.cursor()));
-            }
         }
     }
 
