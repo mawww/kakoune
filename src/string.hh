@@ -368,12 +368,12 @@ inline auto operator<=>(const StringView& lhs, const StringView& rhs)
 
 }
 
-inline String operator"" _str(const char* str, size_t)
+inline String operator""_str(const char* str, size_t)
 {
     return String(str);
 }
 
-inline StringView operator"" _sv(const char* str, size_t)
+inline StringView operator""_sv(const char* str, size_t)
 {
     return StringView{str};
 }
