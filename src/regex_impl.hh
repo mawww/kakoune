@@ -46,21 +46,25 @@ struct CharacterClass
     Vector<Range, MemoryDomain::Regex> ranges;
     CharacterType ctypes = CharacterType::None;
     bool negative = false;
-    bool ignore_case = false;
 
     friend bool operator==(const CharacterClass&, const CharacterClass&) = default;
 
-    bool matches(Codepoint cp) const
+    bool matches(Codepoint cp, bool ignore_case) const
     {
+        Codepoint cp_flip = -1;
         if (ignore_case)
-            cp = to_lower(cp);
-
-        for (auto& [min, max] : ranges)
         {
-            if (cp < min)
-                break;
-            else if (cp <= max)
-                return not negative;
+            if (is_upper(cp))
+                cp_flip = to_lower(cp);
+            else if (is_lower(cp))
+                cp_flip = to_upper(cp);
+        }
+
+        for (const auto& range : ranges)
+        {
+            if ((cp >= range.min && cp <= range.max) || 
+                (cp_flip != -1 && cp_flip >= range.min && cp_flip <= range.max))
+                return !negative;
         }
 
         return (ctypes != CharacterType::None and is_ctype(ctypes, cp)) != negative;
@@ -105,7 +109,11 @@ struct CompiledRegex : UseMemoryDomain<MemoryDomain::Regex>
             uint32_t codepoint : 24;
             bool ignore_case : 1;
         } literal;
-        int16_t character_class_index;
+        struct CharacterClass
+        {
+            int16_t index;
+            bool ignore_case : 1;
+        } character_class;
         CharacterType character_type;
         int16_t jump_offset;
         int16_t save_index;
@@ -405,7 +413,7 @@ private:
                     return failed();
                 case CompiledRegex::CharClass:
                     if (pos != config.end and
-                        m_program.character_classes[inst.param.character_class_index].matches(cp))
+                        m_program.character_classes[inst.param.character_class.index].matches(cp, inst.param.character_class.ignore_case))
                         return consumed();
                     return failed();
                 case CompiledRegex::CharType:
@@ -609,7 +617,7 @@ private:
             else if (op >= Lookaround::CharacterClass and op < Lookaround::CharacterType)
             {
                 auto index = to_underlying(op) - to_underlying(Lookaround::CharacterClass);
-                if (not m_program.character_classes[index].matches(cp))
+                if (not m_program.character_classes[index].matches(cp, param.ignore_case))
                     return false;
             }
             else if (op >= Lookaround::CharacterType and op < Lookaround::OpEnd)
