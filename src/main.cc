@@ -321,6 +321,11 @@ static const EnvVarDesc builtin_env_vars[] = { {
         [](StringView name, const Context& context) -> Vector<String>
         { return {to_string(context.selections().main().cursor().line + 1)}; }
     }, {
+        "cursor_line_percent", false,
+        [](StringView name, const Context& context) -> Vector<String>
+        { auto cursor_line = context.selections().main().cursor().line + 1;
+          return {to_string(100 * cursor_line / context.buffer().line_count())}; }
+    }, {
         "cursor_column", false,
         [](StringView name, const Context& context) -> Vector<String>
         { return {to_string(context.selections().main().cursor().column + 1)}; }
