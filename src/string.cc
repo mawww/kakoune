@@ -148,7 +148,8 @@ void String::Data::set_short(const char* data, size_t size)
     u.s.remaining_size = Short::capacity - size;
     if (data != nullptr)
         memcpy(u.s.string, data, size);
-    u.s.string[size] = 0;
+    if (size != Short::capacity) // in this case, remaining_size is the null terminator
+        u.s.string[size] = 0;
 }
 
 UnitTest test_data{[]{
