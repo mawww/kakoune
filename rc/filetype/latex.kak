@@ -40,8 +40,8 @@ add-highlighter shared/latex/content default-region group
 # This is so that $$math$$ get matched properly.
 add-highlighter shared/latex/dollar-math region '(?<!\\)(?:\\\\)*\K\$[^$]' '(?<!\\)(\\\\)*\$' fill meta
 add-highlighter shared/latex/ddollar-math region '(?<!\\)(?:\\\\)*\K\$\$' '(?<!\\)(\\\\)*\$\$' fill meta
-add-highlighter shared/latex/bracket-math region '(?<!\\)(?:\\\\)*\K\\\[' '\\\]' fill meta
-add-highlighter shared/latex/paren-math region '(?<!\\)(?:\\\\)*\K\\\(' '\\\)' fill meta
+add-highlighter shared/latex/bracket-math region '(?<!\\)(?:\\\\)*\K\\\[' '(?<!\\)(\\\\)*\\\]' fill meta
+add-highlighter shared/latex/paren-math region '(?<!\\)(?:\\\\)*\K\\\(' '(?<!\\)(\\\\)*\\\)' fill meta
 
 # Region for control sequence (includes latex2e arguments and options)
 # starting with unescaped \ and ending :
