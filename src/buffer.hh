@@ -120,6 +120,7 @@ public:
         NoHooks  = 1 << 4,
         Debug    = 1 << 5,
         ReadOnly = 1 << 6,
+        NoBufSetOption = 1 << 7,
     };
     friend constexpr bool with_bit_ops(Meta::Type<Flags>) { return true; }
     friend class BufferIterator;
