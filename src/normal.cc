@@ -448,10 +448,12 @@ void replace_with_char(Context& context, NormalParams)
         ScopedEdition edition(context);
         ScopedSelectionEdition selection_edition{context};
         Buffer& buffer = context.buffer();
-        context.selections().for_each([&](size_t index, Selection& sel) {
+        auto& sels = context.selections();
+        sels.merge_overlapping();
+        sels.for_each([&](size_t index, Selection& sel) {
             CharCount count = char_length(buffer, sel);
             replace(buffer, sel, String{*cp, count});
-        }, false);
+        }, true);
     }, "replace with char", "enter char to replace with\n");
 }
 
