@@ -47,6 +47,9 @@ Buffer* BufferManager::create_buffer(String name, Buffer::Flags flags, BufferLin
 
 void BufferManager::delete_buffer(Buffer& buffer)
 {
+    if (buffer.flags() & Buffer::Flags::Locked)
+        throw runtime_error{"Trying to delete a locked buffer"};
+
     auto it = find_if(m_buffers, [&](auto& p) { return p.get() == &buffer; });
     if (it == m_buffers.end()) // we might be trying to recursively delete this buffer
         return;

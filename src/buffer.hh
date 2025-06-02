@@ -121,6 +121,7 @@ public:
         Debug    = 1 << 5,
         ReadOnly = 1 << 6,
         NoBufSetOption = 1 << 7,
+        Locked = 1 << 8,
     };
     friend constexpr bool with_bit_ops(Meta::Type<Flags>) { return true; }
     friend class BufferIterator;

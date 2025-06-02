@@ -194,6 +194,9 @@ void Client::change_buffer(Buffer& buffer, Optional<FunctionRef<void()>> set_sel
     if (m_buffer_reload_dialog_opened)
         close_buffer_reload_dialog();
 
+    buffer.flags() |= Buffer::Flags::Locked;
+    OnScopeEnd unlock{[&] { buffer.flags() &= ~Buffer::Flags::Locked; }};
+
     auto& client_manager = ClientManager::instance();
     WindowAndSelections ws = client_manager.get_free_window(buffer);
 

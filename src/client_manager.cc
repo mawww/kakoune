@@ -55,6 +55,9 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui, int pi
     if (buffer == nullptr)
         buffer = &BufferManager::instance().get_first_buffer();
 
+    buffer->flags() |= Buffer::Flags::Locked;
+    OnScopeEnd unlock{[&] { buffer->flags() &= ~Buffer::Flags::Locked; }};
+
     WindowAndSelections ws = get_free_window(*buffer);
     Client* client = new Client{std::move(ui), std::move(ws.window),
                                 std::move(ws.selections), pid,
