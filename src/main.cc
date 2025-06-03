@@ -45,10 +45,11 @@ struct {
     unsigned int version;
     StringView notes;
 } constexpr version_notes[] = { {
-        0,
+        20250603,
         "» kak_* appearing in shell arguments will be added to the environment\n"
         "» {+U}double underline{} support\n"
         "» {+u}git apply{} can stage/revert selected changes to current buffer\n"
+        "» {+u}exec/eval -client{} accepts '*' and comma separated list\n"
     }, {
         20240518,
         "» Fix tests failing on some platforms\n"
