@@ -18,8 +18,9 @@ are then restored when the keys have been executed: */*, *"*, *|*, *^*,
 
 == Switches for both commands
 
-*-client* <name>::
-    Execute in the context of the client *name*.
+*-client* <names>::
+    Execute in the context of each client specified in the comma separated
+    list *names*. '\*' can be used as *names* to iterate overall clients.
 
 *-try-client* <name>::
     Execute in the context of the client *name* if such client exists,
@@ -37,7 +38,7 @@ are then restored when the keys have been executed: */*, *"*, *|*, *^*,
 
 *-buffer* <names>::
     Execute in the context of each buffer specified in the comma separated
-    list *names*. '\*' can be used as a *name* to iterate over all non-debug
+    list *names*. '\*' can be used as *names* to iterate over all non-debug
     buffers.
     (See <<buffers#debug-buffers, `:doc buffers`>>)
 

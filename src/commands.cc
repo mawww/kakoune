@@ -2038,7 +2038,7 @@ template<size_t... P>
 ParameterDesc make_context_wrap_params_impl(Array<HashItem<String, SwitchDesc>, sizeof...(P)>&& additional_params,
                                             std::index_sequence<P...>)
 {
-    return { { { "client",     { {client_arg_completer},  "run in given client context" } },
+    return { { { "client",     { {client_arg_completer},  "run in the client context for each client in the given comma separatd list" } },
                { "try-client", { {client_arg_completer},  "run in given client context if it exists, or else in the current one" } },
                { "buffer",     { {complete_buffer_name<false>},  "run in a disposable context for each given buffer in the comma separated list argument" } },
                { "draft",      { {}, "run in a disposable context" } },
@@ -2188,14 +2188,25 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
     };
 
     ClientManager& cm = ClientManager::instance();
-    if (auto client_name = parser.get_switch("client"))
-        context_wrap_for_context(cm.get_client(*client_name).context());
+    if (auto client_names = parser.get_switch("client"))
+    {
+        if (*client_names == "*")
+        {
+            for (auto&& client : ClientManager::instance()
+                               | transform(&std::unique_ptr<Client>::get)
+                               | gather<Vector<SafePtr<Client>>>()) // gather as we might be mutating the client list in the loop.
+                context_wrap_for_context(client->context());
+        }
+        else
+            for (auto&& name : *client_names
+                             | split<StringView>(',', '\\')
+                             | transform(unescape<',', '\\'>))
+                context_wrap_for_context(ClientManager::instance().get_client(name).context());
+    }
     else if (auto client_name = parser.get_switch("try-client"))
     {
-        if (Client* client = cm.get_client_ifp(*client_name))
-            context_wrap_for_context(client->context());
-        else
-            context_wrap_for_context(context);
+        Client* client = cm.get_client_ifp(*client_name);
+        context_wrap_for_context(client ? client->context() : context);
     }
     else
         context_wrap_for_context(context);
