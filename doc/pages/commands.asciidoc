@@ -293,7 +293,9 @@ of the file onto the filesystem
     (See <<faces#,`:doc faces`>> and <<scopes#,`:doc scopes`>>)
 
 *colorscheme* <name>::
-    load named colorscheme
+    load named colorscheme +
+    Colorschemes are just `.kak` scripts that set faces. Colorschemes are searched for in `%val{config}/colors` and `%val{runtime}/colors`. +
+    (See <<faces#, `:doc faces`>> and <<expansions#, `:doc expansions`>>)
 
 *add-highlighter* [<switches>] <highlighter_path> <highlighter_parameters> ...::
     *alias* addhl +
