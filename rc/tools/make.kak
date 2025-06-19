@@ -62,8 +62,9 @@ define-command -hidden make-jump %{
                 set-option buffer jump_current_line %val{cursor_line}
                 set-register a "%reg{1}/%reg{2}" "%reg{3}" "%reg{4}" "%reg{5}"
             } catch %{
-                set-register / %opt{make_error_pattern}
-                execute-keys <a-h><a-l> s<ret>l
+                # check if error pattern matches exactly at the start of the current line, possibly spanning more lines
+                set-register / "\A%opt{make_error_pattern}"
+                execute-keys ghGe s<ret>l
                 set-option buffer jump_current_line %val{cursor_line}
                 set-register a "%reg{1}" "%reg{2}" "%reg{3}" "%reg{4}"
             }
@@ -73,11 +74,12 @@ define-command -hidden make-jump %{
 }
 define-command -hidden make-select-next %{
         set-register / %opt{make_error_pattern}
-        execute-keys "%opt{jump_current_line}ggl" "/<ret>"
+        # go to the current line end, search and go to the start of selection
+        execute-keys "%opt{jump_current_line}ggl" "/<ret><a-;>;"
 }
 define-command -hidden make-select-previous %{
         set-register / %opt{make_error_pattern}
-        execute-keys "%opt{jump_current_line}g" "<a-/><ret>"
+        execute-keys "%opt{jump_current_line}g" "<a-/><ret><a-;>;"
 }
 
 define-command make-next-error -docstring %{alias for "jump-next *make*"} %{
