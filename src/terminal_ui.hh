@@ -61,6 +61,8 @@ public:
     static void restore_terminal();
 
     void suspend();
+    
+    bool is_cursor_native() const { return m_terminal_cursor_native; }
 
     struct Rect
     {
@@ -134,6 +136,8 @@ private:
         CursorMode mode;
         DisplayCoord coord;
     } m_cursor;
+    
+    struct Cursor m_prev_cursor;
 
     FDWatcher m_stdin_watcher;
     OnKeyCallback m_on_key;
@@ -167,6 +171,7 @@ private:
 
     Codepoint m_padding_char = '~';
     bool m_padding_fill = false;
+    bool m_terminal_cursor_native = false;
 
     bool m_dirty = false;
 

@@ -538,10 +538,30 @@ void TerminalUI::redraw(bool force)
     auto set_cursor_pos = [&](DisplayCoord c) {
         format_with(writer, "\033[{};{}H", (int)c.line + 1, (int)c.column + 1);
     };
+
+    DisplayCoord target_pos;
     if (m_cursor.mode == CursorMode::Prompt)
-        set_cursor_pos({m_status_on_top ? 0 : m_dimensions.line, m_cursor.coord.column});
+        target_pos = {m_status_on_top ? 0 : m_dimensions.line, m_cursor.coord.column};
     else
-        set_cursor_pos(m_cursor.coord + content_line_offset());
+        target_pos = m_cursor.coord + content_line_offset();
+
+    if (m_terminal_cursor_native)
+    {
+        // Always position cursor in native mode to ensure it's correct after screen updates
+        set_cursor_pos(target_pos);
+
+        // Only send show cursor command when cursor changes or on force refresh
+        if (m_cursor.mode != m_prev_cursor.mode || m_cursor.coord != m_prev_cursor.coord || force)
+        {
+            format_with(writer, "\033[?25h"); // ensure cursor is visible
+            m_prev_cursor = m_cursor;
+        }
+    }
+    else
+    {
+        // Always position cursor (original behavior)
+        set_cursor_pos(target_pos);
+    }
 }
 
 void TerminalUI::set_cursor(CursorMode mode, DisplayCoord coord)
@@ -1484,13 +1504,17 @@ void TerminalUI::set_resize_pending()
 
 void TerminalUI::setup_terminal()
 {
+    const char* cursor_cmd = instance().m_terminal_cursor_native ? "\033[?25h" : "\033[?25l";
+
     write(STDOUT_FILENO,
         "\033[?1049h" // enable alternative screen buffer
         "\033[?1004h" // enable focus notify
         "\033[>4;1m"  // request CSI u style key reporting
         "\033[>5u"    // kitty progressive enhancement - report shifted key codes
         "\033[22t"    // save the current window title
-        "\033[?25l"   // hide cursor
+    );
+    write(STDOUT_FILENO, cursor_cmd); // show or hide cursor based on mode
+    write(STDOUT_FILENO,
         "\033="       // set application keypad mode, so the keypad keys send unique codes
         "\033[?2004h" // force enable bracketed-paste events
     );
@@ -1500,7 +1524,13 @@ void TerminalUI::restore_terminal()
 {
     write(STDOUT_FILENO,
         "\033>"
-        "\033[?25h"
+    );
+
+    // Only restore cursor visibility if it was hidden (non-native mode)
+    if (not instance().m_terminal_cursor_native)
+        write(STDOUT_FILENO, "\033[?25h");
+
+    write(STDOUT_FILENO,
         "\033[23t"
         "\033[<u"
         "\033[>4;0m"
@@ -1574,6 +1604,7 @@ void TerminalUI::set_ui_options(const Options& options)
 
     m_padding_char = find("terminal_padding_char").map([](StringView s) { return s.column_length() < 1 ? ' ' : s[0_char]; }).value_or(Codepoint{'~'});
     m_padding_fill = find("terminal_padding_fill").map(to_bool).value_or(false);
+    m_terminal_cursor_native = find("terminal_cursor_native").map(to_bool).value_or(false);
 
     m_info_max_width = find("terminal_info_max_width").map(str_to_int_ifp).value_or(0);
 }
