@@ -790,7 +790,7 @@ constexpr StringView WrapHighlighter::ms_id;
 
 struct TabulationHighlighter : Highlighter
 {
-    TabulationHighlighter() : Highlighter{HighlightPass::Move} {}
+    TabulationHighlighter() : Highlighter{HighlightPass::Replace} {}
 
     void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange) override
     {
@@ -881,7 +881,7 @@ const HighlighterDesc show_whitespace_desc = {
 struct ShowWhitespacesHighlighter : Highlighter
 {
     ShowWhitespacesHighlighter(String tab, String tabpad, String spc, String lf, String nbsp, String indent, bool only_trailing)
-      : Highlighter{HighlightPass::Move}, m_tab{std::move(tab)}, m_tabpad{std::move(tabpad)},
+      : Highlighter{HighlightPass::Replace}, m_tab{std::move(tab)}, m_tabpad{std::move(tabpad)},
         m_spc{std::move(spc)}, m_lf{std::move(lf)}, m_nbsp{std::move(nbsp)}, m_indent{std::move(indent)}, m_only_trailing{std::move(only_trailing)}
     {}
 
@@ -1554,7 +1554,7 @@ const HighlighterDesc replace_ranges_desc = {
     "each spec is interpreted as a display line to display in place of the range",
     {}
 };
-struct ReplaceRangesHighlighter : OptionBasedHighlighter<RangeAndStringList, ReplaceRangesHighlighter, HighlightPass::Move>
+struct ReplaceRangesHighlighter : OptionBasedHighlighter<RangeAndStringList, ReplaceRangesHighlighter, HighlightPass::Replace>
 {
     using ReplaceRangesHighlighter::OptionBasedHighlighter::OptionBasedHighlighter;
 private:

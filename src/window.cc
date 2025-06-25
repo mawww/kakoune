@@ -144,8 +144,8 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
 
     m_display_buffer.compute_range();
     const BufferRange range{{0,0}, buffer().end_coord()};
-    m_builtin_highlighters.highlight({context, setup, HighlightPass::Wrap, {}}, m_display_buffer, range);
-    m_builtin_highlighters.highlight({context, setup, HighlightPass::Move, {}}, m_display_buffer, range);
+    for (auto pass : {HighlightPass::Replace, HighlightPass::Wrap, HighlightPass::Move})
+        m_builtin_highlighters.highlight({context, setup, pass, {}}, m_display_buffer, range);
 
     if (context.ensure_cursor_visible)
     {
@@ -233,8 +233,8 @@ DisplaySetup Window::compute_display_setup(const Context& context) const
     win_pos.line = std::min(win_pos.line, buffer().line_count()-1);
 
     DisplaySetup setup{win_pos.line, m_dimensions.line, win_pos.column, 0_col, offset};
-    m_builtin_highlighters.compute_display_setup({context, setup, HighlightPass::Move, {}}, setup);
-    m_builtin_highlighters.compute_display_setup({context, setup, HighlightPass::Wrap, {}}, setup);
+    for (auto pass : {HighlightPass::Move, HighlightPass::Wrap, HighlightPass::Replace})
+        m_builtin_highlighters.compute_display_setup({context, setup, pass, {}}, setup);
     check_display_setup(setup, *this);
 
     return setup;

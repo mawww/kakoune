@@ -22,11 +22,12 @@ using BufferRange = Range<BufferCoord>;
 
 enum class HighlightPass
 {
-    Wrap = 1 << 0,
-    Move = 1 << 1,
-    Colorize = 1 << 2,
+    Replace = 1 << 0,
+    Wrap = 1 << 1,
+    Move = 1 << 2,
+    Colorize = 1 << 3,
 
-    All = Wrap | Move | Colorize,
+    All = Replace | Wrap | Move | Colorize,
 };
 constexpr bool with_bit_ops(Meta::Type<HighlightPass>) { return true; }
 
