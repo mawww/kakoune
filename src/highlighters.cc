@@ -601,7 +601,7 @@ struct WrapHighlighter : Highlighter
 
     static constexpr StringView ms_id = "wrap";
 
-    struct SplitPos{ ByteCount byte; ColumnCount column; };
+    struct SplitPos{ DisplayLine::iterator atom_it; ByteCount byte; ColumnCount column; };
 
     void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange) override
     {
@@ -619,34 +619,21 @@ struct WrapHighlighter : Highlighter
         for (auto it = display_buffer.lines().begin();
              it != display_buffer.lines().end(); ++it)
         {
-            const LineCount buf_line = it->range().begin.line;
-            const ByteCount line_length = buffer[buf_line].length();
             const ColumnCount indent = m_preserve_indent ?
-                zero_if_greater(line_indent(buffer, tabstop, buf_line), wrap_column) : 0_col;
+                zero_if_greater(line_indent(buffer, tabstop, it->range().begin.line), wrap_column) : 0_col;
             const ColumnCount prefix_len = std::max(marker_len, indent);
 
-            auto pos = next_split_pos(buffer, wrap_column, prefix_len, tabstop, buf_line, {0, 0});
-            if (pos.byte == line_length)
-                continue;
-
-            for (auto atom_it = it->begin();
-                 pos.byte != line_length and atom_it != it->end(); )
+            SplitPos pos{it->begin(), 0, 0}; ;
+            while (next_split_pos(pos, it->end(), wrap_column, prefix_len))
             {
-                const BufferCoord coord{buf_line, pos.byte};
-                if (!atom_it->has_buffer_range() or
-                    coord < atom_it->begin() or coord >= atom_it->end())
-                {
-                    ++atom_it;
-                    continue;
-                }
-
                 auto& line = *it;
 
-                if (coord > atom_it->begin())
-                    atom_it = ++line.split(atom_it, coord);
+                if (pos.byte > 0 and pos.atom_it->type() == DisplayAtom::Range)
+                    pos.atom_it = ++line.split(pos.atom_it, pos.atom_it->begin() + BufferCoord{0, pos.byte});
 
-                DisplayLine new_line{ AtomList{ atom_it, line.end() } };
-                line.erase(atom_it, line.end());
+                auto coord = pos.atom_it->begin();
+                DisplayLine new_line{ AtomList{ pos.atom_it, line.end() } };
+                line.erase(pos.atom_it, line.end());
 
                 if (marker_len != 0)
                     new_line.insert(new_line.begin(), {m_marker, face_marker});
@@ -657,9 +644,12 @@ struct WrapHighlighter : Highlighter
                 }
 
                 it = display_buffer.lines().insert(it+1, new_line);
-
-                pos = next_split_pos(buffer, wrap_column - prefix_len, prefix_len, tabstop, buf_line, pos);
-                atom_it = it->begin();
+                pos = SplitPos{it->begin(), 0, 0};
+                if (pos.atom_it->type() != DisplayAtom::Range) // avoid infinite loop trying to split too long non-buffer ranges
+                {
+                    pos.column += pos.atom_it->content().column_length();
+                    ++pos.atom_it;
+                }
             }
         }
     }
@@ -683,79 +673,72 @@ struct WrapHighlighter : Highlighter
         unique_ids.push_back(ms_id);
     }
 
-    SplitPos next_split_pos(const Buffer& buffer,  ColumnCount wrap_column, ColumnCount prefix_len,
-                            int tabstop, LineCount line, SplitPos current) const
+    bool next_split_pos(SplitPos& pos, DisplayLine::iterator line_end,
+                        ColumnCount wrap_column, ColumnCount prefix_len) const
     {
-        const ColumnCount target_column = current.column + wrap_column;
-        StringView content = buffer[line];
+        SplitPos last_word_boundary = pos;
+        SplitPos last_WORD_boundary = pos;
 
-        SplitPos pos = current;
-        SplitPos last_word_boundary = {0, 0};
-        SplitPos last_WORD_boundary = {0, 0};
-
-        auto update_boundaries = [&](Codepoint cp) {
-            if (not m_word_wrap)
-                return;
-            if (!is_word<Word>(cp))
+        auto update_word_boundaries = [&](Codepoint cp) {
+            if (m_word_wrap and not is_word<Word>(cp))
                 last_word_boundary = pos;
-            if (!is_word<WORD>(cp))
+            if (m_word_wrap and not is_word<WORD>(cp))
                 last_WORD_boundary = pos;
         };
 
-        while (pos.byte < content.length() and pos.column < target_column)
+        while (pos.atom_it != line_end and pos.column < wrap_column)
         {
-            if (content[pos.byte] == '\t')
+            auto content = pos.atom_it->content();
+            const char* it = &content[pos.byte];
+            const Codepoint cp = utf8::read_codepoint(it, content.end());
+            const ColumnCount width = codepoint_width(cp);
+            if (pos.column + width > wrap_column) // the target column was in the char
             {
-                const ColumnCount next_column = (pos.column / tabstop + 1) * tabstop;
-                if (next_column > target_column and pos.byte != current.byte) // the target column was in the tab
-                    break;
-                pos.column = next_column;
-                ++pos.byte;
-                last_word_boundary = last_WORD_boundary = pos;
+                update_word_boundaries(cp);
+                break;
             }
-            else
+            pos.column += width;
+            pos.byte = (int)(it - content.begin());
+            update_word_boundaries(cp);
+            if (it == content.end())
             {
-                const char* it = &content[pos.byte];
-                const Codepoint cp = utf8::read_codepoint(it, content.end());
-                const ColumnCount width = codepoint_width(cp);
-                if (pos.column + width > target_column and pos.byte != current.byte) // the target column was in the char
-                {
-                    update_boundaries(cp);
-                    break;
-                }
-                pos.column += width;
-                pos.byte = (int)(it - content.begin());
-                update_boundaries(cp);
+                ++pos.atom_it;
+                pos.byte = 0;
             }
         }
+        if (pos.atom_it == line_end)
+            return false;
 
+        auto content = pos.atom_it->content();
         if (m_word_wrap and pos.byte < content.length())
         {
-            auto find_split_pos = [&](SplitPos start_pos, auto is_word) -> Optional<SplitPos> {
+            auto find_split_pos = [&](SplitPos start_pos, auto is_word) {
                 if (start_pos.byte == 0)
-                    return {};
+                    return false;
                 const char* it = &content[pos.byte];
                 // split at current position if is a word boundary
                 if (not is_word(utf8::codepoint(it, content.end()), {'_'}))
-                    return pos;
+                    return true;
                 // split at last word boundary if the word is shorter than our wrapping width
                 ColumnCount word_length = pos.column - start_pos.column;
                 while (it != content.end() and word_length <= (wrap_column - prefix_len))
                 {
                     const Codepoint cp = utf8::read_codepoint(it, content.end());
                     if (not is_word(cp, {'_'}))
-                        return start_pos;
+                    {
+                        pos = start_pos;
+                        return true;
+                    }
                     word_length += codepoint_width(cp);
                 }
-                return {};
+                return false;
             };
-            if (auto split = find_split_pos(last_WORD_boundary, is_word<WORD>))
-                return *split;
-            if (auto split = find_split_pos(last_word_boundary, is_word<Word>))
-                return *split;
+            if (find_split_pos(last_WORD_boundary, is_word<WORD>) or
+                find_split_pos(last_word_boundary, is_word<Word>))
+                return true;
         }
 
-        return pos;
+        return true;
     }
 
     static ColumnCount line_indent(const Buffer& buffer, int tabstop, LineCount line)

@@ -1,0 +1,4 @@
+declare-option range-specs ranges %val{timestamp} '1.1+0|HINT:' '2.74+0|WRAPPED HINT' '3.8+8|OVERFLOWING HINT XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+
+add-highlighter window/ wrap -word
+add-highlighter window/ replace-ranges ranges
