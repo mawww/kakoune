@@ -613,9 +613,7 @@ struct WrapHighlighter : Highlighter
             return;
 
         const Buffer& buffer = context.context.buffer();
-        const auto& cursor = context.context.selections().main().cursor();
         const int tabstop = context.context.options()["tabstop"].get<int>();
-        const LineCount win_height = context.context.window().dimensions().line;
         const ColumnCount marker_len = zero_if_greater(m_marker.column_length(), wrap_column);
         const Face face_marker = context.context.faces()["WrapMarker"];
         for (auto it = display_buffer.lines().begin();
@@ -658,19 +656,6 @@ struct WrapHighlighter : Highlighter
                     it->replace(String{' ', indent - marker_len});
                 }
 
-                if (it+1 - display_buffer.lines().begin() == win_height)
-                {
-                    if (cursor >= new_line.range().begin) // strip first lines if cursor is not visible
-                    {
-                        display_buffer.lines().erase(display_buffer.lines().begin(), display_buffer.lines().begin()+1);
-                        --it;
-                    }
-                    else
-                    {
-                        display_buffer.lines().erase(it+1, display_buffer.lines().end());
-                        return;
-                    }
-                }
                 it = display_buffer.lines().insert(it+1, new_line);
 
                 pos = next_split_pos(buffer, wrap_column - prefix_len, prefix_len, tabstop, buf_line, pos);
@@ -688,80 +673,9 @@ struct WrapHighlighter : Highlighter
         if (wrap_column <= 0)
             return;
 
-        const Buffer& buffer = context.context.buffer();
-        const auto& cursor = context.context.selections().main().cursor();
-        const int tabstop = context.context.options()["tabstop"].get<int>();
-
-        auto line_wrap_count = [&](LineCount line, ColumnCount prefix_len) {
-            LineCount count = 0;
-            const ByteCount line_length = buffer[line].length();
-            SplitPos pos{0, 0};
-            while (true)
-            {
-                pos = next_split_pos(buffer, wrap_column - (pos.byte == 0 ? 0_col : prefix_len),
-                                     prefix_len, tabstop, line, pos);
-                if (pos.byte == line_length)
-                    break;
-                ++count;
-            }
-            return count;
-        };
-
-        const auto win_height = context.context.window().dimensions().line;
-
         // Disable horizontal scrolling when using a WrapHighlighter
         setup.first_column = 0;
-        setup.line_count = 0;
         setup.scroll_offset.column = 0;
-
-        const ColumnCount marker_len = zero_if_greater(m_marker.column_length(), wrap_column);
-
-        for (auto buf_line = setup.first_line, win_line = 0_line;
-             win_line < win_height or (setup.ensure_cursor_visible and buf_line <= cursor.line);
-             ++buf_line, ++setup.line_count)
-        {
-            if (buf_line >= buffer.line_count())
-                break;
-
-            const ColumnCount indent = m_preserve_indent ?
-                zero_if_greater(line_indent(buffer, tabstop, buf_line), wrap_column) : 0_col;
-            const ColumnCount prefix_len = std::max(marker_len, indent);
-
-            if (buf_line == cursor.line)
-            {
-                SplitPos pos{0, 0};
-                for (LineCount count = 0; true; ++count)
-                {
-                    auto next_pos = next_split_pos(buffer, wrap_column - (pos.byte != 0 ? prefix_len : 0_col),
-                                                   prefix_len, tabstop, buf_line, pos);
-                    if (next_pos.byte > cursor.column)
-                    {
-                        setup.cursor_pos = DisplayCoord{
-                            win_line + count,
-                            get_column(buffer, tabstop, cursor) -
-                            pos.column + (pos.byte != 0 ? indent : 0_col)
-                        };
-                        break;
-                    }
-                    pos = next_pos;
-                }
-            }
-            const auto wrap_count = line_wrap_count(buf_line, prefix_len);
-            win_line += wrap_count + 1;
-
-            // scroll window to keep cursor visible, and update range as lines gets removed
-            while (setup.ensure_cursor_visible and
-                   buf_line >= cursor.line and setup.first_line < cursor.line and
-                   setup.cursor_pos.line + setup.scroll_offset.line >= win_height)
-            {
-                auto remove_count = 1 + line_wrap_count(setup.first_line, indent);
-                ++setup.first_line;
-                --setup.line_count;
-                setup.cursor_pos.line -= std::min(win_height, remove_count);
-                win_line -= remove_count;
-                kak_assert(setup.cursor_pos.line >= 0);
-            }
-        }
     }
 
     void fill_unique_ids(Vector<StringView>& unique_ids) const override
@@ -947,7 +861,6 @@ struct TabulationHighlighter : Highlighter
         const ColumnCount offset = std::max(column + width - win_end, 0_col);
 
         setup.first_column += offset;
-        setup.cursor_pos.column -= offset;
     }
 };
 
@@ -1694,7 +1607,6 @@ private:
         auto& buffer = context.context.buffer();
         auto& sels = context.context.selections();
         auto& range_and_faces = get_option(context);
-        const int tabstop = context.context.options()["tabstop"].get<int>();
         update_ranges(buffer, range_and_faces.prefix, range_and_faces.list);
         range_and_faces.prefix = buffer.timestamp();
 
@@ -1707,19 +1619,7 @@ private:
             if (range.first.line < setup.first_line and last.line >= setup.first_line)
                 setup.first_line = range.first.line;
 
-            const auto& cursor = context.context.selections().main().cursor();
-            if (cursor.line == last.line and cursor.column >= last.column)
-            {
-                auto first_column = get_column(buffer, tabstop, range.first);
-                auto last_column = get_column(buffer, tabstop, last);
-                auto replacement = parse_display_line(spec, context.context.faces());
-                auto cursor_move = replacement.length() - ((range.first.line == last.line) ? last_column - first_column : last_column);
-                setup.cursor_pos.line -= last.line - range.first.line;
-                setup.cursor_pos.column += cursor_move;
-            }
-
-            if (setup.ensure_cursor_visible and
-                last.line >= setup.first_line and
+            if (last.line >= setup.first_line and
                 range.first.line <= setup.first_line + setup.line_count and
                 range.first.line != last.line)
             {

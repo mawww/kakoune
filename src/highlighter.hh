@@ -43,11 +43,8 @@ struct DisplaySetup
     LineCount line_count;
     ColumnCount first_column;
     ColumnCount widget_columns;
-    // Position of the cursor in the window
-    DisplayCoord cursor_pos;
     // Offset of line and columns that must remain visible around cursor
     DisplayCoord scroll_offset;
-    bool ensure_cursor_visible;
 };
 
 using HighlighterIdList = ConstArrayView<StringView>;
