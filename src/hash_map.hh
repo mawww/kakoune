@@ -3,7 +3,6 @@
 
 #include "hash.hh"
 #include "memory.hh"
-#include "optional.hh"
 #include "vector.hh"
 
 namespace Kakoune
@@ -269,56 +268,50 @@ struct HashMap
     }
 
     template<typename KeyType> requires IsHashCompatible<Key, KeyType>
-    constexpr Optional<Item> remove(const KeyType& key)
+    constexpr void remove(const KeyType& key)
     {
-        Optional<Item> removed;
         const auto hash = hash_value(key);
         int index = find_index(key, hash);
         if (index >= 0)
         {
-            removed.emplace(std::move(m_items[index]));
+            [[maybe_unused]] Item keepalive = std::move(m_items[index]);
             m_items.erase(m_items.begin() + index);
             m_index.remove(hash, index);
             m_index.ordered_fix_entries(index);
         }
-        return removed;
     }
 
     template<typename KeyType> requires IsHashCompatible<Key, KeyType>
-    constexpr Optional<Item> unordered_remove(const KeyType& key)
+    constexpr void unordered_remove(const KeyType& key)
     {
-        Optional<Item> removed;
         const auto hash = hash_value(key);
         int index = find_index(key, hash);
         if (index >= 0)
         {
-            removed.emplace(std::move(m_items[index]));
+            [[maybe_unused]] Item keepalive = std::move(m_items[index]);
             m_items[index] = std::move(m_items.back());
             m_items.pop_back();
             m_index.remove(hash, index);
             if (index != m_items.size())
                 m_index.unordered_fix_entries(hash_value(item_key(m_items[index])), m_items.size(), index);
         }
-        return removed;
     }
 
     template<typename KeyType> requires IsHashCompatible<Key, KeyType>
-    constexpr Optional<Item> erase(const KeyType& key) { return unordered_remove(key); }
+    constexpr void erase(const KeyType& key) { return unordered_remove(key); }
 
     template<typename KeyType> requires IsHashCompatible<Key, KeyType>
-    constexpr Vector<Item> remove_all(const KeyType& key)
+    constexpr void remove_all(const KeyType& key)
     {
-        Vector<Item> removed;
         const auto hash = hash_value(key);
         for (int index = find_index(key, hash); index >= 0;
              index = find_index(key, hash))
         {
-            removed.push_back(std::move(m_items[index]));
+            [[maybe_unused]] Item keepalive = std::move(m_items[index]);
             m_items.erase(m_items.begin() + index);
             m_index.remove(hash, index);
             m_index.ordered_fix_entries(index);
         }
-        return removed;
     }
 
     using iterator = typename ContainerType::iterator;
