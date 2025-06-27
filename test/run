@@ -136,7 +136,7 @@ fail_ifn() {
   fi
 }
 
-check_json_eq() {
+assert_eq() {
   if [ ! "$1" = "$2" ]; then
     fail_ifn
     if command -v git > /dev/null; then
@@ -204,13 +204,13 @@ ui_out() {
       [ "$event" = "$expected" ] && break
     done
     ;;
-  -until-eval | -until-grep)
+  -until-grep)
     pattern=$1
     shift
     while read -r event <&4; do
-      if printf %s "$event" | "${arg#-until-}" "$pattern" >/dev/null; then
+      if printf %s "$event" | grep "$pattern" >/dev/null; then
         if [ $# -ne 0 ]; then
-            check_json_eq "$1" "$event"
+            assert_eq "$1" "$event"
             shift
         fi
         break
@@ -219,7 +219,7 @@ ui_out() {
     ;;
   *)
     read -r event <&4
-    check_json_eq "$arg" "$event"
+    assert_eq "$arg" "$event"
     ;;
   esac
 }

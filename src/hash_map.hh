@@ -274,6 +274,7 @@ struct HashMap
         int index = find_index(key, hash);
         if (index >= 0)
         {
+            [[maybe_unused]] Item keepalive = std::move(m_items[index]);
             m_items.erase(m_items.begin() + index);
             m_index.remove(hash, index);
             m_index.ordered_fix_entries(index);
@@ -287,7 +288,8 @@ struct HashMap
         int index = find_index(key, hash);
         if (index >= 0)
         {
-            constexpr_swap(m_items[index], m_items.back());
+            [[maybe_unused]] Item keepalive = std::move(m_items[index]);
+            m_items[index] = std::move(m_items.back());
             m_items.pop_back();
             m_index.remove(hash, index);
             if (index != m_items.size())
@@ -296,7 +298,7 @@ struct HashMap
     }
 
     template<typename KeyType> requires IsHashCompatible<Key, KeyType>
-    constexpr void erase(const KeyType& key) { unordered_remove(key); }
+    constexpr void erase(const KeyType& key) { return unordered_remove(key); }
 
     template<typename KeyType> requires IsHashCompatible<Key, KeyType>
     constexpr void remove_all(const KeyType& key)
@@ -305,6 +307,7 @@ struct HashMap
         for (int index = find_index(key, hash); index >= 0;
              index = find_index(key, hash))
         {
+            [[maybe_unused]] Item keepalive = std::move(m_items[index]);
             m_items.erase(m_items.begin() + index);
             m_index.remove(hash, index);
             m_index.ordered_fix_entries(index);

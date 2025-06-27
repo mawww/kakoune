@@ -601,7 +601,7 @@ struct WrapHighlighter : Highlighter
 
     static constexpr StringView ms_id = "wrap";
 
-    struct SplitPos{ ByteCount byte; ColumnCount column; };
+    struct SplitPos{ DisplayLine::iterator atom_it; ByteCount byte; ColumnCount column; };
 
     void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange) override
     {
@@ -613,42 +613,27 @@ struct WrapHighlighter : Highlighter
             return;
 
         const Buffer& buffer = context.context.buffer();
-        const auto& cursor = context.context.selections().main().cursor();
         const int tabstop = context.context.options()["tabstop"].get<int>();
-        const LineCount win_height = context.context.window().dimensions().line;
         const ColumnCount marker_len = zero_if_greater(m_marker.column_length(), wrap_column);
         const Face face_marker = context.context.faces()["WrapMarker"];
         for (auto it = display_buffer.lines().begin();
              it != display_buffer.lines().end(); ++it)
         {
-            const LineCount buf_line = it->range().begin.line;
-            const ByteCount line_length = buffer[buf_line].length();
             const ColumnCount indent = m_preserve_indent ?
-                zero_if_greater(line_indent(buffer, tabstop, buf_line), wrap_column) : 0_col;
+                zero_if_greater(line_indent(buffer, tabstop, it->range().begin.line), wrap_column) : 0_col;
             const ColumnCount prefix_len = std::max(marker_len, indent);
 
-            auto pos = next_split_pos(buffer, wrap_column, prefix_len, tabstop, buf_line, {0, 0});
-            if (pos.byte == line_length)
-                continue;
-
-            for (auto atom_it = it->begin();
-                 pos.byte != line_length and atom_it != it->end(); )
+            SplitPos pos{it->begin(), 0, 0}; ;
+            while (next_split_pos(pos, it->end(), wrap_column, prefix_len))
             {
-                const BufferCoord coord{buf_line, pos.byte};
-                if (!atom_it->has_buffer_range() or
-                    coord < atom_it->begin() or coord >= atom_it->end())
-                {
-                    ++atom_it;
-                    continue;
-                }
-
                 auto& line = *it;
 
-                if (coord > atom_it->begin())
-                    atom_it = ++line.split(atom_it, coord);
+                if (pos.byte > 0 and pos.atom_it->type() == DisplayAtom::Range)
+                    pos.atom_it = ++line.split(pos.atom_it, pos.atom_it->begin() + BufferCoord{0, pos.byte});
 
-                DisplayLine new_line{ AtomList{ atom_it, line.end() } };
-                line.erase(atom_it, line.end());
+                auto coord = pos.atom_it->begin();
+                DisplayLine new_line{ AtomList{ pos.atom_it, line.end() } };
+                line.erase(pos.atom_it, line.end());
 
                 if (marker_len != 0)
                     new_line.insert(new_line.begin(), {m_marker, face_marker});
@@ -658,23 +643,13 @@ struct WrapHighlighter : Highlighter
                     it->replace(String{' ', indent - marker_len});
                 }
 
-                if (it+1 - display_buffer.lines().begin() == win_height)
-                {
-                    if (cursor >= new_line.range().begin) // strip first lines if cursor is not visible
-                    {
-                        display_buffer.lines().erase(display_buffer.lines().begin(), display_buffer.lines().begin()+1);
-                        --it;
-                    }
-                    else
-                    {
-                        display_buffer.lines().erase(it+1, display_buffer.lines().end());
-                        return;
-                    }
-                }
                 it = display_buffer.lines().insert(it+1, new_line);
-
-                pos = next_split_pos(buffer, wrap_column - prefix_len, prefix_len, tabstop, buf_line, pos);
-                atom_it = it->begin();
+                pos = SplitPos{it->begin(), 0, 0};
+                if (pos.atom_it->type() != DisplayAtom::Range) // avoid infinite loop trying to split too long non-buffer ranges
+                {
+                    pos.column += pos.atom_it->content().column_length();
+                    ++pos.atom_it;
+                }
             }
         }
     }
@@ -688,80 +663,9 @@ struct WrapHighlighter : Highlighter
         if (wrap_column <= 0)
             return;
 
-        const Buffer& buffer = context.context.buffer();
-        const auto& cursor = context.context.selections().main().cursor();
-        const int tabstop = context.context.options()["tabstop"].get<int>();
-
-        auto line_wrap_count = [&](LineCount line, ColumnCount prefix_len) {
-            LineCount count = 0;
-            const ByteCount line_length = buffer[line].length();
-            SplitPos pos{0, 0};
-            while (true)
-            {
-                pos = next_split_pos(buffer, wrap_column - (pos.byte == 0 ? 0_col : prefix_len),
-                                     prefix_len, tabstop, line, pos);
-                if (pos.byte == line_length)
-                    break;
-                ++count;
-            }
-            return count;
-        };
-
-        const auto win_height = context.context.window().dimensions().line;
-
         // Disable horizontal scrolling when using a WrapHighlighter
         setup.first_column = 0;
-        setup.line_count = 0;
         setup.scroll_offset.column = 0;
-
-        const ColumnCount marker_len = zero_if_greater(m_marker.column_length(), wrap_column);
-
-        for (auto buf_line = setup.first_line, win_line = 0_line;
-             win_line < win_height or (setup.ensure_cursor_visible and buf_line <= cursor.line);
-             ++buf_line, ++setup.line_count)
-        {
-            if (buf_line >= buffer.line_count())
-                break;
-
-            const ColumnCount indent = m_preserve_indent ?
-                zero_if_greater(line_indent(buffer, tabstop, buf_line), wrap_column) : 0_col;
-            const ColumnCount prefix_len = std::max(marker_len, indent);
-
-            if (buf_line == cursor.line)
-            {
-                SplitPos pos{0, 0};
-                for (LineCount count = 0; true; ++count)
-                {
-                    auto next_pos = next_split_pos(buffer, wrap_column - (pos.byte != 0 ? prefix_len : 0_col),
-                                                   prefix_len, tabstop, buf_line, pos);
-                    if (next_pos.byte > cursor.column)
-                    {
-                        setup.cursor_pos = DisplayCoord{
-                            win_line + count,
-                            get_column(buffer, tabstop, cursor) -
-                            pos.column + (pos.byte != 0 ? indent : 0_col)
-                        };
-                        break;
-                    }
-                    pos = next_pos;
-                }
-            }
-            const auto wrap_count = line_wrap_count(buf_line, prefix_len);
-            win_line += wrap_count + 1;
-
-            // scroll window to keep cursor visible, and update range as lines gets removed
-            while (setup.ensure_cursor_visible and
-                   buf_line >= cursor.line and setup.first_line < cursor.line and
-                   setup.cursor_pos.line + setup.scroll_offset.line >= win_height)
-            {
-                auto remove_count = 1 + line_wrap_count(setup.first_line, indent);
-                ++setup.first_line;
-                --setup.line_count;
-                setup.cursor_pos.line -= std::min(win_height, remove_count);
-                win_line -= remove_count;
-                kak_assert(setup.cursor_pos.line >= 0);
-            }
-        }
     }
 
     void fill_unique_ids(Vector<StringView>& unique_ids) const override
@@ -769,79 +673,72 @@ struct WrapHighlighter : Highlighter
         unique_ids.push_back(ms_id);
     }
 
-    SplitPos next_split_pos(const Buffer& buffer,  ColumnCount wrap_column, ColumnCount prefix_len,
-                            int tabstop, LineCount line, SplitPos current) const
+    bool next_split_pos(SplitPos& pos, DisplayLine::iterator line_end,
+                        ColumnCount wrap_column, ColumnCount prefix_len) const
     {
-        const ColumnCount target_column = current.column + wrap_column;
-        StringView content = buffer[line];
+        SplitPos last_word_boundary = pos;
+        SplitPos last_WORD_boundary = pos;
 
-        SplitPos pos = current;
-        SplitPos last_word_boundary = {0, 0};
-        SplitPos last_WORD_boundary = {0, 0};
-
-        auto update_boundaries = [&](Codepoint cp) {
-            if (not m_word_wrap)
-                return;
-            if (!is_word<Word>(cp))
+        auto update_word_boundaries = [&](Codepoint cp) {
+            if (m_word_wrap and not is_word<Word>(cp))
                 last_word_boundary = pos;
-            if (!is_word<WORD>(cp))
+            if (m_word_wrap and not is_word<WORD>(cp))
                 last_WORD_boundary = pos;
         };
 
-        while (pos.byte < content.length() and pos.column < target_column)
+        while (pos.atom_it != line_end and pos.column < wrap_column)
         {
-            if (content[pos.byte] == '\t')
+            auto content = pos.atom_it->content();
+            const char* it = &content[pos.byte];
+            const Codepoint cp = utf8::read_codepoint(it, content.end());
+            const ColumnCount width = codepoint_width(cp);
+            if (pos.column + width > wrap_column) // the target column was in the char
             {
-                const ColumnCount next_column = (pos.column / tabstop + 1) * tabstop;
-                if (next_column > target_column and pos.byte != current.byte) // the target column was in the tab
-                    break;
-                pos.column = next_column;
-                ++pos.byte;
-                last_word_boundary = last_WORD_boundary = pos;
+                update_word_boundaries(cp);
+                break;
             }
-            else
+            pos.column += width;
+            pos.byte = (int)(it - content.begin());
+            update_word_boundaries(cp);
+            if (it == content.end())
             {
-                const char* it = &content[pos.byte];
-                const Codepoint cp = utf8::read_codepoint(it, content.end());
-                const ColumnCount width = codepoint_width(cp);
-                if (pos.column + width > target_column and pos.byte != current.byte) // the target column was in the char
-                {
-                    update_boundaries(cp);
-                    break;
-                }
-                pos.column += width;
-                pos.byte = (int)(it - content.begin());
-                update_boundaries(cp);
+                ++pos.atom_it;
+                pos.byte = 0;
             }
         }
+        if (pos.atom_it == line_end)
+            return false;
 
+        auto content = pos.atom_it->content();
         if (m_word_wrap and pos.byte < content.length())
         {
-            auto find_split_pos = [&](SplitPos start_pos, auto is_word) -> Optional<SplitPos> {
+            auto find_split_pos = [&](SplitPos start_pos, auto is_word) {
                 if (start_pos.byte == 0)
-                    return {};
+                    return false;
                 const char* it = &content[pos.byte];
                 // split at current position if is a word boundary
                 if (not is_word(utf8::codepoint(it, content.end()), {'_'}))
-                    return pos;
+                    return true;
                 // split at last word boundary if the word is shorter than our wrapping width
                 ColumnCount word_length = pos.column - start_pos.column;
                 while (it != content.end() and word_length <= (wrap_column - prefix_len))
                 {
                     const Codepoint cp = utf8::read_codepoint(it, content.end());
                     if (not is_word(cp, {'_'}))
-                        return start_pos;
+                    {
+                        pos = start_pos;
+                        return true;
+                    }
                     word_length += codepoint_width(cp);
                 }
-                return {};
+                return false;
             };
-            if (auto split = find_split_pos(last_WORD_boundary, is_word<WORD>))
-                return *split;
-            if (auto split = find_split_pos(last_word_boundary, is_word<Word>))
-                return *split;
+            if (find_split_pos(last_WORD_boundary, is_word<WORD>) or
+                find_split_pos(last_word_boundary, is_word<Word>))
+                return true;
         }
 
-        return pos;
+        return true;
     }
 
     static ColumnCount line_indent(const Buffer& buffer, int tabstop, LineCount line)
@@ -876,7 +773,7 @@ constexpr StringView WrapHighlighter::ms_id;
 
 struct TabulationHighlighter : Highlighter
 {
-    TabulationHighlighter() : Highlighter{HighlightPass::Move} {}
+    TabulationHighlighter() : Highlighter{HighlightPass::Replace} {}
 
     void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange) override
     {
@@ -947,7 +844,6 @@ struct TabulationHighlighter : Highlighter
         const ColumnCount offset = std::max(column + width - win_end, 0_col);
 
         setup.first_column += offset;
-        setup.cursor_pos.column -= offset;
     }
 };
 
@@ -968,7 +864,7 @@ const HighlighterDesc show_whitespace_desc = {
 struct ShowWhitespacesHighlighter : Highlighter
 {
     ShowWhitespacesHighlighter(String tab, String tabpad, String spc, String lf, String nbsp, String indent, bool only_trailing)
-      : Highlighter{HighlightPass::Move}, m_tab{std::move(tab)}, m_tabpad{std::move(tabpad)},
+      : Highlighter{HighlightPass::Replace}, m_tab{std::move(tab)}, m_tabpad{std::move(tabpad)},
         m_spc{std::move(spc)}, m_lf{std::move(lf)}, m_nbsp{std::move(nbsp)}, m_indent{std::move(indent)}, m_only_trailing{std::move(only_trailing)}
     {}
 
@@ -1641,7 +1537,7 @@ const HighlighterDesc replace_ranges_desc = {
     "each spec is interpreted as a display line to display in place of the range",
     {}
 };
-struct ReplaceRangesHighlighter : OptionBasedHighlighter<RangeAndStringList, ReplaceRangesHighlighter, HighlightPass::Move>
+struct ReplaceRangesHighlighter : OptionBasedHighlighter<RangeAndStringList, ReplaceRangesHighlighter, HighlightPass::Replace>
 {
     using ReplaceRangesHighlighter::OptionBasedHighlighter::OptionBasedHighlighter;
 private:
@@ -1694,7 +1590,6 @@ private:
         auto& buffer = context.context.buffer();
         auto& sels = context.context.selections();
         auto& range_and_faces = get_option(context);
-        const int tabstop = context.context.options()["tabstop"].get<int>();
         update_ranges(buffer, range_and_faces.prefix, range_and_faces.list);
         range_and_faces.prefix = buffer.timestamp();
 
@@ -1707,19 +1602,7 @@ private:
             if (range.first.line < setup.first_line and last.line >= setup.first_line)
                 setup.first_line = range.first.line;
 
-            const auto& cursor = context.context.selections().main().cursor();
-            if (cursor.line == last.line and cursor.column >= last.column)
-            {
-                auto first_column = get_column(buffer, tabstop, range.first);
-                auto last_column = get_column(buffer, tabstop, last);
-                auto replacement = parse_display_line(spec, context.context.faces());
-                auto cursor_move = replacement.length() - ((range.first.line == last.line) ? last_column - first_column : last_column);
-                setup.cursor_pos.line -= last.line - range.first.line;
-                setup.cursor_pos.column += cursor_move;
-            }
-
-            if (setup.ensure_cursor_visible and
-                last.line >= setup.first_line and
+            if (last.line >= setup.first_line and
                 range.first.line <= setup.first_line + setup.line_count and
                 range.first.line != last.line)
             {

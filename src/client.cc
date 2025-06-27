@@ -194,6 +194,9 @@ void Client::change_buffer(Buffer& buffer, Optional<FunctionRef<void()>> set_sel
     if (m_buffer_reload_dialog_opened)
         close_buffer_reload_dialog();
 
+    if (context().buffer().flags() & Buffer::Flags::Locked)
+        throw runtime_error("Changing buffer is not allowed while current buffer is locked");
+
     buffer.flags() |= Buffer::Flags::Locked;
     OnScopeEnd unlock{[&] { buffer.flags() &= ~Buffer::Flags::Locked; }};
 
