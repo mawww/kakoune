@@ -16,7 +16,6 @@
 #include "regex.hh"
 #include "register_manager.hh"
 #include "string.hh"
-#include "terminal_ui.hh"
 #include "utf8.hh"
 #include "utf8_iterator.hh"
 #include "window.hh"
@@ -1291,20 +1290,11 @@ void highlight_selections(HighlightContext context, DisplayBuffer& display_buffe
         highlight_range(display_buffer, begin, end, false,
                         apply_face(sel_faces[primary ? 0 : 1]));
     }
-    // Check if we should skip drawing the primary cursor (for terminal cursor native mode)
-    const bool skip_primary_cursor = TerminalUI::has_instance() &&
-                                     TerminalUI::instance().is_cursor_native();
-
     for (size_t i = 0; i < selections.size(); ++i)
     {
         auto& sel = selections[i];
         const BufferCoord coord = sel.cursor();
         const bool primary = (i == selections.main_index());
-
-        // Skip drawing primary cursor if terminal_cursor_native is enabled
-        if (primary && skip_primary_cursor)
-            continue;
-
         const bool eol = buffer[coord.line].length() - 1 == coord.column;
         highlight_range(display_buffer, coord, buffer.char_next(coord), false,
                         apply_face(sel_faces[2 + (eol ? 2 : 0) + (primary ? 0 : 1)]));
