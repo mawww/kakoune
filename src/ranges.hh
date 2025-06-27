@@ -632,31 +632,25 @@ auto gather()
     }};
 }
 
-template<typename ExceptionType, bool exact_size, size_t... Indexes>
-auto elements()
-{
-    return ViewFactory{[=] (auto&& range) {
-        using std::begin; using std::end;
-        auto it = begin(range), end_it = end(range);
-        size_t i = 0;
-        auto elem = [&](size_t index) {
-            for (; i < index; ++i)
-                if (++it == end_it) throw ExceptionType{i};
-            return *it;
-        };
-        // Note that initializer lists elements are guaranteed to be sequenced
-        Array<std::remove_cvref_t<decltype(*begin(range))>, sizeof...(Indexes)> res{{elem(Indexes)...}};
-        if (exact_size and ++it != end_it)
-            throw ExceptionType{++i};
-        return res;
-    }};
-}
-
 template<typename ExceptionType, size_t size, bool exact_size = true>
 auto static_gather()
 {
     return []<size_t... Indexes>(std::index_sequence<Indexes...>) {
-        return elements<ExceptionType, exact_size, Indexes...>();
+        return ViewFactory{[=] (auto&& range) {
+            using std::begin; using std::end;
+            auto it = begin(range), end_it = end(range);
+            size_t i = 0;
+            auto elem = [&](size_t index) {
+                for (; i < index; ++i)
+                    if (++it == end_it) throw ExceptionType{i};
+                return *it;
+            };
+            // Note that initializer lists elements are guaranteed to be sequenced
+            Array<std::remove_cvref_t<decltype(*begin(range))>, sizeof...(Indexes)> res{{elem(Indexes)...}};
+            if (exact_size and ++it != end_it)
+                throw ExceptionType{++i};
+            return res;
+        }};
     }(std::make_index_sequence<size>());
 }
 
