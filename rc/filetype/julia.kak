@@ -24,7 +24,7 @@ hook -group julia-highlight global WinSetOption filetype=julia %{
 }
 
 
-provide-module julia %{
+provide-module julia %§
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
@@ -64,4 +64,4 @@ define-command -hidden julia-insert-on-new-line %<
         try %{ execute-keys -draft x <a-k> ^\h*end <ret> <lt> }
     >
 >
-}
+§
