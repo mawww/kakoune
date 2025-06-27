@@ -167,7 +167,6 @@ private:
 
     Codepoint m_padding_char = '~';
     bool m_padding_fill = false;
-    bool m_terminal_cursor_native = false;
 
     bool m_dirty = false;
 
