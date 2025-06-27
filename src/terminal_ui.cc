@@ -538,7 +538,6 @@ void TerminalUI::redraw(bool force)
     auto set_cursor_pos = [&](DisplayCoord c) {
         format_with(writer, "\033[{};{}H", (int)c.line + 1, (int)c.column + 1);
     };
-
     if (m_cursor.mode == CursorMode::Prompt)
         set_cursor_pos({m_status_on_top ? 0 : m_dimensions.line, m_cursor.coord.column});
     else
