@@ -1,14 +1,14 @@
 #ifndef string_hh_INCLUDED
 #define string_hh_INCLUDED
 
-#include <climits>
-#include <cstddef>
 #include "memory.hh"
 #include "hash.hh"
 #include "units.hh"
 #include "utf8.hh"
 
-#include <algorithm>
+#include <climits>
+#include <cstddef>
+#include <cstring>
 
 namespace Kakoune
 {
@@ -298,9 +298,10 @@ inline String String::no_copy(StringView str) { return {NoCopy{}, str}; }
 template<typename Type, typename CharType>
 inline StringView StringOps<Type, CharType>::substr(ByteCount from, ByteCount length) const
 {
-    const auto str_len = type().length();
-    kak_assert(from >= 0 and from <= str_len);
-    return StringView{type().data() + (int)from, std::min(str_len - from, length >= 0 ? length : str_len)};
+    const auto str_length = type().length();
+    const auto max_length = str_length - from;
+    kak_assert(from >= 0 and max_length >= 0);
+    return StringView{type().data() + (int)from, length >= 0 and length < max_length ? length : max_length};
 }
 
 template<typename Type, typename CharType>
@@ -352,7 +353,7 @@ inline String operator+(StringView lhs, StringView rhs)
 inline bool operator==(const StringView& lhs, const StringView& rhs)
 {
     return lhs.length() == rhs.length() and
-       std::equal(lhs.begin(), lhs.end(), rhs.begin());
+           (lhs.empty() or std::memcmp(lhs.begin(), rhs.begin(), (size_t)lhs.length()) == 0);
 }
 
 inline auto operator<=>(const StringView& lhs, const StringView& rhs)
