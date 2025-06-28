@@ -676,8 +676,8 @@ struct WrapHighlighter : Highlighter
     bool next_split_pos(SplitPos& pos, DisplayLine::iterator line_end,
                         ColumnCount wrap_column, ColumnCount prefix_len) const
     {
-        SplitPos last_word_boundary = pos;
-        SplitPos last_WORD_boundary = pos;
+        SplitPos last_word_boundary{};
+        SplitPos last_WORD_boundary{};
 
         auto update_word_boundaries = [&](Codepoint cp) {
             if (m_word_wrap and not is_word<Word>(cp))
@@ -704,6 +704,9 @@ struct WrapHighlighter : Highlighter
             {
                 ++pos.atom_it;
                 pos.byte = 0;
+                // Thanks to the pass ordering, atom boundary should always be reasonable word split points
+                last_word_boundary = pos;
+                last_WORD_boundary = pos;
             }
         }
         if (pos.atom_it == line_end)
@@ -713,7 +716,7 @@ struct WrapHighlighter : Highlighter
         if (m_word_wrap and pos.byte < content.length())
         {
             auto find_split_pos = [&](SplitPos start_pos, auto is_word) {
-                if (start_pos.byte == 0)
+                if (start_pos.column == 0)
                     return false;
                 const char* it = &content[pos.byte];
                 // split at current position if is a word boundary
@@ -721,15 +724,18 @@ struct WrapHighlighter : Highlighter
                     return true;
                 // split at last word boundary if the word is shorter than our wrapping width
                 ColumnCount word_length = pos.column - start_pos.column;
-                while (it != content.end() and word_length <= (wrap_column - prefix_len))
+                ColumnCount max_word_length = wrap_column - prefix_len;
+                while (it != content.end() and word_length <= max_word_length)
                 {
                     const Codepoint cp = utf8::read_codepoint(it, content.end());
                     if (not is_word(cp, {'_'}))
-                    {
-                        pos = start_pos;
-                        return true;
-                    }
+                        break;
                     word_length += codepoint_width(cp);
+                }
+                if (word_length <= max_word_length)
+                {
+                    pos = start_pos;
+                    return true;
                 }
                 return false;
             };
