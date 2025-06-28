@@ -109,21 +109,9 @@ public:
     String() {}
     String(const char* content) : m_data(content, (size_t)strlen(content)) {}
     String(const char* content, ByteCount len) : m_data(content, (size_t)len) {}
-    explicit String(Codepoint cp, CharCount count = 1)
-    {
-        reserve(utf8::codepoint_size(cp) * (int)count);
-        while (count-- > 0)
-            utf8::dump(std::back_inserter(*this), cp);
-    }
-    explicit String(Codepoint cp, ColumnCount count)
-    {
-        int cp_count = (int)(count / std::max(codepoint_width(cp), 1_col));
-        reserve(utf8::codepoint_size(cp) * cp_count);
-        while (cp_count-- > 0)
-            utf8::dump(std::back_inserter(*this), cp);
-    }
     String(const char* begin, const char* end) : m_data(begin, end-begin) {}
-
+    explicit String(Codepoint cp, CharCount count = 1);
+    explicit String(Codepoint cp, ColumnCount count);
     explicit String(StringView str);
 
     struct NoCopy{};

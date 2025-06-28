@@ -118,6 +118,21 @@ void String::Data::clear()
     set_empty();
 }
 
+String::String(Codepoint cp, CharCount count)
+{
+    reserve(utf8::codepoint_size(cp) * (int)count);
+    while (count-- > 0)
+        utf8::dump(std::back_inserter(*this), cp);
+}
+
+String::String(Codepoint cp, ColumnCount count)
+{
+    int cp_count = (int)(count / max(codepoint_width(cp), 1_col));
+    reserve(utf8::codepoint_size(cp) * cp_count);
+    while (cp_count-- > 0)
+        utf8::dump(std::back_inserter(*this), cp);
+}
+
 void String::resize(ByteCount size, char c)
 {
     const size_t target_size = (size_t)size;
