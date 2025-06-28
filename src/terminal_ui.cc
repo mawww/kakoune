@@ -1579,7 +1579,6 @@ void TerminalUI::set_ui_options(const Options& options)
     if (new_cursor_native != m_terminal_cursor_native)
     {
         m_terminal_cursor_native = new_cursor_native;
-        // Emit cursor visibility command when the option changes
         write(STDOUT_FILENO, m_terminal_cursor_native ? "\033[?25h" : "\033[?25l");
     }
 
