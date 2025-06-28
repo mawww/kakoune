@@ -385,6 +385,10 @@ are exclusively available to built-in options.
             set the maximum allowable width of an info box. set to zero for
             no limit.
 
+        *terminal_cursor_native*:::
+            if *yes* or *true*, use native terminal cursor visibility control
+            instead of Kakoune's cursor management (defaults to *false*)
+
 [[startup-info]]
 *startup_info_version* `int`::
     _default_ 0 +
