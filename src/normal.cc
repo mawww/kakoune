@@ -1,5 +1,7 @@
 #include "normal.hh"
 
+#include "array_view.hh"
+#include "assert.hh"
 #include "buffer.hh"
 #include "buffer_manager.hh"
 #include "buffer_utils.hh"
@@ -20,6 +22,7 @@
 #include "selectors.hh"
 #include "shell_manager.hh"
 #include "string.hh"
+#include "units.hh"
 #include "user_interface.hh"
 #include "unit_tests.hh"
 #include "window.hh"
@@ -555,19 +558,21 @@ BufferRange apply_diff(Buffer& buffer, BufferCoord pos, ArrayView<StringView> li
         switch (op)
         {
         case DiffOp::Keep:
+            kak_assert(not tried_to_erase_final_newline);
             pos = buffer.advance(pos, byte_count(lines_before, posA, len));
             posA += len;
             posB += len;
             break;
         case DiffOp::Add:
-            if (buffer.is_end(pos) and tried_to_erase_final_newline)
-                pos = buffer.prev(pos);
+            if (buffer.is_end(pos))
+                tried_to_erase_final_newline = false;
             pos = buffer.insert(pos, {lines_after[posB].begin(),
                                       lines_after[posB + len - 1].end()}).end;
             posB += len;
             break;
         case DiffOp::Remove:
         {
+            kak_assert(not tried_to_erase_final_newline);
             BufferCoord end = buffer.advance(pos, byte_count(lines_before, posA, len));
             tried_to_erase_final_newline |= buffer.is_end(end);
             pos = buffer.erase(pos, end);
@@ -583,6 +588,70 @@ BufferRange apply_diff(Buffer& buffer, BufferCoord pos, ArrayView<StringView> li
     }
     return {first, pos};
 }
+
+UnitTest test_apply_diff{[] {
+    using Change = Buffer::Change;
+    auto validate = [&](LineCount line,
+                        StringView new_text,
+                        BufferRange expected_new_range,
+                        ConstArrayView<Change> expected_buffer_changes)
+    {
+        Buffer buffer{"", Buffer::Flags::None, {
+            StringData::create("line1\n"),
+            StringData::create("line2\n"),
+            StringData::create("line3\n"),
+        }};
+        const size_t timestamp = buffer.timestamp();
+        Vector<StringView> old_text;
+        for (auto i = line; i < buffer.line_count(); i++)
+            old_text.push_back(buffer[i]);
+        BufferRange new_text_range = apply_diff(buffer, BufferCoord{line, 0}, old_text, new_text);
+        kak_assert(new_text_range == expected_new_range);
+        kak_assert(buffer.changes_since(timestamp) == expected_buffer_changes);
+    };
+    // When appending at end, we add any missing newline
+    validate(
+        /*line=*/3,
+        "added-line3-missing-eol",
+        BufferRange{{3, 0}, {4, 0}},
+        {
+            Change{Change::Insert, {3, 0}, {4, 0}},
+        }
+    );
+    // Special case: erasing until buffer end also erases the final newline.
+    validate(
+        /*line=*/2,
+        "",
+        BufferRange{{1, 5}, {1, 5}},
+        {
+            Change{Change::Erase, {2, 0}, {3, 0}},
+        }
+    );
+    // Erasing and appending at end still produces forward-only changes.
+    validate(
+        /*line=*/2,
+        "changed-line3\n"
+        "added-line4\n"
+        "added-line5\n",
+        BufferRange{{2, 0}, {5, 0}},
+        {
+            Change{Change::Erase,  {2, 0}, {3, 0}},
+            Change{Change::Insert, {2, 0}, {5, 0}},
+        }
+    );
+    // Same result when append is missing newline.
+    validate(
+        /*line=*/2,
+        "changed-line3\n"
+        "added-line4\n"
+        "added-line5-missing-eol",
+        BufferRange{{2, 0}, {5, 0}},
+        {
+            Change{Change::Erase,  {2, 0}, {3, 0}},
+            Change{Change::Insert, {2, 0}, {5, 0}},
+        }
+    );
+}};
 
 template<bool replace>
 void pipe(Context& context, NormalParams params)

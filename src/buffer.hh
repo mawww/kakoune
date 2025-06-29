@@ -224,6 +224,10 @@ public:
         Type type;
         BufferCoord begin;
         BufferCoord end;
+
+        #ifdef KAK_DEBUG
+        bool operator==(const Change&) const = default;
+        #endif
     };
     ConstArrayView<Change> changes_since(size_t timestamp) const;
 
