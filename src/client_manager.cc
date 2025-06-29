@@ -77,7 +77,7 @@ Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui, int pi
         context.window().center_line(init_coord->line);
     }
 
-    auto(std::move(unlock)); // unlock now
+    unlock.trigger();
 
     try
     {

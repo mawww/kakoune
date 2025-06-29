@@ -73,6 +73,9 @@ public:
     { other.m_valid = false; }
 
     [[gnu::always_inline]]
+    void trigger() { if (m_valid) m_func(); m_valid = false; }
+
+    [[gnu::always_inline]]
     ~OnScopeEnd() noexcept(noexcept(m_func())) { if (m_valid) m_func(); }
 
 private:
