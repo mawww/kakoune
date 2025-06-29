@@ -183,6 +183,8 @@ installdirs-debug-yes: installdirs-debug-no
 install: src/kak installdirs install-debug-$(debug) install-gzip-man-$(gzip_man)
 	cp src/kak$(suffix) $(bindir)
 	chmod 0755 $(bindir)/kak
+	cp src/kak-connect$(suffix) $(bindir)
+	chmod 0755 $(bindir)/kak-connect
 
 	ln -sf ../../bin/kak $(libexecdir)/kak
 
