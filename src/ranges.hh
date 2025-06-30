@@ -636,7 +636,7 @@ template<typename ExceptionType, size_t size, bool exact_size = true>
 auto static_gather()
 {
     return []<size_t... Indexes>(std::index_sequence<Indexes...>) {
-        return ViewFactory{[=] (auto&& range) {
+        return ViewFactory{[] (auto&& range) {
             using std::begin; using std::end;
             auto it = begin(range), end_it = end(range);
             size_t i = 0;
