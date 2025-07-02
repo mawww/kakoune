@@ -66,106 +66,11 @@ struct {
         "» custom completions are no longer sorted if the typed text is empty\n"
         "» {+u}terminal{} now selects implementation based on windowing options\n"
         "» {+u}local{} scopes\n"
-    }, {
-        20230805,
-        "» Fix FreeBSD/MacOS clang compilation\n"
-    }, {
-        20230729,
-        "» {+b}<a-u>{} and {+b}<a-U>{} now undo/redo selection changes; "
-        "the previous meaning of moving in history tree has been moved to "
-        "{+b}<c-j>{} and {+b}<c-k>{}\n"
-        "» {+u}%exp\\{...}{} expansions provide flexible quoting for expanded "
-        "strings (as double quoted strings)\n"
-        "» {+u}show-matching -previous{} switch\n"
-        "» {+b}<c-g>{} to cancel current operation\n"
-    }, {
-        20221031,
-        "» {+b}<esc>{} does not end macro recording anymore, use {+b}Q{}\n"
-        "» pipe commands do not append final end-of-lines anymore\n"
-        "» {+u}complete-command{} to configure command completion\n"
-        "» {+b}p{}, {+b}P{}, {+b}!{} and {+b}<a-!>{} now select the inserted text\n"
-        "» {+b}x{} now uses {+b}<a-x>{} behaviour\n"
-        "» {+b}<space>{} and {+b},{} have been swapped\n"
-    }, {
-        20211107,
-        "» colored and curly underlines support (undocumented in 20210828)\n"
-    }, {
-        20211028,
-        "» {+b}g{} and {+b}v{} do not auto-convert to lowercase anymore\n"
-    }, {
-        20210828,
-        "» {+u}write <filename>{} will refuse to overwrite without {+u}-force{}\n"
-        "» {+u}$kak_command_fifo{} support\n"
-        "» {+u}set-option -remove{} support\n"
-        "» prompts auto select {+i}menu{} completions on space\n"
-        "» explicit completion support ({+b}<c-x>...{}) in prompts\n"
-        "» {+u}write -atomic{} was replaced with {+u}write -method <method>{}\n"
-    }, {
-        20200901,
-        "» daemon mode does not fork anymore\n"
-    }, {
-        20200804,
-        "» {+u}User{} hook support\n"
-        "» Removed {+i}bold{} and {+i}italic{} faces from colorschemes\n"
-        "» Read from stdin support for clients\n"
-        "» {+u}rgba:RRGGBBAA{} faces and alpha blending\n"
-    }, {
-        20200116,
-        "» {+u}InsertCompletionHide{} parameter is now the list of inserted ranges\n"
-    }, {
-        20191210,
-        "» {+u}ModeChange{} parameter has changed to contain push/pop\n"
-        "» {+ui}Mode{+u}Begin{}/{+ui}Mode{+u}End{} hooks were removed\n"
-    }, {
-        20190701,
-        "» {+u}%file\\{<filename>}{} expansions to read files\n"
-        "» {+u}echo -to-file <filename>{} to write to file\n"
-        "» completions option have an on select command instead of "
-        "a docstring\n"
-        "» Function key syntax do not accept lower case f anymore\n"
-        "» shell quoting of list options is now opt-in with "
-        "{+u}$kak_quoted_...{}\n"
-    }, {
-        20190120,
-        "» named capture groups in regex\n"
-        "» auto_complete option renamed to autocomplete\n"
-    }, {
-        20181027,
-        "» {+u}define-commands{} {+i}-shell-completion{} and {+i}-shell-candidates{} "
-        "has been renamed\n"
-        "» exclusive face attributes is replaced with final "
-        "(fg/bg/attr)\n"
-        "» {+b}<a-M>{} (merge consecutive) moved to {+b}<a-_>{} to make {+b}<a-M>{} "
-        "backward {+b}<a-m>{}\n"
-        "» {+u}remove-hooks{} now takes a regex parameter\n"
-    }, {
-        20180904,
-        "» Big breaking refactoring of various Kakoune features, "
-        "configuration might need to be updated see `:doc changelog` "
-        "for details\n"
-        "» {+u}define-command{} {+i}-allow-override{} switch has been renamed "
-        "{+i}-override{}\n"
-    }, {
-        20180413,
-        "» {+u}ModeChange{} hook has been introduced and is expected "
-        "to replace the various {+ui}Mode{+u}Begin{}/{+ui}Mode{+u}End{} hooks, "
-        "consider those deprecated.\n"
-        "» {+b}*{} Does not strip whitespaces anymore, use built-in "
-        "{+b}_{} to strip them\n"
-        "» {+b}l{} on eol will go to next line, {+b}h{} on first char will "
-        "go to previous\n"
-        "» selections merging behaviour is now a bit more complex "
-        "again\n"
-        "» {+b}x{} will only jump to next line if full line is already "
-        "selected\n"
-        "» {+i}WORD{} text object moved to {+b}<a-w>{} instead of {+b}W{} for "
-        "consistency\n"
-        "» rotate main selection moved to {+b}){}, rotate content to {+b}<a-)>{}, "
-        "{+b}({} for backward\n"
-        "» faces are now scoped, {+u}set-face{} command takes an additional "
-        "scope parameter\n"
-        "» {+b}<backtab>{} key is gone, use {+b}<s-tab>{} instead\n"
-} };
+    }
+};
+
+static_assert(sizeof(version_notes) / sizeof(version_notes[0]) <= 4 - (version_notes[0].version != 0 ? 1 : 0),
+              "Only 3 versions should be displayed in version notes, not including the development version");
 
 void show_startup_info(Client* local_client, int last_version)
 {
