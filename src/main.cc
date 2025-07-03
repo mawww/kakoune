@@ -70,11 +70,11 @@ struct {
 };
 
 static_assert(sizeof(version_notes) / sizeof(version_notes[0]) <= 4 - (version_notes[0].version != 0 ? 1 : 0),
-              "Only 3 versions should be displayed in version notes, not including the development version");
+              "Maximum 3 versions should be displayed in version notes, not including the development version");
 
 void show_startup_info(Client* local_client, int last_version)
 {
-    const Face version_face{Color::Default, Color::Default, Attribute::Bold};
+    const Face version_face{.attributes=Attribute::Bold};
     DisplayLineList info;
     for (auto [version, notes] : version_notes)
     {
@@ -88,20 +88,17 @@ void show_startup_info(Client* local_client, int last_version)
             const auto year = version / 10000;
             const auto month = (version / 100) % 100;
             const auto day = version % 100;
-            info.push_back({format("• Kakoune v{}.{}{}.{}{}",
-                                   year, month < 10 ? "0" : "", month, day < 10 ? "0" : "", day),
-                            version_face});
+            info.push_back({format("• Kakoune v{}.{:02}.{:02}", year, month, day), version_face});
         }
 
         for (auto&& line : notes | split<StringView>('\n'))
             info.push_back(parse_display_line(line, GlobalScope::instance().faces()));
     }
     if (not info.empty())
-    {
-        info.push_back({"See the `:doc options startup-info` to control this message",
-                        Face{Color::Default, Color::Default, Attribute::Italic}});
-        local_client->info_show({format("Kakoune {}", version), version_face}, info, {}, InfoStyle::Prompt);
-    }
+        local_client->info_show({{{format("Kakoune {}", version), version_face},
+                                  {", more info at ", {}},
+                                  {":doc changelog", {.attributes=Attribute::Underline}}}},
+                                 std::move(info), {}, InfoStyle::Prompt);
 }
 
 inline void write_stdout(StringView str) { try { write(STDOUT_FILENO, str); } catch (runtime_error&) {} }

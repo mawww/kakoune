@@ -1,5 +1,7 @@
 = Changelog
 
+To control the startup info message, see <<options#startup-info,`:doc options startup-info`>>
+
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
