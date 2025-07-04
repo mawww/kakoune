@@ -315,6 +315,13 @@ static const EnvVarDesc builtin_env_vars[] = { {
         [](StringView name, const Context& context) -> Vector<String>
         { return history_as_strings(context.buffer().history()); }
     }, {
+        "history_since_", true,
+        [](StringView name, const Context& context) -> Vector<String>
+        { return history_as_strings(
+            ArrayView(context.buffer().history())
+                .subrange(str_to_int(name.substr(14_byte)) + 1)
+        ); }
+    }, {
         "uncommitted_modifications", false,
         [](StringView name, const Context& context) -> Vector<String>
         { return undo_group_as_strings(context.buffer().current_undo_group()); }
