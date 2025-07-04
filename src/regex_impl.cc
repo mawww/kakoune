@@ -151,6 +151,7 @@ private:
         None              = 0,
         IgnoreCase        = 1 << 0,
         DotMatchesNewLine = 1 << 1,
+        SmartCase         = 1 << 2,
     };
     friend constexpr bool with_bit_ops(Meta::Type<Flags>) { return true; }
 
@@ -206,10 +207,20 @@ private:
                 auto m = *it++;
                 switch (m)
                 {
-                    case 'i': m_flags |= Flags::IgnoreCase; break;
-                    case 'I': m_flags &= ~Flags::IgnoreCase; break;
+                    case 'i':
+                        m_flags |= Flags::IgnoreCase;
+                        m_flags &= ~Flags::SmartCase;
+                        break;
+                    case 'I':
+                        m_flags &= ~Flags::IgnoreCase;
+                        m_flags &= ~Flags::SmartCase;
+                        break;
                     case 's': m_flags |= Flags::DotMatchesNewLine; break;
                     case 'S': m_flags &= ~Flags::DotMatchesNewLine; break;
+                    case 'c':
+                         m_flags |= Flags::SmartCase | Flags::IgnoreCase;
+                         m_smartcase_start_index = m_parsed_regex.nodes.size();
+                         break;
                     case ')':
                         m_pos = Iterator{it, m_regex};
                         return true;
@@ -434,7 +445,6 @@ private:
     {
         CharacterClass character_class;
 
-        character_class.ignore_case = (m_flags & Flags::IgnoreCase);
         character_class.negative = m_pos != m_regex.end() and *m_pos == '^';
         if (character_class.negative)
             ++m_pos;
@@ -504,15 +514,6 @@ private:
         if (at_end())
             parse_error("unclosed character class");
         ++m_pos;
-
-        if (character_class.ignore_case)
-        {
-            for (auto& range : character_class.ranges)
-            {
-                range.min = to_lower(range.min);
-                range.max = to_lower(range.max);
-            }
-        }
 
         normalize_ranges(character_class.ranges);
 
@@ -592,6 +593,28 @@ private:
         if (res == max_nodes)
             parse_error(format("regex parsed to more than {} ast nodes", max_nodes));
         const NodeIndex next = res+1;
+
+        if (m_flags & Flags::SmartCase)
+        {
+            bool ignore_case = true;
+            if (op == ParsedRegex::Literal and is_upper(value))
+                ignore_case = false;
+            else if (op == ParsedRegex::CharClass)
+                for (auto& [min, max] : m_parsed_regex.character_classes[value].ranges)
+                    if (is_upper(min) or is_upper(max))
+                    {
+                        ignore_case = false;
+                        break;
+                    }
+            if (not ignore_case)
+            {
+                for (auto i = m_smartcase_start_index; i < m_parsed_regex.nodes.size(); ++i)
+                    m_parsed_regex.nodes[i].ignore_case = false;
+                m_flags &= ~(Flags::SmartCase | Flags::IgnoreCase);
+                m_smartcase_start_index = -1;
+            }
+        }
+
         m_parsed_regex.nodes.push_back({op, m_flags & Flags::IgnoreCase, next, value, quantifier});
         return res;
     }
@@ -635,6 +658,8 @@ private:
     Iterator m_pos;
 
     Flags m_flags = Flags::DotMatchesNewLine;
+
+    ParsedRegex::NodeIndex m_smartcase_start_index = -1;
 
     static constexpr struct CharacterClassEscape {
         Codepoint cp;
@@ -729,7 +754,7 @@ private:
                 push_inst(CompiledRegex::AnyCharExceptNewLine);
                 break;
             case ParsedRegex::CharClass:
-                push_inst(CompiledRegex::CharClass, {.character_class_index=int16_t(node.value)});
+                push_inst(CompiledRegex::CharClass, {.character_class={.index=int16_t(node.value), .ignore_case=ignore_case}});
                 break;
             case ParsedRegex::CharType:
                 push_inst(CompiledRegex::CharType, {.character_type=CharacterType{(unsigned char)node.value}});
@@ -955,7 +980,7 @@ private:
                 auto& character_class = m_parsed_regex.character_classes[node.value];
                 if (character_class.ctypes == CharacterType::None and
                     not character_class.negative and
-                    not character_class.ignore_case)
+                    not node.ignore_case)
                 {
                     for (auto& range : character_class.ranges)
                     {
@@ -970,7 +995,7 @@ private:
                 {
                     for (Codepoint cp = 0; cp < single_byte_limit; ++cp)
                     {
-                        if (start_desc.map[cp] or character_class.matches(cp))
+                        if (start_desc.map[cp] or character_class.matches(cp, node.ignore_case))
                             start_desc.map[cp] = true;
                     }
                 }
@@ -1108,7 +1133,7 @@ String dump_regex(const CompiledRegex& program)
                 res += "anything but newline\n";
                 break;
             case CompiledRegex::CharClass:
-                res += format("character class {}\n", inst.param.character_class_index);
+                res += format("character class {}\n", inst.param.character_class.index);
                 break;
             case CompiledRegex::CharType:
                 res += format("character type {}\n", to_underlying(inst.param.character_type));
@@ -1406,6 +1431,78 @@ auto test_regex = UnitTest{[]{
     {
         TestVM<> vm{R"((?i)[a-z]+)"};
         kak_assert(vm.exec("ABC"));
+    }
+
+    {
+        TestVM<> vm{R"((?i)[@-C]+)"};
+        kak_assert(vm.exec("aBc"));
+        kak_assert(not vm.exec("aBc_"));
+    }
+
+    {
+        TestVM<> vm{R"((?i)[@-_])"};
+        kak_assert(vm.exec("A"));
+        kak_assert(vm.exec("a"));
+    }
+
+    {
+        TestVM<> vm{R"((?i)[@-C]+)"};
+        kak_assert(vm.exec("aBc"));
+        kak_assert(not vm.exec("aBc_"));
+    }
+
+    {
+        TestVM<> vm{R"((?i)[@-_])"};
+        kak_assert(vm.exec("A"));
+        kak_assert(vm.exec("a"));
+    }
+
+    {
+        TestVM<> vm{R"((?c)foobar)"};
+        kak_assert(vm.exec("foobar"));
+        kak_assert(vm.exec("fooBar"));
+        kak_assert(vm.exec("FOOBAR"));
+    }
+
+    {
+        TestVM<> vm{R"((?c)fooBar)"};
+        kak_assert(not vm.exec("foobar"));
+        kak_assert(vm.exec("fooBar"));
+        kak_assert(not vm.exec("FOOBAR"));
+    }
+
+    {
+        TestVM<> vm{R"((?c)foo\x42ar)"};
+        kak_assert(not vm.exec("foobar"));
+        kak_assert(vm.exec("fooBar"));
+        kak_assert(not vm.exec("FOOBAR"));
+    }
+
+    {
+        TestVM<> vm{R"((?c)foo[B]ar)"};
+        kak_assert(not vm.exec("foobar"));
+        kak_assert(vm.exec("fooBar"));
+        kak_assert(not vm.exec("FOOBAR"));
+    }
+
+    {
+        TestVM<> vm{R"((?c)foo[\x42]ar)"};
+        kak_assert(not vm.exec("foobar"));
+        kak_assert(vm.exec("fooBar"));
+        kak_assert(not vm.exec("FOOBAR"));
+    }
+
+    {
+        TestVM<> vm{R"((?c)foo[a-cQ]ar)"};
+        kak_assert(vm.exec("foobar"));
+        kak_assert(not vm.exec("fooBar"));
+        kak_assert(not vm.exec("FOObAR"));
+    }
+
+    {
+        TestVM<> vm{R"((?c)foo(?i)BAR(?c)baZ)"};
+        kak_assert(vm.exec("FooBarbaZ"));
+        kak_assert(not vm.exec("FooBarbaz"));
     }
 
     {
