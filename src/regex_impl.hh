@@ -725,9 +725,9 @@ private:
             Thread* new_data = new Thread[new_capacity];
             Thread* old_data = m_data.get();
             std::rotate_copy(old_data, old_data + m_current, old_data + capacity, new_data);
-            m_next_begin -= m_current;
-            if ((pushed_current and m_next_begin == 0) or m_next_begin < 0)
-                m_next_begin += capacity;
+            m_next_begin = (m_next_begin - m_current) & m_capacity_mask;
+            if (pushed_current and m_next_begin == 0)
+                m_next_begin = capacity;
             m_next_end = capacity;
             m_current = 0;
 
@@ -737,13 +737,13 @@ private:
         }
 
     private:
-        int32_t decrement(int32_t& index)
+        uint32_t decrement(uint32_t& index)
         {
             index = (index - 1) & m_capacity_mask;
             return index;
         }
 
-        int32_t post_increment(int32_t& index)
+        uint32_t post_increment(uint32_t& index)
         {
             auto res = index;
             index = (index + 1) & m_capacity_mask;
@@ -752,9 +752,9 @@ private:
 
         std::unique_ptr<Thread[]> m_data;
         uint32_t m_capacity_mask = 0; // Maximum capacity should be 2*instruction count, so 65536
-        int32_t m_current = 0;
-        int32_t m_next_begin = 0;
-        int32_t m_next_end = 0;
+        uint32_t m_current = 0;
+        uint32_t m_next_begin = 0;
+        uint32_t m_next_end = 0;
     };
 
     static constexpr bool forward = mode & RegexMode::Forward;
