@@ -361,12 +361,8 @@ private:
     void step_current_thread(const Iterator& pos, Codepoint cp, uint16_t current_step, const ExecConfig& config)
     {
         Thread thread = m_threads.pop_current();
-        auto failed = [this, &thread]() {
-            release_saves(thread.saves);
-        };
-        auto consumed = [this, &thread]() {
-            m_threads.push_next(thread);
-        };
+        auto failed   = [&] { release_saves(thread.saves); };
+        auto consumed = [&] { m_threads.push_next(thread); };
 
         while (true)
         {
@@ -691,13 +687,13 @@ private:
 
         void ensure_initial_capacity()
         {
-            if (m_capacity != 0)
+            if (m_capacity_mask != 0)
                 return;
 
-            constexpr int32_t initial_capacity = 64 / sizeof(Thread);
-            static_assert(initial_capacity >= 4);
+            constexpr uint32_t initial_capacity = 64 / sizeof(Thread);
+            static_assert(initial_capacity >= 4 and std::has_single_bit(initial_capacity));
             m_data.reset(new Thread[initial_capacity]);
-            m_capacity = initial_capacity;
+            m_capacity_mask = initial_capacity-1;
         }
 
         [[gnu::always_inline]]
@@ -710,38 +706,38 @@ private:
         [[gnu::noinline]]
         void grow(bool pushed_current)
         {
-            const auto new_capacity = m_capacity * 2;
+            auto capacity = m_capacity_mask + 1;
+            const auto new_capacity = capacity * 2;
             Thread* new_data = new Thread[new_capacity];
             Thread* old_data = m_data.get();
-            std::rotate_copy(old_data, old_data + m_current, old_data + m_capacity, new_data);
+            std::rotate_copy(old_data, old_data + m_current, old_data + capacity, new_data);
             m_next_begin -= m_current;
             if ((pushed_current and m_next_begin == 0) or m_next_begin < 0)
-                m_next_begin += m_capacity;
-            m_next_end = m_capacity;
+                m_next_begin += capacity;
+            m_next_end = capacity;
             m_current = 0;
 
             m_data.reset(new_data);
-            m_capacity = new_capacity;
+            kak_assert(std::has_single_bit(new_capacity));
+            m_capacity_mask = new_capacity-1;
         }
 
     private:
         int32_t decrement(int32_t& index)
         {
-            if (index == 0)
-                index = m_capacity;
-            return --index;
+            index = (index - 1) & m_capacity_mask;
+            return index;
         }
 
         int32_t post_increment(int32_t& index)
         {
             auto res = index;
-            if (++index == m_capacity)
-                index = 0;
+            index = (index + 1) & m_capacity_mask;
             return res;
         }
 
         std::unique_ptr<Thread[]> m_data;
-        int32_t m_capacity = 0; // Maximum capacity should be 2*instruction count, so 65536
+        uint32_t m_capacity_mask = 0; // Maximum capacity should be 2*instruction count, so 65536
         int32_t m_current = 0;
         int32_t m_next_begin = 0;
         int32_t m_next_end = 0;
