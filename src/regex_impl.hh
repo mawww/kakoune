@@ -374,14 +374,15 @@ private:
 
         while (true)
         {
-            auto& inst = *thread.inst++;
+            auto* inst = thread.inst++;
+            auto [op, last_step, param] = *inst;
             // if this instruction was already executed for this step in another thread,
             // then this thread is redundant and can be dropped
-            if (inst.last_step == current_step)
+            if (last_step == current_step)
                 return failed();
-            inst.last_step = current_step;
+            inst->last_step = current_step;
 
-            switch (inst.op)
+            switch (op)
             {
                 case CompiledRegex::Match:
                     if ((pos != config.end and not (mode & RegexMode::Search)) or
@@ -398,7 +399,7 @@ private:
                     return;
                 case CompiledRegex::Literal:
                     if (pos != config.end and
-                        inst.param.literal.codepoint == (inst.param.literal.ignore_case ? to_lower(cp) : cp))
+                        param.literal.codepoint == (param.literal.ignore_case ? to_lower(cp) : cp))
                         return consumed();
                     return failed();
                 case CompiledRegex::AnyChar:
@@ -408,30 +409,30 @@ private:
                         return consumed();
                     return failed();
                 case CompiledRegex::CharRange:
-                    if (auto actual_cp = (inst.param.range.ignore_case ? to_lower(cp) : cp);
+                    if (auto actual_cp = (param.range.ignore_case ? to_lower(cp) : cp);
                         pos != config.end and
-                        (actual_cp >= inst.param.range.min and actual_cp <= inst.param.range.max) != inst.param.range.negative)
+                        (actual_cp >= param.range.min and actual_cp <= param.range.max) != param.range.negative)
                         return consumed();
                     return failed();
                 case CompiledRegex::CharType:
-                    if (pos != config.end and is_ctype(inst.param.character_type, cp))
+                    if (pos != config.end and is_ctype(param.character_type, cp))
                         return consumed();
                     return failed();
                 case CompiledRegex::CharClass:
                     if (pos != config.end and
-                        m_program.character_classes[inst.param.character_class_index].matches(cp))
+                        m_program.character_classes[param.character_class_index].matches(cp))
                         return consumed();
                     return failed();
                 case CompiledRegex::Jump:
-                    thread.inst = &inst + inst.param.jump_offset;
+                    thread.inst = inst + param.jump_offset;
                     break;
                 case CompiledRegex::Split:
-                    if (auto* target = &inst + inst.param.split.offset;
+                    if (auto* target = inst + param.split.offset;
                         target->last_step != current_step)
                     {
                         if (thread.saves >= 0)
                             ++m_saves[thread.saves].refcount;
-                        if (not inst.param.split.prioritize_parent)
+                        if (not param.split.prioritize_parent)
                             std::swap(thread.inst, target);
                         m_threads.push_current({target, thread.saves});
                     }
@@ -446,23 +447,23 @@ private:
                         --saves.refcount;
                         thread.saves = new_saves<true>(saves.pos, saves.valid_mask);
                     }
-                    m_saves[thread.saves].pos[inst.param.save_index] = pos;
-                    m_saves[thread.saves].valid_mask |= (1 << inst.param.save_index);
+                    m_saves[thread.saves].pos[param.save_index] = pos;
+                    m_saves[thread.saves].valid_mask |= (1 << param.save_index);
                     break;
                 case CompiledRegex::LineAssertion:
-                    if (not (inst.param.line_start ? is_line_start(pos, config) : is_line_end(pos, config)))
+                    if (not (param.line_start ? is_line_start(pos, config) : is_line_end(pos, config)))
                         return failed();
                     break;
                 case CompiledRegex::SubjectAssertion:
-                    if (pos != (inst.param.subject_begin ? config.subject_begin : config.subject_end))
+                    if (pos != (param.subject_begin ? config.subject_begin : config.subject_end))
                         return failed();
                     break;
                 case CompiledRegex::WordBoundary:
-                    if (is_word_boundary(pos, config) != inst.param.word_boundary_positive)
+                    if (is_word_boundary(pos, config) != param.word_boundary_positive)
                         return failed();
                     break;
                 case CompiledRegex::LookAround:
-                    if (lookaround(inst.param.lookaround, pos, config) != inst.param.lookaround.positive)
+                    if (lookaround(param.lookaround, pos, config) != param.lookaround.positive)
                         return failed();
                     break;
             }
