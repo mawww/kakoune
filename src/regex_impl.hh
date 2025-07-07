@@ -76,8 +76,9 @@ struct CompiledRegex : UseMemoryDomain<MemoryDomain::Regex>
         Literal,
         AnyChar,
         AnyCharExceptNewLine,
-        CharClass,
+        CharRange,
         CharType,
+        CharClass,
         Jump,
         Split,
         Save,
@@ -105,8 +106,15 @@ struct CompiledRegex : UseMemoryDomain<MemoryDomain::Regex>
             uint32_t codepoint : 24;
             bool ignore_case : 1;
         } literal;
-        int16_t character_class_index;
+        struct CharRange
+        {
+            uint8_t min;
+            uint8_t max;
+            bool ignore_case : 1;
+            bool negative;
+        } range;
         CharacterType character_type;
+        int16_t character_class_index;
         int16_t jump_offset;
         int16_t save_index;
         struct Split
@@ -399,13 +407,19 @@ private:
                     if (pos != config.end and cp != '\n')
                         return consumed();
                     return failed();
-                case CompiledRegex::CharClass:
-                    if (pos != config.end and
-                        m_program.character_classes[inst.param.character_class_index].matches(cp))
+                case CompiledRegex::CharRange:
+                    if (auto actual_cp = (inst.param.range.ignore_case ? to_lower(cp) : cp);
+                        pos != config.end and
+                        (actual_cp >= inst.param.range.min and actual_cp <= inst.param.range.max) != inst.param.range.negative)
                         return consumed();
                     return failed();
                 case CompiledRegex::CharType:
                     if (pos != config.end and is_ctype(inst.param.character_type, cp))
+                        return consumed();
+                    return failed();
+                case CompiledRegex::CharClass:
+                    if (pos != config.end and
+                        m_program.character_classes[inst.param.character_class_index].matches(cp))
                         return consumed();
                     return failed();
                 case CompiledRegex::Jump:
