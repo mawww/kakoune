@@ -393,7 +393,7 @@ static String modification_as_string(const Buffer::Modification& modification)
                   modification.content->strview());
 }
 
-Vector<String> history_as_strings(const Vector<Buffer::HistoryNode>& history)
+Vector<String> history_as_strings(ConstArrayView<Buffer::HistoryNode> history)
 {
     Vector<String> res;
     for (auto& node : history)
