@@ -1,5 +1,4 @@
 #include "regex.hh"
-#include "ranges.hh"
 #include "string_utils.hh"
 
 namespace Kakoune
@@ -14,8 +13,12 @@ Regex::Regex(StringView re, RegexCompileFlags flags)
 
 int Regex::named_capture_index(StringView name) const
 {
-    auto it = find_if(m_impl->named_captures, [&](auto& c) { return c.name == name; });
-    return it != m_impl->named_captures.end() ? it->index : -1;
+    for (auto capture : m_impl->named_captures)
+    {
+        if (capture.name == name)
+            return capture.index;
+    }
+    return -1;
 }
 
 String option_to_string(const Regex& re, Quoting quoting)

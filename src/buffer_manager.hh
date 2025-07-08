@@ -3,6 +3,7 @@
 
 #include "buffer.hh"
 #include "vector.hh"
+#include "utils.hh"
 
 #include <memory>
 
@@ -28,8 +29,8 @@ public:
     Buffer* get_buffer_ifp(StringView name);
     Buffer& get_buffer(StringView name);
 
-    Buffer* get_buffer_matching_ifp(const Regex& regex);
-    Buffer& get_buffer_matching(const Regex& regex);
+    Buffer* get_buffer_matching_ifp(const FunctionRef<bool (Buffer&)>& filter);
+    Buffer& get_buffer_matching(const FunctionRef<bool (Buffer&)>& filter);
 
     void make_latest(Buffer& buffer);
     void arrange_buffers(ConstArrayView<String> first_ones);

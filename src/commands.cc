@@ -880,7 +880,11 @@ const CommandDesc buffer_cmd = {
     make_completer(menu(complete_buffer_name<true>)),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        Buffer& buffer = parser.get_switch("matching") ? BufferManager::instance().get_buffer_matching(Regex{parser[0]})
+        Buffer& buffer = parser.get_switch("matching") ? BufferManager::instance().get_buffer_matching(
+                                                             [re=Regex{parser[0]}](Buffer& buffer) {
+                                                                auto name = buffer.name();
+                                                                return regex_match(name.begin(), name.end(), re);
+                                                             })
                                                        : BufferManager::instance().get_buffer(parser[0]);
         if (&buffer != &context.buffer())
         {

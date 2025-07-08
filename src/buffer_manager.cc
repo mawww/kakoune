@@ -7,7 +7,6 @@
 #include "buffer_utils.hh"
 #include "ranges.hh"
 #include "string.hh"
-#include "regex.hh"
 
 namespace Kakoune
 {
@@ -83,21 +82,21 @@ Buffer& BufferManager::get_buffer(StringView name)
     return *res;
 }
 
-Buffer* BufferManager::get_buffer_matching_ifp(const Regex& regex)
+Buffer* BufferManager::get_buffer_matching_ifp(const FunctionRef<bool (Buffer&)>& filter)
 {
     for (auto& buf : m_buffers | reverse())
     {
-        if (StringView name = buf->name(); regex_match(name.begin(), name.end(), regex))
+        if (filter(*buf))
             return buf.get();
     }
     return nullptr;
 }
 
-Buffer& BufferManager::get_buffer_matching(const Regex& regex)
+Buffer& BufferManager::get_buffer_matching(const FunctionRef<bool (Buffer&)>& filter)
 {
-    Buffer* res = get_buffer_matching_ifp(regex);
+    Buffer* res = get_buffer_matching_ifp(filter);
     if (not res)
-        throw runtime_error{format("no buffer matching '{}'", regex.str())};
+        throw runtime_error{format("no buffer found")};
     return *res;
 }
 
