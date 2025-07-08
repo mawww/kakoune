@@ -87,7 +87,7 @@ void Buffer::on_registered()
     m_flags &= ~Flags::NoBufSetOption;
 
     for (auto& option : options().flatten_options()
-                      | transform(&std::unique_ptr<Option>::get)
+                      | transform(&UniquePtr<Option>::get)
                       | gather<Vector<Option*>>())
         on_option_changed(*option);
 }

@@ -9,8 +9,7 @@
 #include "string.hh"
 #include "utils.hh"
 #include "parameters_parser.hh"
-
-#include <memory>
+#include "unique_ptr.hh"
 
 namespace Kakoune
 {
@@ -68,7 +67,7 @@ struct Highlighter
 
     virtual bool has_children() const;
     virtual Highlighter& get_child(StringView path);
-    virtual void add_child(String name, std::unique_ptr<Highlighter>&& hl, bool override = false);
+    virtual void add_child(String name, UniquePtr<Highlighter>&& hl, bool override = false);
     virtual void remove_child(StringView id);
     virtual Completions complete_child(StringView path, ByteCount cursor_pos, bool group) const;
     virtual void fill_unique_ids(Vector<StringView>& unique_ids) const;
@@ -83,7 +82,7 @@ private:
 };
 
 using HighlighterParameters = ConstArrayView<String>;
-using HighlighterFactory = std::unique_ptr<Highlighter> (*)(HighlighterParameters params, Highlighter* parent);
+using HighlighterFactory = UniquePtr<Highlighter> (*)(HighlighterParameters params, Highlighter* parent);
 
 struct HighlighterDesc
 {

@@ -24,8 +24,8 @@
 namespace Kakoune
 {
 
-Client::Client(std::unique_ptr<UserInterface>&& ui,
-               std::unique_ptr<Window>&& window,
+Client::Client(UniquePtr<UserInterface>&& ui,
+               UniquePtr<Window>&& window,
                SelectionList selections, int pid,
                EnvVarMap env_vars,
                String name,

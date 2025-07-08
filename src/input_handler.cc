@@ -205,7 +205,7 @@ struct MouseHandler
     }
 
 private:
-    std::unique_ptr<ScopedSelectionEdition> m_dragging;
+    UniquePtr<ScopedSelectionEdition> m_dragging;
     BufferCoord m_anchor;
 };
 

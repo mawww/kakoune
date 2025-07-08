@@ -4,8 +4,7 @@
 #include "buffer.hh"
 #include "vector.hh"
 #include "utils.hh"
-
-#include <memory>
+#include "unique_ptr.hh"
 
 namespace Kakoune
 {
@@ -13,7 +12,7 @@ namespace Kakoune
 class BufferManager : public Singleton<BufferManager>
 {
 public:
-    using BufferList = Vector<std::unique_ptr<Buffer>, MemoryDomain::BufferMeta>;
+    using BufferList = Vector<UniquePtr<Buffer>, MemoryDomain::BufferMeta>;
     using iterator = BufferList::const_iterator;
 
     ~BufferManager();

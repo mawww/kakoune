@@ -44,7 +44,7 @@ String ClientManager::generate_name() const
     }
 }
 
-Client* ClientManager::create_client(std::unique_ptr<UserInterface>&& ui, int pid,
+Client* ClientManager::create_client(UniquePtr<UserInterface>&& ui, int pid,
                                      String name, EnvVarMap env_vars, StringView init_cmds,
                                      StringView init_buffer, Optional<BufferCoord> init_coord,
                                      Client::OnExitCallback on_exit)
@@ -156,7 +156,7 @@ WindowAndSelections ClientManager::get_free_window(Buffer& buffer)
                       { return &ws.window->buffer() == &buffer; });
 
     if (it == m_free_windows.rend())
-        return { std::make_unique<Window>(buffer), { buffer, Selection{} } };
+        return { make_unique_ptr<Window>(buffer), { buffer, Selection{} } };
 
     WindowAndSelections res = std::move(*it);
     m_free_windows.erase(it.base()-1);
@@ -164,7 +164,7 @@ WindowAndSelections ClientManager::get_free_window(Buffer& buffer)
     return res;
 }
 
-void ClientManager::add_free_window(std::unique_ptr<Window>&& window, SelectionList selections)
+void ClientManager::add_free_window(UniquePtr<Window>&& window, SelectionList selections)
 {
     if (not contains(BufferManager::instance(), &window->buffer()))
     {
@@ -181,7 +181,7 @@ void ClientManager::ensure_no_client_uses_buffer(Buffer& buffer)
     for (auto& client : m_clients)
         client->context().forget_buffer(buffer);
 
-    Vector<std::unique_ptr<Window>> removed_windows;
+    Vector<UniquePtr<Window>> removed_windows;
     m_free_windows.erase(remove_if(m_free_windows,
                                    [&buffer, &removed_windows](WindowAndSelections& ws) {
                                        if (&ws.window->buffer() != &buffer)
@@ -240,7 +240,7 @@ void ClientManager::redraw_clients() const
 CandidateList ClientManager::complete_client_name(StringView prefix,
                                                   ByteCount cursor_pos) const
 {
-    auto c = m_clients | transform([](const std::unique_ptr<Client>& c) -> const String&
+    auto c = m_clients | transform([](const UniquePtr<Client>& c) -> const String&
                                    { return c->context().name(); });
     return complete(prefix, cursor_pos, c);
 }

@@ -169,8 +169,8 @@ struct CompiledRegex : UseMemoryDomain<MemoryDomain::Regex>
         bool map[count];
     };
 
-    std::unique_ptr<StartDesc> forward_start_desc;
-    std::unique_ptr<StartDesc> backward_start_desc;
+    UniquePtr<StartDesc> forward_start_desc;
+    UniquePtr<StartDesc> backward_start_desc;
 };
 
 String dump_regex(const CompiledRegex& program);
@@ -751,7 +751,7 @@ private:
             return res;
         }
 
-        std::unique_ptr<Thread[]> m_data;
+        UniquePtr<Thread[]> m_data;
         uint32_t m_capacity_mask = 0; // Maximum capacity should be 2*instruction count, so 65536
         uint32_t m_current = 0;
         uint32_t m_next_begin = 0;

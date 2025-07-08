@@ -213,7 +213,7 @@ static const EnvVarDesc builtin_env_vars[] = { {
         "client_list", false,
         [](StringView name, const Context& context) -> Vector<String>
         { return ClientManager::instance() |
-                      transform([](const std::unique_ptr<Client>& c) -> const String&
+                      transform([](const UniquePtr<Client>& c) -> const String&
                                 { return c->context().name(); }) | gather<Vector<String>>(); }
     }, {
         "modified", false,
@@ -333,10 +333,10 @@ void register_registers()
     RegisterManager& register_manager = RegisterManager::instance();
 
     for (Codepoint c : StringView{"abcdefghijklmnopqrstuvwxyz\"^@"})
-        register_manager.add_register(c, std::make_unique<StaticRegister>(String{c}));
+        register_manager.add_register(c, make_unique_ptr<StaticRegister>(String{c}));
 
     for (Codepoint c : StringView{"/|:\\"})
-        register_manager.add_register(c, std::make_unique<HistoryRegister>(String{c}));
+        register_manager.add_register(c, make_unique_ptr<HistoryRegister>(String{c}));
 
     using StringList = Vector<String, MemoryDomain::Registers>;
 
@@ -388,7 +388,7 @@ void register_registers()
             }));
     }
 
-    register_manager.add_register('_', std::make_unique<NullRegister>());
+    register_manager.add_register('_', make_unique_ptr<NullRegister>());
 }
 
 void register_keymaps()
@@ -551,7 +551,7 @@ UIType parse_ui_type(StringView ui_name)
     throw parameter_error(format("error: unknown ui type: '{}'", ui_name));
 }
 
-std::unique_ptr<UserInterface> make_ui(UIType ui_type)
+UniquePtr<UserInterface> make_ui(UIType ui_type)
 {
     struct DummyUI : UserInterface
     {
@@ -577,9 +577,9 @@ std::unique_ptr<UserInterface> make_ui(UIType ui_type)
 
     switch (ui_type)
     {
-        case UIType::Terminal: return std::make_unique<TerminalUI>();
-        case UIType::Json: return std::make_unique<JsonUI>();
-        case UIType::Dummy: return std::make_unique<DummyUI>();
+        case UIType::Terminal: return make_unique_ptr<TerminalUI>();
+        case UIType::Json: return make_unique_ptr<JsonUI>();
+        case UIType::Dummy: return make_unique_ptr<DummyUI>();
     }
     throw logic_error{};
 }
@@ -598,7 +598,7 @@ pid_t fork_server_to_background()
     return 0;
 }
 
-std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
+UniquePtr<UserInterface> create_local_ui(UIType ui_type)
 {
     auto ui = make_ui(ui_type);
 

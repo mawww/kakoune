@@ -707,7 +707,7 @@ const CommandDesc write_all_cmd = {
 
 static void ensure_all_buffers_are_saved()
 {
-    auto is_modified = [](const std::unique_ptr<Buffer>& buf) {
+    auto is_modified = [](const UniquePtr<Buffer>& buf) {
         return (buf->flags() & Buffer::Flags::File) and buf->is_modified();
     };
 
@@ -899,7 +899,7 @@ void cycle_buffer(const ParametersParser& parser, Context& context, const ShellC
 {
     Buffer* oldbuf = &context.buffer();
     auto it = find_if(BufferManager::instance(),
-                      [oldbuf](const std::unique_ptr<Buffer>& lhs)
+                      [oldbuf](const UniquePtr<Buffer>& lhs)
                       { return lhs.get() == oldbuf; });
     kak_assert(it != BufferManager::instance().end());
 
@@ -2093,7 +2093,7 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
         if (*bufnames == "*")
         {
             for (auto&& buffer : BufferManager::instance()
-                               | transform(&std::unique_ptr<Buffer>::get)
+                               | transform(&UniquePtr<Buffer>::get)
                                | filter([](Buffer* buf) { return not (buf->flags() & Buffer::Flags::Debug); })
                                | gather<Vector<SafePtr<Buffer>>>()) // gather as we might be mutating the buffer list in the loop.
                 context_wrap_for_buffer(*buffer);
@@ -2197,7 +2197,7 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
         if (*client_names == "*")
         {
             for (auto&& client : ClientManager::instance()
-                               | transform(&std::unique_ptr<Client>::get)
+                               | transform(&UniquePtr<Client>::get)
                                | gather<Vector<SafePtr<Client>>>()) // gather as we might be mutating the client list in the loop.
                 context_wrap_for_context(client->context());
         }

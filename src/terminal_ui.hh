@@ -84,7 +84,7 @@ private:
         explicit operator bool() const { return (bool)lines; }
 
         struct Line;
-        std::unique_ptr<Line[]> lines;
+        UniquePtr<Line[]> lines;
     };
 
     struct Screen : Window
@@ -92,7 +92,7 @@ private:
         void output(bool force, bool synchronized, Writer& writer);
         void set_face(const Face& face, Writer& writer);
 
-        std::unique_ptr<size_t[]> hashes;
+        UniquePtr<size_t[]> hashes;
         Face m_active_face;
     };
 

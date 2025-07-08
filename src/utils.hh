@@ -2,8 +2,7 @@
 #define utils_hh_INCLUDED
 
 #include "assert.hh"
-
-#include <memory>
+#include "unique_ptr.hh"
 
 namespace Kakoune
 {
@@ -126,14 +125,6 @@ private:
     NestedBool& m_nested_bool;
     bool m_condition;
 };
-
-// *** Misc helper functions ***
-
-template<typename T>
-bool operator== (const std::unique_ptr<T>& lhs, T* rhs)
-{
-    return lhs.get() == rhs;
-}
 
 template<typename T>
 const T& clamp(const T& val, const T& min, const T& max)

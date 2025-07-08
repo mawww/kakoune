@@ -3,9 +3,9 @@
 
 #include "hash_map.hh"
 #include "meta.hh"
+#include "unique_ptr.hh"
 
 #include <type_traits>
-#include <memory>
 
 namespace Kakoune
 {
@@ -68,7 +68,7 @@ private:
         T m_content;
     };
 
-    std::unique_ptr<Concept> m_value;
+    UniquePtr<Concept> m_value;
 };
 
 enum class ValueId : int {};

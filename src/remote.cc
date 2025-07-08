@@ -655,7 +655,7 @@ bool check_session(StringView session)
     return connect(sock, (sockaddr*)&addr, sizeof(addr.sun_path)) != -1;
 }
 
-RemoteClient::RemoteClient(StringView session, StringView name, std::unique_ptr<UserInterface>&& ui,
+RemoteClient::RemoteClient(StringView session, StringView name, UniquePtr<UserInterface>&& ui,
                            int pid, const EnvVarMap& env_vars, StringView init_command,
                            Optional<BufferCoord> init_coord, Optional<int> stdin_fd)
     : m_ui(std::move(ui))
@@ -810,7 +810,7 @@ private:
                                        AutoScroll::NotInitially);
                 auto* ui = new RemoteUI{sock, dimensions};
                 ClientManager::instance().create_client(
-                    std::unique_ptr<UserInterface>(ui), pid, std::move(name),
+                    UniquePtr<UserInterface>(ui), pid, std::move(name),
                     std::move(env_vars), init_cmds, {}, init_coord,
                     [ui](int status) { ui->exit(status); });
 
