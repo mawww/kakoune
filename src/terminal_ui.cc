@@ -637,7 +637,7 @@ void TerminalUI::check_resize(bool force)
     const int fd = open("/dev/tty", O_RDWR);
     if (fd < 0)
         return;
-    auto close_fd = on_scope_end([fd]{ ::close(fd); });
+    auto close_fd = OnScopeEnd([fd]{ ::close(fd); });
 
     DisplayCoord terminal_size{24_line, 80_col};
     if (winsize ws; ioctl(fd, TIOCGWINSZ, &ws) == 0 and ws.ws_row > 0 and ws.ws_col > 0)

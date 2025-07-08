@@ -2069,7 +2069,7 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
     const auto& register_manager = RegisterManager::instance();
     auto make_register_restorer = [&](char c) {
         auto& reg = register_manager[c];
-        return on_scope_end([&, c, save=reg.save(context), d=ScopedSetBool{reg.modified_hook_disabled()}] {
+        return OnScopeEnd([&, c, save=reg.save(context), d=ScopedSetBool{reg.modified_hook_disabled()}] {
             try
             {
                 reg.restore(context, save);
@@ -2328,7 +2328,7 @@ const CommandDesc prompt_cmd = {
                     return;
 
                 sc.env_vars["text"_sv] = String{String::NoCopy{}, str};
-                auto remove_text = on_scope_end([&] {
+                auto remove_text = OnScopeEnd([&] {
                     sc.env_vars.erase("text"_sv);
                 });
 

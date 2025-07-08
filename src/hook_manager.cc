@@ -130,7 +130,7 @@ void HookManager::run_hook(Hook hook, StringView param, Context& context)
     }
 
     m_running_hooks.emplace_back(hook, param);
-    auto pop_running_hook = on_scope_end([this]{
+    auto pop_running_hook = OnScopeEnd([this]{
         m_running_hooks.pop_back();
         if (m_running_hooks.empty())
             m_hooks_trash.clear();

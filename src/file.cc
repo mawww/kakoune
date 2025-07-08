@@ -194,7 +194,7 @@ String read_file(StringView filename, bool text)
     if (fd == -1)
         throw file_access_error(filename, strerror(errno));
 
-    auto close_fd = on_scope_end([fd]{ close(fd); });
+    auto close_fd = OnScopeEnd([fd]{ close(fd); });
     return read_fd(fd, text);
 }
 
@@ -204,7 +204,7 @@ MappedFile::MappedFile(StringView filename)
     int fd = open(filename.zstr(), O_RDONLY | O_NONBLOCK);
     if (fd == -1)
         throw file_access_error(filename, strerror(errno));
-    auto close_fd = on_scope_end([&] { close(fd); });
+    auto close_fd = OnScopeEnd([&] { close(fd); });
 
     fstat(fd, &st);
     if (S_ISDIR(st.st_mode))
@@ -253,7 +253,7 @@ void write(int fd, StringView data)
     int flags = fcntl(fd, F_GETFL, 0);
     if (not atomic and EventManager::has_instance())
         fcntl(fd, F_SETFL, flags | O_NONBLOCK);
-    auto restore_flags = on_scope_end([&] { fcntl(fd, F_SETFL, flags); });
+    auto restore_flags = OnScopeEnd([&] { fcntl(fd, F_SETFL, flags); });
 
     while (count)
     {
@@ -291,7 +291,7 @@ void write_to_file(StringView filename, StringView data)
     int fd = create_file(filename.zstr());
     if (fd == -1)
         throw file_access_error(filename, strerror(errno));
-    auto close_fd = on_scope_end([fd]{ close(fd); });
+    auto close_fd = OnScopeEnd([fd]{ close(fd); });
     write(fd, data);
 }
 
@@ -358,7 +358,7 @@ void make_directory(StringView dir, mode_t mode)
         else
         {
             auto old_mask = umask(0);
-            auto restore_mask = on_scope_end([old_mask]() { umask(old_mask); });
+            auto restore_mask = OnScopeEnd([old_mask]() { umask(old_mask); });
 
             if (mkdir(dirname.zstr(), mode) != 0)
                 throw runtime_error(format("mkdir failed for directory '{}' errno {}", dirname, errno));
@@ -374,7 +374,7 @@ void list_files(StringView dirname, FunctionRef<void (StringView, const struct s
     if (not dir)
         return;
 
-    auto close_dir = on_scope_end([dir]{ closedir(dir); });
+    auto close_dir = OnScopeEnd([dir]{ closedir(dir); });
 
     while (dirent* entry = readdir(dir))
     {

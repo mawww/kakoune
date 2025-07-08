@@ -1688,7 +1688,7 @@ private:
             return write_to_debug_buffer(format("highlighting recursion detected with ref to {}", m_name));
 
         running_refs.push_back(desc);
-        auto pop_desc = on_scope_end([] { running_refs.pop_back(); });
+        auto pop_desc = OnScopeEnd([] { running_refs.pop_back(); });
 
         try
         {

@@ -221,7 +221,7 @@ void write_buffer_to_file(Buffer& buffer, StringView filename,
     }
 
     {
-        auto close_fd = on_scope_end([fd]{ close(fd); });
+        auto close_fd = OnScopeEnd([fd]{ close(fd); });
         write_buffer_to_fd(buffer, fd);
         if (flags & WriteFlags::Sync)
             ::fsync(fd);
@@ -310,7 +310,7 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, AutoScroll 
             const int fifo = fd();
 
             {
-                auto restore_flags = on_scope_end([this, flags=m_buffer.flags()] { m_buffer.flags() = flags; });
+                auto restore_flags = OnScopeEnd([this, flags=m_buffer.flags()] { m_buffer.flags() = flags; });
                 m_buffer.flags() &= ~Buffer::Flags::ReadOnly;
                 do
                 {

@@ -51,11 +51,11 @@ Singleton<T>* Singleton<T>::ms_instance = nullptr;
 
 // *** On scope end ***
 //
-// on_scope_end provides a way to register some code to be
+// OnScopeEnd provides a way to register some code to be
 // executed when current scope closes.
 //
 // usage:
-// auto cleaner = on_scope_end([]() { ... });
+// auto cleaner = OnScopeEnd([]() { ... });
 //
 // This permits to cleanup c-style resources without implementing
 // a wrapping class
@@ -81,12 +81,6 @@ private:
     bool m_valid;
     T m_func;
 };
-
-template<typename T>
-OnScopeEnd<T> on_scope_end(T t)
-{
-    return OnScopeEnd<T>{std::move(t)};
-}
 
 // bool that can be set (to true) multiple times, and will
 // be false only when unset the same time;

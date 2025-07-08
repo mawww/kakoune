@@ -650,7 +650,7 @@ static int connect_to(StringView session)
 bool check_session(StringView session)
 {
     int sock = socket(AF_UNIX, SOCK_STREAM, 0);
-    auto close_sock = on_scope_end([sock]{ close(sock); });
+    auto close_sock = OnScopeEnd([sock]{ close(sock); });
     sockaddr_un addr = session_addr(session);
     return connect(sock, (sockaddr*)&addr, sizeof(addr.sun_path)) != -1;
 }
@@ -704,7 +704,7 @@ RemoteClient::RemoteClient(StringView session, StringView name, UniquePtr<UserIn
             if (not reader.ready())
                 continue;
 
-            auto clear_reader = on_scope_end([&reader] { reader.reset(); });
+            auto clear_reader = OnScopeEnd([&reader] { reader.reset(); });
             switch (reader.type())
             {
             case MessageType::MenuShow:
@@ -756,7 +756,7 @@ bool RemoteClient::is_ui_ok() const
 void send_command(StringView session, StringView command)
 {
     int sock = connect_to(session);
-    auto close_sock = on_scope_end([sock]{ close(sock); });
+    auto close_sock = OnScopeEnd([sock]{ close(sock); });
     RemoteBuffer buffer;
     {
         MsgWriter msg{buffer, MessageType::Command};
@@ -863,7 +863,7 @@ Server::Server(String session_name, bool is_daemon)
 
     // Do not give any access to the socket to other users by default
     auto old_mask = umask(0077);
-    auto restore_mask = on_scope_end([old_mask]() { umask(old_mask); });
+    auto restore_mask = OnScopeEnd([old_mask]() { umask(old_mask); });
 
     if (bind(listen_sock, (sockaddr*) &addr, sizeof(sockaddr_un)) == -1)
        throw runtime_error(format("unable to bind listen socket '{}': {}",

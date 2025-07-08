@@ -1229,7 +1229,7 @@ void join_lines(Context& context, NormalParams params)
 {
     ScopedSelectionEdition selection_edition{context};
     SelectionList sels{context.selections()};
-    auto restore_sels = on_scope_end([&]{
+    auto restore_sels = OnScopeEnd([&]{
         sels.update();
         context.selections_write_only() = std::move(sels);
     });
@@ -1690,7 +1690,7 @@ void replay_macro(Context& context, NormalParams params)
         throw runtime_error(format("register '{}' is empty", reg));
 
     running_macros[idx] = true;
-    auto stop = on_scope_end([&]{ running_macros[idx] = false; });
+    auto stop = OnScopeEnd([&]{ running_macros[idx] = false; });
 
     auto keys = parse_keys(reg_val[0]);
     ScopedEdition edition(context);
