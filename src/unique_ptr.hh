@@ -15,7 +15,7 @@ class UniquePtr
 
 public:
     explicit UniquePtr(Type* ptr = nullptr) : m_ptr{ptr} {}
-    UniquePtr(nullptr_t) : m_ptr{nullptr} {}
+    UniquePtr(std::nullptr_t) : m_ptr{nullptr} {}
 
     UniquePtr(const UniquePtr&) = delete;
     UniquePtr& operator=(const UniquePtr&) = delete;
