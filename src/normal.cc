@@ -28,6 +28,8 @@
 #include "window.hh"
 #include "word_db.hh"
 
+#include <memory>
+
 namespace Kakoune
 {
 
