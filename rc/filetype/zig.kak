@@ -57,7 +57,7 @@ add-highlighter shared/zig/code/ regex '\b(?:const|var|extern|packed|export|pub|
 add-highlighter shared/zig/code/ regex '\b(?:struct|enum|union|error|opaque)\b' 0:attribute
 
 # statement
-add-highlighter shared/zig/code/ regex '\b(?:break|return|continue|asm|defer|errdefer|unreachable|try|catch||suspend|nosuspend|resume)\b' 0:keyword
+add-highlighter shared/zig/code/ regex '\b(?:break|return|continue|asm|defer|errdefer|unreachable|try|catch|suspend|nosuspend|resume)\b' 0:keyword
 # conditional
 add-highlighter shared/zig/code/ regex '\b(?:if|else|switch|and|or|orelse)\b' 0:keyword
 # repeat
@@ -67,7 +67,7 @@ add-highlighter shared/zig/code/ regex '\b(?:fn|test)\b' 0:keyword
 
 # types
 add-highlighter shared/zig/code/ regex '\b(?:bool|f16|f32|f64|f80|f128|void|noreturn|type|anyerror|anyframe|anytype|anyopaque)\b' 0:type
-add-highlighter shared/zig/code/ regex '\b(?:i0|u0|isize||usize|comptime_int|comptime_float)\b' 0:type
+add-highlighter shared/zig/code/ regex '\b(?:i0|u0|isize|usize|comptime_int|comptime_float)\b' 0:type
 add-highlighter shared/zig/code/ regex '\b(?:[iu][1-9]\d*)\b' 0:type
 add-highlighter shared/zig/code/ regex '\b(?:c_char|c_short|c_ushort|c_int|c_uint|c_long|c_ulong|c_longlong|c_ulonglong|c_longdouble)\b' 0:type
 
