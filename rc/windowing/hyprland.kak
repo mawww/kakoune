@@ -4,7 +4,7 @@ provide-module hyprland %{
 # Ensure we're actually in Hyprland
 evaluate-commands %sh{
     [ -z "${kak_opt_windowing_modules}" ] ||
-    [ "$XDG_CURRENT_DESKTOP"  == "Hyprland" ] &&
+    [ "$XDG_CURRENT_DESKTOP"  = "Hyprland" ] &&
     [ -n "$HYPRLAND_INSTANCE_SIGNATURE" ] ||
     echo 'fail hyprland not detected'
 }
