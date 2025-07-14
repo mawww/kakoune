@@ -311,7 +311,7 @@ protected:
     Optional<Shell> m_running_script;
     Optional<FDWatcher> m_watcher;
     Vector<char, MemoryDomain::Completion> m_stdout_buffer;
-    std::function<void (StringView)> m_handle_line;
+    Function<void (StringView)> m_handle_line;
     Completions::Flags m_flags;
 };
 

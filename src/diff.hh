@@ -6,7 +6,7 @@
 // (http://xmailserver.org/diff2.pdf)
 
 #include <algorithm>
-#include <functional>
+#include "function.hh"
 #include "unique_ptr.hh"
 
 namespace Kakoune

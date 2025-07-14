@@ -295,12 +295,12 @@ const BufferRange init_range{ {INT_MAX, INT_MAX}, {INT_MIN, INT_MIN} };
 void DisplayLine::compute_range()
 {
     m_range = init_range;
-    auto first = find_if(m_atoms, std::mem_fn(&DisplayAtom::has_buffer_range));
+    auto first = find_if(m_atoms, [](const auto& atom) { return atom.has_buffer_range(); });
     if (first == m_atoms.end())
         m_range = { { 0, 0 }, { 0, 0 } };
     else
     {
-        auto last = std::find_if(m_atoms.rbegin(), std::reverse_iterator(first+1), std::mem_fn(&DisplayAtom::has_buffer_range));
+        auto last = std::find_if(m_atoms.rbegin(), std::reverse_iterator(first+1), [](const auto& atom) { return atom.has_buffer_range(); });
         m_range.begin = first->begin();
         m_range.end = last->end();
     }

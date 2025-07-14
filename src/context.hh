@@ -4,8 +4,7 @@
 #include "selection.hh"
 #include "optional.hh"
 #include "utils.hh"
-
-#include <functional>
+#include "function.hh"
 
 namespace Kakoune
 {
@@ -45,7 +44,7 @@ private:
     size_t m_current = 0;
 };
 
-using LastSelectFunc = std::function<void (Context&)>;
+using LastSelectFunc = Function<void (Context&)>;
 
 struct LocalScope;
 

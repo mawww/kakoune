@@ -519,7 +519,7 @@ void Client::clear_pending()
 constexpr std::chrono::seconds wait_timeout{1};
 
 BusyIndicator::BusyIndicator(const Context& context,
-                             std::function<DisplayLine(std::chrono::seconds)> status_message,
+                             Function<DisplayLine(std::chrono::seconds)> status_message,
                              TimePoint wait_time)
     : m_context(context),
       m_timer{wait_time + wait_timeout,

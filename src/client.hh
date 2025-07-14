@@ -25,7 +25,7 @@ enum class MenuStyle;
 class Client final : public SafeCountable, public OptionManagerWatcher
 {
 public:
-    using OnExitCallback = std::function<void (int status)>;
+    using OnExitCallback = Function<void (int status)>;
 
     Client(UniquePtr<UserInterface>&& ui,
            UniquePtr<Window>&& window,
@@ -170,7 +170,7 @@ class BusyIndicator
 {
 public:
     BusyIndicator(const Context& context,
-                  std::function<DisplayLine(std::chrono::seconds)> status_message,
+                  Function<DisplayLine(std::chrono::seconds)> status_message,
                   TimePoint wait_time = Clock::now());
     ~BusyIndicator();
 private:
