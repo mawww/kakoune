@@ -1,0 +1,2 @@
+:set-option global modelinefmt '%val{cursor_line_percent}'
+6g
