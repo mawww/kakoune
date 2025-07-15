@@ -7,6 +7,7 @@
 #include "utf8.hh"
 #include "vector.hh"
 #include "utils.hh"
+#include "unique_ptr.hh"
 
 #include <bit>
 #include <algorithm>

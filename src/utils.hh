@@ -2,7 +2,6 @@
 #define utils_hh_INCLUDED
 
 #include "assert.hh"
-#include "unique_ptr.hh"
 
 namespace Kakoune
 {

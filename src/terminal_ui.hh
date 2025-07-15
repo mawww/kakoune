@@ -9,6 +9,7 @@
 #include "optional.hh"
 #include "string.hh"
 #include "user_interface.hh"
+#include "unique_ptr.hh"
 
 #include <termios.h>
 

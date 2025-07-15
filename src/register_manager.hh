@@ -5,6 +5,7 @@
 #include "completion.hh"
 #include "exception.hh"
 #include "utils.hh"
+#include "unique_ptr.hh"
 #include "hash_map.hh"
 #include "string.hh"
 #include "vector.hh"
