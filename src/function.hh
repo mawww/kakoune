@@ -23,10 +23,10 @@ inline constexpr FunctionVTable<Res, Args...> unset_vtable{
     .destroy = [](void*) {},
 };
 
-template<typename Target, typename Res, typename... Args>
+template<bool Copyable, typename Target, typename Res, typename... Args>
 inline constexpr FunctionVTable<Res, Args...> vtable_for{
     .call = [](void* target, Args... args) -> Res { return (*reinterpret_cast<Target*>(target))(std::forward<Args>(args)...); },
-    .clone = [](void* target) -> void* { return new Target(*reinterpret_cast<Target*>(target)); },
+    .clone = [](void* target) -> void* { if constexpr (Copyable) { return new Target(*reinterpret_cast<Target*>(target)); } return nullptr; },
     .destroy = [](void* target) { delete reinterpret_cast<Target*>(target); }
 };
 
@@ -37,18 +37,18 @@ inline constexpr FunctionVTable<Res, Args...> vtable_for_func{
     .destroy = [](void* target) {}
 };
 
-template<typename F>
-class Function;
+template<bool Copyable, typename F>
+class FunctionImpl;
 
-template<typename Res, typename... Args>
-class Function<Res (Args...)>
+template<bool Copyable, typename Res, typename... Args>
+class FunctionImpl<Copyable, Res (Args...)>
 {
 public:
-    Function() = default;
+    FunctionImpl() = default;
 
     template<typename Target>
-        requires (not std::is_same_v<Function, std::remove_cvref_t<Target>>)
-    Function(Target&& target)
+        requires (not std::is_same_v<FunctionImpl, std::remove_cvref_t<Target>>)
+    FunctionImpl(Target&& target)
     {
         using EffectiveTarget = std::remove_cvref_t<Target>;
         if constexpr (std::is_convertible_v<EffectiveTarget, Res(*)(Args...)>)
@@ -59,33 +59,34 @@ public:
         else
         {
             m_target = new EffectiveTarget(std::forward<Target>(target));
-            m_vtable = &vtable_for<EffectiveTarget, Res, Args...>;
+            m_vtable = &vtable_for<Copyable, EffectiveTarget, Res, Args...>;
         }
     }
 
-    Function(const Function& other) : m_target(other.m_vtable->clone(other.m_target)), m_vtable(other.m_vtable)
+    FunctionImpl(const FunctionImpl& other) requires Copyable
+        : m_target(other.m_vtable->clone(other.m_target)), m_vtable(other.m_vtable)
     {
     }
 
-    Function(Function&& other) : m_target(other.m_target), m_vtable(other.m_vtable)
+    FunctionImpl(FunctionImpl&& other) : m_target(other.m_target), m_vtable(other.m_vtable)
     {
         other.m_target = nullptr;
         other.m_vtable = &unset_vtable<Res, Args...>;
     }
 
-    ~Function()
+    ~FunctionImpl()
     {
         m_vtable->destroy(m_target);
     }
 
-    Function& operator=(const Function& other)
+    FunctionImpl& operator=(const FunctionImpl& other) requires Copyable
     {
         m_target = other.m_vtable->clone(other.m_target);
         m_vtable = other.m_vtable;
         return *this;
     }
 
-    Function& operator=(Function&& other)
+    FunctionImpl& operator=(FunctionImpl&& other)
     {
         m_target = other.m_target;
         m_vtable = other.m_vtable;
@@ -105,6 +106,12 @@ private:
     void* m_target = nullptr;
     const FunctionVTable<Res, Args...>* m_vtable = &unset_vtable<Res, Args...>;
 };
+
+template<typename F>
+using Function = FunctionImpl<true, F>;
+
+template<typename F>
+using MoveOnlyFunction = FunctionImpl<false, F>;
 
 }
 

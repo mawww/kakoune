@@ -25,7 +25,7 @@ enum class PromptEvent
     Abort,
     Validate
 };
-using PromptCallback = Function<void (StringView, PromptEvent, Context&)>;
+using PromptCallback = MoveOnlyFunction<void (StringView, PromptEvent, Context&)>;
 
 enum class PromptFlags
 {

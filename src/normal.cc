@@ -28,8 +28,6 @@
 #include "window.hh"
 #include "word_db.hh"
 
-#include <memory>
-
 namespace Kakoune
 {
 
@@ -665,7 +663,7 @@ void pipe(Context& context, NormalParams params)
         prompt, {}, default_command, context.faces()["Prompt"],
         PromptFlags::DropHistoryEntriesWithBlankPrefix, '|',
         shell_complete,
-        [default_command, selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
+        [default_command, selection_edition=ScopedSelectionEdition(context)]
         (StringView cmdline, PromptEvent event, Context& context)
         {
             if (event != PromptEvent::Validate)
@@ -880,7 +878,7 @@ void insert_output(Context& context, NormalParams params)
         prompt, {}, default_command, context.faces()["Prompt"],
         PromptFlags::DropHistoryEntriesWithBlankPrefix, '|',
         shell_complete,
-        [default_command, selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
+        [default_command, selection_edition=ScopedSelectionEdition(context)]
         (StringView cmdline, PromptEvent event, Context& context)
         {
             if (event != PromptEvent::Validate)
@@ -954,7 +952,7 @@ void regex_prompt(Context& context, String prompt, char reg, RegexMode mode, Fun
             return {(int)(word.begin() - regex.begin()), pos,  std::move(candidates) };
         },
         [=, func=std::move(func), saved_reg=RegisterManager::instance()[reg].save(context),
-         selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
+         selection_edition=ScopedSelectionEdition(context)]
         (StringView str, PromptEvent event, Context& context) mutable {
             try
             {
@@ -1247,7 +1245,7 @@ void keep(Context& context, NormalParams params)
     const char reg = to_lower(params.reg ? params.reg : '/');
 
     regex_prompt(context, prompt.str(), reg, RegexMode::Forward,
-                 [selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
+                 [selection_edition=ScopedSelectionEdition(context)]
                  (const Regex& regex, PromptEvent event, Context& context) {
         if (regex.empty() or regex.str().empty())
             return;
@@ -1278,7 +1276,7 @@ void keep_pipe(Context& context, NormalParams params)
     context.input_handler().prompt(
         "keep pipe:", {}, default_command, context.faces()["Prompt"],
         PromptFlags::DropHistoryEntriesWithBlankPrefix, '|', shell_complete,
-        [default_command, selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
+        [default_command, selection_edition=ScopedSelectionEdition(context)]
         (StringView cmdline, PromptEvent event, Context& context) {
             if (event != PromptEvent::Validate)
                 return;
