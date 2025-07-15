@@ -451,6 +451,8 @@ See <<Appending>> below for instructions on extending (appending to) the current
  * `pagedown, <c-f>`: scroll one page down
  * `<c-u>`: scroll half a page up
  * `<c-d>`: scroll half a page down
+ * `<c-y>`: scroll one line up
+ * `<c-e>`: scroll one line down
 
  * `)`: rotate selections (the main selection becomes the next one)
  * `(`: rotate selections backwards
