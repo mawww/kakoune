@@ -18,6 +18,7 @@ A shell command is appended to the one set in this option at runtime} \
                    'termite        -e      ' \
                    'wterm          -e sh -c' \
                    'gnome-terminal -e      ' \
+                   'kgx            -e      ' \
                    'xfce4-terminal -e      ' \
                    'konsole        -e      '; do
         terminal=${termcmd%% *}
