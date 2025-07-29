@@ -1,8 +1,10 @@
+provide-module detect-mail %{
+
 hook global BufCreate .+\.eml %{
     set-option buffer filetype mail
 }
 
-hook global WinSetOption filetype=mail %{
+hook -group mail-ret-map global WinSetOption filetype=mail %{
     require-module mail
     map buffer normal <ret> :diff-jump<ret>
     hook -once -always window WinSetOption filetype=.* %{
@@ -14,6 +16,10 @@ hook -group mail-highlight global WinSetOption filetype=mail %{
     add-highlighter window/mail ref mail
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/mail }
 }
+
+}
+
+require-module detect-mail
 
 
 provide-module mail %{
