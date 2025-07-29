@@ -10,10 +10,6 @@ hook global BufCreate .*\.(sml|fun|sig) %{
     set-option buffer filetype sml
 }
 
-}
-
-require-module detect-sml
-
 # Initialization
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
@@ -27,6 +23,10 @@ hook -group sml-highlight global WinSetOption filetype=sml %{
     add-highlighter window/sml ref sml
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/sml }
 }
+
+}
+
+require-module detect-sml
 
 provide-module sml %[
 
