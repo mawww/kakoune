@@ -81,6 +81,7 @@ public:
 
     FunctionImpl& operator=(const FunctionImpl& other) requires Copyable
     {
+        m_vtable->destroy(m_target);
         m_target = other.m_vtable->clone(other.m_target);
         m_vtable = other.m_vtable;
         return *this;
@@ -88,6 +89,7 @@ public:
 
     FunctionImpl& operator=(FunctionImpl&& other)
     {
+        m_vtable->destroy(m_target);
         m_target = other.m_target;
         m_vtable = other.m_vtable;
         other.m_target = nullptr;
