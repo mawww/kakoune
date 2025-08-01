@@ -28,7 +28,7 @@ tag-sanitize-address = .san_a
 
 CXXFLAGS-sanitize-undefined = -fsanitize=undefined
 
-LDFLAGS-sanitize-undefined = -lubsan
+LDFLAGS-sanitize-undefined = -lasan -lubsan
 tag-sanitize-undefined = .san_u
 
 LDFLAGS-static-yes = -static -pthread
