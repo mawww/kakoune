@@ -1,14 +1,14 @@
 #ifndef string_hh_INCLUDED
 #define string_hh_INCLUDED
 
-#include <climits>
-#include <cstddef>
 #include "memory.hh"
 #include "hash.hh"
 #include "units.hh"
 #include "utf8.hh"
 
-#include <algorithm>
+#include <climits>
+#include <cstddef>
+#include <cstring>
 
 namespace Kakoune
 {
@@ -109,21 +109,9 @@ public:
     String() {}
     String(const char* content) : m_data(content, (size_t)strlen(content)) {}
     String(const char* content, ByteCount len) : m_data(content, (size_t)len) {}
-    explicit String(Codepoint cp, CharCount count = 1)
-    {
-        reserve(utf8::codepoint_size(cp) * (int)count);
-        while (count-- > 0)
-            utf8::dump(std::back_inserter(*this), cp);
-    }
-    explicit String(Codepoint cp, ColumnCount count)
-    {
-        int cp_count = (int)(count / std::max(codepoint_width(cp), 1_col));
-        reserve(utf8::codepoint_size(cp) * cp_count);
-        while (cp_count-- > 0)
-            utf8::dump(std::back_inserter(*this), cp);
-    }
     String(const char* begin, const char* end) : m_data(begin, end-begin) {}
-
+    explicit String(Codepoint cp, CharCount count = 1);
+    explicit String(Codepoint cp, ColumnCount count);
     explicit String(StringView str);
 
     struct NoCopy{};
@@ -184,7 +172,7 @@ public:
         Data& operator=(const Data& other);
         Data& operator=(Data&& other) noexcept;
 
-        bool is_long() const { return (u.l.mode& Long::active_mask) > 0; }
+        bool is_long() const { return (u.l.mode & Long::active_mask) != 0; }
         size_t size() const { return is_long() ? u.l.size : (Short::capacity - u.s.remaining_size); }
         size_t capacity() const { return is_long() ? u.l.capacity : Short::capacity; }
 
@@ -298,9 +286,10 @@ inline String String::no_copy(StringView str) { return {NoCopy{}, str}; }
 template<typename Type, typename CharType>
 inline StringView StringOps<Type, CharType>::substr(ByteCount from, ByteCount length) const
 {
-    const auto str_len = type().length();
-    kak_assert(from >= 0 and from <= str_len);
-    return StringView{type().data() + (int)from, std::min(str_len - from, length >= 0 ? length : str_len)};
+    const auto str_length = type().length();
+    const auto max_length = str_length - from;
+    kak_assert(from >= 0 and max_length >= 0);
+    return StringView{type().data() + (int)from, length >= 0 and length < max_length ? length : max_length};
 }
 
 template<typename Type, typename CharType>
@@ -352,7 +341,7 @@ inline String operator+(StringView lhs, StringView rhs)
 inline bool operator==(const StringView& lhs, const StringView& rhs)
 {
     return lhs.length() == rhs.length() and
-       std::equal(lhs.begin(), lhs.end(), rhs.begin());
+           (lhs.empty() or std::memcmp(lhs.begin(), rhs.begin(), (size_t)lhs.length()) == 0);
 }
 
 inline auto operator<=>(const StringView& lhs, const StringView& rhs)
@@ -368,12 +357,12 @@ inline auto operator<=>(const StringView& lhs, const StringView& rhs)
 
 }
 
-inline String operator"" _str(const char* str, size_t)
+inline String operator""_str(const char* str, size_t)
 {
     return String(str);
 }
 
-inline StringView operator"" _sv(const char* str, size_t)
+inline StringView operator""_sv(const char* str, size_t)
 {
     return StringView{str};
 }

@@ -34,12 +34,21 @@ provide-module latex %~
 
 add-highlighter shared/latex regions
 add-highlighter shared/latex/content default-region group
+
+# Math modes
+# $math$ must have at least one non-$ character inside.
+# This is so that $$math$$ get matched properly.
+add-highlighter shared/latex/dollar-math region '(?<!\\)(?:\\\\)*\K\$[^$]' '(?<!\\)(\\\\)*\$' fill meta
+add-highlighter shared/latex/ddollar-math region '(?<!\\)(?:\\\\)*\K\$\$' '(?<!\\)(\\\\)*\$\$' fill meta
+add-highlighter shared/latex/bracket-math region '(?<!\\)(?:\\\\)*\K\\\[' '(?<!\\)(\\\\)*\\\]' fill meta
+add-highlighter shared/latex/paren-math region '(?<!\\)(?:\\\\)*\K\\\(' '(?<!\\)(\\\\)*\\\)' fill meta
+
 # Region for control sequence (includes latex2e arguments and options)
 # starting with unescaped \ and ending :
 # - at eol, or
 # - at word boundaries not preceded nor followed by @ : \ { } [ ] *, or
 # - after an unescaped }
-add-highlighter shared/latex/cs region '(?<!\\)(?:\\\\)*\K\\[@\w]' '/\n|(?<![@:\\{}\[\]*])(?![@:\\{}\[\]*])\b|(?<!\\)(?:\\\\)*\K\}\K' group
+add-highlighter shared/latex/cs region '(?<!\\)(?:\\\\)*\K\\[@\w]' '\n|(?<![@:\\{}\[\]*])(?![@:\\{}\[\]*])\b|(?<!\\)(?:\\\\)*\K\}\K' group
 add-highlighter shared/latex/comment region '(?<!\\)(?:\\\\)*\K%' '\n' fill comment
 
 # Document and LaTeX2e control sequence
@@ -72,9 +81,6 @@ add-highlighter shared/latex/cs/ regex '_(bool|box|cctab|clist|coffin|dim|fp|ior
 add-highlighter shared/latex/content/ regex '(?<!\\)(?:\\\\)*\K#+[1-9]' 0:string
 ## group containing words and numbers (list separated by ; , / or spaces)
 add-highlighter shared/latex/content/ regex '(?<!\\)(?:\\\\)*\K\{([\s/;,.\w\d]+)\}' 1:string
-
-# Math mode between dollar signs/pairs
-add-highlighter shared/latex/content/ regex '((?<!\\)(?:\\\\)*\K\$(\\\$|[^$])+\$)|((?<!\\)(?:\\\\)*\K\$\$(\\\$|[^$])+\$\$)|((?<!\\)(?:\\\\)*\K\\\[.*?\\\])|(\\\(.*?\\\))' 0:meta
 
 # Indent
 # ------

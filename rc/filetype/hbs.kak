@@ -100,7 +100,7 @@ define-command -hidden hbs-indent-on-new-line %{
 declare-option bool hbs_highlighters_enabled false
 
 define-command -hidden maybe-add-hbs-to-html %{ evaluate-commands %sh{
-    if [ "$kak_opt_hbs_highlighters_enabled" == "false" ]; then
+    if [ "$kak_opt_hbs_highlighters_enabled" = "false" ]; then
         printf %s "
             add-highlighter shared/html/hbs region '\{\{' '\}\}' ref hbs
             add-highlighter shared/html/tag/hbs region '\{\{' '\}\}' ref hbs

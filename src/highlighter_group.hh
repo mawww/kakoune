@@ -21,7 +21,7 @@ public:
     HighlighterGroup(HighlightPass passes) : Highlighter{passes} {}
 
     bool has_children() const override { return true; }
-    void add_child(String name, std::unique_ptr<Highlighter>&& hl, bool override = false) override;
+    void add_child(String name, UniquePtr<Highlighter>&& hl, bool override = false) override;
     void remove_child(StringView id) override;
 
     Highlighter& get_child(StringView path) override;
@@ -34,7 +34,7 @@ protected:
     void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range) override;
     void do_compute_display_setup(HighlightContext context, DisplaySetup& setup) const override;
 
-    using HighlighterMap = HashMap<String, std::unique_ptr<Highlighter>, MemoryDomain::Highlight>;
+    using HighlighterMap = HashMap<String, UniquePtr<Highlighter>, MemoryDomain::Highlight>;
     HighlighterMap m_highlighters;
 };
 

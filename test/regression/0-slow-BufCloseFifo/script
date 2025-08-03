@@ -1,0 +1,2 @@
+mkfifo fifo2 2>/dev/null
+assert_eq "$(cat fifo2)" "still alive"

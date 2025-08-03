@@ -56,7 +56,7 @@ HookManager::~HookManager() = default;
 
 void HookManager::add_hook(Hook hook, String group, HookFlags flags, Regex filter, String commands, Context& context)
 {
-    std::unique_ptr<HookData> hook_data{new HookData{std::move(group), flags, std::move(filter), std::move(commands)}};
+    UniquePtr<HookData> hook_data{new HookData{std::move(group), flags, std::move(filter), std::move(commands)}};
     if (hook == Hook::ModuleLoaded)
     {
         const bool only_always = context.hooks_disabled();
@@ -80,7 +80,7 @@ void HookManager::remove_hooks(const Regex& regex)
 {
     for (auto& list : m_hooks)
     {
-        list.erase(remove_if(list, [this, &regex](std::unique_ptr<HookData>& h) {
+        list.erase(remove_if(list, [this, &regex](UniquePtr<HookData>& h) {
                        if (not regex_match(h->group.begin(), h->group.end(), regex))
                            return false;
                        m_hooks_trash.push_back(std::move(h));
@@ -94,7 +94,7 @@ CandidateList HookManager::complete_hook_group(StringView prefix, ByteCount pos_
     CandidateList res;
     for (auto& list : m_hooks)
     {
-        auto container = list | transform([](const std::unique_ptr<HookData>& h) -> const String& { return h->group; });
+        auto container = list | transform([](const UniquePtr<HookData>& h) -> const String& { return h->group; });
         for (auto& c : complete(prefix, pos_in_token, container))
         {
             if (!contains(res, c))
@@ -130,7 +130,7 @@ void HookManager::run_hook(Hook hook, StringView param, Context& context)
     }
 
     m_running_hooks.emplace_back(hook, param);
-    auto pop_running_hook = on_scope_end([this]{
+    auto pop_running_hook = OnScopeEnd([this]{
         m_running_hooks.pop_back();
         if (m_running_hooks.empty())
             m_hooks_trash.clear();

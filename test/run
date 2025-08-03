@@ -32,15 +32,13 @@ main() {
 
   number_tests=0
   number_failures=0
-  for dir in $(find "${@:-.}" -type d | sort); do
+  for dir in $(find "${@:-.}" -type d | sed 's|^\./||' | sort); do
     cd $root/$dir;
-    indent="$(echo "$dir/" | sed -e 's|[^/]*//*|  |g')"
-    name=${PWD##*/}
     if [ ! -f cmd ]; then
-      echo "$indent$name"
+      echo "$dir"
       continue
     elif [ -x enabled ] && ! ./enabled; then
-      printf "${yellow}$indent%s (disabled)${none}\n" "$name"
+      echo "${yellow}$dir (disabled)${none}"
       continue
     fi
 
@@ -81,8 +79,8 @@ main() {
 
     if [ ! -e error ]; then # failure not expected
       if [ $retval -ne 0 ]; then
-        printf "${red}$indent%s${none}\n" "$name"
-        echo "$indent  Kakoune returned error $retval"
+        printf "${red}%s${none}\n" "$dir"
+        echo "  Kakoune returned error $retval"
         failed=1
       else
         for file in out $env_vars; do
@@ -100,19 +98,19 @@ main() {
       if [ -f stderr ]; then
         sed -i -e 's/^[0-9]*:[0-9]*: //g' stderr
         if [ -s error ] && ! cmp -s error stderr; then
-          printf "${yellow}$indent%s${none}\n" "$name"
+          printf "${yellow}%s${none}\n" "$dir"
           show_diff error stderr
           failed=1
         fi
       elif [ $retval -eq 0 ]; then
-        printf "${red}$indent%s${none}\n" "$name"
-        echo "$indent  Expected failure, but Kakoune returned 0"
+        printf "${red}%s${none}\n" "$dir"
+        echo "  Expected failure, but Kakoune returned 0"
         failed=1
       fi
     fi
 
     if [ $failed -eq 0 ]; then
-      printf "${green}$indent%s${none}\n" "$name"
+      printf "${green}%s${none}\n" "$dir"
     else
       number_failures=$(($number_failures + 1))
     fi
@@ -131,7 +129,7 @@ main() {
 
 fail_ifn() {
   if [ $failed -eq 0 ]; then
-    printf "${red}$indent%s${none}\n" "$name"
+    printf "${red}%s${none}\n" "$dir"
     failed=1
   fi
 }
@@ -139,7 +137,13 @@ fail_ifn() {
 assert_eq() {
   if [ ! "$1" = "$2" ]; then
     fail_ifn
-    printf "${indent}  ${red}- %s\n${indent}  ${green}+ %s${none}\n" "$1" "$2"
+    if command -v git > /dev/null; then
+        echo "$1" > expected
+        echo "$2" > actual
+        git --no-pager diff --color-words --no-index expected actual
+    else
+        printf "  ${red}- %s\n  ${green}+ %s${none}\n" "$1" "$2"
+    fi
   fi
 }
 
@@ -198,11 +202,11 @@ ui_out() {
       [ "$event" = "$expected" ] && break
     done
     ;;
-  -until-eval | -until-grep)
+  -until-grep)
     pattern=$1
     shift
     while read -r event <&4; do
-      if printf %s "$event" | "${arg#-until-}" "$pattern" >/dev/null; then
+      if printf %s "$event" | grep "$pattern" >/dev/null; then
         if [ $# -ne 0 ]; then
             assert_eq "$1" "$event"
             shift

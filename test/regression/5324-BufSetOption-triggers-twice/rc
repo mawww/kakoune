@@ -1,0 +1,4 @@
+hook global BufCreate .*/foo %{ set buffer filetype foo }
+hook global BufSetOption filetype=foo %{ exec -buffer out ihook-ran<esc> }
+edit foo
+delete-buffer foo

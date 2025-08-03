@@ -118,6 +118,21 @@ void String::Data::clear()
     set_empty();
 }
 
+String::String(Codepoint cp, CharCount count)
+{
+    reserve(utf8::codepoint_size(cp) * (int)count);
+    while (count-- > 0)
+        utf8::dump(std::back_inserter(*this), cp);
+}
+
+String::String(Codepoint cp, ColumnCount count)
+{
+    int cp_count = (int)(count / max(codepoint_width(cp), 1_col));
+    reserve(utf8::codepoint_size(cp) * cp_count);
+    while (cp_count-- > 0)
+        utf8::dump(std::back_inserter(*this), cp);
+}
+
 void String::resize(ByteCount size, char c)
 {
     const size_t target_size = (size_t)size;
@@ -148,7 +163,8 @@ void String::Data::set_short(const char* data, size_t size)
     u.s.remaining_size = Short::capacity - size;
     if (data != nullptr)
         memcpy(u.s.string, data, size);
-    u.s.string[size] = 0;
+    if (size != Short::capacity) // in this case, remaining_size is the null terminator
+        u.s.string[size] = 0;
 }
 
 UnitTest test_data{[]{

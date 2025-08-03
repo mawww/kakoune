@@ -11,4 +11,19 @@ define-command run %{
     git commit --all --message 'changed line 2'
     # Show the commit, jumping to the new version of line 2.
     git blame-jump
+    hook -once buffer BufCloseFifo .* %{
+        evaluate-commands -client client0 %{
+            # We've jumped to the new version of line 2. Move to the old
+            # version so we can annotate the old version of the file.
+            execute-keys k
+            git blame
+            hook -once buffer BufCloseFifo .* %{
+                execute-keys -client client0 x
+                # Wait for a redraw before reporting completion.
+                hook -once buffer NormalIdle .* %{
+                    echo -to-file fifo
+                }
+            }
+        }
+    }
 }

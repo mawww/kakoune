@@ -683,7 +683,7 @@ void TerminalUI::check_resize(bool force)
     const int fd = open("/dev/tty", O_RDWR);
     if (fd < 0)
         return;
-    auto close_fd = on_scope_end([fd]{ ::close(fd); });
+    auto close_fd = OnScopeEnd([fd]{ ::close(fd); });
 
     DisplayCoord terminal_size{24_line, 80_col};
     if (winsize ws; ioctl(fd, TIOCGWINSZ, &ws) == 0 and ws.ws_row > 0 and ws.ws_col > 0)
@@ -1625,6 +1625,13 @@ void TerminalUI::set_ui_options(const Options& options)
 
     m_padding_char = find("terminal_padding_char").map([](StringView s) { return s.column_length() < 1 ? ' ' : s[0_char]; }).value_or(Codepoint{'~'});
     m_padding_fill = find("terminal_padding_fill").map(to_bool).value_or(false);
+    
+    bool new_cursor_native = find("terminal_cursor_native").map(to_bool).value_or(false);
+    if (new_cursor_native != m_cursor_native)
+    {
+        m_cursor_native = new_cursor_native;
+        write(STDOUT_FILENO, m_cursor_native ? "\033[?25h" : "\033[?25l");
+    }
 
     m_info_max_width = find("terminal_info_max_width").map(str_to_int_ifp).value_or(0);
 

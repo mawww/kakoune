@@ -2,6 +2,7 @@
 #define user_interface_hh_INCLUDED
 
 #include "array_view.hh"
+#include "function.hh"
 #include "hash_map.hh"
 #include "range.hh"
 #include "selection.hh"
@@ -45,8 +46,8 @@ enum class CursorMode
     Buffer,
 };
 
-using OnKeyCallback = std::function<void(Key key)>;
-using OnPasteCallback = std::function<void(StringView content)>;
+using OnKeyCallback = Function<void(Key key)>;
+using OnPasteCallback = Function<void(StringView content)>;
 
 class UserInterface
 {

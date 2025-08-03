@@ -1,11 +1,14 @@
 #include "normal.hh"
 
+#include "array_view.hh"
+#include "assert.hh"
 #include "buffer.hh"
 #include "buffer_manager.hh"
 #include "buffer_utils.hh"
 #include "changes.hh"
 #include "command_manager.hh"
 #include "context.hh"
+#include "coord.hh"
 #include "diff.hh"
 #include "enum.hh"
 #include "face_registry.hh"
@@ -19,6 +22,7 @@
 #include "selectors.hh"
 #include "shell_manager.hh"
 #include "string.hh"
+#include "units.hh"
 #include "user_interface.hh"
 #include "unit_tests.hh"
 #include "window.hh"
@@ -448,10 +452,12 @@ void replace_with_char(Context& context, NormalParams)
         ScopedEdition edition(context);
         ScopedSelectionEdition selection_edition{context};
         Buffer& buffer = context.buffer();
-        context.selections().for_each([&](size_t index, Selection& sel) {
+        auto& sels = context.selections();
+        sels.merge_overlapping();
+        sels.for_each([&](size_t index, Selection& sel) {
             CharCount count = char_length(buffer, sel);
             replace(buffer, sel, String{*cp, count});
-        }, false);
+        }, true);
     }, "replace with char", "enter char to replace with\n");
 }
 
@@ -535,8 +541,9 @@ void command(Context& context, NormalParams params)
     command(context, std::move(env_vars), params.reg);
 }
 
-BufferCoord apply_diff(Buffer& buffer, BufferCoord pos, ArrayView<StringView> lines_before, StringView after)
+BufferRange apply_diff(Buffer& buffer, BufferCoord pos, ArrayView<StringView> lines_before, StringView after)
 {
+    BufferCoord first = pos;
     const auto lines_after = after | split_after<StringView>('\n') | gather<Vector<StringView>>();
 
     auto byte_count = [](auto&& lines, int first, int count) {
@@ -544,29 +551,107 @@ BufferCoord apply_diff(Buffer& buffer, BufferCoord pos, ArrayView<StringView> li
                                [](ByteCount l, StringView s) { return l + s.length(); });
     };
 
+    bool tried_to_erase_final_newline = false;
     for_each_diff(lines_before.begin(), (int)lines_before.size(),
                   lines_after.begin(), (int)lines_after.size(),
                   [&, posA = 0, posB = 0](DiffOp op, int len) mutable {
         switch (op)
         {
         case DiffOp::Keep:
+            kak_assert(not tried_to_erase_final_newline);
             pos = buffer.advance(pos, byte_count(lines_before, posA, len));
             posA += len;
             posB += len;
             break;
         case DiffOp::Add:
+            if (buffer.is_end(pos))
+                tried_to_erase_final_newline = false;
             pos = buffer.insert(pos, {lines_after[posB].begin(),
                                       lines_after[posB + len - 1].end()}).end;
             posB += len;
             break;
         case DiffOp::Remove:
-            pos = buffer.erase(pos, buffer.advance(pos, byte_count(lines_before, posA, len)));
+        {
+            kak_assert(not tried_to_erase_final_newline);
+            BufferCoord end = buffer.advance(pos, byte_count(lines_before, posA, len));
+            tried_to_erase_final_newline |= buffer.is_end(end);
+            pos = buffer.erase(pos, end);
             posA += len;
             break;
         }
+        }
     });
-    return pos;
+    if (tried_to_erase_final_newline)
+    {
+        first = std::min(first, buffer.back_coord());
+        pos = buffer.erase(buffer.back_coord(), buffer.end_coord());
+    }
+    return {first, pos};
 }
+
+UnitTest test_apply_diff{[] {
+    using Change = Buffer::Change;
+    auto validate = [&](LineCount line,
+                        StringView new_text,
+                        BufferRange expected_new_range,
+                        ConstArrayView<Change> expected_buffer_changes)
+    {
+        Buffer buffer{"", Buffer::Flags::None, {
+            StringData::create("line1\n"),
+            StringData::create("line2\n"),
+            StringData::create("line3\n"),
+        }};
+        const size_t timestamp = buffer.timestamp();
+        Vector<StringView> old_text;
+        for (auto i = line; i < buffer.line_count(); i++)
+            old_text.push_back(buffer[i]);
+        BufferRange new_text_range = apply_diff(buffer, BufferCoord{line, 0}, old_text, new_text);
+        kak_assert(new_text_range == expected_new_range);
+        kak_assert(buffer.changes_since(timestamp) == expected_buffer_changes);
+    };
+    // When appending at end, we add any missing newline
+    validate(
+        /*line=*/3,
+        "added-line3-missing-eol",
+        BufferRange{{3, 0}, {4, 0}},
+        {
+            Change{Change::Insert, {3, 0}, {4, 0}},
+        }
+    );
+    // Special case: erasing until buffer end also erases the final newline.
+    validate(
+        /*line=*/2,
+        "",
+        BufferRange{{1, 5}, {1, 5}},
+        {
+            Change{Change::Erase, {2, 0}, {3, 0}},
+        }
+    );
+    // Erasing and appending at end still produces forward-only changes.
+    validate(
+        /*line=*/2,
+        "changed-line3\n"
+        "added-line4\n"
+        "added-line5\n",
+        BufferRange{{2, 0}, {5, 0}},
+        {
+            Change{Change::Erase,  {2, 0}, {3, 0}},
+            Change{Change::Insert, {2, 0}, {5, 0}},
+        }
+    );
+    // Same result when append is missing newline.
+    validate(
+        /*line=*/2,
+        "changed-line3\n"
+        "added-line4\n"
+        "added-line5-missing-eol",
+        BufferRange{{2, 0}, {5, 0}},
+        {
+            Change{Change::Erase,  {2, 0}, {3, 0}},
+            Change{Change::Insert, {2, 0}, {5, 0}},
+        }
+    );
+}};
 
 template<bool replace>
 void pipe(Context& context, NormalParams params)
@@ -578,7 +663,7 @@ void pipe(Context& context, NormalParams params)
         prompt, {}, default_command, context.faces()["Prompt"],
         PromptFlags::DropHistoryEntriesWithBlankPrefix, '|',
         shell_complete,
-        [default_command, selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
+        [default_command, selection_edition=ScopedSelectionEdition(context)]
         (StringView cmdline, PromptEvent event, Context& context)
         {
             if (event != PromptEvent::Validate)
@@ -626,12 +711,12 @@ void pipe(Context& context, NormalParams params)
                     if (in_lines.back().back() != '\n' and not out.empty() and out.back() == '\n')
                         out.resize(out.length()-1, 0);
 
-                    auto new_end = apply_diff(buffer, first, in_lines, out);
-                    if (new_end != first)
+                    auto [new_first, new_end] = apply_diff(buffer, first, in_lines, out);
+                    if (new_first != new_end)
                     {
                         auto& min = sel.min();
                         auto& max = sel.max();
-                        min = first;
+                        min = new_first;
                         max = buffer.char_prev(new_end);
                     }
                     else
@@ -716,7 +801,7 @@ void paste(Context& context, NormalParams params)
 {
     const char reg = params.reg ? params.reg : '"';
     auto strings = RegisterManager::instance()[reg].get(context);
-    const bool linewise = any_of(strings, [](StringView str) {
+    const bool linewise = all_of(strings, [](StringView str) {
         return not str.empty() and str.back() == '\n';
     });
 
@@ -741,7 +826,6 @@ void paste_all(Context& context, NormalParams params)
 {
     const char reg = params.reg ? params.reg : '"';
     auto strings = RegisterManager::instance()[reg].get(context);
-    bool linewise = false;
     String all;
     Vector<ByteCount> offsets;
     for (auto& str : strings)
@@ -749,11 +833,12 @@ void paste_all(Context& context, NormalParams params)
         if (str.empty())
             continue;
 
-        if (str.back() == '\n')
-            linewise = true;
         all += str;
         offsets.push_back(all.length());
     }
+    const bool linewise = all_of(strings, [](StringView str) {
+        return not str.empty() and str.back() == '\n';
+    });
 
     if (offsets.empty())
         throw runtime_error("nothing to paste");
@@ -793,7 +878,7 @@ void insert_output(Context& context, NormalParams params)
         prompt, {}, default_command, context.faces()["Prompt"],
         PromptFlags::DropHistoryEntriesWithBlankPrefix, '|',
         shell_complete,
-        [default_command, selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
+        [default_command, selection_edition=ScopedSelectionEdition(context)]
         (StringView cmdline, PromptEvent event, Context& context)
         {
             if (event != PromptEvent::Validate)
@@ -867,7 +952,7 @@ void regex_prompt(Context& context, String prompt, char reg, RegexMode mode, Fun
             return {(int)(word.begin() - regex.begin()), pos,  std::move(candidates) };
         },
         [=, func=std::move(func), saved_reg=RegisterManager::instance()[reg].save(context),
-         selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
+         selection_edition=ScopedSelectionEdition(context)]
         (StringView str, PromptEvent event, Context& context) mutable {
             try
             {
@@ -947,7 +1032,7 @@ void extend_to_next_matches(Context& context, const Regex& regex, RegexMode mode
                  new_sels.push_back(sel);
                  merge_selections(new_sels.back(), new_sel);
              }
-             else if (new_sels.size() <= main_index)
+             else if (new_sels.size() <= main_index and main_index != 0)
                  --main_index;
          }
          if (new_sels.empty())
@@ -1144,7 +1229,7 @@ void join_lines(Context& context, NormalParams params)
 {
     ScopedSelectionEdition selection_edition{context};
     SelectionList sels{context.selections()};
-    auto restore_sels = on_scope_end([&]{
+    auto restore_sels = OnScopeEnd([&]{
         sels.update();
         context.selections_write_only() = std::move(sels);
     });
@@ -1160,7 +1245,7 @@ void keep(Context& context, NormalParams params)
     const char reg = to_lower(params.reg ? params.reg : '/');
 
     regex_prompt(context, prompt.str(), reg, RegexMode::Forward,
-                 [selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
+                 [selection_edition=ScopedSelectionEdition(context)]
                  (const Regex& regex, PromptEvent event, Context& context) {
         if (regex.empty() or regex.str().empty())
             return;
@@ -1191,7 +1276,7 @@ void keep_pipe(Context& context, NormalParams params)
     context.input_handler().prompt(
         "keep pipe:", {}, default_command, context.faces()["Prompt"],
         PromptFlags::DropHistoryEntriesWithBlankPrefix, '|', shell_complete,
-        [default_command, selection_edition=std::make_shared<ScopedSelectionEdition>(context)]
+        [default_command, selection_edition=ScopedSelectionEdition(context)]
         (StringView cmdline, PromptEvent event, Context& context) {
             if (event != PromptEvent::Validate)
                 return;
@@ -1605,11 +1690,12 @@ void replay_macro(Context& context, NormalParams params)
         throw runtime_error(format("register '{}' is empty", reg));
 
     running_macros[idx] = true;
-    auto stop = on_scope_end([&]{ running_macros[idx] = false; });
+    auto stop = OnScopeEnd([&]{ running_macros[idx] = false; });
 
     auto keys = parse_keys(reg_val[0]);
     ScopedEdition edition(context);
     ScopedSelectionEdition selection_edition{context};
+    ScopedSetBool disable_keymaps(context.keymaps_disabled());
     do
     {
         for (auto& key : keys)

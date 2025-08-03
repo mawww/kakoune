@@ -25,10 +25,10 @@ enum class MenuStyle;
 class Client final : public SafeCountable, public OptionManagerWatcher
 {
 public:
-    using OnExitCallback = std::function<void (int status)>;
+    using OnExitCallback = Function<void (int status)>;
 
-    Client(std::unique_ptr<UserInterface>&& ui,
-           std::unique_ptr<Window>&& window,
+    Client(UniquePtr<UserInterface>&& ui,
+           UniquePtr<Window>&& window,
            SelectionList selections,
            int pid, EnvVarMap env_vars,
            String name,
@@ -88,8 +88,8 @@ private:
 
     DisplayLine generate_mode_line() const;
 
-    std::unique_ptr<UserInterface> m_ui;
-    std::unique_ptr<Window> m_window;
+    UniquePtr<UserInterface> m_ui;
+    UniquePtr<Window> m_window;
 
     const int m_pid;
 
@@ -170,7 +170,7 @@ class BusyIndicator
 {
 public:
     BusyIndicator(const Context& context,
-                  std::function<DisplayLine(std::chrono::seconds)> status_message,
+                  Function<DisplayLine(std::chrono::seconds)> status_message,
                   TimePoint wait_time = Clock::now());
     ~BusyIndicator();
 private:

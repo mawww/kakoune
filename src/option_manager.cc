@@ -64,7 +64,7 @@ Option& OptionManager::get_local_option(StringView name)
     else if (m_parent)
     {
         auto* clone = (*m_parent)[name].clone(*this);
-        return *m_options.insert({clone->name(), std::unique_ptr<Option>{clone}});
+        return *m_options.insert({clone->name(), UniquePtr<Option>{clone}});
     }
     else
         throw option_not_found(name);
@@ -120,7 +120,7 @@ void OptionManager::on_option_changed(const Option& option)
 CandidateList OptionsRegistry::complete_option_name(StringView prefix,
                                                     ByteCount cursor_pos) const
 {
-    using OptionPtr = std::unique_ptr<const OptionDesc>;
+    using OptionPtr = UniquePtr<const OptionDesc>;
     return complete(prefix, cursor_pos, m_descs |
                     filter([](const OptionPtr& desc)
                            { return not (desc->flags() & OptionFlags::Hidden); }) |

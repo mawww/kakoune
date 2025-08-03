@@ -8,8 +8,7 @@
 #include "optional.hh"
 #include "string.hh"
 #include "format.hh"
-
-#include <functional>
+#include "function.hh"
 
 namespace Kakoune
 {
@@ -40,7 +39,7 @@ struct wrong_argument_count : public parameter_error
 
 class Context;
 struct Completions;
-using ArgCompleter = std::function<Completions (const Context&, StringView, ByteCount)>;
+using ArgCompleter = Function<Completions (const Context&, StringView, ByteCount)>;
 
 struct SwitchDesc
 {

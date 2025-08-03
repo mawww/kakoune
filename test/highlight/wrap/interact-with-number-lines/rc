@@ -1,0 +1,2 @@
+add-highlighter window/ wrap -word -width 4
+add-highlighter window/ number-lines

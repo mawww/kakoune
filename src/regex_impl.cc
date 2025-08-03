@@ -505,6 +505,18 @@ private:
             parse_error("unclosed character class");
         ++m_pos;
 
+        if (not character_class.ignore_case)
+        {
+            bool could_ignore_case = true;
+            for (const auto& [min, max] : character_class.ranges)
+            {
+                if (not contains(character_class.ranges, CharacterClass::Range{to_lower(min), to_lower(max)}) or
+                    not contains(character_class.ranges, CharacterClass::Range{to_upper(min), to_upper(max)}))
+                    could_ignore_case = false;
+            }
+            character_class.ignore_case = could_ignore_case;
+        }
+
         if (character_class.ignore_case)
         {
             for (auto& range : character_class.ranges)
@@ -521,7 +533,7 @@ private:
         if (character_class.ctypes == CharacterType::None and not character_class.negative and
             character_class.ranges.size() == 1 and
             character_class.ranges.front().min == character_class.ranges.front().max)
-            return add_node(ParsedRegex::Literal, character_class.ranges.front().min);
+            return add_node(ParsedRegex::Literal, character_class.ranges.front().min, {1,1}, character_class.ignore_case);
 
         if (character_class.ctypes != CharacterType::None and not character_class.negative and
             character_class.ranges.empty())
@@ -585,14 +597,14 @@ private:
         }
     }
 
-    NodeIndex add_node(ParsedRegex::Op op, Codepoint value = -1, ParsedRegex::Quantifier quantifier = {1, 1})
+    NodeIndex add_node(ParsedRegex::Op op, Codepoint value = -1, ParsedRegex::Quantifier quantifier = {1, 1}, bool ignore_case = false)
     {
         constexpr auto max_nodes = std::numeric_limits<int16_t>::max();
         const NodeIndex res = m_parsed_regex.nodes.size();
         if (res == max_nodes)
             parse_error(format("regex parsed to more than {} ast nodes", max_nodes));
         const NodeIndex next = res+1;
-        m_parsed_regex.nodes.push_back({op, m_flags & Flags::IgnoreCase, next, value, quantifier});
+        m_parsed_regex.nodes.push_back({op, ignore_case or (m_flags & Flags::IgnoreCase), next, value, quantifier});
         return res;
     }
 
@@ -703,6 +715,7 @@ struct RegexCompiler
 private:
 
     template<RegexMode direction>
+    [[gnu::noinline]]
     OpIndex compile_node_inner(ParsedRegex::NodeIndex index)
     {
         auto& node = get_node(index);
@@ -729,7 +742,15 @@ private:
                 push_inst(CompiledRegex::AnyCharExceptNewLine);
                 break;
             case ParsedRegex::CharClass:
-                push_inst(CompiledRegex::CharClass, {.character_class_index=int16_t(node.value)});
+                if (auto& char_class = m_parsed_regex.character_classes[node.value];
+                    char_class.ranges.size() == 1 and char_class.ctypes == CharacterType::None and
+                    char_class.ranges[0].max <= std::numeric_limits<uint8_t>::max())
+                    push_inst(CompiledRegex::CharRange, {.range={.min=uint8_t(char_class.ranges[0].min),
+                                                                 .max=uint8_t(char_class.ranges[0].max),
+                                                                 .ignore_case=char_class.ignore_case,
+                                                                 .negative=char_class.negative}});
+                else
+                    push_inst(CompiledRegex::CharClass, {.character_class_index=int16_t(node.value)});
                 break;
             case ParsedRegex::CharType:
                 push_inst(CompiledRegex::CharType, {.character_type=CharacterType{(unsigned char)node.value}});
@@ -1025,7 +1046,7 @@ private:
 
     template<RegexMode direction>
     [[gnu::noinline]]
-    std::unique_ptr<CompiledRegex::StartDesc> compute_start_desc() const
+    UniquePtr<CompiledRegex::StartDesc> compute_start_desc() const
     {
         CompiledRegex::StartDesc start_desc{};
         if (compute_start_desc<direction>(0, start_desc) or
@@ -1035,7 +1056,7 @@ private:
         if (std::count(std::begin(start_desc.map), std::end(start_desc.map), true) == 1)
             start_desc.start_byte = find(start_desc.map, true) - std::begin(start_desc.map);
 
-        return std::make_unique<CompiledRegex::StartDesc>(start_desc);
+        return make_unique_ptr<CompiledRegex::StartDesc>(start_desc);
     }
 
     void optimize(size_t begin, size_t end)
@@ -1107,11 +1128,17 @@ String dump_regex(const CompiledRegex& program)
             case CompiledRegex::AnyCharExceptNewLine:
                 res += "anything but newline\n";
                 break;
-            case CompiledRegex::CharClass:
-                res += format("character class {}\n", inst.param.character_class_index);
+            case CompiledRegex::CharRange:
+                res += format("character range {}[{}{}-{}]\n",
+                              inst.param.range.ignore_case ? "(ignore case) " : "",
+                              inst.param.range.negative ? "^" : "",
+                              inst.param.range.min, inst.param.range.max);
                 break;
             case CompiledRegex::CharType:
                 res += format("character type {}\n", to_underlying(inst.param.character_type));
+                break;
+            case CompiledRegex::CharClass:
+                res += format("character class {}\n", inst.param.character_class_index);
                 break;
             case CompiledRegex::Jump:
                 res += format("jump {} ({:03})\n", inst.param.jump_offset, index + inst.param.jump_offset);
@@ -1256,6 +1283,12 @@ auto test_regex = UnitTest{[]{
         kak_assert(vm.exec("foo"));
         kak_assert(vm.exec("bar"));
         kak_assert(not vm.exec("foobar"));
+    }
+
+    {
+        TestVM<> vm{R"([aA])"};
+        kak_assert(vm.exec("a"));
+        kak_assert(vm.exec("A"));
     }
 
     {

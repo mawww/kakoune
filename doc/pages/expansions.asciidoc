@@ -305,6 +305,11 @@ The following expansions are supported (with required context _in italics_):
     history), and each _modification_ is presented as in
     `%val{uncommitted_modifications}`.
 
+*%val{history_since_id}*::
+    _in buffer, window scope_ +
+    a partial history of the buffer in the same format as `%val{history}`
+    starting after entry _id_
+
 *%val{history_id}*::
     _in buffer, window scope_ +
     history id of the current buffer, an integer value which refers to a

@@ -26,7 +26,7 @@ void HighlighterGroup::fill_unique_ids(Vector<StringView>& unique_ids) const
         hl.value->fill_unique_ids(unique_ids);
 }
 
-void HighlighterGroup::add_child(String name, std::unique_ptr<Highlighter>&& hl, bool override)
+void HighlighterGroup::add_child(String name, UniquePtr<Highlighter>&& hl, bool override)
 {
     if ((hl->passes() & passes()) != hl->passes())
         throw runtime_error{"cannot add that highlighter to this group, passes don't match"};

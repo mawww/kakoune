@@ -109,7 +109,7 @@ struct LineCount : public StronglyTypedNumber<LineCount, int>
 };
 
 [[gnu::always_inline]]
-inline constexpr LineCount operator"" _line(unsigned long long int value)
+inline constexpr LineCount operator""_line(unsigned long long int value)
 {
     return LineCount(value);
 }
@@ -120,7 +120,7 @@ struct ByteCount : public StronglyTypedNumber<ByteCount, int>
 };
 
 [[gnu::always_inline]]
-inline constexpr ByteCount operator"" _byte(unsigned long long int value)
+inline constexpr ByteCount operator""_byte(unsigned long long int value)
 {
     return ByteCount(value);
 }
@@ -135,7 +135,7 @@ struct CharCount : public StronglyTypedNumber<CharCount, int>
 };
 
 [[gnu::always_inline]]
-inline constexpr CharCount operator"" _char(unsigned long long int value)
+inline constexpr CharCount operator""_char(unsigned long long int value)
 {
     return CharCount(value);
 }
@@ -146,7 +146,7 @@ struct ColumnCount : public StronglyTypedNumber<ColumnCount, int>
 };
 
 [[gnu::always_inline]]
-inline constexpr ColumnCount operator"" _col(unsigned long long int value)
+inline constexpr ColumnCount operator""_col(unsigned long long int value)
 {
     return ColumnCount(value);
 }

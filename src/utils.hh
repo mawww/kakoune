@@ -3,8 +3,6 @@
 
 #include "assert.hh"
 
-#include <memory>
-
 namespace Kakoune
 {
 
@@ -52,11 +50,11 @@ Singleton<T>* Singleton<T>::ms_instance = nullptr;
 
 // *** On scope end ***
 //
-// on_scope_end provides a way to register some code to be
+// OnScopeEnd provides a way to register some code to be
 // executed when current scope closes.
 //
 // usage:
-// auto cleaner = on_scope_end([]() { ... });
+// auto cleaner = OnScopeEnd([]() { ... });
 //
 // This permits to cleanup c-style resources without implementing
 // a wrapping class
@@ -73,18 +71,15 @@ public:
     { other.m_valid = false; }
 
     [[gnu::always_inline]]
+    void trigger() { if (m_valid) m_func(); m_valid = false; }
+
+    [[gnu::always_inline]]
     ~OnScopeEnd() noexcept(noexcept(m_func())) { if (m_valid) m_func(); }
 
 private:
     bool m_valid;
     T m_func;
 };
-
-template<typename T>
-OnScopeEnd<T> on_scope_end(T t)
-{
-    return OnScopeEnd<T>{std::move(t)};
-}
 
 // bool that can be set (to true) multiple times, and will
 // be false only when unset the same time;
@@ -123,14 +118,6 @@ private:
     NestedBool& m_nested_bool;
     bool m_condition;
 };
-
-// *** Misc helper functions ***
-
-template<typename T>
-bool operator== (const std::unique_ptr<T>& lhs, T* rhs)
-{
-    return lhs.get() == rhs;
-}
 
 template<typename T>
 const T& clamp(const T& val, const T& min, const T& max)

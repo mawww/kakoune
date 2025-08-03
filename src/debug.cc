@@ -23,7 +23,7 @@ void write_to_debug_buffer(StringView str)
     if (Buffer* buffer = BufferManager::instance().get_buffer_ifp(debug_buffer_name))
     {
         buffer->flags() &= ~Buffer::Flags::ReadOnly;
-        auto restore = on_scope_end([buffer] { buffer->flags() |= Buffer::Flags::ReadOnly; });
+        auto restore = OnScopeEnd([buffer] { buffer->flags() |= Buffer::Flags::ReadOnly; });
 
         buffer->insert(buffer->back_coord(), eol_back ? str : str + "\n");
     }

@@ -4,6 +4,11 @@ Some commands take an exclamation mark (*!*), which can be used to force
 the execution of the command (i.e. to quit a modified buffer, the
 command *q!* has to be used). Aliases are mentioned below each command.
 
+For all commands that accept switches, a parameter beginning with
+a single dash (*-*) will be interpreted as a switch. Any unknown switches
+will cause an error. To force the remaining parameters to not be interpreted as
+switches even if they begin with a dash, you can pass two dashes (*--*) as a parameter.
+
 *doc* <topic>::
     *alias* help +
     display documentation about a topic. The completion list displays the
@@ -288,7 +293,9 @@ of the file onto the filesystem
     (See <<faces#,`:doc faces`>> and <<scopes#,`:doc scopes`>>)
 
 *colorscheme* <name>::
-    load named colorscheme
+    load named colorscheme +
+    Colorschemes are just `.kak` scripts that set faces. Colorschemes are searched for in `%val{config}/colors` and `%val{runtime}/colors`. +
+    (See <<faces#, `:doc faces`>> and <<expansions#, `:doc expansions`>>)
 
 *add-highlighter* [<switches>] <highlighter_path> <highlighter_parameters> ...::
     *alias* addhl +

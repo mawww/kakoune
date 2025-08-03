@@ -10,8 +10,8 @@
 #include "vector.hh"
 #include "format.hh"
 #include "string_utils.hh"
+#include "unique_ptr.hh"
 
-#include <memory>
 #include <utility>
 
 namespace Kakoune
@@ -121,7 +121,7 @@ private:
     // the only one allowed to construct a root option manager
     friend class Scope;
     friend class OptionsRegistry;
-    using OptionMap = HashMap<StringView, std::unique_ptr<Option>, MemoryDomain::Options>;
+    using OptionMap = HashMap<StringView, UniquePtr<Option>, MemoryDomain::Options>;
 
     OptionMap m_options;
     OptionManager* m_parent;
@@ -268,13 +268,13 @@ public:
                                         : format("[{}] - {}", option_type_name(Meta::Type<T>{}), docstring);
         m_descs.emplace_back(new OptionDesc{name.str(), std::move(doc), flags});
         return *opts.insert({m_descs.back()->name(),
-                             std::make_unique<TypedCheckedOption<T, validator>>(m_global_manager, *m_descs.back(), value)});
+                             make_unique_ptr<TypedCheckedOption<T, validator>>(m_global_manager, *m_descs.back(), value)});
     }
 
     const OptionDesc* option_desc(StringView name) const
     {
         auto it = find_if(m_descs,
-                          [&name](const std::unique_ptr<const OptionDesc>& opt)
+                          [&name](const UniquePtr<const OptionDesc>& opt)
                           { return opt->name() == name; });
         return it != m_descs.end() ? it->get() : nullptr;
     }
@@ -284,11 +284,11 @@ public:
     CandidateList complete_option_name(StringView prefix, ByteCount cursor_pos) const;
 
     void clear_option_trash() { m_option_trash.clear(); }
-    void move_to_trash(std::unique_ptr<Option>&& option) { m_option_trash.push_back(std::move(option)); }
+    void move_to_trash(UniquePtr<Option>&& option) { m_option_trash.push_back(std::move(option)); }
 private:
     OptionManager& m_global_manager;
-    Vector<std::unique_ptr<const OptionDesc>, MemoryDomain::Options> m_descs;
-    Vector<std::unique_ptr<Option>> m_option_trash;
+    Vector<UniquePtr<const OptionDesc>, MemoryDomain::Options> m_descs;
+    Vector<UniquePtr<Option>> m_option_trash;
 };
 
 }

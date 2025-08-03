@@ -7,6 +7,7 @@
 #include "utf8.hh"
 #include "vector.hh"
 #include "utils.hh"
+#include "unique_ptr.hh"
 
 #include <bit>
 #include <algorithm>
@@ -76,8 +77,9 @@ struct CompiledRegex : UseMemoryDomain<MemoryDomain::Regex>
         Literal,
         AnyChar,
         AnyCharExceptNewLine,
-        CharClass,
+        CharRange,
         CharType,
+        CharClass,
         Jump,
         Split,
         Save,
@@ -105,8 +107,15 @@ struct CompiledRegex : UseMemoryDomain<MemoryDomain::Regex>
             uint32_t codepoint : 24;
             bool ignore_case : 1;
         } literal;
-        int16_t character_class_index;
+        struct CharRange
+        {
+            uint8_t min;
+            uint8_t max;
+            bool ignore_case : 1;
+            bool negative;
+        } range;
         CharacterType character_type;
+        int16_t character_class_index;
         int16_t jump_offset;
         int16_t save_index;
         struct Split
@@ -161,8 +170,8 @@ struct CompiledRegex : UseMemoryDomain<MemoryDomain::Regex>
         bool map[count];
     };
 
-    std::unique_ptr<StartDesc> forward_start_desc;
-    std::unique_ptr<StartDesc> backward_start_desc;
+    UniquePtr<StartDesc> forward_start_desc;
+    UniquePtr<StartDesc> backward_start_desc;
 };
 
 String dump_regex(const CompiledRegex& program);
@@ -361,23 +370,20 @@ private:
     void step_current_thread(const Iterator& pos, Codepoint cp, uint16_t current_step, const ExecConfig& config)
     {
         Thread thread = m_threads.pop_current();
-        auto failed = [this, &thread]() {
-            release_saves(thread.saves);
-        };
-        auto consumed = [this, &thread]() {
-            m_threads.push_next(thread);
-        };
+        auto failed   = [&] { release_saves(thread.saves); };
+        auto consumed = [&] { m_threads.push_next(thread); };
 
         while (true)
         {
-            auto& inst = *thread.inst++;
+            auto* inst = thread.inst++;
+            auto [op, last_step, param] = *inst;
             // if this instruction was already executed for this step in another thread,
             // then this thread is redundant and can be dropped
-            if (inst.last_step == current_step)
+            if (last_step == current_step)
                 return failed();
-            inst.last_step = current_step;
+            inst->last_step = current_step;
 
-            switch (inst.op)
+            switch (op)
             {
                 case CompiledRegex::Match:
                     if ((pos != config.end and not (mode & RegexMode::Search)) or
@@ -394,7 +400,7 @@ private:
                     return;
                 case CompiledRegex::Literal:
                     if (pos != config.end and
-                        inst.param.literal.codepoint == (inst.param.literal.ignore_case ? to_lower(cp) : cp))
+                        param.literal.codepoint == (param.literal.ignore_case ? to_lower(cp) : cp))
                         return consumed();
                     return failed();
                 case CompiledRegex::AnyChar:
@@ -403,25 +409,31 @@ private:
                     if (pos != config.end and cp != '\n')
                         return consumed();
                     return failed();
-                case CompiledRegex::CharClass:
-                    if (pos != config.end and
-                        m_program.character_classes[inst.param.character_class_index].matches(cp))
+                case CompiledRegex::CharRange:
+                    if (auto actual_cp = (param.range.ignore_case ? to_lower(cp) : cp);
+                        pos != config.end and
+                        (actual_cp >= param.range.min and actual_cp <= param.range.max) != param.range.negative)
                         return consumed();
                     return failed();
                 case CompiledRegex::CharType:
-                    if (pos != config.end and is_ctype(inst.param.character_type, cp))
+                    if (pos != config.end and is_ctype(param.character_type, cp))
+                        return consumed();
+                    return failed();
+                case CompiledRegex::CharClass:
+                    if (pos != config.end and
+                        m_program.character_classes[param.character_class_index].matches(cp))
                         return consumed();
                     return failed();
                 case CompiledRegex::Jump:
-                    thread.inst = &inst + inst.param.jump_offset;
+                    thread.inst = inst + param.jump_offset;
                     break;
                 case CompiledRegex::Split:
-                    if (auto* target = &inst + inst.param.split.offset;
+                    if (auto* target = inst + param.split.offset;
                         target->last_step != current_step)
                     {
                         if (thread.saves >= 0)
                             ++m_saves[thread.saves].refcount;
-                        if (not inst.param.split.prioritize_parent)
+                        if (not param.split.prioritize_parent)
                             std::swap(thread.inst, target);
                         m_threads.push_current({target, thread.saves});
                     }
@@ -436,23 +448,23 @@ private:
                         --saves.refcount;
                         thread.saves = new_saves<true>(saves.pos, saves.valid_mask);
                     }
-                    m_saves[thread.saves].pos[inst.param.save_index] = pos;
-                    m_saves[thread.saves].valid_mask |= (1 << inst.param.save_index);
+                    m_saves[thread.saves].pos[param.save_index] = pos;
+                    m_saves[thread.saves].valid_mask |= (1 << param.save_index);
                     break;
                 case CompiledRegex::LineAssertion:
-                    if (not (inst.param.line_start ? is_line_start(pos, config) : is_line_end(pos, config)))
+                    if (not (param.line_start ? is_line_start(pos, config) : is_line_end(pos, config)))
                         return failed();
                     break;
                 case CompiledRegex::SubjectAssertion:
-                    if (pos != (inst.param.subject_begin ? config.subject_begin : config.subject_end))
+                    if (pos != (param.subject_begin ? config.subject_begin : config.subject_end))
                         return failed();
                     break;
                 case CompiledRegex::WordBoundary:
-                    if (is_word_boundary(pos, config) != inst.param.word_boundary_positive)
+                    if (is_word_boundary(pos, config) != param.word_boundary_positive)
                         return failed();
                     break;
                 case CompiledRegex::LookAround:
-                    if (lookaround(inst.param.lookaround, pos, config) != inst.param.lookaround.positive)
+                    if (lookaround(param.lookaround, pos, config) != param.lookaround.positive)
                         return failed();
                     break;
             }
@@ -691,13 +703,13 @@ private:
 
         void ensure_initial_capacity()
         {
-            if (m_capacity != 0)
+            if (m_capacity_mask != 0)
                 return;
 
-            constexpr int32_t initial_capacity = 64 / sizeof(Thread);
-            static_assert(initial_capacity >= 4);
+            constexpr uint32_t initial_capacity = 64 / sizeof(Thread);
+            static_assert(initial_capacity >= 4 and std::has_single_bit(initial_capacity));
             m_data.reset(new Thread[initial_capacity]);
-            m_capacity = initial_capacity;
+            m_capacity_mask = initial_capacity-1;
         }
 
         [[gnu::always_inline]]
@@ -710,41 +722,41 @@ private:
         [[gnu::noinline]]
         void grow(bool pushed_current)
         {
-            const auto new_capacity = m_capacity * 2;
+            auto capacity = m_capacity_mask + 1;
+            const auto new_capacity = capacity * 2;
             Thread* new_data = new Thread[new_capacity];
             Thread* old_data = m_data.get();
-            std::rotate_copy(old_data, old_data + m_current, old_data + m_capacity, new_data);
-            m_next_begin -= m_current;
-            if ((pushed_current and m_next_begin == 0) or m_next_begin < 0)
-                m_next_begin += m_capacity;
-            m_next_end = m_capacity;
+            std::rotate_copy(old_data, old_data + m_current, old_data + capacity, new_data);
+            m_next_begin = (m_next_begin - m_current) & m_capacity_mask;
+            if (pushed_current and m_next_begin == 0)
+                m_next_begin = capacity;
+            m_next_end = capacity;
             m_current = 0;
 
             m_data.reset(new_data);
-            m_capacity = new_capacity;
+            kak_assert(std::has_single_bit(new_capacity));
+            m_capacity_mask = new_capacity-1;
         }
 
     private:
-        int32_t decrement(int32_t& index)
+        uint32_t decrement(uint32_t& index)
         {
-            if (index == 0)
-                index = m_capacity;
-            return --index;
+            index = (index - 1) & m_capacity_mask;
+            return index;
         }
 
-        int32_t post_increment(int32_t& index)
+        uint32_t post_increment(uint32_t& index)
         {
             auto res = index;
-            if (++index == m_capacity)
-                index = 0;
+            index = (index + 1) & m_capacity_mask;
             return res;
         }
 
-        std::unique_ptr<Thread[]> m_data;
-        int32_t m_capacity = 0; // Maximum capacity should be 2*instruction count, so 65536
-        int32_t m_current = 0;
-        int32_t m_next_begin = 0;
-        int32_t m_next_end = 0;
+        UniquePtr<Thread[]> m_data;
+        uint32_t m_capacity_mask = 0; // Maximum capacity should be 2*instruction count, so 65536
+        uint32_t m_current = 0;
+        uint32_t m_next_begin = 0;
+        uint32_t m_next_end = 0;
     };
 
     static constexpr bool forward = mode & RegexMode::Forward;

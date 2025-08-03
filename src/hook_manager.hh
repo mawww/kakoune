@@ -6,8 +6,7 @@
 #include "meta.hh"
 #include "enum.hh"
 #include "array.hh"
-
-#include <memory>
+#include "unique_ptr.hh"
 
 namespace Kakoune
 {
@@ -141,10 +140,10 @@ private:
     friend class Scope;
 
     SafePtr<HookManager> m_parent;
-    Array<Vector<std::unique_ptr<HookData>, MemoryDomain::Hooks>, enum_desc(Meta::Type<Hook>{}).size()> m_hooks;
+    Array<Vector<UniquePtr<HookData>, MemoryDomain::Hooks>, enum_desc(Meta::Type<Hook>{}).size()> m_hooks;
 
     mutable Vector<std::pair<Hook, StringView>, MemoryDomain::Hooks> m_running_hooks;
-    mutable Vector<std::unique_ptr<HookData>, MemoryDomain::Hooks> m_hooks_trash;
+    mutable Vector<UniquePtr<HookData>, MemoryDomain::Hooks> m_hooks_trash;
 };
 
 }

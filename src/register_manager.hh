@@ -5,6 +5,7 @@
 #include "completion.hh"
 #include "exception.hh"
 #include "utils.hh"
+#include "unique_ptr.hh"
 #include "hash_map.hh"
 #include "string.hh"
 #include "vector.hh"
@@ -84,19 +85,19 @@ public:
 };
 
 template<typename Func>
-std::unique_ptr<Register> make_dyn_reg(String name, Func func)
+UniquePtr<Register> make_dyn_reg(String name, Func func)
 {
     auto setter = [](Context&, ConstArrayView<String>)
     {
         throw runtime_error("this register is not assignable");
     };
-    return std::make_unique<DynamicRegister<Func, decltype(setter)>>(name, std::move(func), setter);
+    return make_unique_ptr<DynamicRegister<Func, decltype(setter)>>(name, std::move(func), setter);
 }
 
 template<typename Getter, typename Setter>
-std::unique_ptr<Register> make_dyn_reg(String name, Getter getter, Setter setter)
+UniquePtr<Register> make_dyn_reg(String name, Getter getter, Setter setter)
 {
-    return std::make_unique<DynamicRegister<Getter, Setter>>(name, std::move(getter), std::move(setter));
+    return make_unique_ptr<DynamicRegister<Getter, Setter>>(name, std::move(getter), std::move(setter));
 }
 
 class NullRegister : public Register
@@ -120,14 +121,14 @@ class RegisterManager : public Singleton<RegisterManager>
 public:
     Register& operator[](StringView reg) const;
     Register& operator[](Codepoint c) const;
-    void add_register(Codepoint c, std::unique_ptr<Register> reg);
+    void add_register(Codepoint c, UniquePtr<Register> reg);
     CandidateList complete_register_name(StringView prefix, ByteCount cursor_pos) const;
 
     auto begin() const { return m_registers.begin(); }
     auto end() const { return m_registers.end(); }
 
 protected:
-    HashMap<Codepoint, std::unique_ptr<Register>, MemoryDomain::Registers> m_registers;
+    HashMap<Codepoint, UniquePtr<Register>, MemoryDomain::Registers> m_registers;
 };
 
 }

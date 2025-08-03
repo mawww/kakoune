@@ -25,7 +25,7 @@ enum class PromptEvent
     Abort,
     Validate
 };
-using PromptCallback = std::function<void (StringView, PromptEvent, Context&)>;
+using PromptCallback = MoveOnlyFunction<void (StringView, PromptEvent, Context&)>;
 
 enum class PromptFlags
 {
@@ -36,13 +36,13 @@ enum class PromptFlags
 };
 constexpr bool with_bit_ops(Meta::Type<PromptFlags>) { return true; }
 
-using KeyCallback = std::function<void (Key, Context&)>;
+using KeyCallback = Function<void (Key, Context&)>;
 
 class InputMode;
 enum class KeymapMode : char;
 enum class CursorMode;
 
-using PromptCompleter = std::function<Completions (const Context&, StringView, ByteCount)>;
+using PromptCompleter = Function<Completions (const Context&, StringView, ByteCount)>;
 enum class InsertMode : unsigned
 {
     Insert,

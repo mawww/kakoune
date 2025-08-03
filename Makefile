@@ -9,6 +9,9 @@ gzip_man = yes
 # to get format compatible with GitHub archive use "gzip -S .gz" here
 compress_bin = bzip2
 
+tag-static-no=
+tag-static-yes=.static
+
 compress-suffix-bzip2 = bz2
 compress-suffix-zstd = zst
 
@@ -25,7 +28,7 @@ tag-sanitize-address = .san_a
 
 CXXFLAGS-sanitize-undefined = -fsanitize=undefined
 
-LDFLAGS-sanitize-undefined = -lubsan
+LDFLAGS-sanitize-undefined = -lasan -lubsan
 tag-sanitize-undefined = .san_u
 
 LDFLAGS-static-yes = -static -pthread
@@ -96,6 +99,7 @@ KAK_LIBS = \
 	$(LIBS)
 
 tag = $(tag-debug-$(debug))$(tag-sanitize-$(sanitize))
+tagbin = $(tag)$(tag-static-$(static))
 
 .SUFFIXES: $(tag).o .cc
 .PHONY: src/kak
@@ -106,10 +110,10 @@ objects = $(sources:.cc=$(tag).o)
 
 all: src/kak
 
-src/kak: src/kak$(tag)
-	ln -sf kak$(tag) $@
+src/kak: src/kak$(tagbin)
+	ln -sf kak$(tagbin) $@
 
-src/kak$(tag): src/.version.o $(objects)
+src/kak$(tagbin): src/.version.o $(objects)
 	$(CXX) $(KAK_LDFLAGS) $(KAK_CXXFLAGS) $(objects) src/.version.o $(KAK_LIBS) -o $@
 
 deps = $(shell touch src/.version$(tag).d && find src -type f -name '.*$(tag).d') # Ensure we find one deps for FreeBSD make

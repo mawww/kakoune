@@ -6,8 +6,8 @@
 // (http://xmailserver.org/diff2.pdf)
 
 #include <algorithm>
-#include <functional>
-#include <memory>
+#include "function.hh"
+#include "unique_ptr.hh"
 
 namespace Kakoune
 {
@@ -175,7 +175,7 @@ template<typename IteratorA, typename IteratorB, typename OnDiff, typename Equal
 void for_each_diff(IteratorA a, int N, IteratorB b, int M, OnDiff&& on_diff, Equal&& eq = Equal{})
 {
     const int max = 2 * (N + M) + 1;
-    std::unique_ptr<int[]> data(new int[2*max]);
+    UniquePtr<int[]> data(new int[2*max]);
     constexpr int cost_limit = 1000;
 
     Diff last{};
