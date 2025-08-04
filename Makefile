@@ -113,8 +113,8 @@ all: src/kak
 src/kak: src/kak$(tagbin)
 	ln -sf kak$(tagbin) $@
 
-src/kak$(tagbin): src/.version.o $(objects)
-	$(CXX) $(KAK_LDFLAGS) $(KAK_CXXFLAGS) $(objects) src/.version.o $(KAK_LIBS) -o $@
+src/kak$(tagbin): src/.version$(tag).o $(objects)
+	$(CXX) $(KAK_LDFLAGS) $(KAK_CXXFLAGS) $(objects) src/.version$(tag).o $(KAK_LIBS) -o $@
 
 deps = $(shell touch src/.version$(tag).d && find src -type f -name '.*$(tag).d') # Ensure we find one deps for FreeBSD make
 deps != touch src/.version$(tag).d && find src -type f -name '.*$(tag).d' # Ensure we find one deps for FreeBSD make
@@ -126,7 +126,7 @@ include $(deps)
 src/.version.cc:
 	echo 'namespace Kakoune { const char *version = "$(version)"; }' > $@
 
-src/.version.o: src/.version.cc
+src/.version$(tag).o: src/.version.cc
 	$(CXX) $(KAK_CPPFLAGS) $(KAK_CXXFLAGS) -c -o $@ src/.version.cc
 
 # Generate the man page
