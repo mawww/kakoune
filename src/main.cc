@@ -45,6 +45,9 @@ struct {
     unsigned int version;
     StringView notes;
 } constexpr version_notes[] = { {
+        0,
+        "» {+b}FocusIn{}/{+b}FocusOut{} events on suspend\n"
+    }, {
         20250603,
         "» kak_* appearing in shell arguments will be added to the environment\n"
         "» {+U}double underline{} support\n"
