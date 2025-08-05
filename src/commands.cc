@@ -311,7 +311,7 @@ protected:
     Optional<Shell> m_running_script;
     Optional<FDWatcher> m_watcher;
     Vector<char, MemoryDomain::Completion> m_stdout_buffer;
-    std::function<void (StringView)> m_handle_line;
+    Function<void (StringView)> m_handle_line;
     Completions::Flags m_flags;
 };
 
@@ -707,7 +707,7 @@ const CommandDesc write_all_cmd = {
 
 static void ensure_all_buffers_are_saved()
 {
-    auto is_modified = [](const std::unique_ptr<Buffer>& buf) {
+    auto is_modified = [](const UniquePtr<Buffer>& buf) {
         return (buf->flags() & Buffer::Flags::File) and buf->is_modified();
     };
 
@@ -880,7 +880,11 @@ const CommandDesc buffer_cmd = {
     make_completer(menu(complete_buffer_name<true>)),
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        Buffer& buffer = parser.get_switch("matching") ? BufferManager::instance().get_buffer_matching(Regex{parser[0]})
+        Buffer& buffer = parser.get_switch("matching") ? BufferManager::instance().get_buffer_matching(
+                                                             [re=Regex{parser[0]}](Buffer& buffer) {
+                                                                auto name = buffer.name();
+                                                                return regex_match(name.begin(), name.end(), re);
+                                                             })
                                                        : BufferManager::instance().get_buffer(parser[0]);
         if (&buffer != &context.buffer())
         {
@@ -895,7 +899,7 @@ void cycle_buffer(const ParametersParser& parser, Context& context, const ShellC
 {
     Buffer* oldbuf = &context.buffer();
     auto it = find_if(BufferManager::instance(),
-                      [oldbuf](const std::unique_ptr<Buffer>& lhs)
+                      [oldbuf](const UniquePtr<Buffer>& lhs)
                       { return lhs.get() == oldbuf; });
     kak_assert(it != BufferManager::instance().end());
 
@@ -2038,7 +2042,7 @@ template<size_t... P>
 ParameterDesc make_context_wrap_params_impl(Array<HashItem<String, SwitchDesc>, sizeof...(P)>&& additional_params,
                                             std::index_sequence<P...>)
 {
-    return { { { "client",     { {client_arg_completer},  "run in given client context" } },
+    return { { { "client",     { {client_arg_completer},  "run in the client context for each client in the given comma separatd list" } },
                { "try-client", { {client_arg_completer},  "run in given client context if it exists, or else in the current one" } },
                { "buffer",     { {complete_buffer_name<false>},  "run in a disposable context for each given buffer in the comma separated list argument" } },
                { "draft",      { {}, "run in a disposable context" } },
@@ -2065,7 +2069,7 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
     const auto& register_manager = RegisterManager::instance();
     auto make_register_restorer = [&](char c) {
         auto& reg = register_manager[c];
-        return on_scope_end([&, c, save=reg.save(context), d=ScopedSetBool{reg.modified_hook_disabled()}] {
+        return OnScopeEnd([&, c, save=reg.save(context), d=ScopedSetBool{reg.modified_hook_disabled()}] {
             try
             {
                 reg.restore(context, save);
@@ -2083,14 +2087,13 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
     if (auto bufnames = parser.get_switch("buffer"))
     {
         auto context_wrap_for_buffer = [&](Buffer& buffer) {
-            InputHandler input_handler{{ buffer, Selection{} },
-                                       Context::Flags::Draft};
+            InputHandler input_handler{{buffer, Selection{}}, Context::Flags::Draft};
             func(parser, input_handler.context());
         };
         if (*bufnames == "*")
         {
             for (auto&& buffer : BufferManager::instance()
-                               | transform(&std::unique_ptr<Buffer>::get)
+                               | transform(&UniquePtr<Buffer>::get)
                                | filter([](Buffer* buf) { return not (buf->flags() & Buffer::Flags::Debug); })
                                | gather<Vector<SafePtr<Buffer>>>()) // gather as we might be mutating the buffer list in the loop.
                 context_wrap_for_buffer(*buffer);
@@ -2103,100 +2106,114 @@ void context_wrap(const ParametersParser& parser, Context& context, StringView d
         return;
     }
 
+    auto context_wrap_for_context = [&parser, &func](Context& base_context) {
+        Optional<InputHandler> input_handler;
+
+        const bool draft = (bool)parser.get_switch("draft");
+        if (draft)
+        {
+            input_handler.emplace(base_context.selections(),
+                                  Context::Flags::Draft,
+                                  base_context.name());
+
+            // Preserve window so that window scope is available
+            if (base_context.has_window())
+                input_handler->context().set_window(base_context.window());
+
+            // We do not want this draft context to commit undo groups if the real one is
+            // going to commit the whole thing later
+            if (base_context.is_editing())
+                input_handler->context().disable_undo_handling();
+        }
+
+        Context& c = input_handler ? input_handler->context() : base_context;
+
+        ScopedEdition edition{c};
+        ScopedSelectionEdition selection_edition{c};
+
+        if (parser.get_switch("itersel"))
+        {
+            SelectionList sels{base_context.selections()};
+            Vector<Selection> new_sels;
+            size_t main = 0;
+            size_t timestamp = c.buffer().timestamp();
+            bool one_selection_succeeded = false;
+            for (auto& sel : sels)
+            {
+                c.selections_write_only() = SelectionList{sels.buffer(), sel, sels.timestamp()};
+                c.selections().update();
+
+                try
+                {
+                    func(parser, c);
+                    one_selection_succeeded = true;
+
+                    if (&sels.buffer() != &c.buffer())
+                        throw runtime_error("buffer has changed while iterating on selections");
+
+                    if (not draft)
+                    {
+                        update_selections(new_sels, main, c.buffer(), timestamp);
+                        timestamp = c.buffer().timestamp();
+                        if (&sel == &sels.main())
+                            main = new_sels.size() + c.selections().main_index();
+
+                        const auto middle = new_sels.insert(new_sels.end(), c.selections().begin(), c.selections().end());
+                        std::inplace_merge(new_sels.begin(), middle, new_sels.end(), compare_selections);
+                    }
+                }
+                catch (no_selections_remaining&) {}
+            }
+
+            if (not one_selection_succeeded)
+            {
+                c.selections_write_only() = std::move(sels);
+                throw no_selections_remaining{};
+            }
+
+            if (not draft)
+                c.selections_write_only().set(std::move(new_sels), main);
+        }
+        else
+        {
+            const bool collapse_jumps = not (c.flags() & Context::Flags::Draft) and c.has_buffer();
+            auto& jump_list = c.jump_list();
+            const size_t prev_index = jump_list.current_index();
+            auto jump = collapse_jumps ? c.selections() : Optional<SelectionList>{};
+
+            func(parser, c);
+
+            // If the jump list got mutated, collapse all jumps into a single one from original selections
+            if (auto index = jump_list.current_index();
+                collapse_jumps and index > prev_index and
+                contains(BufferManager::instance(), &jump->buffer()))
+                jump_list.push(std::move(*jump), prev_index);
+        }
+    };
+
     ClientManager& cm = ClientManager::instance();
-    Context* base_context = &context;
-    if (auto client_name = parser.get_switch("client"))
-        base_context = &cm.get_client(*client_name).context();
+    if (auto client_names = parser.get_switch("client"))
+    {
+        if (*client_names == "*")
+        {
+            for (auto&& client : ClientManager::instance()
+                               | transform(&UniquePtr<Client>::get)
+                               | gather<Vector<SafePtr<Client>>>()) // gather as we might be mutating the client list in the loop.
+                context_wrap_for_context(client->context());
+        }
+        else
+            for (auto&& name : *client_names
+                             | split<StringView>(',', '\\')
+                             | transform(unescape<',', '\\'>))
+                context_wrap_for_context(ClientManager::instance().get_client(name).context());
+    }
     else if (auto client_name = parser.get_switch("try-client"))
     {
-        if (Client* client = cm.get_client_ifp(*client_name))
-            base_context = &client->context();
-    }
-
-    Optional<InputHandler> input_handler;
-    Context* effective_context = base_context;
-
-    const bool draft = (bool)parser.get_switch("draft");
-    if (draft)
-    {
-        input_handler.emplace(base_context->selections(),
-                              Context::Flags::Draft,
-                              base_context->name());
-        effective_context = &input_handler->context();
-
-        // Preserve window so that window scope is available
-        if (base_context->has_window())
-            effective_context->set_window(base_context->window());
-
-        // We do not want this draft context to commit undo groups if the real one is
-        // going to commit the whole thing later
-        if (base_context->is_editing())
-            effective_context->disable_undo_handling();
-    }
-
-    Context& c = *effective_context;
-
-    ScopedEdition edition{c};
-    ScopedSelectionEdition selection_edition{c};
-
-    if (parser.get_switch("itersel"))
-    {
-        SelectionList sels{base_context->selections()};
-        Vector<Selection> new_sels;
-        size_t main = 0;
-        size_t timestamp = c.buffer().timestamp();
-        bool one_selection_succeeded = false;
-        for (auto& sel : sels)
-        {
-            c.selections_write_only() = SelectionList{sels.buffer(), sel, sels.timestamp()};
-            c.selections().update();
-
-            try
-            {
-                func(parser, c);
-                one_selection_succeeded = true;
-
-                if (&sels.buffer() != &c.buffer())
-                    throw runtime_error("buffer has changed while iterating on selections");
-
-                if (not draft)
-                {
-                    update_selections(new_sels, main, c.buffer(), timestamp);
-                    timestamp = c.buffer().timestamp();
-                    if (&sel == &sels.main())
-                        main = new_sels.size() + c.selections().main_index();
-
-                    const auto middle = new_sels.insert(new_sels.end(), c.selections().begin(), c.selections().end());
-                    std::inplace_merge(new_sels.begin(), middle, new_sels.end(), compare_selections);
-                }
-            }
-            catch (no_selections_remaining&) {}
-        }
-
-        if (not one_selection_succeeded)
-        {
-            c.selections_write_only() = std::move(sels);
-            throw no_selections_remaining{};
-        }
-
-        if (not draft)
-            c.selections_write_only().set(std::move(new_sels), main);
+        Client* client = cm.get_client_ifp(*client_name);
+        context_wrap_for_context(client ? client->context() : context);
     }
     else
-    {
-        const bool collapse_jumps = not (c.flags() & Context::Flags::Draft) and context.has_buffer();
-        auto& jump_list = c.jump_list();
-        const size_t prev_index = jump_list.current_index();
-        auto jump = collapse_jumps ? c.selections() : Optional<SelectionList>{};
-
-        func(parser, c);
-
-        // If the jump list got mutated, collapse all jumps into a single one from original selections
-        if (auto index = jump_list.current_index();
-            collapse_jumps and index > prev_index and
-            contains(BufferManager::instance(), &jump->buffer()))
-            jump_list.push(std::move(*jump), prev_index);
-    }
+        context_wrap_for_context(context);
 }
 
 const CommandDesc execute_keys_cmd = {
@@ -2311,7 +2328,7 @@ const CommandDesc prompt_cmd = {
                     return;
 
                 sc.env_vars["text"_sv] = String{String::NoCopy{}, str};
-                auto remove_text = on_scope_end([&] {
+                auto remove_text = OnScopeEnd([&] {
                     sc.env_vars.erase("text"_sv);
                 });
 

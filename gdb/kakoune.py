@@ -85,13 +85,16 @@ class String:
         self.val = val
 
     def to_string(self):
-        data = self.val["m_data"]
-        if (data["u"]["s"]["size"] & 1) != 1:
-            ptr = data["u"]["l"]["ptr"]
-            len = data["u"]["l"]["size"]
+        data_u = self.val["m_data"]["u"]
+        long = data_u["l"]
+        short = data_u["s"]
+        if (long["mode"] & long["active_mask"]) != 0:
+            ptr = long["ptr"]
+            len = long["size"]
         else:
-            ptr = data["u"]["s"]["string"]
-            len = data["u"]["s"]["size"] >> 1
+            ptr = short["string"]
+            short_capacity = short
+            len = short["capacity"] - short["remaining_size"]
         return "\"%s\"" % (ptr.string("utf-8", "ignore", len))
 
 

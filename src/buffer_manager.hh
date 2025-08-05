@@ -3,8 +3,8 @@
 
 #include "buffer.hh"
 #include "vector.hh"
-
-#include <memory>
+#include "utils.hh"
+#include "unique_ptr.hh"
 
 namespace Kakoune
 {
@@ -12,7 +12,7 @@ namespace Kakoune
 class BufferManager : public Singleton<BufferManager>
 {
 public:
-    using BufferList = Vector<std::unique_ptr<Buffer>, MemoryDomain::BufferMeta>;
+    using BufferList = Vector<UniquePtr<Buffer>, MemoryDomain::BufferMeta>;
     using iterator = BufferList::const_iterator;
 
     ~BufferManager();
@@ -28,8 +28,8 @@ public:
     Buffer* get_buffer_ifp(StringView name);
     Buffer& get_buffer(StringView name);
 
-    Buffer* get_buffer_matching_ifp(const Regex& regex);
-    Buffer& get_buffer_matching(const Regex& regex);
+    Buffer* get_buffer_matching_ifp(const FunctionRef<bool (Buffer&)>& filter);
+    Buffer& get_buffer_matching(const FunctionRef<bool (Buffer&)>& filter);
 
     void make_latest(Buffer& buffer);
     void arrange_buffers(ConstArrayView<String> first_ones);

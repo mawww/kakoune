@@ -24,8 +24,8 @@
 namespace Kakoune
 {
 
-Client::Client(std::unique_ptr<UserInterface>&& ui,
-               std::unique_ptr<Window>&& window,
+Client::Client(UniquePtr<UserInterface>&& ui,
+               UniquePtr<Window>&& window,
                SelectionList selections, int pid,
                EnvVarMap env_vars,
                String name,
@@ -193,6 +193,12 @@ void Client::change_buffer(Buffer& buffer, Optional<FunctionRef<void()>> set_sel
 {
     if (m_buffer_reload_dialog_opened)
         close_buffer_reload_dialog();
+
+    if (context().buffer().flags() & Buffer::Flags::Locked)
+        throw runtime_error("Changing buffer is not allowed while current buffer is locked");
+
+    buffer.flags() |= Buffer::Flags::Locked;
+    OnScopeEnd unlock{[&] { buffer.flags() &= ~Buffer::Flags::Locked; }};
 
     auto& client_manager = ClientManager::instance();
     WindowAndSelections ws = client_manager.get_free_window(buffer);
@@ -513,7 +519,7 @@ void Client::clear_pending()
 constexpr std::chrono::seconds wait_timeout{1};
 
 BusyIndicator::BusyIndicator(const Context& context,
-                             std::function<DisplayLine(std::chrono::seconds)> status_message,
+                             Function<DisplayLine(std::chrono::seconds)> status_message,
                              TimePoint wait_time)
     : m_context(context),
       m_timer{wait_time + wait_timeout,

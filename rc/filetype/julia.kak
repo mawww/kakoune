@@ -13,6 +13,9 @@ hook global BufCreate .*\.(jl) %{
 
 hook global WinSetOption filetype=julia %{
     require-module julia
+    hook window InsertChar \n -group julia-indent julia-indent-on-new-line
+    hook window InsertChar d -group julia-insert julia-insert-on-new-line
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window julia-.+ }
 }
 
 hook -group julia-highlight global WinSetOption filetype=julia %{
@@ -21,7 +24,7 @@ hook -group julia-highlight global WinSetOption filetype=julia %{
 }
 
 
-provide-module julia %{
+provide-module julia %§
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
@@ -39,4 +42,26 @@ add-highlighter shared/julia/code/ regex \b(Number|Real|BigInt|Integer|UInt|UInt
 add-highlighter shared/julia/code/ regex \w+!*(?=\() 0:function
 add-highlighter shared/julia/code/ regex @\w+!*\b 0:meta
 add-highlighter shared/julia/code/ regex '(?:\?|=|:=|\+=|-=|\*=|/=|//=|\.//=|\.\*=|\./=|\\=|\.\\=|\^=|\.\^=|÷=|\.÷=|%=|\.%=|\|=|&=|\$=|=>|<<=|>>=|>>>=|~|\.\+=|\.-=|--|-->|←|→|↔|↚|↛|↠|↣|↦|↮|⇎|⇏|⇒|⇔|⇴|⇶|⇷|⇸|⇹|⇺|⇻|⇼|⇽|⇾|⇿|⟵|⟶|⟷|⟷|⟹|⟺|⟻|⟼|⟽|⟾|⟿|⤀|⤁|⤂|⤃|⤄|⤅|⤆|⤇|⤌|⤍|⤎|⤏|⤐|⤑|⤔|⤕|⤖|⤗|⤘|⤝|⤞|⤟|⤠|⥄|⥅|⥆|⥇|⥈|⥊|⥋|⥎|⥐|⥒|⥓|⥖|⥗|⥚|⥛|⥞|⥟|⥢|⥤|⥦|⥧|⥨|⥩|⥪|⥫|⥬|⥭|⥰|⧴|⬱|⬰|⬲|⬳|⬴|⬵|⬶|⬷|⬸|⬹|⬺|⬻|⬼|⬽|⬾|⬿|⭀|⭁|⭂|⭃|⭄|⭇|⭈|⭉|⭊|⭋|⭌|￩|￫|&&|\|\||>|<|>=|≥|<=|≤|==|===|≡|!=|≠|!==|≢|\.>|\.<|\.>=|\.≥|\.<=|\.≤|\.==|\.!=|\.≠|\.=|\.!|<:|>:|∈|∉|∋|∌|⊆|⊈|⊂|⊄|⊊|∝|∊|∍|∥|∦|∷|∺|∻|∽|∾|≁|≃|≄|≅|≆|≇|≈|≉|≊|≋|≌|≍|≎|≐|≑|≒|≓|≔|≕|≖|≗|≘|≙|≚|≛|≜|≝|≞|≟|≣|≦|≧|≨|≩|≪|≫|≬|≭|≮|≯|≰|≱|≲|≳|≴|≵|≶|≷|≸|≹|≺|≻|≼|≽|≾|≿|⊀|⊁|⊃|⊅|⊇|⊉|⊋|⊏|⊐|⊑|⊒|⊜|⊩|⊬|⊮|⊰|⊱|⊲|⊳|⊴|⊵|⊶|⊷|⋍|⋐|⋑|⋕|⋖|⋗|⋘|⋙|⋚|⋛|⋜|⋝|⋞|⋟|⋠|⋡|⋢|⋣|⋤|⋥|⋦|⋧|⋨|⋩|⋪|⋫|⋬|⋭|⋲|⋳|⋴|⋵|⋶|⋷|⋸|⋹|⋺|⋻|⋼|⋽|⋾|⋿|⟈|⟉|⟒|⦷|⧀|⧁|⧡|⧣|⧤|⧥|⩦|⩧|⩪|⩫|⩬|⩭|⩮|⩯|⩰|⩱|⩲|⩳|⩴|⩵|⩶|⩷|⩸|⩹|⩺|⩻|⩼|⩽|⩾|⩿|⪀|⪁|⪂|⪃|⪄|⪅|⪆|⪇|⪈|⪉|⪊|⪋|⪌|⪍|⪎|⪏|⪐|⪑|⪒|⪓|⪔|⪕|⪖|⪗|⪘|⪙|⪚|⪛|⪜|⪝|⪞|⪟|⪠|⪡|⪢|⪣|⪤|⪥|⪦|⪧|⪨|⪩|⪪|⪫|⪬|⪭|⪮|⪯|⪰|⪱|⪲|⪳|⪴|⪵|⪶|⪷|⪸|⪹|⪺|⪻|⪼|⪽|⪾|⪿|⫀|⫁|⫂|⫃|⫄|⫅|⫆|⫇|⫈|⫉|⫊|⫋|⫌|⫍|⫎|⫏|⫐|⫑|⫒|⫓|⫔|⫕|⫖|⫗|⫘|⫙|⫷|⫸|⫹|⫺|⊢|⊣|\|>|<\||:|\.\.|\+|-|⊕|⊖|⊞|⊟|\.\+|\.-|\+\+|\||∪|∨|\$|⊔|±|∓|∔|∸|≂|≏|⊎|⊻|⊽|⋎|⋓|⧺|⧻|⨈|⨢|⨣|⨤|⨥|⨦|⨧|⨨|⨩|⨪|⨫|⨬|⨭|⨮|⨹|⨺|⩁|⩂|⩅|⩊|⩌|⩏|⩐|⩒|⩔|⩖|⩗|⩛|⩝|⩡|⩢|⩣|<<|>>|>>>|\.<<|\.>>|\.>>>|\*|/|\./|÷|\.÷|%|⋅|∘|×|\.%|\.\*|\\|\.\\|&|∩|∧|⊗|⊘|⊙|⊚|⊛|⊠|⊡|⊓|∗|∙|∤|⅋|≀|⊼|⋄|⋆|⋇|⋉|⋊|⋋|⋌|⋏|⋒|⟑|⦸|⦼|⦾|⦿|⧶|⧷|⨇|⨰|⨱|⨲|⨳|⨴|⨵|⨶|⨷|⨸|⨻|⨼|⨽|⩀|⩃|⩄|⩋|⩍|⩎|⩑|⩓|⩕|⩘|⩚|⩜|⩞|⩟|⩠|⫛|⊍|▷|⨝|⟕|⟖|⟗|//|\.//|\^|\.\^|↑|↓|⇵|⟰|⟱|⤈|⤉|⤊|⤋|⤒|⤓|⥉|⥌|⥍|⥏|⥑|⥔|⥕|⥘|⥙|⥜|⥝|⥠|⥡|⥣|⥥|⥮|⥯|￪|￬|::|\.)' 0:operator
-}
+
+define-command -hidden julia-indent-on-new-line %<
+    evaluate-commands -draft -itersel %<
+        # preserve previous line indent
+        try %{ execute-keys -draft <semicolon> K <a-&> }
+        # preserve previous line comment
+        try %{ execute-keys -draft k x <a-k> ^\h*# <ret> j i <#> <space> }
+        # cleanup trailing whitespaces from previous line
+        try %{ execute-keys -draft k x s \h+$ <ret> d }
+        # indent after block start
+        try %{ execute-keys -draft , k x <a-k> ^\h*(struct|macro|function|begin|if|try|for|while|let|quote|do) <ret> <a-K> end$ <ret> j <a-gt> }
+        # deindent closing brace/bracket when after cursor (for arrays and dictionaries)
+        try %< execute-keys -draft x <a-k> ^\h*[}\]] <ret> gh / [}\]] <ret> m <a-S> 1<a-&> >
+    >
+>
+
+define-command -hidden julia-insert-on-new-line %<
+    evaluate-commands -draft -itersel %<
+        # deindent on end
+        try %{ execute-keys -draft x <a-k> ^\h*end <ret> <lt> }
+    >
+>
+§

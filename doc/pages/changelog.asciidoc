@@ -1,14 +1,25 @@
 = Changelog
 
+To control the startup info message, see <<options#startup-info,`:doc options startup-info`>>
+
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
-== Development version
+== Development Version
+
+* `FocusIn`/`FocusOut` events on suspend
+
+== Kakoune 2025.06.03
 
 * Expose env vars that are mentioned in the arguments passed to shell expansions
+
 * Support for colored double underlines
+
 * `git apply` can now operate on selected changes in the current buffer's
   file (useful for quick (un)staging and reverting)
+
+* `exec/eval -client` switch accepts '*' for all clients and comma separated
+  list of client names.
 
 == Kakoune 2024.05.18
 

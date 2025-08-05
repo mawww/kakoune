@@ -132,7 +132,7 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
         return m_display_buffer;
 
     kak_assert(&buffer() == &context.buffer());
-    const DisplaySetup setup = compute_display_setup(context);
+    DisplaySetup setup = compute_display_setup(context);
 
     for (LineCount line = 0; line < setup.line_count; ++line)
     {
@@ -144,8 +144,26 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
 
     m_display_buffer.compute_range();
     const BufferRange range{{0,0}, buffer().end_coord()};
-    m_builtin_highlighters.highlight({context, setup, HighlightPass::Wrap, {}}, m_display_buffer, range);
-    m_builtin_highlighters.highlight({context, setup, HighlightPass::Move, {}}, m_display_buffer, range);
+    for (auto pass : {HighlightPass::Replace, HighlightPass::Wrap, HighlightPass::Move})
+        m_builtin_highlighters.highlight({context, setup, pass, {}}, m_display_buffer, range);
+
+    if (context.ensure_cursor_visible)
+    {
+        auto cursor_pos = display_coord(context.selections().main().cursor());
+        kak_assert(cursor_pos);
+
+        if (auto line_overflow = cursor_pos->line - m_dimensions.line + setup.scroll_offset.line + 1; line_overflow > 0)
+        {
+            lines.erase(lines.begin(), lines.begin() + (size_t)line_overflow);
+            setup.first_line = lines.begin()->range().begin.line;
+        }
+
+        auto max_first_column = cursor_pos->column - (setup.widget_columns + setup.scroll_offset.column);
+        setup.first_column = std::min(setup.first_column, max_first_column);
+
+        auto min_first_column = cursor_pos->column - (m_dimensions.column - setup.scroll_offset.column) + 1;
+        setup.first_column = std::max(setup.first_column, min_first_column);
+    }
 
     for (auto& line : m_display_buffer.lines())
         line.trim_from(setup.widget_columns, setup.first_column, m_dimensions.column);
@@ -203,11 +221,9 @@ DisplaySetup Window::compute_display_setup(const Context& context) const
     offset.line = std::min(offset.line, (m_dimensions.line + 1) / 2);
     offset.column = std::min(offset.column, (m_dimensions.column + 1) / 2);
 
-    const int tabstop = context.options()["tabstop"].get<int>();
     const auto& cursor = context.selections().main().cursor();
 
-    bool ensure_cursor_visible = context.ensure_cursor_visible;
-    if (ensure_cursor_visible)
+    if (context.ensure_cursor_visible)
     {
         if (cursor.line - offset.line < win_pos.line)
             win_pos.line = std::max(0_line, cursor.line - offset.line);
@@ -216,38 +232,10 @@ DisplaySetup Window::compute_display_setup(const Context& context) const
     }
     win_pos.line = std::min(win_pos.line, buffer().line_count()-1);
 
-    DisplaySetup setup{
-        win_pos.line,
-        m_dimensions.line,
-        win_pos.column,
-        0_col,
-        {cursor.line - win_pos.line,
-         get_column(buffer(), tabstop, cursor) - win_pos.column},
-        offset,
-        ensure_cursor_visible
-    };
-    for (auto pass : { HighlightPass::Move, HighlightPass::Wrap })
+    DisplaySetup setup{win_pos.line, m_dimensions.line, win_pos.column, 0_col, offset};
+    for (auto pass : {HighlightPass::Move, HighlightPass::Wrap, HighlightPass::Replace})
         m_builtin_highlighters.compute_display_setup({context, setup, pass, {}}, setup);
     check_display_setup(setup, *this);
-
-    // now ensure the cursor column is visible
-    if (ensure_cursor_visible)
-    {
-        auto underflow = std::max(-setup.first_column,
-                                  setup.cursor_pos.column - setup.scroll_offset.column);
-        if (underflow < 0)
-        {
-            setup.first_column += underflow;
-            setup.cursor_pos.column -= underflow;
-        }
-        auto overflow = setup.cursor_pos.column + setup.scroll_offset.column - (m_dimensions.column - setup.widget_columns)  + 1;
-        if (overflow > 0)
-        {
-            setup.first_column += overflow;
-            setup.cursor_pos.column -= overflow;
-        }
-        check_display_setup(setup, *this);
-    }
 
     return setup;
 }

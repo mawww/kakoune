@@ -46,9 +46,13 @@ struct {
     StringView notes;
 } constexpr version_notes[] = { {
         0,
+        "» {+b}FocusIn{}/{+b}FocusOut{} events on suspend\n"
+    }, {
+        20250603,
         "» kak_* appearing in shell arguments will be added to the environment\n"
         "» {+U}double underline{} support\n"
         "» {+u}git apply{} can stage/revert selected changes to current buffer\n"
+        "» {+u}exec/eval -client{} accepts '*' and comma separated list\n"
     }, {
         20240518,
         "» Fix tests failing on some platforms\n"
@@ -65,110 +69,15 @@ struct {
         "» custom completions are no longer sorted if the typed text is empty\n"
         "» {+u}terminal{} now selects implementation based on windowing options\n"
         "» {+u}local{} scopes\n"
-    }, {
-        20230805,
-        "» Fix FreeBSD/MacOS clang compilation\n"
-    }, {
-        20230729,
-        "» {+b}<a-u>{} and {+b}<a-U>{} now undo/redo selection changes; "
-        "the previous meaning of moving in history tree has been moved to "
-        "{+b}<c-j>{} and {+b}<c-k>{}\n"
-        "» {+u}%exp\\{...}{} expansions provide flexible quoting for expanded "
-        "strings (as double quoted strings)\n"
-        "» {+u}show-matching -previous{} switch\n"
-        "» {+b}<c-g>{} to cancel current operation\n"
-    }, {
-        20221031,
-        "» {+b}<esc>{} does not end macro recording anymore, use {+b}Q{}\n"
-        "» pipe commands do not append final end-of-lines anymore\n"
-        "» {+u}complete-command{} to configure command completion\n"
-        "» {+b}p{}, {+b}P{}, {+b}!{} and {+b}<a-!>{} now select the inserted text\n"
-        "» {+b}x{} now uses {+b}<a-x>{} behaviour\n"
-        "» {+b}<space>{} and {+b},{} have been swapped\n"
-    }, {
-        20211107,
-        "» colored and curly underlines support (undocumented in 20210828)\n"
-    }, {
-        20211028,
-        "» {+b}g{} and {+b}v{} do not auto-convert to lowercase anymore\n"
-    }, {
-        20210828,
-        "» {+u}write <filename>{} will refuse to overwrite without {+u}-force{}\n"
-        "» {+u}$kak_command_fifo{} support\n"
-        "» {+u}set-option -remove{} support\n"
-        "» prompts auto select {+i}menu{} completions on space\n"
-        "» explicit completion support ({+b}<c-x>...{}) in prompts\n"
-        "» {+u}write -atomic{} was replaced with {+u}write -method <method>{}\n"
-    }, {
-        20200901,
-        "» daemon mode does not fork anymore\n"
-    }, {
-        20200804,
-        "» {+u}User{} hook support\n"
-        "» Removed {+i}bold{} and {+i}italic{} faces from colorschemes\n"
-        "» Read from stdin support for clients\n"
-        "» {+u}rgba:RRGGBBAA{} faces and alpha blending\n"
-    }, {
-        20200116,
-        "» {+u}InsertCompletionHide{} parameter is now the list of inserted ranges\n"
-    }, {
-        20191210,
-        "» {+u}ModeChange{} parameter has changed to contain push/pop\n"
-        "» {+ui}Mode{+u}Begin{}/{+ui}Mode{+u}End{} hooks were removed\n"
-    }, {
-        20190701,
-        "» {+u}%file\\{<filename>}{} expansions to read files\n"
-        "» {+u}echo -to-file <filename>{} to write to file\n"
-        "» completions option have an on select command instead of "
-        "a docstring\n"
-        "» Function key syntax do not accept lower case f anymore\n"
-        "» shell quoting of list options is now opt-in with "
-        "{+u}$kak_quoted_...{}\n"
-    }, {
-        20190120,
-        "» named capture groups in regex\n"
-        "» auto_complete option renamed to autocomplete\n"
-    }, {
-        20181027,
-        "» {+u}define-commands{} {+i}-shell-completion{} and {+i}-shell-candidates{} "
-        "has been renamed\n"
-        "» exclusive face attributes is replaced with final "
-        "(fg/bg/attr)\n"
-        "» {+b}<a-M>{} (merge consecutive) moved to {+b}<a-_>{} to make {+b}<a-M>{} "
-        "backward {+b}<a-m>{}\n"
-        "» {+u}remove-hooks{} now takes a regex parameter\n"
-    }, {
-        20180904,
-        "» Big breaking refactoring of various Kakoune features, "
-        "configuration might need to be updated see `:doc changelog` "
-        "for details\n"
-        "» {+u}define-command{} {+i}-allow-override{} switch has been renamed "
-        "{+i}-override{}\n"
-    }, {
-        20180413,
-        "» {+u}ModeChange{} hook has been introduced and is expected "
-        "to replace the various {+ui}Mode{+u}Begin{}/{+ui}Mode{+u}End{} hooks, "
-        "consider those deprecated.\n"
-        "» {+b}*{} Does not strip whitespaces anymore, use built-in "
-        "{+b}_{} to strip them\n"
-        "» {+b}l{} on eol will go to next line, {+b}h{} on first char will "
-        "go to previous\n"
-        "» selections merging behaviour is now a bit more complex "
-        "again\n"
-        "» {+b}x{} will only jump to next line if full line is already "
-        "selected\n"
-        "» {+i}WORD{} text object moved to {+b}<a-w>{} instead of {+b}W{} for "
-        "consistency\n"
-        "» rotate main selection moved to {+b}){}, rotate content to {+b}<a-)>{}, "
-        "{+b}({} for backward\n"
-        "» faces are now scoped, {+u}set-face{} command takes an additional "
-        "scope parameter\n"
-        "» {+b}<backtab>{} key is gone, use {+b}<s-tab>{} instead\n"
-} };
+    }
+};
+
+static_assert(sizeof(version_notes) / sizeof(version_notes[0]) <= 4 - (version_notes[0].version != 0 ? 1 : 0),
+              "Maximum 3 versions should be displayed in version notes, not including the development version");
 
 void show_startup_info(Client* local_client, int last_version)
 {
-    const Face version_face{Color::Default, Color::Default, Attribute::Bold};
+    const Face version_face{.attributes=Attribute::Bold};
     DisplayLineList info;
     for (auto [version, notes] : version_notes)
     {
@@ -182,20 +91,17 @@ void show_startup_info(Client* local_client, int last_version)
             const auto year = version / 10000;
             const auto month = (version / 100) % 100;
             const auto day = version % 100;
-            info.push_back({format("• Kakoune v{}.{}{}.{}{}",
-                                   year, month < 10 ? "0" : "", month, day < 10 ? "0" : "", day),
-                            version_face});
+            info.push_back({format("• Kakoune v{}.{:02}.{:02}", year, month, day), version_face});
         }
 
         for (auto&& line : notes | split<StringView>('\n'))
             info.push_back(parse_display_line(line, GlobalScope::instance().faces()));
     }
     if (not info.empty())
-    {
-        info.push_back({"See the `:doc options startup-info` to control this message",
-                        Face{Color::Default, Color::Default, Attribute::Italic}});
-        local_client->info_show({format("Kakoune {}", version), version_face}, info, {}, InfoStyle::Prompt);
-    }
+        local_client->info_show({{{format("Kakoune {}", version), version_face},
+                                  {", more info at ", {}},
+                                  {":doc changelog", {.attributes=Attribute::Underline}}}},
+                                 std::move(info), {}, InfoStyle::Prompt);
 }
 
 inline void write_stdout(StringView str) { try { write(STDOUT_FILENO, str); } catch (runtime_error&) {} }
@@ -310,7 +216,7 @@ static const EnvVarDesc builtin_env_vars[] = { {
         "client_list", false,
         [](StringView name, const Context& context) -> Vector<String>
         { return ClientManager::instance() |
-                      transform([](const std::unique_ptr<Client>& c) -> const String&
+                      transform([](const UniquePtr<Client>& c) -> const String&
                                 { return c->context().name(); }) | gather<Vector<String>>(); }
     }, {
         "modified", false,
@@ -417,6 +323,13 @@ static const EnvVarDesc builtin_env_vars[] = { {
         [](StringView name, const Context& context) -> Vector<String>
         { return history_as_strings(context.buffer().history()); }
     }, {
+        "history_since_", true,
+        [](StringView name, const Context& context) -> Vector<String>
+        { return history_as_strings(
+            ArrayView(context.buffer().history())
+                .subrange(str_to_int(name.substr(14_byte)) + 1)
+        ); }
+    }, {
         "uncommitted_modifications", false,
         [](StringView name, const Context& context) -> Vector<String>
         { return undo_group_as_strings(context.buffer().current_undo_group()); }
@@ -428,10 +341,10 @@ void register_registers()
     RegisterManager& register_manager = RegisterManager::instance();
 
     for (Codepoint c : StringView{"abcdefghijklmnopqrstuvwxyz\"^@"})
-        register_manager.add_register(c, std::make_unique<StaticRegister>(String{c}));
+        register_manager.add_register(c, make_unique_ptr<StaticRegister>(String{c}));
 
     for (Codepoint c : StringView{"/|:\\"})
-        register_manager.add_register(c, std::make_unique<HistoryRegister>(String{c}));
+        register_manager.add_register(c, make_unique_ptr<HistoryRegister>(String{c}));
 
     using StringList = Vector<String, MemoryDomain::Registers>;
 
@@ -483,7 +396,7 @@ void register_registers()
             }));
     }
 
-    register_manager.add_register('_', std::make_unique<NullRegister>());
+    register_manager.add_register('_', make_unique_ptr<NullRegister>());
 }
 
 void register_keymaps()
@@ -608,6 +521,7 @@ void register_options()
                        "    terminal_shift_function_key    int\n"
                        "    terminal_padding_char          codepoint\n"
                        "    terminal_padding_fill          bool\n"
+                       "    terminal_cursor_native         bool\n"
                        "    terminal_info_max_width        int\n",
                        UserInterface::Options{});
     reg.declare_option("modelinefmt", "format string used to generate the modeline",
@@ -645,7 +559,7 @@ UIType parse_ui_type(StringView ui_name)
     throw parameter_error(format("error: unknown ui type: '{}'", ui_name));
 }
 
-std::unique_ptr<UserInterface> make_ui(UIType ui_type)
+UniquePtr<UserInterface> make_ui(UIType ui_type)
 {
     struct DummyUI : UserInterface
     {
@@ -671,9 +585,9 @@ std::unique_ptr<UserInterface> make_ui(UIType ui_type)
 
     switch (ui_type)
     {
-        case UIType::Terminal: return std::make_unique<TerminalUI>();
-        case UIType::Json: return std::make_unique<JsonUI>();
-        case UIType::Dummy: return std::make_unique<DummyUI>();
+        case UIType::Terminal: return make_unique_ptr<TerminalUI>();
+        case UIType::Json: return make_unique_ptr<JsonUI>();
+        case UIType::Dummy: return make_unique_ptr<DummyUI>();
     }
     throw logic_error{};
 }
@@ -692,7 +606,7 @@ pid_t fork_server_to_background()
     return 0;
 }
 
-std::unique_ptr<UserInterface> create_local_ui(UIType ui_type)
+UniquePtr<UserInterface> create_local_ui(UIType ui_type)
 {
     auto ui = make_ui(ui_type);
 

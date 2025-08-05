@@ -23,7 +23,7 @@ declare-option -docstring \
 "Ordered list of windowing modules to try and load. An empty list disables
 both automatic module loading and environment detection, enabling complete
 manual control of the module loading." \
-str-list windowing_modules 'tmux' 'screen' 'zellij' 'kitty' 'iterm' 'appleterminal' 'sway' 'wayland' 'x11' 'wezterm'
+str-list windowing_modules 'tmux' 'screen' 'zellij' 'kitty' 'iterm' 'appleterminal' 'sway' 'hyprland' 'wayland' 'x11' 'wezterm'
 
 declare-option -docstring %{
     windowing module to use in the 'terminal' command

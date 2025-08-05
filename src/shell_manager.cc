@@ -309,7 +309,7 @@ std::pair<String, int> ShellManager::eval(
     sigemptyset(&mask);
     sigaddset(&mask, SIGCHLD);
     sigprocmask(SIG_BLOCK, &mask, &orig_mask);
-    auto restore_mask = on_scope_end([&] { sigprocmask(SIG_SETMASK, &orig_mask, nullptr); });
+    auto restore_mask = OnScopeEnd([&] { sigprocmask(SIG_SETMASK, &orig_mask, nullptr); });
 
     int status = 0;
     // check for termination now that SIGCHLD is blocked

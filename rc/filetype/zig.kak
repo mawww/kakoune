@@ -57,17 +57,17 @@ add-highlighter shared/zig/code/ regex '\b(?:const|var|extern|packed|export|pub|
 add-highlighter shared/zig/code/ regex '\b(?:struct|enum|union|error|opaque)\b' 0:attribute
 
 # statement
-add-highlighter shared/zig/code/ regex '\b(?:break|return|continue|asm|defer|errdefer|unreachable|try|catch|async|noasync|await|suspend|nosuspend|resume)\b' 0:keyword
+add-highlighter shared/zig/code/ regex '\b(?:break|return|continue|asm|defer|errdefer|unreachable|try|catch|suspend|nosuspend|resume)\b' 0:keyword
 # conditional
 add-highlighter shared/zig/code/ regex '\b(?:if|else|switch|and|or|orelse)\b' 0:keyword
 # repeat
 add-highlighter shared/zig/code/ regex '\b(?:while|for)\b' 0:keyword
 # other keywords
-add-highlighter shared/zig/code/ regex '\b(?:fn|usingnamespace|test)\b' 0:keyword
+add-highlighter shared/zig/code/ regex '\b(?:fn|test)\b' 0:keyword
 
 # types
 add-highlighter shared/zig/code/ regex '\b(?:bool|f16|f32|f64|f80|f128|void|noreturn|type|anyerror|anyframe|anytype|anyopaque)\b' 0:type
-add-highlighter shared/zig/code/ regex '\b(?:i0|u0|isize||usize|comptime_int|comptime_float)\b' 0:type
+add-highlighter shared/zig/code/ regex '\b(?:i0|u0|isize|usize|comptime_int|comptime_float)\b' 0:type
 add-highlighter shared/zig/code/ regex '\b(?:[iu][1-9]\d*)\b' 0:type
 add-highlighter shared/zig/code/ regex '\b(?:c_char|c_short|c_ushort|c_int|c_uint|c_long|c_ulong|c_longlong|c_ulonglong|c_longdouble)\b' 0:type
 
@@ -90,7 +90,7 @@ add-highlighter shared/zig/code/ regex '\b0x[0-9a-fA-F]+\.?[eE][-+]?[0-9a-fA-F]+
 add-highlighter shared/zig/code/ regex '(?:\+|-|\*|/|%|=|<|>|&|\||\^|~|\?|!)' 0:operator
 
 # builtin functions
-add-highlighter shared/zig/code/ regex "@(?:addrSpaceCast|addWithOverflow|alignCast|alignOf|as|atomicLoad|atomicRmw|atomicStore|bitCast|bitOffsetOf|bitSizeOf|branchHint|breakpoint|mulAdd|byteSwap|bitReverse|offsetOf|call|cDefine|cImport|cInclude|clz|cmpxchgStrong|cmpxchgWeak|compileError|compileLog|constCast|ctz|cUndef|cVaArg|cVaCopy|cVaEnd|cVaStart|disableInstrumentation|disableIntrinsics|divExact|divFloor|divTrunc|embedFile|enumFromInt|errorFromInt|errorName|errorReturnTrace|errorCast|export|extern|field|fieldParentPtr|FieldType|floatCast|floatFromInt|frameAddress|hasDecl|hasField|import|inComptime|intCast|intFromBool|intFromEnum|intFromError|intFromFloat|intFromPtr|max|memcpy|memset|min|wasmMemorySize|wasmMemoryGrow|mod|mulWithOverflow|panic|popCount|prefetch|ptrCast|ptrFromInt|rem|returnAddress|select|setEvalBranchQuota|setFloatMode|setRuntimeSafety|shlExact|shlWithOverflow|shrExact|shuffle|sizeOf|splat|reduce|src|sqrt|sin|cos|tan|exp|exp2|log|log2|log10|abs|floor|ceil|trunc|round|subWithOverflow|tagName|This|trap|truncate|Type|typeInfo|typeName|TypeOf|unionInit|Vector|volatileCast|workGroupId|workGroupSize|workItemId)\b" 0:meta
+add-highlighter shared/zig/code/ regex "@(?:addrSpaceCast|addWithOverflow|alignCast|alignOf|as|atomicLoad|atomicRmw|atomicStore|bitCast|bitOffsetOf|bitSizeOf|branchHint|breakpoint|mulAdd|byteSwap|bitReverse|offsetOf|call|cDefine|cImport|cInclude|clz|cmpxchgStrong|cmpxchgWeak|compileError|compileLog|constCast|ctz|cUndef|cVaArg|cVaCopy|cVaEnd|cVaStart|disableInstrumentation|disableIntrinsics|divExact|divFloor|divTrunc|embedFile|enumFromInt|errorFromInt|errorName|errorReturnTrace|errorCast|export|extern|field|fieldParentPtr|FieldType|floatCast|floatFromInt|frameAddress|hasDecl|hasField|import|inComptime|intCast|intFromBool|intFromEnum|intFromError|intFromFloat|intFromPtr|max|memcpy|memmove|memset|min|wasmMemorySize|wasmMemoryGrow|mod|mulWithOverflow|panic|popCount|prefetch|ptrCast|ptrFromInt|rem|returnAddress|select|setEvalBranchQuota|setFloatMode|setRuntimeSafety|shlExact|shlWithOverflow|shrExact|shuffle|sizeOf|splat|reduce|src|sqrt|sin|cos|tan|exp|exp2|log|log2|log10|abs|floor|ceil|trunc|round|subWithOverflow|tagName|This|trap|truncate|Type|typeInfo|typeName|TypeOf|unionInit|Vector|volatileCast|workGroupId|workGroupSize|workItemId)\b" 0:meta
 
 # Commands
 # ‾‾‾‾‾‾‾‾

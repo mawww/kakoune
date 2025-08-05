@@ -1,10 +1,3 @@
-ui_out -until '{ "jsonrpc": "2.0", "method": "refresh", "params": [false] }'
-
-# We've jumped to the new version of line 2. Move to the old version so we
-# can annotate the old file.
-ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "k:git blame<ret>" ] }'
-ui_out -until-eval 'grep "draw_status" | grep -v "\[fifo\]"'
-
+mkfifo fifo 2>/dev/null
+cat fifo
 # We should have jumped to the old version of line 2, assert on kak_selection.
-ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ "x" ] }'
-ui_out -until '{ "jsonrpc": "2.0", "method": "refresh", "params": [false] }'

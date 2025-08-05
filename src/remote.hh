@@ -6,8 +6,7 @@
 #include "utils.hh"
 #include "vector.hh"
 #include "optional.hh"
-
-#include <memory>
+#include "unique_ptr.hh"
 
 namespace Kakoune
 {
@@ -30,15 +29,15 @@ using RemoteBuffer = Vector<char, MemoryDomain::Remote>;
 class RemoteClient
 {
 public:
-    RemoteClient(StringView session, StringView name, std::unique_ptr<UserInterface>&& ui,
+    RemoteClient(StringView session, StringView name, UniquePtr<UserInterface>&& ui,
                  int pid, const EnvVarMap& env_vars, StringView init_command,
                  Optional<BufferCoord> init_coord, Optional<int> stdin_fd);
 
     bool is_ui_ok() const;
     const Optional<int>& exit_status() const { return m_exit_status; }
 private:
-    std::unique_ptr<UserInterface> m_ui;
-    std::unique_ptr<FDWatcher>     m_socket_watcher;
+    UniquePtr<UserInterface> m_ui;
+    UniquePtr<FDWatcher>     m_socket_watcher;
     RemoteBuffer                   m_send_buffer;
     Optional<int>                  m_exit_status;
 };
@@ -68,8 +67,8 @@ private:
 
     String m_session;
     bool m_is_daemon;
-    std::unique_ptr<FDWatcher> m_listener;
-    Vector<std::unique_ptr<Accepter>, MemoryDomain::Remote> m_accepters;
+    UniquePtr<FDWatcher> m_listener;
+    Vector<UniquePtr<Accepter>, MemoryDomain::Remote> m_accepters;
 };
 
 bool check_session(StringView session);

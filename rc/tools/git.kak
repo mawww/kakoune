@@ -743,9 +743,11 @@ define-command -params 1.. \
                         } END $SQ$SQ
                             print \"execute-keys -client $ENV{client} \${diff_line}g<a-h>$ENV{cursor_column}l;\";
                             printf \"evaluate-commands -client $ENV{client} $SQ$SQ$SQ$SQ
-                                echo -markup -- %s
-                                hook -once window NormalIdle .* %%{ execute-keys vv }
-                            $SQ$SQ$SQ$SQ ;\"," . escape(escape(perlquote(escape(quote($info))))) . ";
+                                hook -once window NormalIdle .* $SQ$SQ$SQ$SQ$SQ$SQ$SQ$SQ
+                                    execute-keys vv
+                                    echo -markup -- %s
+                                $SQ$SQ$SQ$SQ$SQ$SQ$SQ$SQ
+                            $SQ$SQ$SQ$SQ ;\"," . escape(escape(perlquote(escape(escape(quote($info)))))) . ";
                         $SQ$SQ
                     $SQ
                 ";

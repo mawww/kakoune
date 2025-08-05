@@ -9,23 +9,22 @@
 #include "optional.hh"
 #include "utils.hh"
 #include "hash_map.hh"
-
-#include <functional>
+#include "function.hh"
 
 namespace Kakoune
 {
 
 class Context;
 using CommandParameters = ConstArrayView<String>;
-using CommandFunc = std::function<void (const ParametersParser& parser,
+using CommandFunc = Function<void (const ParametersParser& parser,
                                         Context& context,
                                         const ShellContext& shell_context)>;
 
-using CommandCompleter = std::function<Completions (const Context& context,
+using CommandCompleter = Function<Completions (const Context& context,
                                                     CommandParameters,
                                                     size_t, ByteCount)>;
 
-using CommandHelper = std::function<String (const Context& context, CommandParameters)>;
+using CommandHelper = Function<String (const Context& context, CommandParameters)>;
 
 enum class CommandFlags
 {

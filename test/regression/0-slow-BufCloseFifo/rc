@@ -1,0 +1,16 @@
+define-command run %{
+    evaluate-commands %sh{
+        mkfifo fifo1 fifo2 2>/dev/null
+        ( : >fifo1 & ) > /dev/null 2>&1 </dev/null
+    }
+    edit! -fifo fifo1 *fifo*
+    add-highlighter global/myhl regex foo 0:green
+    hook -once global BufCloseFifo .* %{
+        evaluate-commands -client client0 %{
+            nop %sh{sleep 2}
+        }
+        hook -once buffer NormalIdle .* %{
+            echo -to-file fifo2 still alive
+        }
+    }
+}

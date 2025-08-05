@@ -221,7 +221,7 @@ void write_buffer_to_file(Buffer& buffer, StringView filename,
     }
 
     {
-        auto close_fd = on_scope_end([fd]{ close(fd); });
+        auto close_fd = OnScopeEnd([fd]{ close(fd); });
         write_buffer_to_fd(buffer, fd);
         if (flags & WriteFlags::Sync)
             ::fsync(fd);
@@ -290,7 +290,8 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, AutoScroll 
             kak_assert(m_buffer.flags() & Buffer::Flags::Fifo);
             close_fd();
             m_buffer.run_hook_in_own_context(Hook::BufCloseFifo, "");
-            m_buffer.flags() &= ~(Buffer::Flags::Fifo | Buffer::Flags::NoUndo);
+            if (not m_buffer.values().contains(fifo_watcher_id))
+                m_buffer.flags() &= ~(Buffer::Flags::Fifo | Buffer::Flags::NoUndo);
         }
 
         void read_fifo()
@@ -309,7 +310,7 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, AutoScroll 
             const int fifo = fd();
 
             {
-                auto restore_flags = on_scope_end([this, flags=m_buffer.flags()] { m_buffer.flags() = flags; });
+                auto restore_flags = OnScopeEnd([this, flags=m_buffer.flags()] { m_buffer.flags() = flags; });
                 m_buffer.flags() &= ~Buffer::Flags::ReadOnly;
                 do
                 {
@@ -392,7 +393,7 @@ static String modification_as_string(const Buffer::Modification& modification)
                   modification.content->strview());
 }
 
-Vector<String> history_as_strings(const Vector<Buffer::HistoryNode>& history)
+Vector<String> history_as_strings(ConstArrayView<Buffer::HistoryNode> history)
 {
     Vector<String> res;
     for (auto& node : history)

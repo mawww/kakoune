@@ -70,6 +70,8 @@ void Buffer::on_registered()
         return;
     }
 
+    m_flags |= Flags::NoBufSetOption;
+
     run_hook_in_own_context(Hook::BufCreate, m_name);
 
     if (m_flags & Flags::File)
@@ -82,9 +84,10 @@ void Buffer::on_registered()
             run_hook_in_own_context(Hook::BufOpenFile, m_name);
         }
     }
+    m_flags &= ~Flags::NoBufSetOption;
 
     for (auto& option : options().flatten_options()
-                      | transform(&std::unique_ptr<Option>::get)
+                      | transform(&UniquePtr<Option>::get)
                       | gather<Vector<Option*>>())
         on_option_changed(*option);
 }
@@ -637,6 +640,9 @@ const FsStatus& Buffer::fs_status() const
 
 void Buffer::on_option_changed(const Option& option)
 {
+    if (m_flags & Flags::NoBufSetOption)
+        return;
+
     if (option.name() == "readonly")
     {
         if (option.get<bool>())

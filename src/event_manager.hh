@@ -6,8 +6,7 @@
 #include "utils.hh"
 #include "optional.hh"
 #include "vector.hh"
-
-#include <functional>
+#include "function.hh"
 
 #include <sys/select.h>
 #include <csignal>
@@ -34,7 +33,7 @@ constexpr bool with_bit_ops(Meta::Type<FdEvents>) { return true; }
 class FDWatcher
 {
 public:
-    using Callback = std::function<void (FDWatcher& watcher, FdEvents events, EventMode mode)>;
+    using Callback = Function<void (FDWatcher& watcher, FdEvents events, EventMode mode)>;
     FDWatcher(int fd, FdEvents events, EventMode mode, Callback callback);
     FDWatcher(const FDWatcher&) = delete;
     FDWatcher& operator=(const FDWatcher&) = delete;
@@ -61,7 +60,7 @@ private:
 class Timer
 {
 public:
-    using Callback = std::function<void (Timer& timer)>;
+    using Callback = Function<void (Timer& timer)>;
 
     Timer(TimePoint date, Callback callback,
           EventMode mode = EventMode::Normal);

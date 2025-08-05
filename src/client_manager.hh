@@ -9,7 +9,7 @@ namespace Kakoune
 
 struct WindowAndSelections
 {
-    std::unique_ptr<Window> window;
+    UniquePtr<Window> window;
     SelectionList selections;
 };
 
@@ -19,7 +19,7 @@ public:
     ClientManager();
     ~ClientManager();
 
-    Client* create_client(std::unique_ptr<UserInterface>&& ui, int pid,
+    Client* create_client(UniquePtr<UserInterface>&& ui, int pid,
                           String name, EnvVarMap env_vars, StringView init_cmds,
                           StringView init_buffer, Optional<BufferCoord> init_coord,
                           Client::OnExitCallback on_exit);
@@ -32,7 +32,7 @@ public:
     void ensure_no_client_uses_buffer(Buffer& buffer);
 
     WindowAndSelections get_free_window(Buffer& buffer);
-    void add_free_window(std::unique_ptr<Window>&& window, SelectionList selections);
+    void add_free_window(UniquePtr<Window>&& window, SelectionList selections);
 
     void redraw_clients() const;
     bool process_pending_inputs();
@@ -43,7 +43,7 @@ public:
     bool client_name_exists(StringView name) const;
     void remove_client(Client& client, bool graceful, int status);
 
-    using ClientList = Vector<std::unique_ptr<Client>, MemoryDomain::Client>;
+    using ClientList = Vector<UniquePtr<Client>, MemoryDomain::Client>;
     using iterator = ClientList::const_iterator;
 
     iterator begin() const { return m_clients.begin(); }
@@ -60,7 +60,7 @@ private:
     ClientList m_clients;
     ClientList m_client_trash;
     Vector<WindowAndSelections, MemoryDomain::Client> m_free_windows;
-    Vector<std::unique_ptr<Window>, MemoryDomain::Client> m_window_trash;
+    Vector<UniquePtr<Window>, MemoryDomain::Client> m_window_trash;
 };
 
 }

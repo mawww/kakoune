@@ -104,7 +104,7 @@ Register& RegisterManager::operator[](Codepoint c) const
     return *(it->value);
 }
 
-void RegisterManager::add_register(Codepoint c, std::unique_ptr<Register> reg)
+void RegisterManager::add_register(Codepoint c, UniquePtr<Register> reg)
 {
     auto& reg_ptr = m_registers[c];
     kak_assert(not reg_ptr);

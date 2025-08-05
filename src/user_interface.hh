@@ -3,8 +3,7 @@
 
 #include "array_view.hh"
 #include "hash_map.hh"
-
-#include <functional>
+#include "function.hh"
 
 namespace Kakoune
 {
@@ -42,8 +41,8 @@ enum class CursorMode
     Buffer,
 };
 
-using OnKeyCallback = std::function<void(Key key)>;
-using OnPasteCallback = std::function<void(StringView content)>;
+using OnKeyCallback = Function<void(Key key)>;
+using OnPasteCallback = Function<void(StringView content)>;
 
 class UserInterface
 {

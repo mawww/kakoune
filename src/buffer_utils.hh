@@ -97,7 +97,7 @@ void write_buffer_to_backup_file(Buffer& buffer);
 
 void write_to_debug_buffer(StringView str);
 
-Vector<String> history_as_strings(const Vector<Buffer::HistoryNode>& history);
+Vector<String> history_as_strings(ConstArrayView<Buffer::HistoryNode> history);
 Vector<String> undo_group_as_strings(const Buffer::UndoGroup& undo_group);
 
 String generate_buffer_name(StringView pattern);

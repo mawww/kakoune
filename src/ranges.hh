@@ -546,10 +546,10 @@ auto find(Range&& range, const T& value)
 }
 
 template<typename Range, typename T>
-auto find_if(Range&& range, T op)
+auto find_if(Range&& range, T&& op)
 {
     using std::begin; using std::end;
-    return std::find_if(begin(range), end(range), op);
+    return std::find_if(begin(range), end(range), std::forward<T>(op));
 }
 
 template<typename Range, typename T>
@@ -560,24 +560,24 @@ bool contains(Range&& range, const T& value)
 }
 
 template<typename Range, typename T>
-bool all_of(Range&& range, T op)
+bool all_of(Range&& range, T&& op)
 {
     using std::begin; using std::end;
-    return std::all_of(begin(range), end(range), op);
+    return std::all_of(begin(range), end(range), std::forward<T>(op));
 }
 
 template<typename Range, typename T>
-bool any_of(Range&& range, T op)
+bool any_of(Range&& range, T&& op)
 {
     using std::begin; using std::end;
-    return std::any_of(begin(range), end(range), op);
+    return std::any_of(begin(range), end(range), std::forward<T>(op));
 }
 
 template<typename Range, typename T>
-auto remove_if(Range&& range, T op)
+auto remove_if(Range&& range, T&& op)
 {
     using std::begin; using std::end;
-    return std::remove_if(begin(range), end(range), op);
+    return std::remove_if(begin(range), end(range), std::forward<T>(op));
 }
 
 template<typename Range, typename U>
@@ -596,7 +596,7 @@ template<typename Range, typename Init, typename BinOp>
 Init accumulate(Range&& c, Init&& init, BinOp&& op)
 {
     using std::begin; using std::end;
-    return std::accumulate(begin(c), end(c), init, op);
+    return std::accumulate(begin(c), end(c), init, std::forward<BinOp>(op));
 }
 
 template<typename Range, typename Compare, typename Func>
@@ -632,36 +632,26 @@ auto gather()
     }};
 }
 
-template<typename ExceptionType, bool exact_size, size_t... Indexes>
-auto elements()
-{
-    return ViewFactory{[=] (auto&& range) {
-        using std::begin; using std::end;
-        auto it = begin(range), end_it = end(range);
-        size_t i = 0;
-        auto elem = [&](size_t index) {
-            for (; i < index; ++i)
-                if (++it == end_it) throw ExceptionType{i};
-            return *it;
-        };
-        // Note that initializer lists elements are guaranteed to be sequenced
-        Array<std::remove_cvref_t<decltype(*begin(range))>, sizeof...(Indexes)> res{{elem(Indexes)...}};
-        if (exact_size and ++it != end_it)
-            throw ExceptionType{++i};
-        return res;
-    }};
-}
-
-template<typename ExceptionType, bool exact_size, size_t... Indexes>
-auto static_gather_impl(std::index_sequence<Indexes...>)
-{
-    return elements<ExceptionType, exact_size, Indexes...>();
-}
-
 template<typename ExceptionType, size_t size, bool exact_size = true>
 auto static_gather()
 {
-    return static_gather_impl<ExceptionType, exact_size>(std::make_index_sequence<size>());
+    return []<size_t... Indexes>(std::index_sequence<Indexes...>) {
+        return ViewFactory{[] (auto&& range) {
+            using std::begin; using std::end;
+            auto it = begin(range), end_it = end(range);
+            size_t i = 0;
+            auto elem = [&](size_t index) {
+                for (; i < index; ++i)
+                    if (++it == end_it) throw ExceptionType{i};
+                return *it;
+            };
+            // Note that initializer lists elements are guaranteed to be sequenced
+            Array<std::remove_cvref_t<decltype(*begin(range))>, sizeof...(Indexes)> res{{elem(Indexes)...}};
+            if (exact_size and ++it != end_it)
+                throw ExceptionType{++i};
+            return res;
+        }};
+    }(std::make_index_sequence<size>());
 }
 
 }

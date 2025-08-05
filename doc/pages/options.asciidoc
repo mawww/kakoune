@@ -342,7 +342,7 @@ are exclusively available to built-in options.
 
 *ui_options* `str-to-str-map`::
     a list of `key=value` pairs that are forwarded to the user
-    interface implementation. The NCurses UI supports the following options:
+    interface implementation. The Terminal UI supports the following options:
 
         *terminal_set_title*:::
             if *yes* or *true*, the terminal emulator title will
@@ -384,6 +384,10 @@ are exclusively available to built-in options.
         *terminal_info_max_width*:::
             set the maximum allowable width of an info box. set to zero for
             no limit.
+
+        *terminal_cursor_native*:::
+            if *yes* or *true*, use native terminal cursor visibility control
+            instead of Kakoune's cursor management (defaults to *false*)
 
 [[startup-info]]
 *startup_info_version* `int`::

@@ -82,7 +82,7 @@ void CommandManager::load_module(StringView module_name, Context& context)
 
     {
         module->value.state = Module::State::Loading;
-        auto restore_state = on_scope_end([&] { module->value.state = Module::State::Registered; });
+        auto restore_state = OnScopeEnd([&] { module->value.state = Module::State::Registered; });
 
         Context empty_context{Context::EmptyContextFlag{}};
         execute(module->value.commands, empty_context);
@@ -526,7 +526,7 @@ void CommandManager::execute_single_command(CommandParameters params,
         throw runtime_error("maximum nested command depth hit");
 
     ++m_command_depth;
-    auto pop_depth = on_scope_end([this] { --m_command_depth; });
+    auto pop_depth = OnScopeEnd([this] { --m_command_depth; });
 
     auto command_it = m_commands.find(resolve_alias(context, params[0]));
     if (command_it == m_commands.end())

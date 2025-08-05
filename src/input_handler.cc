@@ -205,7 +205,7 @@ struct MouseHandler
     }
 
 private:
-    std::unique_ptr<ScopedSelectionEdition> m_dragging;
+    UniquePtr<ScopedSelectionEdition> m_dragging;
     BufferCoord m_anchor;
 };
 
@@ -288,7 +288,7 @@ public:
         ScopedSetBool set_in_on_key{m_in_on_key};
 
         bool do_restore_hooks = false;
-        auto restore_hooks = on_scope_end([&, this]{
+        auto restore_hooks = OnScopeEnd([&, this]{
             if (m_hooks_disabled and enabled() and do_restore_hooks)
             {
                 context().hooks_disabled().unset();
@@ -340,7 +340,7 @@ public:
         }
         else
         {
-            auto pop_if_single_command = on_scope_end([this] {
+            auto pop_if_single_command = OnScopeEnd([this] {
                 if (m_state == State::SingleCommand and enabled())
                      pop_mode();
                 else if (m_state == State::SingleCommand)
@@ -1682,7 +1682,7 @@ void InputHandler::handle_key(Key key, bool synthesized)
         return;
 
     ++m_handle_key_level;
-    auto dec = on_scope_end([this]{ --m_handle_key_level;} );
+    auto dec = OnScopeEnd([this]{ --m_handle_key_level;} );
 
     if (not synthesized)
         current_mode().on_raw_key();

@@ -522,7 +522,6 @@ bool InsertCompleter::setup_ifn()
 {
     if (!m_enabled)
         return false;
-    using namespace std::placeholders;
     if (not m_completions.is_valid())
     {
         auto& completers = m_options["completers"].get<InsertCompleterDescList>();
