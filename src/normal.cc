@@ -688,10 +688,13 @@ void pipe(Context& context, NormalParams params)
                     const auto first = changes_tracker.get_new_coord_tolerant(sel.min());
                     const auto last = changes_tracker.get_new_coord_tolerant(sel.max());
 
+                    Vector<StringDataPtr> keep_alive;
                     Vector<StringView> in_lines;
                     for (auto line = first.line; line <= last.line; ++line)
                     {
-                        auto content = buffer[line];
+                        auto& storage = buffer.line_storage(line);
+                        keep_alive.push_back(storage);
+                        auto content = storage->strview();;
                         if (line == last.line)
                             content = content.substr(0, last.column + utf8::codepoint_size(content[last.column]));
                         if (line == first.line)
