@@ -63,8 +63,14 @@ define-command -hidden make-jump %{
                 set-register a "%reg{1}/%reg{2}" "%reg{3}" "%reg{4}" "%reg{5}"
             } catch %{
                 # check if error pattern matches exactly at the start of the current line, possibly spanning more lines
-                set-register / "\A%opt{make_error_pattern}"
-                execute-keys ghGe s<ret>l
+                execute-keys ghGe 
+                try %{
+                    set-register / "\A%opt{make_error_pattern}"
+                    execute-keys s<ret>l
+                } catch %{ # fallback on common error pattern so that explicit jumps on warning/note lines still work
+                    set-register / "\A^([^:\n]+):(\d+):(?:(\d+):)? ([^\n]+)?"
+                    execute-keys s<ret>l
+                }
                 set-option buffer jump_current_line %val{cursor_line}
                 set-register a "%reg{1}" "%reg{2}" "%reg{3}" "%reg{4}"
             }
