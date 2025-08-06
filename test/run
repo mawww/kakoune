@@ -19,7 +19,8 @@ main() {
         exec -with-hooks <c-l>
       '
 
-  root=$PWD
+  cd "$(dirname $0)"
+  root="$PWD"
   tmpdir="${TMPDIR:-/tmp}"
   work=$(mktemp -d $tmpdir/kak-tests.XXXXXXXX)
   session="kak-tests"
