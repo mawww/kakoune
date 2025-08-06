@@ -38,8 +38,8 @@ main() {
     if [ ! -f cmd ]; then
       echo "$dir"
       continue
-    elif [ -x enabled ] && ! ./enabled; then
-      echo "${yellow}$dir (disabled)${none}"
+    elif [ -x enabled ] && ! ./enabled >/dev/null 2>&1; then
+      printf "${yellow}$dir (disabled)${none}\n"
       continue
     fi
 
