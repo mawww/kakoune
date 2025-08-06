@@ -1,4 +1,4 @@
-#include "regex_impl.hh"
+#include "regex_vm.hh"
 
 #include "string.hh"
 #include "unicode.hh"
