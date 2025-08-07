@@ -215,27 +215,24 @@ static void check_display_setup(const DisplaySetup& setup, const Window& window)
 
 DisplaySetup Window::compute_display_setup(const Context& context) const
 {
-    auto win_pos = m_position;
-
     DisplayCoord offset = options()["scrolloff"].get<DisplayCoord>();
     offset.line = std::min(offset.line, (m_dimensions.line + 1) / 2);
     offset.column = std::min(offset.column, (m_dimensions.column + 1) / 2);
-
     const auto& cursor = context.selections().main().cursor();
+    DisplaySetup setup{m_position.line, m_dimensions.line, m_position.column, 0_col, offset};
+    if (context.ensure_cursor_visible and
+        cursor.line - offset.line < setup.first_line)
+        setup.first_line = clamp(cursor.line - offset.line, 0_line, buffer().line_count()-1);
 
-    if (context.ensure_cursor_visible)
-    {
-        if (cursor.line - offset.line < win_pos.line)
-            win_pos.line = std::max(0_line, cursor.line - offset.line);
-        if (cursor.line + offset.line >= win_pos.line + m_dimensions.line)
-            win_pos.line = cursor.line + offset.line - m_dimensions.line + 1;
-    }
-    win_pos.line = std::min(win_pos.line, buffer().line_count()-1);
-
-    DisplaySetup setup{win_pos.line, m_dimensions.line, win_pos.column, 0_col, offset};
     for (auto pass : {HighlightPass::Move, HighlightPass::Wrap, HighlightPass::Replace})
         m_builtin_highlighters.compute_display_setup({context, setup, pass, {}}, setup);
     check_display_setup(setup, *this);
+
+    if (context.ensure_cursor_visible and
+        cursor.line + offset.line >= setup.first_line + setup.line_count)
+        setup.first_line = std::min(cursor.line + offset.line - setup.line_count + 1, buffer().line_count()-1);
+
+    setup.first_line = std::min(setup.first_line, buffer().line_count()-1);
 
     return setup;
 }
