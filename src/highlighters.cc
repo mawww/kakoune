@@ -1604,7 +1604,7 @@ private:
             if (!is_valid(buffer, range.first) or (!is_empty(range) and !is_valid(buffer, range.last)) or !is_fully_selected(sels, range))
                 continue;
 
-            auto last = is_empty(range) ? range.first : range.last;
+            auto last = is_empty(range) ? range.first : buffer.char_next(range.last);
             if (range.first.line < setup.first_line and last.line >= setup.first_line)
                 setup.first_line = range.first.line;
 
