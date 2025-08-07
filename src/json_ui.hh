@@ -22,8 +22,13 @@ public:
     bool is_ok() const override { return m_stdin_watcher.fd() != -1; }
 
     void draw(const DisplayBuffer& display_buffer,
-              const Face& default_face,
-              const Face& buffer_padding) override;
+          const Range<LineCount> range,
+          const LineCount buffer_line_count,
+          const Vector<LineCount> selection_lines,
+          const Face& default_face,
+          const Face& padding_face,
+          const Face& scroll_bar_gutter_face,
+          const Face& scroll_bar_handle_face) override;
 
     void draw_status(const DisplayLine& status_line,
                      const DisplayLine& mode_line,
