@@ -162,7 +162,9 @@ constexpr auto enum_desc(Meta::Type<Autoreload>)
         { Autoreload::No, "no" },
         { Autoreload::Ask, "ask" },
         { Autoreload::Yes, "true" },
-        { Autoreload::No, "false" }
+        { Autoreload::No, "false" },
+        { Autoreload::Yes, "on" },
+        { Autoreload::No, "off" }
     });
 }
 
