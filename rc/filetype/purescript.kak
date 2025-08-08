@@ -3,6 +3,8 @@
 # Syntax reference
 # https://github.com/purescript/documentation/blob/master/language/Syntax.md
 
+provide-module detect-purescript %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -28,6 +30,10 @@ hook -group purescript-highlight global WinSetOption filetype=purescript %{
     add-highlighter window/purescript ref purescript
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/purescript }
 }
+
+}
+
+require-module detect-purescript
 
 
 provide-module purescript %§

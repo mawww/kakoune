@@ -1,6 +1,8 @@
 # http://lua.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-lua %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -31,6 +33,10 @@ hook -group lua-highlight global WinSetOption filetype=lua %{
     add-highlighter window/lua ref lua
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/lua }
 }
+
+}
+
+require-module detect-lua
 
 
 provide-module lua %§

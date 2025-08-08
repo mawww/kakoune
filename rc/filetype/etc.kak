@@ -1,3 +1,5 @@
+provide-module detect-etc %{
+
 # Highlighting for common files in /etc
 hook global BufCreate .*/etc/(hosts|networks|services)  %{ set-option buffer filetype etc-hosts }
 hook global BufCreate .*/etc/resolv.conf                %{ set-option buffer filetype etc-resolv-conf }
@@ -45,6 +47,10 @@ hook -group etc-passwd-highlight global WinSetOption filetype=etc-passwd %{
     add-highlighter window/etc-passwd ref etc-passwd
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/etc-passwd }
 }
+
+}
+
+require-module detect-etc
 
 
 # Highlighters

@@ -1,6 +1,8 @@
 # http://elixir-lang.org
 # ----------------------
 
+provide-module detect-elixir %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -40,6 +42,10 @@ hook -group eex-highlight global WinSetOption filetype=eex %{
     add-highlighter window/eex ref eex
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/eex }
 }
+
+}
+
+require-module detect-elixir
 
 provide-module eex %{
 require-module html
