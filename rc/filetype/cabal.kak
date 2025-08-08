@@ -1,6 +1,8 @@
 # http://haskell.org/cabal
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-cabal %[
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -27,6 +29,10 @@ hook -group cabal-highlight global WinSetOption filetype=cabal %{
     add-highlighter window/cabal ref cabal
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/cabal }
 }
+
+]
+
+require-module detect-cabal
 
 
 provide-module cabal %[

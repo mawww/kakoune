@@ -4,6 +4,8 @@
 
 # Detection and Initialization sections were adapted from rc/filetype/elixir.kak
 
+provide-module detect-erlang %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 hook global BufCreate .*[.](erl|hrl) %{
@@ -22,6 +24,10 @@ hook -group erlang-highlight global WinSetOption filetype=erlang %{
     add-highlighter window/erlang ref erlang
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/erlang }
 }
+
+}
+
+require-module detect-erlang
 
 provide-module erlang %[
 

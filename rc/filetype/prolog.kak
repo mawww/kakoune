@@ -3,8 +3,11 @@
 
 # Adapted from rc/filetype/erlang.kak
 
+provide-module detect-prolog %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
+
 hook global BufCreate .*[.](pl|P) %{
     set-option buffer filetype prolog
 }
@@ -21,6 +24,10 @@ hook -group prolog-highlight global WinSetOption filetype=prolog %{
     add-highlighter window/prolog ref prolog
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/prolog }
 }
+
+}
+
+require-module detect-prolog
 
 provide-module prolog %[
 

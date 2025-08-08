@@ -1,6 +1,8 @@
 # http://graphql.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-graphql %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -25,6 +27,10 @@ hook -group graphql-highlight global WinSetOption filetype=graphql %{
     add-highlighter window/graphql ref graphql
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/graphql }
 }
+
+}
+
+require-module detect-graphql
 
 
 provide-module graphql %§ 

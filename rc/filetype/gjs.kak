@@ -1,6 +1,8 @@
 # https://github.com/ember-template-imports/ember-template-imports
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-gjs %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -39,6 +41,10 @@ hook -group gts-highlight global WinSetOption filetype=gts %{
     add-highlighter window/gts ref gts
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/gts }
 }
+
+}
+
+require-module detect-gjs
 
 # Modules
 

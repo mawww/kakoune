@@ -1,3 +1,5 @@
+provide-module detect-exherbo %{
+
 ## Repository metadata files
 hook global BufCreate .*/metadata/mirrors\.conf         %{ set-option buffer filetype paludis-mirrors-conf }
 hook global BufCreate .*/metadata/licence_groups.conf   %{ set-option buffer filetype exheres-0-licence-groups }
@@ -43,6 +45,10 @@ hook -group exheres-0-licence-groups-highlight global WinSetOption filetype=exhe
     add-highlighter window/exheres-0-licence-groups ref exheres-0-licence-groups
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/exheres-0-licence-groups }
 }
+
+}
+
+require-module detect-exherbo
 
 provide-module exheres %{
 # Highlighters

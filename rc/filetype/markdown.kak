@@ -1,6 +1,8 @@
 # http://daringfireball.net/projects/markdown
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-markdown %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -34,6 +36,10 @@ hook -group markdown-highlight global WinSetOption filetype=markdown %{
     add-highlighter window/markdown ref markdown
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/markdown }
 }
+
+}
+
+require-module detect-markdown
 
 
 provide-module markdown %{

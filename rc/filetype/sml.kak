@@ -1,10 +1,10 @@
 # https://smlfamily.github.io
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-sml %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
-
-provide-module detect-sml %{
 
 hook global BufCreate .*\.(sml|fun|sig) %{
     set-option buffer filetype sml

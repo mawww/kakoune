@@ -1,3 +1,5 @@
+provide-module detect-diff %{
+
 hook global BufCreate .*\.(diff|patch) %{
     set-option buffer filetype diff
 }
@@ -11,6 +13,10 @@ hook -group diff-highlight global WinSetOption filetype=diff %{
     add-highlighter window/diff ref diff
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/diff }
 }
+
+}
+
+require-module detect-diff
 
 provide-module diff %§
 

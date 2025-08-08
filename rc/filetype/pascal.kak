@@ -1,7 +1,10 @@
 # https://www.freepascal.org/docs-html/ref/ref.html
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-pascal %[
+
 # Detection, see https://wiki.freepascal.org/file_types
+
 hook global BufCreate .*\.(p|pp|pas|pascal)$ %{
     set-option buffer filetype pascal
 }
@@ -24,6 +27,10 @@ hook -group pascal-highlight global WinSetOption filetype=((free|object)?pascal|
     add-highlighter window/pascal ref pascal
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/pascal }
 ]
+
+]
+
+require-module detect-pascal
 
 provide-module pascal %§
 

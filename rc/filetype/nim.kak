@@ -1,6 +1,8 @@
 # https://nim-lang.org/
 #
 
+provide-module detect-nim %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -28,6 +30,10 @@ hook -group nim-highlight global WinSetOption filetype=nim %{
     add-highlighter window/nim ref nim
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/nim }
 }
+
+}
+
+require-module detect-nim
 
 provide-module nim %{
 

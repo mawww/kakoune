@@ -1,6 +1,8 @@
 # http://haml.info
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-haml %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -25,6 +27,10 @@ hook -group haml-highlight global WinSetOption filetype=haml %{
     add-highlighter window/haml ref haml
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/haml }
 }
+
+}
+
+require-module detect-haml
 
 
 provide-module haml %[

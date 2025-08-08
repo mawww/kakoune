@@ -1,6 +1,8 @@
 # http://cukes.info
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-cucumber %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -25,6 +27,10 @@ hook -group cucumber-highlight global WinSetOption filetype=cucumber %{
     add-highlighter window/cucumber ref cucumber
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/cucumber }
 }
+
+}
+
+require-module detect-cucumber
 
 
 provide-module cucumber %{

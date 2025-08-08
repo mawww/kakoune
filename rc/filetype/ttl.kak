@@ -2,6 +2,8 @@
 # of the W3C's Resource Description Framework (RDF):
 # https://www.w3.org/TR/turtle/
 
+provide-module detect-ttl %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -26,6 +28,10 @@ hook -group ttl-highlight global WinSetOption filetype=ttl %{
     add-highlighter window/ttl ref ttl
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/ttl }
 }
+
+}
+
+require-module detect-ttl
 
 
 provide-module ttl %{

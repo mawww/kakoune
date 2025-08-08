@@ -1,3 +1,5 @@
+provide-module detect-i3 %[
+
 hook global BufCreate .*(sway|i3)/config %{
     set buffer filetype i3
 }
@@ -21,6 +23,10 @@ hook -group i3-highlight global WinSetOption filetype=i3 %{
     add-highlighter window/i3 ref i3
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/i3 }
 }
+
+]
+
+require-module detect-i3
 
 
 provide-module i3 %[

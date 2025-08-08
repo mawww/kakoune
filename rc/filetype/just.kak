@@ -1,3 +1,5 @@
+provide-module detect-just %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -18,6 +20,10 @@ hook -group justfile-highlight global WinSetOption filetype=justfile %{
     add-highlighter window/justfile ref justfile
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/justfile }
 }
+
+}
+
+require-module detect-just
 
 
 provide-module justfile %{

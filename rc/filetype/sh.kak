@@ -1,3 +1,5 @@
+provide-module detect-sh %{
+
 hook global BufCreate .*\.((z|ba|c|k|mk)?(sh(rc|_profile|env)?|profile)) %{
     set-option buffer filetype sh
 }
@@ -16,6 +18,10 @@ hook -group sh-highlight global WinSetOption filetype=sh %{
     add-highlighter window/sh ref sh
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/sh }
 }
+
+}
+
+require-module detect-sh
 
 # using non-ascii characters here so that we can use the '[' command
 provide-module sh %§

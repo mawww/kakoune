@@ -1,6 +1,8 @@
 # http://json.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-json %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -25,6 +27,10 @@ hook -group json-highlight global WinSetOption filetype=json %{
     add-highlighter window/json ref json
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/json }
 }
+
+}
+
+require-module detect-json
 
 
 provide-module json %(

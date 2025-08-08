@@ -9,6 +9,8 @@ provide-module perf-report %{
     }
 }
 
+provide-module detect-perf-report %{
+
 hook -group perf-report-highlight global WinSetOption filetype=perf-report %{
     require-module perf-report
     add-highlighter window/perf-report ref perf-report
@@ -16,6 +18,10 @@ hook -group perf-report-highlight global WinSetOption filetype=perf-report %{
 
     map window normal <ret> ': perf-report-focus<ret>'
 }
+
+}
+
+require-module detect-perf-report
 
 provide-module perf-annotate %{
     require-module gas
@@ -25,8 +31,14 @@ provide-module perf-annotate %{
     add-highlighter shared/perf-annotate/below_threshold regex '^\h+0\.\d+\b' 0:green
 }
 
+provide-module detect-perf-annotate %{
+
 hook -group perf-annotate-highlight global WinSetOption filetype=perf-annotate %{
     require-module perf-annotate
     add-highlighter window/perf-annotate ref perf-annotate
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/perf-annotate }
 }
+
+}
+
+require-module detect-perf-annotate

@@ -1,6 +1,8 @@
 # https://www.w3schools.com/sql/default.asp
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-sql %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -20,6 +22,10 @@ hook -group sql-highlight global WinSetOption filetype=sql %{
     add-highlighter window/sql ref sql
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/sql }
 }
+
+}
+
+require-module detect-sql
 
 
 provide-module sql %{

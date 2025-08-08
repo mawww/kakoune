@@ -60,6 +60,8 @@ provide-module -override wren %§
         'var' 'while' 'Bool' 'Class' 'Fiber' 'Fn' 'List' 'Map' 'Null' 'Num' 'Object' 'Range' 'Sequence' 'String' 'System'
 §
 
+provide-module detect-wren %{
+
 hook global BufCreate (.*/)?.*\.wren %{ set-option buffer filetype wren }
 
 hook -group wren-highlight global WinSetOption filetype=wren %{
@@ -82,6 +84,10 @@ hook global WinSetOption filetype=wren %{
     hook window InsertChar \n -group wren-comment-insert wren-insert-comment-on-new-line
     hook window InsertChar \n -group wren-closing-delimiter-insert wren-insert-closing-delimiter-on-new-line
 }
+
+}
+
+require-module detect-wren
 
 define-command -hidden wren-indent-on-new-line %~
     evaluate-commands -draft -itersel %=

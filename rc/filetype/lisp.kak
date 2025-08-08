@@ -1,6 +1,8 @@
 # http://common-lisp.net
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-lisp %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -25,6 +27,10 @@ hook -group lisp-highlight global WinSetOption filetype=lisp %{
     add-highlighter window/lisp ref lisp
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/lisp }
 }
+
+}
+
+require-module detect-lisp
 
 provide-module lisp %{
 

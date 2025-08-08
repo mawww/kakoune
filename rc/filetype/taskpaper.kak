@@ -1,6 +1,8 @@
 # https://www.taskpaper.com
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-taskpaper %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -23,6 +25,10 @@ hook -group taskpaper-highlight global WinSetOption filetype=taskpaper %{
     add-highlighter window/taskpaper ref taskpaper
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/taskpaper }
 }
+
+}
+
+require-module detect-taskpaper
 
 
 provide-module taskpaper %{

@@ -1,3 +1,5 @@
+provide-module detect-ini %{
+
 hook global BufCreate .+\.ini %{
     set-option buffer filetype ini
 }
@@ -10,6 +12,10 @@ hook -group ini-highlight global WinSetOption filetype=ini %{
     add-highlighter window/ini ref ini
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/ini }
 }
+
+}
+
+require-module detect-ini
 
 
 provide-module ini %{

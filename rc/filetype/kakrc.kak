@@ -1,6 +1,8 @@
 # http://kakoune.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-kakrc %§
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -31,6 +33,10 @@ hook -group kak-highlight global WinSetOption filetype=kak %{
     add-highlighter window/kakrc ref kakrc
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/kakrc }
 }
+
+§
+
+require-module detect-kakrc
 
 provide-module kak %§
 

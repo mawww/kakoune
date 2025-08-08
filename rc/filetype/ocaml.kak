@@ -1,6 +1,8 @@
 # http://ocaml.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-ocaml %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -27,6 +29,10 @@ hook -group ocaml-highlight global WinSetOption filetype=ocaml %{
         remove-highlighter window/ocaml
     }
 }
+
+}
+
+require-module detect-ocaml
 
 provide-module ocaml %{
 

@@ -1,12 +1,18 @@
 # http://kakoune.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-r %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate (.*/)?(\.Rprofile|.*\.[rR]) %{
     set-option buffer filetype r
 }
+
+}
+
+require-module detect-r
 
 provide-module r %§
 

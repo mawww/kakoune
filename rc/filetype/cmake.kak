@@ -1,3 +1,5 @@
+provide-module detect-cmake %{
+
 hook global BufCreate .+\.cmake|.*/CMakeLists.txt %{
     set-option buffer filetype cmake
 }
@@ -14,6 +16,10 @@ hook -group cmake-highlight global WinSetOption filetype=cmake %{
     add-highlighter window/cmake ref cmake
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/cmake }
 }
+
+}
+
+require-module detect-cmake
 
 provide-module cmake %{
 

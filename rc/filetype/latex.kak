@@ -1,6 +1,8 @@
 # https://www.latex-project.org/
 #
 
+provide-module detect-latex %(
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -26,6 +28,10 @@ hook -group latex-highlight global WinSetOption filetype=latex %{
     add-highlighter window/latex ref latex
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/latex }
 }
+
+)
+
+require-module detect-latex
 
 provide-module latex %~
 

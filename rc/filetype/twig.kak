@@ -1,6 +1,8 @@
 # https://twig.symfony.com/doc/3.x/templates.html
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-twig %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -29,6 +31,10 @@ hook -group twig-highlight global WinSetOption filetype=twig %{
     add-highlighter window/twig ref twig
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/twig }
 }
+
+}
+
+require-module detect-twig
 
 
 provide-module twig %[
