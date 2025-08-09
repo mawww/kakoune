@@ -319,6 +319,7 @@ nix-env -iA nixpkgs.kakoune
 pkg_add kakoune
 --------------------------------
 ====
+https://repology.org/project/kakoune/versions[image:https://repology.org/badge/vertical-allrepos/kakoune.svg[Packaging status]]
 
 Running
 ~~~~~~~
