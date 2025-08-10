@@ -1,4 +1,4 @@
-provide-module detect-apl %@
+provide-module detect-apl %<
 
 # Detection
 # ‾‾‾‾‾‾‾‾‾
@@ -27,7 +27,7 @@ hook -group apl-highlight global WinSetOption filetype=apl %{
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/apl }
 }
 
-@
+>
 
 require-module detect-apl
 
