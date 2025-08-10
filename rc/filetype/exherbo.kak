@@ -1,5 +1,7 @@
 provide-module detect-exherbo %{
 
+# exheres
+
 ## Repository metadata files
 hook global BufCreate .*/metadata/mirrors\.conf         %{ set-option buffer filetype paludis-mirrors-conf }
 hook global BufCreate .*/metadata/licence_groups.conf   %{ set-option buffer filetype exheres-0-licence-groups }
@@ -46,6 +48,45 @@ hook -group exheres-0-licence-groups-highlight global WinSetOption filetype=exhe
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/exheres-0-licence-groups }
 }
 
+
+# paludis
+
+hook global WinSetOption filetype=paludis-(key-value|options|mirrors|specs)-conf %{
+    require-module paludis
+}
+
+hook -group paludis-options-conf-highlight global WinSetOption filetype=paludis-options-conf %{
+    add-highlighter window/paludis-options-conf ref paludis-options-conf
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/paludis-options-conf }
+}
+
+hook -group paludis-key-value-conf-highlight global WinSetOption filetype=paludis-key-value-conf %{
+    add-highlighter window/paludis-key-value-conf ref paludis-key-value-conf
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/paludis-key-value-conf }
+}
+
+hook -group paludis-mirrors-conf-highlight global WinSetOption filetype=paludis-mirrors-conf %{
+    add-highlighter window/paludis-mirrors-conf ref paludis-mirrors-conf
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/paludis-mirrors-conf }
+}
+
+hook -group paludis-specs-conf-highlight global WinSetOption filetype=paludis-specs-conf %{
+    add-highlighter window/paludis-specs-conf ref paludis-specs-conf
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/paludis-specs-conf }
+}
+
+
+# glep42
+
+hook global WinSetOption filetype=glep42 %{
+    require-module glep42
+}
+
+hook -group glep42-highlight global WinSetOption filetype=glep42 %{
+    add-highlighter window/glep42 ref glep42
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/glep42 }
+}
+
 }
 
 require-module detect-exherbo
@@ -74,29 +115,6 @@ add-highlighter shared/exheres-0-licence-groups/ regex ^(\S+) 0:type
 add-highlighter shared/exheres-0-licence-groups/ regex ^#.*?$ 0:comment
 }
 
-hook global WinSetOption filetype=paludis-(key-value|options|mirrors|specs)-conf %{
-    require-module paludis
-}
-
-hook -group paludis-options-conf-highlight global WinSetOption filetype=paludis-options-conf %{
-    add-highlighter window/paludis-options-conf ref paludis-options-conf
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/paludis-options-conf }
-}
-
-hook -group paludis-key-value-conf-highlight global WinSetOption filetype=paludis-key-value-conf %{
-    add-highlighter window/paludis-key-value-conf ref paludis-key-value-conf
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/paludis-key-value-conf }
-}
-
-hook -group paludis-mirrors-conf-highlight global WinSetOption filetype=paludis-mirrors-conf %{
-    add-highlighter window/paludis-mirrors-conf ref paludis-mirrors-conf
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/paludis-mirrors-conf }
-}
-
-hook -group paludis-specs-conf-highlight global WinSetOption filetype=paludis-specs-conf %{
-    add-highlighter window/paludis-specs-conf ref paludis-specs-conf
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/paludis-specs-conf }
-}
 provide-module paludis %{
 ## Paludis configurations
 ### options.conf
@@ -124,15 +142,6 @@ add-highlighter shared/paludis-specs-conf group
 add-highlighter shared/paludis-specs-conf/ regex [\s\t]+(\S+(?:[\s\t]+))*$ 0:attribute
 add-highlighter shared/paludis-specs-conf/ regex ^(\S+/\S+) 0:type
 add-highlighter shared/paludis-specs-conf/ regex ^#.*?$ 0:comment
-}
-
-hook global WinSetOption filetype=glep42 %{
-    require-module glep42
-}
-
-hook -group glep42-highlight global WinSetOption filetype=glep42 %{
-    add-highlighter window/glep42 ref glep42
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/glep42 }
 }
 
 provide-module glep42 %{
