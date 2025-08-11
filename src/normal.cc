@@ -385,6 +385,7 @@ void view_commands(Context& context, NormalParams params)
 
         const BufferCoord cursor = context.selections().main().cursor();
         Window& window = context.window();
+        window.update_display_buffer(context);
 
         const DisplayCoord scrolloff = context.options()["scrolloff"].get<DisplayCoord>();
         const LineCount line_offset{std::min((window.dimensions().line - 1) / 2, scrolloff.line)};
