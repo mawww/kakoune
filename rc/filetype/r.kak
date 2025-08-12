@@ -1,12 +1,38 @@
 # http://kakoune.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-r %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate (.*/)?(\.Rprofile|.*\.[rR]) %{
     set-option buffer filetype r
 }
+
+# Initialization
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+hook -group r-highlight global WinSetOption filetype=r %{
+    require-module r
+    add-highlighter window/r ref r
+    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/r }
+}
+
+hook global WinSetOption filetype=r %~
+    require-module r
+    hook window ModeChange pop:insert:.* r-trim-indent
+    hook window InsertChar \n        r-insert-on-newline
+    hook window InsertChar \n        r-indent-on-newline
+    hook window InsertChar \{        r-indent-on-opening-curly-brace
+    hook window InsertChar \}        r-indent-on-closing-curly-brace
+
+    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window r-.+ }
+~
+
+}
+
+require-module detect-r
 
 provide-module r %§
 
@@ -133,23 +159,3 @@ define-command -hidden r-insert-on-newline %[ evaluate-commands -itersel -draft 
 ] ]
 
 §
-
-# Initialization
-# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾
-
-hook -group r-highlight global WinSetOption filetype=r %{
-    require-module r
-    add-highlighter window/r ref r
-    hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/r }
-}
-
-hook global WinSetOption filetype=r %~
-    require-module r
-    hook window ModeChange pop:insert:.* r-trim-indent
-    hook window InsertChar \n        r-insert-on-newline
-    hook window InsertChar \n        r-indent-on-newline
-    hook window InsertChar \{        r-indent-on-opening-curly-brace
-    hook window InsertChar \}        r-indent-on-closing-curly-brace
-
-    hook -once -always window WinSetOption filetype=.* %{ remove-hooks window r-.+ }
-~

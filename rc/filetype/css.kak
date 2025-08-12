@@ -1,6 +1,8 @@
 # http://w3.org/Style/CSS
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-css %[
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -28,6 +30,10 @@ hook -group css-highlight global WinSetOption filetype=css %{
     add-highlighter window/css ref css
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/css }
 }
+
+]
+
+require-module detect-css
 
 
 provide-module css %[

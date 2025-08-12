@@ -1,3 +1,5 @@
+provide-module detect-troff %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -16,6 +18,10 @@ hook -group troff-highlight global WinSetOption filetype=troff %{
     add-highlighter window/troff ref troff
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/troff }
 }
+
+}
+
+require-module detect-troff
 
 provide-module troff %{
 

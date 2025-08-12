@@ -1,6 +1,8 @@
 # http://godotengine.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-gdscript %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -27,6 +29,10 @@ hook -group gdscript-highlight global WinSetOption filetype=gdscript %{
     add-highlighter window/gdscript ref gdscript
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/gdscript }
 }
+
+}
+
+require-module detect-gdscript
 
 provide-module gdscript %§
 

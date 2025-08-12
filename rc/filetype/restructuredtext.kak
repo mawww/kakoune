@@ -1,3 +1,5 @@
+provide-module detect-restructuredtext %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -25,6 +27,10 @@ hook -group restructuredtext-highlight global WinSetOption filetype=restructured
     add-highlighter window/restructuredtext ref restructuredtext
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/restructuredtext }
 }
+
+}
+
+require-module detect-restructuredtext
 
 provide-module restructuredtext %{
 
