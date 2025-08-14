@@ -413,25 +413,48 @@ void register_keymaps()
     keymaps.map_key(shift(Key::Home), KeymapMode::Normal, {alt('H')}, "");
 }
 
+static void check_tabstop(const int& val)
+{
+    if (val < 1) throw runtime_error{"tabstop should be strictly positive"};
+}
+
+static void check_indentwidth(const int& val)
+{
+    if (val < 0) throw runtime_error{"indentwidth should be positive or zero"};
+}
+
+static void check_scrolloff(const DisplayCoord& so)
+{
+    if (so.line < 0 or so.column < 0)
+        throw runtime_error{"scroll offset must be positive or zero"};
+}
+
+static void check_timeout(const int& timeout)
+{
+    if (timeout < 50)
+        throw runtime_error{"the minimum acceptable timeout is 50 milliseconds"};
+}
+
+static void check_extra_word_chars(const Vector<Codepoint, MemoryDomain::Options>& extra_chars)
+{
+    if (any_of(extra_chars, is_blank))
+        throw runtime_error{"blanks are not accepted for extra completion characters"};
+}
+
+static void check_matching_pairs(const Vector<Codepoint, MemoryDomain::Options>& pairs)
+{
+    if ((pairs.size() % 2) != 0)
+        throw runtime_error{"matching pairs should have a pair number of element"};
+    if (not all_of(pairs, [](Codepoint cp) { return is_punctuation(cp); }))
+        throw runtime_error{"matching pairs can only be punctuation"};
+}
+
 void register_options()
 {
-
     OptionsRegistry& reg = GlobalScope::instance().option_registry();
 
-    constexpr auto check_tabstop = [](const int& val) {
-        if (val < 1) throw runtime_error{"tabstop should be strictly positive"};
-    };
     reg.declare_option<int, check_tabstop>("tabstop", "size of a tab character", 8);
-
-    constexpr auto check_indentwidth = [](const int& val) {
-        if (val < 0) throw runtime_error{"indentwidth should be positive or zero"};
-    };
     reg.declare_option<int, check_indentwidth>("indentwidth", "indentation width", 4);
-
-    constexpr auto check_scrolloff = [](const DisplayCoord& so) {
-        if (so.line < 0 or so.column < 0)
-            throw runtime_error{"scroll offset must be positive or zero"};
-    };
     reg.declare_option<DisplayCoord, check_scrolloff>(
         "scrolloff", "number of lines and columns to keep visible main cursor when scrolling",
         {0,0});
@@ -472,17 +495,11 @@ void register_options()
     reg.declare_option("writemethod",
                        "how to write buffer to files",
                        WriteMethod::Overwrite);
-
-    constexpr auto check_timeout = [](const int& timeout) {
-        if (timeout < 50)
-            throw runtime_error{"the minimum acceptable timeout is 50 milliseconds"};
-    };
     reg.declare_option<int, check_timeout>(
         "idle_timeout", "timeout, in milliseconds, before idle hooks are triggered", 50);
     reg.declare_option<int, check_timeout>(
         "fs_check_timeout", "timeout, in milliseconds, between file system buffer modification checks",
         500);
-
     reg.declare_option("ui_options",
                        "space separated list of <key>=<value> options that are "
                        "passed to and interpreted by the user interface\n"
@@ -507,22 +524,10 @@ void register_options()
 
     reg.declare_option("debug", "various debug flags", DebugFlags::None);
     reg.declare_option("readonly", "prevent buffers from being modified", false);
-
-    constexpr auto check_extra_word_chars = [](const Vector<Codepoint, MemoryDomain::Options>& extra_chars) {
-        if (any_of(extra_chars, is_blank))
-            throw runtime_error{"blanks are not accepted for extra completion characters"};
-    };
     reg.declare_option<Vector<Codepoint, MemoryDomain::Options>, check_extra_word_chars>(
         "extra_word_chars",
         "Additional characters to be considered as words for insert completion",
         { '_' });
-
-    constexpr auto check_matching_pairs = [](const Vector<Codepoint, MemoryDomain::Options>& pairs) {
-        if ((pairs.size() % 2) != 0)
-            throw runtime_error{"matching pairs should have a pair number of element"};
-        if (not all_of(pairs, [](Codepoint cp) { return is_punctuation(cp); }))
-            throw runtime_error{"matching pairs can only be punctuation"};
-    };
     reg.declare_option<Vector<Codepoint, MemoryDomain::Options>, check_matching_pairs>(
         "matching_pairs",
         "set of pair of characters to be considered as matching pairs",
