@@ -41,6 +41,9 @@ namespace Kakoune
 
 extern const char* version;
 
+namespace
+{
+
 struct {
     unsigned int version;
     StringView notes;
@@ -130,7 +133,7 @@ String config_directory()
     return format("{}/.config/kak", homedir());
 }
 
-static auto main_sel_first(const SelectionList& selections)
+auto main_sel_first(const SelectionList& selections)
 {
     auto beg = &*selections.begin(), end = &*selections.end();
     auto main = beg + selections.main_index();
@@ -138,7 +141,7 @@ static auto main_sel_first(const SelectionList& selections)
     return concatenated(View{main, end}, View{beg, main});
 }
 
-static const EnvVarDesc builtin_env_vars[] = { {
+const EnvVarDesc builtin_env_vars[] = { {
         "bufname", false,
         [](StringView name, const Context& context) -> Vector<String>
         { return {context.buffer().display_name()}; }
@@ -413,35 +416,35 @@ void register_keymaps()
     keymaps.map_key(shift(Key::Home), KeymapMode::Normal, {alt('H')}, "");
 }
 
-static void check_tabstop(const int& val)
+void check_tabstop(const int& val)
 {
     if (val < 1) throw runtime_error{"tabstop should be strictly positive"};
 }
 
-static void check_indentwidth(const int& val)
+void check_indentwidth(const int& val)
 {
     if (val < 0) throw runtime_error{"indentwidth should be positive or zero"};
 }
 
-static void check_scrolloff(const DisplayCoord& so)
+void check_scrolloff(const DisplayCoord& so)
 {
     if (so.line < 0 or so.column < 0)
         throw runtime_error{"scroll offset must be positive or zero"};
 }
 
-static void check_timeout(const int& timeout)
+void check_timeout(const int& timeout)
 {
     if (timeout < 50)
         throw runtime_error{"the minimum acceptable timeout is 50 milliseconds"};
 }
 
-static void check_extra_word_chars(const Vector<Codepoint, MemoryDomain::Options>& extra_chars)
+void check_extra_word_chars(const Vector<Codepoint, MemoryDomain::Options>& extra_chars)
 {
     if (any_of(extra_chars, is_blank))
         throw runtime_error{"blanks are not accepted for extra completion characters"};
 }
 
-static void check_matching_pairs(const Vector<Codepoint, MemoryDomain::Options>& pairs)
+void check_matching_pairs(const Vector<Codepoint, MemoryDomain::Options>& pairs)
 {
     if ((pairs.size() % 2) != 0)
         throw runtime_error{"matching pairs should have a pair number of element"};
@@ -535,8 +538,8 @@ void register_options()
     reg.declare_option<int>("startup_info_version", "version up to which startup info changes should be hidden", 0);
 }
 
-static Client* local_client = nullptr;
-static bool convert_to_client_pending = false;
+Client* local_client = nullptr;
+bool convert_to_client_pending = false;
 
 enum class UIType
 {
@@ -993,6 +996,8 @@ void signal_handler(int signal)
     }
     else
         abort();
+}
+
 }
 
 }
