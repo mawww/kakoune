@@ -72,9 +72,8 @@ public:
         };
         (append(strs), ...);
         *data = 0;
-        return RefPtr<StringData, PtrPolicy>{res};
+        return Ptr{res};
     }
-
 };
 
 using StringDataPtr = StringData::Ptr;
