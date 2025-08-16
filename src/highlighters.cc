@@ -524,7 +524,7 @@ const HighlighterDesc column_desc = {
     "Highlight the column <column> with <face>",
     {
         { { "ruler", { ArgCompleter{}, "replace empty or whitespace cells with the given character. When provided, <face> is not applied to non-empty cells" } } },
-        ParameterDesc::Flags::SwitchesOnlyAtStart, 2, 2
+        ParameterDesc::Flags::None, 2, 2
     },
 };
 UniquePtr<Highlighter> create_column_highlighter(HighlighterParameters params, Highlighter*)
@@ -532,14 +532,14 @@ UniquePtr<Highlighter> create_column_highlighter(HighlighterParameters params, H
     ParametersParser parser{params, column_desc.params};
 
     auto positionals = parser.positionals_from(0);
+
     auto ruler = parser.get_switch("ruler");
-    if (ruler.value_or(" ").char_length() > 1)
+    bool highlight_non_blank = static_cast<bool>(ruler);
+    auto col_char = ruler.value_or(" ").str();
+    if (col_char.char_length() > 1)
         throw runtime_error("-ruler expects a single character");
 
-    auto ruler_provided = static_cast<bool>(ruler);
-    auto col_char = ruler.value_or(" ").str();
-
-    auto func = [col_expr=positionals[0], facespec=parse_face(positionals[1]), ruler_provided, col_char]
+    auto func = [col_expr=positionals[0], facespec=parse_face(positionals[1]), highlight_non_blank, col_char]
                 (HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
     {
         ColumnCount column = -1;
@@ -574,9 +574,10 @@ UniquePtr<Highlighter> create_column_highlighter(HighlighterParameters params, H
                         atom_it = ++line.split(atom_it, remaining_col);
                     if (atom_it->length() > 1)
                         atom_it = line.split(atom_it, 1_col);
-                    if (!ruler_provided)
+                    if (!highlight_non_blank)
                         atom_it->face = merge_faces(atom_it->face, face);
-                    if (ruler_provided && is_blank(atom_it->content()[0])) {
+                    else if (is_blank(atom_it->content()[0]))
+                    {
                         atom_it->replace(col_char);
                         atom_it->face = merge_faces(atom_it->face, face);
                     }
