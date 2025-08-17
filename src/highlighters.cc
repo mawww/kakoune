@@ -534,7 +534,7 @@ UniquePtr<Highlighter> create_column_highlighter(HighlighterParameters params, H
     auto positionals = parser.positionals_from(0);
 
     auto ruler = parser.get_switch("ruler");
-    bool highlight_non_blank = static_cast<bool>(ruler);
+    bool highlight_non_blank = (bool)ruler;
     auto col_char = ruler.value_or(" ").str();
     if (col_char.char_length() > 1)
         throw runtime_error("-ruler expects a single character");
