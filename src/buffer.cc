@@ -28,8 +28,8 @@ Buffer::Buffer(String name, Flags flags, BufferLines lines,
                ByteOrderMark bom, EolFormat eolformat,
                FsStatus fs_status)
     : Scope{GlobalScope::instance()},
-      m_name{(flags & Flags::File) ? real_path(parse_filename(name)) : std::move(name)},
-      m_display_name{(flags & Flags::File) ? compact_path(m_name) : m_name},
+      m_filename{(flags & Flags::File) ? real_path(parse_filename(name)) : String{}},
+      m_display_name{(flags & Flags::File) ? compact_path(m_filename) : std::move(name)},
       m_flags{flags | Flags::NoUndo},
       m_history{{HistoryId::Invalid}},
       m_history_id{HistoryId::First},
@@ -72,16 +72,16 @@ void Buffer::on_registered()
 
     m_flags |= Flags::NoBufSetOption;
 
-    run_hook_in_own_context(Hook::BufCreate, m_name);
+    run_hook_in_own_context(Hook::BufCreate, (m_flags & Flags::File) ? m_filename : m_display_name);
 
     if (m_flags & Flags::File)
     {
         if (m_flags & Buffer::Flags::New)
-            run_hook_in_own_context(Hook::BufNewFile, m_name);
+            run_hook_in_own_context(Hook::BufNewFile, (m_flags & Flags::File) ? m_filename : m_display_name);
         else
         {
             kak_assert(m_fs_status.timestamp != InvalidTime);
-            run_hook_in_own_context(Hook::BufOpenFile, m_name);
+            run_hook_in_own_context(Hook::BufOpenFile, (m_flags & Flags::File) ? m_filename : m_display_name);
         }
     }
     m_flags &= ~Flags::NoBufSetOption;
@@ -98,7 +98,7 @@ void Buffer::on_unregistered()
         return;
 
     options().unregister_watcher(*this);
-    run_hook_in_own_context(Hook::BufClose, m_name);
+    run_hook_in_own_context(Hook::BufClose, (m_flags & Flags::File) ? m_filename : m_display_name);
 }
 
 Buffer::~Buffer()
@@ -113,9 +113,9 @@ bool Buffer::set_name(String name)
     {
         if (m_flags & Flags::File)
         {
-            m_name = real_path(name);
-            m_display_name = compact_path(m_name);
-            if (m_flags & Buffer::Flags::File and not file_exists(m_name))
+            m_filename = real_path(name);
+            m_display_name = compact_path(m_filename);
+            if (m_flags & Buffer::Flags::File and not file_exists(m_filename))
             {
                 m_flags |= Buffer::Flags::New;
                 m_last_save_history_id = HistoryId::Invalid;
@@ -123,8 +123,8 @@ bool Buffer::set_name(String name)
         }
         else
         {
-            m_name = std::move(name);
-            m_display_name = m_name;
+            m_filename = String{};
+            m_display_name = std::move(name);
         }
         return true;
     }
@@ -140,7 +140,7 @@ void Buffer::throw_if_read_only() const
 void Buffer::update_display_name()
 {
     if (m_flags & Flags::File)
-        m_display_name = compact_path(m_name);
+        m_display_name = compact_path(m_filename);
 }
 
 BufferIterator Buffer::iterator_at(BufferCoord coord) const
@@ -684,7 +684,7 @@ String Buffer::debug_description() const
 
     return format("{}\nFlags: {}{}{}{}{}{}{}{}\nUsed mem: content={} additional={}\n",
                   display_name(),
-                  (m_flags & Flags::File) ? "File (" + name() + ") " : "",
+                  (m_flags & Flags::File) ? "File (" + filename() + ") " : "",
                   (m_flags & Flags::New) ? "New " : "",
                   (m_flags & Flags::Fifo) ? "Fifo " : "",
                   (m_flags & Flags::NoUndo) ? "NoUndo " : "",

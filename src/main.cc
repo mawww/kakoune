@@ -49,6 +49,7 @@ struct {
     StringView notes;
 } constexpr version_notes[] = { {
         0,
+        "» {+b}%val\\{buffile}{} is now empty for scratch buffers\n"
         "» {+b}FocusIn{}/{+b}FocusOut{} events on suspend\n"
     }, {
         20250603,
@@ -148,7 +149,7 @@ const EnvVarDesc builtin_env_vars[] = { {
     }, {
         "buffile", false,
         [](StringView name, const Context& context) -> Vector<String>
-        { return {context.buffer().name()}; }
+        { return {context.buffer().filename()}; }
     }, {
         "buflist", false,
         [](StringView name, const Context& context) -> Vector<String>
@@ -928,10 +929,10 @@ int run_filter(StringView keystr, ConstArrayView<StringView> files, bool quiet, 
         {
             Buffer* buffer = open_file_buffer(file, Buffer::Flags::NoHooks);
             if (not suffix_backup.empty())
-                write_buffer_to_file(*buffer, buffer->name() + suffix_backup,
+                write_buffer_to_file(*buffer, buffer->filename() + suffix_backup,
                                      WriteMethod::Overwrite, WriteFlags::None);
             apply_to_buffer(*buffer);
-            write_buffer_to_file(*buffer, buffer->name(),
+            write_buffer_to_file(*buffer, buffer->filename(),
                                  WriteMethod::Overwrite, WriteFlags::None);
             buffer_manager.delete_buffer(*buffer);
         }

@@ -499,8 +499,7 @@ void edit(const ParametersParser& parser, Context& context, const ShellContext&)
             buffer = parser.get_switch("existing") ? open_file_buffer(name, flags)
                                                    : open_or_create_file_buffer(name, flags);
             if (buffer->flags() & Buffer::Flags::New)
-                context.print_status({ format("new file '{}'", name),
-                                       context.faces()["StatusLine"] });
+                context.print_status({format("new file '{}'", name), context.faces()["StatusLine"]});
         }
 
         buffer->flags() &= ~Buffer::Flags::NoHooks;
@@ -606,12 +605,12 @@ void do_write_buffer(Context& context, Optional<String> filename, WriteFlags fla
     // if the buffer is in read-only mode and we try to save it directly
     // or we try to write to it indirectly using e.g. a symlink, throw an error
     if (is_file and is_readonly and
-        (not filename or real_path(*filename) == buffer.name()))
+        (not filename or real_path(*filename) == buffer.filename()))
         throw runtime_error("cannot overwrite the buffer when in readonly mode");
 
-    auto effective_filename = filename ? parse_filename(*filename) : buffer.name();
+    auto effective_filename = filename ? parse_filename(*filename) : buffer.filename();
     if (filename and not (flags & WriteFlags::Force) and
-        real_path(effective_filename) != buffer.name() and
+        real_path(effective_filename) != buffer.filename() and
         regular_file_exists(effective_filename))
         throw runtime_error("cannot overwrite existing file without -force");
 
@@ -619,7 +618,7 @@ void do_write_buffer(Context& context, Optional<String> filename, WriteFlags fla
 
     context.hooks().run_hook(Hook::BufWritePre, effective_filename, context);
     BusyIndicator busy_indicator{context, [&](std::chrono::seconds elapsed) {
-        return DisplayLine{format("waiting while writing buffer '{}' ({}s)", buffer.name(), elapsed.count()),
+        return DisplayLine{format("waiting while writing buffer '{}' ({}s)", buffer.filename(), elapsed.count()),
                            context.faces()["Information"]};
     }};
     write_buffer_to_file(buffer, effective_filename, method, flags);
@@ -720,7 +719,7 @@ static void ensure_all_buffers_are_saved()
                             std::count_if(it, end, is_modified));
     while (it != end)
     {
-        message += (*it)->name();
+        message += (*it)->display_name();
         it = std::find_if(it+1, end, is_modified);
         message += (it != end) ? ", " : "]";
     }
@@ -957,7 +956,7 @@ void delete_buffer(const ParametersParser& parser, Context& context, const Shell
     BufferManager& manager = BufferManager::instance();
     Buffer& buffer = parser.positional_count() == 0 ? context.buffer() : manager.get_buffer(parser[0]);
     if (not force and (buffer.flags() & Buffer::Flags::File) and buffer.is_modified())
-        throw runtime_error(format("buffer '{}' is modified", buffer.name()));
+        throw runtime_error(format("buffer '{}' is modified", buffer.display_name()));
 
     manager.delete_buffer(buffer);
     context.forget_buffer(buffer);

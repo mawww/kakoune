@@ -199,7 +199,8 @@ public:
     BufferCoord offset_coord(BufferCoord coord, CharCount offset, ColumnCount) const;
     BufferCoordAndTarget offset_coord(BufferCoordAndTarget coord, LineCount offset, ColumnCount tabstop) const;
 
-    const String& name() const { return m_name; }
+    const String& name() const { return m_flags & Flags::File ? m_filename : m_display_name; }
+    const String& filename() const { return m_filename; }
     const String& display_name() const { return m_display_name; }
 
     // returns true if the buffer is in a different state than
@@ -294,7 +295,7 @@ private:
     };
     LineList m_lines;
 
-    String m_name;
+    String m_filename;
     String m_display_name;
     Flags  m_flags;
 

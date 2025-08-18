@@ -331,7 +331,7 @@ void Client::reload_buffer()
     {
         context().print_status({ format("error while reloading buffer: '{}'", error.what()),
                                  context().faces()["Error"] });
-        buffer.set_fs_status(get_fs_status(buffer.name()));
+        buffer.set_fs_status(get_fs_status(buffer.filename()));
     }
 }
 
@@ -356,7 +356,7 @@ void Client::on_buffer_reload_key(Key key)
     else if (key == 'n' or key == 'N' or key == Key::Escape)
     {
         // reread timestamp in case the file was modified again
-        buffer.set_fs_status(get_fs_status(buffer.name()));
+        buffer.set_fs_status(get_fs_status(buffer.filename()));
         print_status({ format("'{}' kept", buffer.display_name()),
                        context().faces()["Information"] });
         if (key == 'N')
@@ -399,7 +399,7 @@ void Client::check_if_buffer_needs_reloading()
 
     try
     {
-        const String& filename = buffer.name();
+        const String& filename = buffer.filename();
         const timespec ts = get_fs_timestamp(filename);
         const auto status = buffer.fs_status();
 
@@ -412,12 +412,11 @@ void Client::check_if_buffer_needs_reloading()
 
         if (reload == Autoreload::Ask)
         {
-            StringView bufname = buffer.display_name();
-            info_show(format("reload '{}' ?", bufname),
+            info_show(format("reload '{}' ?", buffer.display_name()),
                       format("'{}' was modified externally\n"
                              " y, <ret>: reload | n, <esc>: keep\n"
                              " Y: always reload | N: always keep\n",
-                             bufname), {}, InfoStyle::Modal);
+                             buffer.display_name()), {}, InfoStyle::Modal);
 
             m_buffer_reload_dialog_opened = true;
             m_input_handler.on_next_key("buffer-reload", KeymapMode::None, [this](Key key, Context&){ on_buffer_reload_key(key); });
@@ -427,7 +426,7 @@ void Client::check_if_buffer_needs_reloading()
     }
     catch (Kakoune::runtime_error& error)
     {
-        write_to_debug_buffer(format("Error while checking if buffer {} changed: {}", buffer.name(), error.what()));
+        write_to_debug_buffer(format("Error while checking if buffer {} changed: {}", buffer.filename(), error.what()));
     }
 }
 

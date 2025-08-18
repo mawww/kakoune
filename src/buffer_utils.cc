@@ -162,7 +162,7 @@ Buffer* open_or_create_file_buffer(StringView filename, Buffer::Flags flags)
 void reload_file_buffer(Buffer& buffer)
 {
     kak_assert(buffer.flags() & Buffer::Flags::File);
-    parse_file(buffer.name(), [&](auto&&... params) {
+    parse_file(buffer.filename(), [&](auto&&... params) {
         buffer.reload(std::forward<decltype(params)>(params)...);
     });
     buffer.flags() &= ~Buffer::Flags::New;
@@ -244,13 +244,13 @@ void write_buffer_to_file(Buffer& buffer, StringView filename,
     }
 
     if ((buffer.flags() & Buffer::Flags::File) and
-        real_path(filename) == real_path(buffer.name()))
+        real_path(filename) == real_path(buffer.filename()))
         buffer.notify_saved(get_fs_status(real_path(filename)));
 }
 
 void write_buffer_to_backup_file(Buffer& buffer)
 {
-    const int fd = open_temp_file(buffer.name());
+    const int fd = open_temp_file(buffer.filename());
     if (fd >= 0)
     {
         write_buffer_to_fd(buffer, fd);

@@ -306,7 +306,7 @@ void goto_commands(Context& context, NormalParams params)
                     if (any_of(filename, [](char c){ return contains(forbidden, c); }))
                         throw runtime_error(format("filename contains invalid characters: '{}'", filename));
 
-                    const StringView buffer_dir = split_path(buffer.name()).first;
+                    const StringView buffer_dir = split_path(buffer.filename()).first;
                     String path = find_file(filename, buffer_dir, paths_opt);
                     if (path.empty())
                         throw runtime_error(format("unable to find file '{}'", filename));
