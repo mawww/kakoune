@@ -6,6 +6,7 @@
 #include "unique_ptr.hh"
 
 #include <type_traits>
+#include <typeinfo>
 
 namespace Kakoune
 {

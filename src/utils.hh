@@ -3,6 +3,9 @@
 
 #include "assert.hh"
 
+#include <utility>
+#include <type_traits>
+
 namespace Kakoune
 {
 
