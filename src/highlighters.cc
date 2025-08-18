@@ -534,7 +534,7 @@ UniquePtr<Highlighter> create_column_highlighter(HighlighterParameters params, H
     auto positionals = parser.positionals_from(0);
 
     auto ruler = parser.get_switch("ruler");
-    bool highlight_non_blank = (bool)ruler;
+    bool highlight_non_blank = not (bool)ruler;
     auto col_char = ruler.value_or(" ").str();
     if (col_char.char_length() > 1)
         throw runtime_error("-ruler expects a single character");
@@ -574,7 +574,7 @@ UniquePtr<Highlighter> create_column_highlighter(HighlighterParameters params, H
                         atom_it = ++line.split(atom_it, remaining_col);
                     if (atom_it->length() > 1)
                         atom_it = line.split(atom_it, 1_col);
-                    if (!highlight_non_blank)
+                    if (highlight_non_blank)
                         atom_it->face = merge_faces(atom_it->face, face);
                     else if (is_blank(atom_it->content()[0]))
                     {
