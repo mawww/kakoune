@@ -26,13 +26,8 @@ BufferManager::~BufferManager()
 
 Buffer* BufferManager::create_buffer(String name, Buffer::Flags flags, BufferLines lines, ByteOrderMark bom, EolFormat eolformat, FsStatus fs_status)
 {
-    auto path = real_path(parse_filename(name));
-    for (auto& buf : m_buffers)
-    {
-        if (buf->name() == name or
-            (buf->flags() & Buffer::Flags::File and buf->name() == path))
-            throw runtime_error{"buffer name is already in use"};
-    }
+    if (get_buffer_ifp(name) != nullptr)
+        throw runtime_error{"buffer name is already in use"};
 
     m_buffers.push_back(make_unique_ptr<Buffer>(std::move(name), flags, std::move(lines), bom, eolformat, fs_status));
     auto* buffer = m_buffers.back().get();
