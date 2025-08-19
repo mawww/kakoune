@@ -303,9 +303,9 @@ Optional<BufferCoord> Window::buffer_coord(DisplayCoord coord) const
         m_display_buffer.lines().empty())
         return {};
     if (coord <= 0_line)
-        coord = {};
+        return {};
     if ((size_t)coord.line >= m_display_buffer.lines().size())
-        coord = DisplayCoord{(int)m_display_buffer.lines().size()-1, INT_MAX};
+        return {};
 
     return find_buffer_coord(m_display_buffer.lines()[(int)coord.line],
                              buffer(), coord.column);

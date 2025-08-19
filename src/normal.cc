@@ -234,12 +234,12 @@ void goto_commands(Context& context, NormalParams params)
     else
     {
         on_next_key_with_autoinfo(context, "goto", KeymapMode::Goto,
-                                 [](Key key, Context& context) {
+                                  [params](Key key, Context& context) {
             auto cp = key.codepoint();
             if (not cp or key == Key::Escape)
                 return;
             auto& buffer = context.buffer();
-            switch (to_lower(*cp))
+            switch (auto lower_cp = to_lower(*cp); lower_cp)
             {
             case 'g':
             case 'k':
@@ -297,6 +297,30 @@ void goto_commands(Context& context, NormalParams params)
                 context.change_buffer(*target);
                 break;
             }
+            case 'd':
+            case 'u':
+            {
+                auto offset = (lower_cp == 'd' ? 1_line : -1_line) * std::max(params.count, 1);
+                select(context, mode, [&](Context& context, Selection& sel) -> Optional<Selection> {
+                    if (context.has_window())
+                    {
+                        auto& cursor = sel.cursor();
+                        auto& window = context.window();
+                        if (auto display_coord = window.display_coord(cursor))
+                        {
+                            if (cursor.display_target == -1)
+                                cursor.display_target = display_coord->column;
+                            display_coord->column = cursor.display_target;
+                            if (auto buffer_coord = window.buffer_coord(*display_coord + offset))
+                                return Selection{BufferCoordAndTarget{*buffer_coord, -1, cursor.display_target}};
+                        }
+                    }
+                    const ColumnCount tabstop = context.options()["tabstop"].get<int>();
+                    return Selection{context.buffer().offset_coord(sel.cursor(), offset, tabstop)};
+                });
+                break;
+            }
+
             case 'f':
             {
                 static constexpr char forbidden[] = { '\'', '\\', '\0' };
