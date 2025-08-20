@@ -111,8 +111,13 @@ highlighter is replaced with the new one.
 *fill* <face>::
     fill using the given *face*, mostly useful with regions highlighters
 
-*column* <number> <face>::
-    highlight column *number* with face *face*
+*column* <number> <face> [options]::
+    highlight column *number* with face *face*, with the following *options*:
+
+    *-ruler* <character>:::
+        a single character to display instead of empty or whitespace cells at
+        column *number*. If this option is provided, *face* will also not
+        apply to non-empty cells, and will only apply to *character*.
 
 *line* <number> <face>::
     highlight line *number* with face *face*
