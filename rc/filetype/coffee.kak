@@ -1,6 +1,8 @@
 # http://coffeescript.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-coffee %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -25,6 +27,10 @@ hook -group coffee-highlight global WinSetOption filetype=coffee %{
     add-highlighter window/coffee ref coffee
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/coffee }
 }
+
+}
+
+require-module detect-coffee
 
 
 provide-module coffee %[

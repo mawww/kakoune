@@ -1,5 +1,7 @@
 # Adapted from the file created by Daniel Lewan TeddyDD
 
+provide-module detect-groovy %{
+
 hook global BufCreate "(.+\.(groovy|gvy|gy|gsh|gradle))|.+[Jj]enkinsfile.*" %{
     set-option buffer filetype groovy
 }
@@ -21,6 +23,10 @@ hook -group groovy-highlight global WinSetOption filetype=groovy %{
     add-highlighter window/groovy ref groovy
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/groovy }
 }
+
+}
+
+require-module detect-groovy
 
 provide-module groovy %§
 

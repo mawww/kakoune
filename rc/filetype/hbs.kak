@@ -1,6 +1,8 @@
 # http://handlebarsjs.com/
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-hbs %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -26,6 +28,10 @@ hook -group hbs-highlight global WinSetOption filetype=hbs %{
     add-highlighter window/hbs-file ref hbs-file
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/hbs-file }
 }
+
+}
+
+require-module detect-hbs
 
 
 provide-module hbs %[

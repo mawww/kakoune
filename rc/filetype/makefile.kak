@@ -1,3 +1,5 @@
+provide-module detect-makefile %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -22,6 +24,10 @@ hook -group makefile-highlight global WinSetOption filetype=makefile %{
     add-highlighter window/makefile ref makefile
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/makefile }
 }
+
+}
+
+require-module detect-makefile
 
 provide-module makefile %{
 

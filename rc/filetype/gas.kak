@@ -1,3 +1,5 @@
+provide-module detect-gas %{
+
 # Detection
 # ---------
 hook global BufCreate .*\.(s|S|asm)$ %{
@@ -16,6 +18,10 @@ hook -group gas-highlight global WinSetOption filetype=gas %{
     add-highlighter window/gas ref gas
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/gas }
 }
+
+}
+
+require-module detect-gas
 
 
 provide-module gas %{

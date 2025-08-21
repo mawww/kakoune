@@ -3,6 +3,8 @@
 # based off of https://github.com/ziglang/zig.vim/blob/master/syntax/zig.vim
 # as well as https://ziglang.org/documentation/master/#Grammar
 
+provide-module detect-zig %<
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -28,6 +30,10 @@ hook -group zig-highlight global WinSetOption filetype=zig %{
     add-highlighter window/zig ref zig
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/zig }
 }
+
+>
+
+require-module detect-zig
 
 provide-module zig %§
 

@@ -1,5 +1,7 @@
 # https://developers.google.com/protocol-buffers/
 
+provide-module detect-protobuff %[
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -28,6 +30,10 @@ hook -group protobuf-highlight global WinSetOption filetype=protobuf %{
     add-highlighter window/protobuf ref protobuf
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/protobuf }
 }
+
+]
+
+require-module detect-protobuff
 
 provide-module protobuf %[
 

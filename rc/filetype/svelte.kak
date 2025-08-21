@@ -1,3 +1,5 @@
+provide-module detect-svelte %{
+
 hook global BufCreate .*\.svelte %[
     set-option buffer filetype svelte
 ]
@@ -20,6 +22,10 @@ hook -group svelte-highlight global WinSetOption filetype=(svelte) %{
         remove-highlighter ""window/svelte""
     "
 }
+
+}
+
+require-module detect-svelte
 
 add-highlighter shared/svelte regions
 add-highlighter shared/svelte/comment region <!--     -->                  fill comment
