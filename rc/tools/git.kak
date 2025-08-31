@@ -541,6 +541,46 @@ define-command -params 1.. \
         fi
     }
 
+    classify_new_commit() {
+        {
+            git log --no-walk=unsorted --format='%H:%T:%P:%s' \
+                HEAD HEAD@{1} -- ||
+            git log --no-walk=unsorted --format='%H:%T:%P:%s' \
+                HEAD --
+        } 2>/dev/null | (
+            IFS=:
+            read -r _ head_tree head_parents head_subject
+            read -r last_commit last_tree last_parents last_subject
+            if [ -z "${head_parents}" ] &&
+               { [ -z "${last_commit}" ] || [ -n "${last_parents}" ]; }; then
+                if [ "${head_tree}" = "$(git mktree </dev/null)" ]; then
+                    echo "Created empty root commit '${head_subject}'"
+                else
+                    echo "Created root commit '${head_subject}'"
+                fi
+            elif [ "${head_parents}" = "${last_parents}" ]; then
+                if [ "${head_tree}" = "${last_tree}" ]; then
+                    echo "Reworded commit '${last_subject}'"
+                else
+                    echo "Amended commit '${last_subject}'"
+                fi
+            else
+                if [ "${head_parents}" = "${last_commit}" ]; then
+                    parent_tree="${last_tree}"
+                elif [ "${head_parents#* }" = "${head_parents}" ]; then
+                    parent_tree="$(git rev-parse HEAD^:)"
+                else
+                    parent_tree="merges-are-never-empty"
+                fi
+                if [ "${head_tree}" = "${parent_tree}" ]; then
+                    echo "Created empty commit '${head_subject}'"
+                else
+                    echo "Created commit '${head_subject}'"
+                fi
+            fi
+        )
+   }
+
     empty_commit_message_is_allowed() {
         ret=1
         for arg; do
@@ -655,9 +695,9 @@ define-command -params 1.. \
             export fifo_dir GIT_EDITOR
             failed=0
             if err="$(git commit "$@" 2>&1)"; then
-                cmd="eval -try-client '${kak_client}' %{
-                    echo -markup '{Information}Commit succeeded'
-                }"
+                cmd="eval -try-client '${kak_client}' '
+                    echo -markup ''{Information}{\}$(classify_new_commit | sed "s/'/''''/g")''
+                '"
             elif [ -f "${fifo_dir}/cancelled" ]; then
                 cmd="eval -try-client '${kak_client}' %{
                     echo -markup '{Information}Commit cancelled'
