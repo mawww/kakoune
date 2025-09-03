@@ -226,13 +226,13 @@ DisplaySetup Window::compute_display_setup(const Context& context) const
 
     for (auto pass : {HighlightPass::Move, HighlightPass::Wrap, HighlightPass::Replace})
         m_builtin_highlighters.compute_display_setup({context, setup, pass, {}}, setup);
-    check_display_setup(setup, *this);
 
     if (context.ensure_cursor_visible and
         cursor.line + offset.line >= setup.first_line + setup.line_count)
         setup.first_line = std::min(cursor.line + offset.line - setup.line_count + 1, buffer().line_count()-1);
 
     setup.first_line = std::min(setup.first_line, buffer().line_count()-1);
+    check_display_setup(setup, *this);
 
     return setup;
 }
