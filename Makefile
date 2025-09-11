@@ -49,16 +49,9 @@ mandir = $(DESTDIR)$(PREFIX)/share/man/man1
 os = $(shell uname | sed 's/.*_NT.*/Windows/')
 os != uname | sed 's/.*_NT.*/Windows/'
 
-CPPFLAGS-os-Darwin = -I/opt/local/include
-LDFLAGS-os-Darwin = -L/opt/local/lib
-
-CPPFLAGS-os-FreeBSD = -I/usr/local/include
-LDFLAGS-os-FreeBSD = -L/usr/local/lib
-
 LIBS-os-Haiku = -lnetwork -lbe
 
-CPPFLAGS-os-OpenBSD = -DKAK_BIN_PATH=\"$(bindir)/kak\" -I/usr/local/include
-LDFLAGS-os-OpenBSD = -L/usr/local/lib
+CPPFLAGS-os-OpenBSD = -DKAK_BIN_PATH=\"$(bindir)/kak\"
 mandir-os-OpenBSD = $(DESTDIR)$(PREFIX)/man/man1
 
 LDFLAGS-os-SunOS = -lsocket -rdynamic
