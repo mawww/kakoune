@@ -956,7 +956,6 @@ Vector<Selection> select_matches(const Buffer& buffer, ConstArrayView<Selection>
                                                  submatch.second.coord()));
 
             auto begin = capture.first, end = capture.second;
-            kak_assert(result.empty() or begin.coord() >= result.back().min());
             result.push_back(
                 keep_direction({ begin.coord(),
                                  (begin == end ? end : utf8::previous(end, begin)).coord(),
@@ -965,6 +964,8 @@ Vector<Selection> select_matches(const Buffer& buffer, ConstArrayView<Selection>
     }
     if (result.empty())
         throw runtime_error("nothing selected");
+
+    std::sort(result.begin(), result.end(), compare_selections);
     return result;
 }
 
