@@ -285,11 +285,14 @@ are exclusively available to built-in options.
     when completing words in insert mode
 
 *extra_word_chars* `codepoint-list`::
+    _default_ _ +
     a list of all additional codepoints that should be considered
-    part of a word, for the purposes of the `w`, `b`, and `e` commands
-    (See <<keys#movement,`:doc keys movement`>>).
-    If this option is empty, Kakoune pretends it contains an
-    underscore, otherwise the value is used as-is.
+    part of a word for the purposes of the `w`, `b`, and `e` commands
+    (See <<keys#movement,`:doc keys movement`>>),
+    the `word=buffer` and `word=all` completers
+    (See `completers` above),
+    "word" objects
+    (See <<keys#object-selection,`:doc keys object-selection`>>), etc.
     This must be set on the buffer, not the window,
     for word completion to offer words containing these codepoints.
 
