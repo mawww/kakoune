@@ -9,6 +9,7 @@ hook global ModuleLoaded tmux %{
 provide-module tmux-repl %{
 
 declare-option -docstring "tmux pane id in which the REPL is running" str tmux_repl_id
+declare-option -docstring "whether to use bracketed paste" bool repl_bracketed_paste true
 
 define-command -hidden -params 1.. tmux-repl-impl %{
     evaluate-commands %sh{
@@ -80,7 +81,7 @@ define-command -hidden tmux-send-text -params 0..1 -docstring %{
         else
             tmux set-buffer -b kak_selection -- "$1"
         fi
-        tmux paste-buffer -b kak_selection -t "$kak_opt_tmux_repl_id" ||
+        tmux paste-buffer ${kak_opt_repl_bracketed_paste:+-p} -b kak_selection -t "$kak_opt_tmux_repl_id" ||
         echo 'fail tmux-send-text: failed to send text, see *debug* buffer for details'
     }
 }
