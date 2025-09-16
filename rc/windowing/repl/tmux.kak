@@ -61,7 +61,7 @@ define-command -params 0..1 tmux-repl-set-pane -docstring %{
         else
             tgt_pane="$1"
         fi
-        curr_win="$(tmux display-message -t ${kak_client_env_TMUX_PANE} -p '#{window_id}')" 
+        curr_win="$(tmux display-message -t ${kak_client_env_TMUX_PANE} -p '#{window_id}')"
         if tmux list-panes -t "$curr_win" -F \#D | grep -Fxq "%"$tgt_pane; then
             printf "set-option current tmux_repl_id '%s'" %$tgt_pane
         else
