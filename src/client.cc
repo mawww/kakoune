@@ -254,9 +254,20 @@ void Client::redraw_ifn()
 
     const auto& faces = context().faces();
 
-    if (m_ui_pending & Draw)
-        m_ui->draw(window.update_display_buffer(context()),
-                   faces["Default"], faces["BufferPadding"]);
+    if (m_ui_pending & Draw) {
+        auto& db = window.update_display_buffer(context());
+        auto selections = context().selections();
+        auto sel = selections.begin();
+        Vector<LineCount> selection_lines;
+        selection_lines.reserve(selections.size());
+        std::generate_n(std::back_inserter(selection_lines), selections.size(), [&sel] { return (sel++)->min().line; });
+        m_ui->draw(db,
+                   {db.range().begin.line, db.range().end.line},
+                   context().buffer().line_count(),
+                   selection_lines,
+                   faces["Default"], faces["BufferPadding"],
+                   faces["ScrollBarGutter"], faces["ScrollBarHandle"]);
+    }
 
     const bool update_menu_anchor = (m_ui_pending & Draw) and not (m_ui_pending & MenuHide) and
                                     not m_menu.items.empty() and m_menu.style == MenuStyle::Inline;
