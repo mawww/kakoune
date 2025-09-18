@@ -258,6 +258,11 @@ const EnvVarDesc builtin_env_vars[] = { {
         { auto cursor = context.selections().main().cursor();
           return {to_string(context.buffer().distance({0,0}, cursor))}; }
     }, {
+        "recording_register", false,
+        [](StringView name, const Context& context) -> Vector<String>
+        { const char reg = context.client().input_handler().recording_reg();
+          return {reg ? String{static_cast<Codepoint>(reg)} : ""}; }
+    }, {
         "selection_desc", false,
         [](StringView name, const Context& context) -> Vector<String>
         { return {selection_to_string(ColumnType::Byte, context.buffer(), context.selections().main())}; }
