@@ -2,8 +2,52 @@
 # ------------------------------
 
 # Kakoune Niri windowing module
-# original author: Daniel <daniel AT ficd DOT sh>
-# (contact with questions or problems)
+
+# Niri is a scrolling window manager;
+# vertical/horizontal splits aren't really a native concept.
+# A workspace consists of columns of arbitrary width, where each
+# column can have one or more window in it. Windows in a column
+# are stacked on top of each other. To "consume" a window into a
+# column is to pull it BELOW the other windows in the column.
+# For example, consider:
+# +-----+ +-----+                         +-----+
+# |     | |     |                         |  A  |
+# |  A  | |  B  |  --consume B into A-->  +-----+
+# |     | |     |                         |  B  |
+# +-----+ +-----+                         +-----+
+
+# We provide three ways to open a new window.
+
+# normal: simply spawn a new window to the right.
+#   This is the default for new windows in Niri.
+# Alias: horizontal
+# +-----+ +-----+
+# |     | |     |
+# | KAK | | NEW |
+# |     | |     |
+# +-----+ +-----+
+
+# consume: the new window is consumed into the current column.
+# Alias: vertical
+# +-----+
+# | KAK |
+# +-----+
+# | NEW |
+# +-----+
+
+# consume-right: spawn new window and consume into column to the right
+#   Note: FOO is an already open window to the right.
+# Alias: none
+# +-----+ +-----+
+# |     | | FOO |
+# | KAK | +-----+
+# |     | | NEW |
+# +-----+ +-----+
+
+# In terms of closest analogues to the vertical & horizontal split paradigm,
+# we alias "vertical" to "consume" and we alias "horizontal" to "normal".
+# There isn't a clean alias for "consume-right", but it's a convenient command
+# that users can invoke directly.
 
 provide-module niri %~
 
@@ -20,40 +64,33 @@ require-module wayland
 
 alias global niri-terminal-window wayland-terminal-window
 
-# Niri is a scrolling window manager;
-# this module intentionally does not implement the
-# vertical|horizontal naming scheme.
-# Instead, we implement three ways to open a new window:
-# normal: simply spawn a new window to the right.
-# consume: spawn new window and consume into current column
-# consume-right: spawn new window and consume into column to the right
-
-# first arg MUST be left|right
-# rest are passed to program in new terminal
-# note that left means consume into current column
-# because new windows are always opened to the right
+# first arg MUST be left|right, rest are passed to program in new terminal
+# Direction is relative to the new window, which is always opened to the right.
+# Therefore, left means consume into current column.
 define-command -hidden niri-terminal-consume-impl -params 1.. %{
-    # this block is a bit confusing but i'll do my best to explain
-    # when niri creates a new window, it's always in a new column
-    # to the right of the focused window, and the new window is
-    # focused.
-    # so the idea to spawn a terminal, and then consume it
+    # When Niri creates a new window, it's always in a new column
+    # to the right of the focused window, and the new window is focused.
+    # Niri doesn't allow us to specify where the new window should go,
+    # we can only operate on it AFTER it's been spawned.
+    # The idea to spawn a terminal, and then consume it
     # either into the current col, or the col to the right.
-    # however, after spawning the terminal, we can't safely
-    # operate on it yet because it takes some time (aprx. 0.1s)
+    # However, after spawning the terminal, we can't safely
+    # operate on it immediately because it takes some time (aprx. 0.1s)
     # to actually initialize.
-    # so here's what we do:
-    # 1. open niri's event stream, wait for it to initialize
-    # 2. execute our command (opening new terminal window)
-    # 3. watch the event stream and wait for window to be spawned
-    # 3.1 only operate on window if not floating
-    # 3.2 switch focus to new window if not already focused
-    # 4. once it exists, run the appropriate consume command
+
+    # 1.  Open niri's event stream, wait for it to initialize.
+    #       Note: event stream is newline-delimited JSON.
+    # 2.  Execute command to open new terminal window.
+    # 3.  Watch the event stream and wait for window to be spawned.
+    # 3.a Only operate on window if not floating.
+    # 3.b Switch focus to new window if not already focused.
+    #     ^ (Not certain this is necessary, but better to be safe).
+    # 4.  Once the window exists, consume in specified direction.
     nop %sh{
-        # first arg always left|right
+        # First arg always left|right. No need for guards b/c this is private function.
         direction=$1
         shift
-        # create fifo
+        # create fifo for collecting event stream
         temp=$(mktemp -d kak-niri-XXXXXX)
         fifo="$temp/fifo"
         mkfifo "$fifo"
@@ -73,7 +110,7 @@ define-command -hidden niri-terminal-consume-impl -params 1.. %{
         ) >/dev/null 2>&1 </dev/null &
         watchdog_pid=$!
 
-        # to safely quote arguments
+        # safely quote arguments for passing to new terminal
         kakquote() {
         	set -- "$*" ""
         	while [ "${1#*\'}" != "$1" ]; do
@@ -81,40 +118,57 @@ define-command -hidden niri-terminal-consume-impl -params 1.. %{
         	done
         	printf "'%s' " "$2$1"
         }
-        # loop over args and quote 'em all
+        # loop over args and quote all
         quoted_args=''
         for arg in "$@"; do
         	quoted_args="$quoted_args$(kakquote "$arg")"
         done
+        # run this block async to avoid user-facing lag
         {
+            # track when new window is ready
         	ready=false
-        	# read the event stream
+        	# read lines of event stream from fifo
+        	#   Note: each line is one event.
+        	#   We wait for the event that indicates stream is initialized,
+        	#   then we spawn the new terminal window. The next WindowOpenedOrChanged
+        	#   event immediately after running niri-terminal-window SHOULD be
+        	#   the event for this window, but it's not guaranteed. There is a very,
+        	#   very tiny window for a race condition here. Unfortunately, I don't
+        	#   believe we have a good way to handle it because there's no way to
+        	#   know the window's ID before it's spawned. This may be a good job for
+        	#   the Ostrich algorithm (https://en.wikipedia.org/wiki/Ostrich_algorithm)
         	while IFS= read -r line; do
+        	    # each line is a JSON object
         		case "$line" in
         		# this line means stream is initialized
         		*"OverviewOpenedOrClosed"*)
+        		    # guard to avoid spawning terminal twice
         			if [ "$ready" = false ]; then
         				ready=true
         				# spawn terminal with command
-        				printf 'wayland-terminal-window %s' "$quoted_args" >"$kak_command_fifo"
+        				printf 'niri-terminal-window %s' "$quoted_args" >"$kak_command_fifo"
         			fi
         			;;
-        		# window is now available
+        		# newly opened window is now available to act on
         		*"WindowOpenedOrChanged"*)
         		    # only operate if window isn't floating
+        		    # This accursed incantation is to access the JSON field
+        		    # without depending on jq.
         			if expr "${line}" : '.*"is_floating":[[:space:]]*false.*' \
         				>/dev/null; then
-        				# handle new window unfocused
+        				# handle new window being unfocused
         				if expr "${line}" : '.*"is_focused":[[:space:]]*false.*' \
         					>/dev/null; then
         					# extract the window ID
+        					# (POSIX compliant JSON parsing is ugly, sorry)
         					id="$(echo "$line" | sed -n 's/.*"id":[[:space:]]*\([0-9][0-9]*\).*/\1/p')"
+        					# focus the new window
         					niri msg action focus-window --id "$id"
         				fi
-        				# operate on the new window
+        				# consume the new window in specified direction
         				niri msg action consume-or-expel-window-${direction}
         			fi
-        			# close the stream reader
+        			# close the stream reader and timeout watchdog
         			kill "$stream_pid"
         			wait "$stream_pid" 2>/dev/null
         			kill "$watchdog_pid" 2>/dev/null
@@ -166,4 +220,8 @@ The optional arguments are passed as commands to the new client' \
     niri-terminal-window kak -c %val{session} -e "%arg{@}"
 }
 complete-command -menu niri-new-window command
+
+alias global niri-terminal-vertical niri-terminal-consume
+alias global niri-terminal-horizontal niri-terminal-window
+
 ~
