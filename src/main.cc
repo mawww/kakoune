@@ -223,10 +223,6 @@ const EnvVarDesc builtin_env_vars[] = { {
                       transform([](const UniquePtr<Client>& c) -> const String&
                                 { return c->context().name(); }) | gather<Vector<String>>(); }
     }, {
-        "is_recording", false,
-        [](StringView name, const Context& context) -> Vector<String>
-        { return {context.input_handler().is_recording() ? "true" : "false"}; }
-    }, {
         "modified", false,
         [](StringView name, const Context& context) -> Vector<String>
         { return {context.buffer().is_modified() ? "true" : "false"}; }

@@ -324,9 +324,6 @@ The following expansions are supported (with required context _in italics_):
     _in `hook` command <command> parameter_ +
     the complete parameter string of the executing hook
 
-*%val{is_recording}*::
-    `true` if currently recording a macro, otherwise `false`
-
 *%val{modified}*::
     _in buffer, window scope_ +
     `true` if the buffer has modifications not saved, otherwise `false`
