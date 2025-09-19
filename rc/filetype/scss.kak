@@ -1,6 +1,8 @@
 # http://sass-lang.com
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-scss %[
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -27,6 +29,10 @@ hook -group scss-highlight global WinSetOption filetype=scss %{
     add-highlighter window/scss ref scss
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/scss }
 }
+
+]
+
+require-module detect-scss
 
 
 provide-module scss %[

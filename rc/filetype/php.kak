@@ -1,3 +1,5 @@
+provide-module detect-php %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -23,6 +25,10 @@ hook -group php-highlight global WinSetOption filetype=php %{
     add-highlighter window/php-file ref php-file
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/php-file }
 }
+
+}
+
+require-module detect-php
 
 provide-module php %§
 require-module html

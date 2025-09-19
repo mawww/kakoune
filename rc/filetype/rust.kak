@@ -1,6 +1,8 @@
 # http://rust-lang.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-rust %<
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -24,6 +26,10 @@ hook -group rust-highlight global WinSetOption filetype=rust %{
     add-highlighter window/rust ref rust
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/rust }
 }
+
+>
+
+require-module detect-rust
 
 provide-module rust %§
 

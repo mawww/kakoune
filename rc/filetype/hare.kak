@@ -1,3 +1,5 @@
+provide-module detect-hare %{
+
 # detection
 hook global BufCreate .*[.]ha %{
     set-option buffer filetype hare
@@ -17,6 +19,10 @@ hook -group hare-highlight global WinSetOption filetype=hare %{
     add-highlighter window/hare ref hare
     hook -once -always window WinSetOption filetype=*. %{ remove-highlighter window/hare }
 }
+
+}
+
+require-module detect-hare
 
 # highlighters
 provide-module hare %§

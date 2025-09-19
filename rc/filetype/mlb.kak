@@ -1,6 +1,8 @@
 # http://mlton.org/MLBasis
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-mlb %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -21,6 +23,10 @@ hook -group mlb-highlight global WinSetOption filetype=mlb %{
     add-highlighter window/mlb ref mlb
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/mlb }
 }
+
+}
+
+require-module detect-mlb
 
 provide-module mlb %[
 

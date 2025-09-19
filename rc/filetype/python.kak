@@ -1,6 +1,8 @@
 # http://python.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-python %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -27,6 +29,10 @@ hook -group python-highlight global WinSetOption filetype=python %{
     add-highlighter window/python ref python
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/python }
 }
+
+}
+
+require-module detect-python
 
 provide-module python %§
 

@@ -2,6 +2,8 @@
 #
 # a lot of this file was taken from rc/filetype/go.kak and rc/filetype/hare.kak, thanks everyone !
 
+provide-module detect-gleam %<
+
 # Detection
 hook global BufCreate .*\.gleam %{
     set-option buffer filetype gleam
@@ -31,6 +33,10 @@ hook global WinSetOption filetype=gleam %<
         remove-hooks window gleam-.+
     ]
 >
+
+>
+
+require-module detect-gleam
 
 provide-module gleam %§
     # Highlighters

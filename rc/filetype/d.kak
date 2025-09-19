@@ -1,6 +1,8 @@
 # http://dlang.org/
 #
 
+provide-module detect-d %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -30,6 +32,10 @@ hook -group d-highlight global WinSetOption filetype=d %{
     add-highlighter window/d ref d
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/d }
 }
+
+}
+
+require-module detect-d
 
 provide-module d %§
 
