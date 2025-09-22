@@ -46,8 +46,8 @@ template<bool force_blocking = false>
 void write(int fd, StringView data);
 void write_to_file(StringView filename, StringView data);
 int create_file(const char* filename);
+int open_temp_file(StringView filename, String &tmpFile);
 int open_temp_file(StringView filename);
-int open_temp_file(StringView filename, char (&buffer)[PATH_MAX]);
 
 struct MappedFile
 {
