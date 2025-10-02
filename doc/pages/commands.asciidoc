@@ -142,6 +142,7 @@ of the file onto the filesystem
 
 *rename-client* <name>::
     set current client name
+    Client names may only contain letters, numbers, `-`, and `_`.
 
 *rename-session* <name>::
     set current session name
