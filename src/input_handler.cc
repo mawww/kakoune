@@ -1,6 +1,7 @@
 #include "input_handler.hh"
 
 #include "buffer.hh"
+#include "context.hh"
 #include "debug.hh"
 #include "command_manager.hh"
 #include "client.hh"
@@ -15,7 +16,6 @@
 #include "window.hh"
 #include "word_db.hh"
 
-#include <concepts>
 #include <utility>
 #include <limits>
 
@@ -127,19 +127,24 @@ struct MouseHandler
             switch (key.mouse_button())
             {
             case Key::MouseButton::Right: {
-                m_dragging.reset();
+                m_dragging.reset(new ScopedSelectionEdition{context});
                 auto cursor = context.window().buffer_coord(key.coord());
                 if (not cursor)
                 {
                     context.ensure_cursor_visible = false;
                     return true;
                 }
-                ScopedSelectionEdition selection_edition{context};
                 auto& selections = context.selections();
                 if (key.modifiers & Key::Modifiers::Control)
-                    selections = {{selections.begin()->anchor(), *cursor}};
+                {
+                    m_anchor = selections.begin()->anchor();
+                    selections = {{m_anchor, *cursor}};
+                }
                 else
-                    selections.main() = {selections.main().anchor(), *cursor};
+                {
+                    m_anchor = selections.main().anchor();
+                    selections.main() = {m_anchor, *cursor};
+                }
                 selections.sort_and_merge_overlapping();
                 return true;
             }
@@ -154,7 +159,7 @@ struct MouseHandler
                 }
                 m_anchor = *anchor;
                 if (not (key.modifiers & Key::Modifiers::Control))
-                    context.selections_write_only() = { buffer, m_anchor};
+                    context.selections_write_only() = {buffer, m_anchor};
                 else
                 {
                     auto& selections = context.selections();
