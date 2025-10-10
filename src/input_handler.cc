@@ -123,17 +123,18 @@ struct MouseHandler
 
         switch ((key.modifiers & ~modifiers).value)
         {
-        case Key::Modifiers::MousePress:
-            switch (key.mouse_button())
+        case Key::Modifiers::MousePress: {
+            m_dragging.reset(new ScopedSelectionEdition{context});
+            auto cursor = context.window().buffer_coord(key.coord());
+            if (not cursor)
             {
-            case Key::MouseButton::Right: {
-                m_dragging.reset(new ScopedSelectionEdition{context});
-                auto cursor = context.window().buffer_coord(key.coord());
-                if (not cursor)
-                {
-                    context.ensure_cursor_visible = false;
-                    return true;
-                }
+                context.ensure_cursor_visible = false;
+                return true;
+            }
+
+            if (key.mouse_button() == Key::MouseButton::Right or
+                (key.mouse_button() == Key::MouseButton::Left and key.modifiers & Key::Modifiers::Shift))
+            {
                 auto& selections = context.selections();
                 if (key.modifiers & Key::Modifiers::Control)
                 {
@@ -146,18 +147,10 @@ struct MouseHandler
                     selections.main() = {m_anchor, *cursor};
                 }
                 selections.sort_and_merge_overlapping();
-                return true;
             }
-
-            case Key::MouseButton::Left: {
-                m_dragging.reset(new ScopedSelectionEdition{context});
-                auto anchor = context.window().buffer_coord(key.coord());
-                if (not anchor)
-                {
-                    context.ensure_cursor_visible = false;
-                    return true;
-                }
-                m_anchor = *anchor;
+            else if (key.mouse_button() == Key::MouseButton::Left)
+            {
+                m_anchor = *cursor;
                 if (not (key.modifiers & Key::Modifiers::Control))
                     context.selections_write_only() = {buffer, m_anchor};
                 else
@@ -168,11 +161,10 @@ struct MouseHandler
                     selections.set_main_index(main);
                     selections.sort_and_merge_overlapping();
                 }
-                return true;
             }
 
-            default: return true;
-            }
+            return true;
+        }
 
         case Key::Modifiers::MouseRelease: {
             auto cursor = context.window().buffer_coord(key.coord());
