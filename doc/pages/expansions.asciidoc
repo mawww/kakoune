@@ -101,6 +101,11 @@ Expansions with the type `sh` are executed as shell-scripts, and whatever
 the script prints to standard output replaces the expansion. For example,
 the command `echo %sh{date}` will echo the output of the `date` command.
 
+Kakoune will block user input until the script is complete. If you want to
+run a process in the background, note that Kakoune will also wait for the
+script's stdout and stderr to be closed. You can redirect stdout and stderr
+of your long running background process to avoid blocking.
+
 TIP: If a shell expansion writes to standard error, that output is appended to
 Kakoune's `\*debug*` buffer. If you're trying to debug a shell expansion,
 check the debug buffer with `:buffer \*debug*` to see if anything shows up.
