@@ -339,6 +339,9 @@ The following expansions are supported (with required context _in italics_):
     an inner selection, `to_begin` if the user wants to select to the
     beginning, and `to_end` if the user wants to select to the end
 
+*%val{recording_register}*::
+    the register being recorded to if currently recording a macro, empty when not recording
+
 *%val{register}*::
     _in `map` command <keys> parameter and `<a-;>` from the object menu_ +
     current register when the mapping was triggered
