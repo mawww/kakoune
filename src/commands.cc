@@ -704,7 +704,7 @@ const CommandDesc write_all_cmd = {
     }
 };
 
-static void ensure_all_buffers_are_saved()
+static void ensure_all_buffers_are_saved(Context& context)
 {
     auto is_modified = [](const UniquePtr<Buffer>& buf) {
         return (buf->flags() & Buffer::Flags::File) and buf->is_modified();
@@ -714,6 +714,12 @@ static void ensure_all_buffers_are_saved()
     const auto end = BufferManager::instance().end();
     if (it == end)
         return;
+
+    if (not context.buffer().is_modified())
+    {
+        context.push_jump();
+        context.change_buffer(**it);
+    }
 
     String message = format("{} modified buffers remaining: [",
                             std::count_if(it, end, is_modified));
@@ -732,7 +738,7 @@ void kill(const ParametersParser& parser, Context& context, const ShellContext&)
     auto& client_manager = ClientManager::instance();
 
     if (not force)
-        ensure_all_buffers_are_saved();
+        ensure_all_buffers_are_saved(context);
 
     const int status = parser.positional_count() > 0 ? str_to_int(parser[0]) : 0;
     while (not client_manager.empty())
@@ -781,7 +787,7 @@ template<bool force>
 void quit(const ParametersParser& parser, Context& context, const ShellContext&)
 {
     if (not force and ClientManager::instance().count() == 1 and not Server::instance().is_daemon())
-        ensure_all_buffers_are_saved();
+        ensure_all_buffers_are_saved(context);
 
     const int status = parser.positional_count() > 0 ? str_to_int(parser[0]) : 0;
     ClientManager::instance().remove_client(context.client(), true, status);
