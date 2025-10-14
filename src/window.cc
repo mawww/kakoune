@@ -134,6 +134,13 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
     kak_assert(&buffer() == &context.buffer());
     DisplaySetup setup = compute_display_setup(context);
 
+    if (setup.line_count != m_last_display_setup.line_count or
+        setup.widget_columns != m_last_display_setup.widget_columns)
+    {
+        // Technically the window has not resized, but most things that hook WinResize probably want to be notfied anyway
+        m_resize_hook_pending = true;
+    }
+
     for (LineCount line = 0; line < setup.line_count; ++line)
     {
         LineCount buffer_line = setup.first_line + line;

@@ -314,8 +314,9 @@ const EnvVarDesc builtin_env_vars[] = { {
         [](StringView name, const Context& context) -> Vector<String>
         {
             const auto& setup = context.window().last_display_setup();
+            const auto width = context.window().dimensions().column - setup.widget_columns;
             return {to_string(setup.first_line), to_string(setup.first_column),
-                    to_string(setup.line_count), to_string(0)};
+                    to_string(setup.line_count), to_string(width)};
         }
     }, {
         "history", false,
