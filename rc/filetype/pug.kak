@@ -5,6 +5,8 @@
 # http://jade-lang.com (will be http://pug-lang.com)
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-pug %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -28,6 +30,10 @@ hook -group pug-highlight global WinSetOption filetype=pug %{
     add-highlighter window/pug ref pug
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/pug }
 }
+
+}
+
+require-module detect-pug
 
 
 provide-module pug %{

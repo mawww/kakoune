@@ -1,5 +1,7 @@
 # Based on IEEE Std 1076‐2019
 
+provide-module detect-vhdl %[
+
 # Detection
 hook global BufCreate .*[.](vhd[l]?) %[
     set-option buffer filetype vhdl
@@ -21,6 +23,10 @@ hook -group vhdl-highlight global WinSetOption filetype=vhdl %[
     add-highlighter window/vhdl ref vhdl
     hook -once -always window WinSetOption filetype=.* %[ remove-highlighter window/vhdl ]
 ]
+
+]
+
+require-module detect-vhdl
 
 provide-module vhdl %§
 

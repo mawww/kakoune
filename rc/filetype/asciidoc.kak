@@ -1,6 +1,8 @@
 # http://asciidoc.org/
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-asciidoc %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -17,6 +19,10 @@ hook -group asciidoc-highlight global WinSetOption filetype=asciidoc %{
     add-highlighter window/asciidoc ref asciidoc
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/asciidoc }
 }
+
+}
+
+require-module detect-asciidoc
 
 provide-module asciidoc %{
 

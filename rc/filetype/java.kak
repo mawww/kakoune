@@ -1,3 +1,5 @@
+provide-module detect-java %{
+
 hook global BufCreate .*\.java %{
     set-option buffer filetype java
 }
@@ -24,6 +26,10 @@ hook -group java-highlight global WinSetOption filetype=java %{
     add-highlighter window/java ref java
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/java }
 }
+
+}
+
+require-module detect-java
 
 provide-module java %§
 
