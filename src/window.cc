@@ -309,12 +309,11 @@ Optional<BufferCoord> Window::buffer_coord(DisplayCoord coord) const
     if (m_display_buffer.timestamp() != buffer().timestamp() or
         m_display_buffer.lines().empty())
         return {};
-    if (coord <= 0_line)
-        return {};
-    if ((size_t)coord.line >= m_display_buffer.lines().size())
+    if (coord < 0_line)
         return {};
 
-    return find_buffer_coord(m_display_buffer.lines()[(int)coord.line],
+    auto line = std::min((size_t)coord.line, m_display_buffer.lines().size() - 1);
+    return find_buffer_coord(m_display_buffer.lines()[line],
                              buffer(), coord.column);
 }
 
