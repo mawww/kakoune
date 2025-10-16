@@ -43,6 +43,7 @@ public:
     FdEvents events() const { return m_events; }
     FdEvents& events() { return m_events; }
     EventMode mode() const { return m_mode; }
+    void set_mode(EventMode mode) { m_mode = mode; }
 
     void run(FdEvents events, EventMode mode);
 
@@ -114,8 +115,9 @@ private:
 };
 
 using SignalHandler = void(*)(int);
+using SignalAction = void(*)(int, siginfo_t *, void *);
 
-SignalHandler set_signal_handler(int signum, SignalHandler handler);
+SignalHandler set_signal_handler(int signum, SignalHandler handler, SignalAction action = nullptr);
 
 }
 

@@ -7,6 +7,7 @@
 #include "utils.hh"
 #include "unique_descriptor.hh"
 #include "completion.hh"
+#include "unique_ptr.hh"
 
 #include <signal.h>
 #include <sys/wait.h>
@@ -45,10 +46,13 @@ struct Shell
     UniqueFd err;
 };
 
+struct CommandFifos;
+
 class ShellManager : public Singleton<ShellManager>
 {
 public:
     ShellManager(ConstArrayView<EnvVarDesc> builtin_env_vars);
+    ~ShellManager();
 
     enum class Flags
     {
@@ -77,12 +81,25 @@ public:
                 bool open_stdin,
                 const ShellContext& shell_context = {});
 
+    void convert_to_background();
+    void remove_background_shell(int pid);
+    void clear_removed_background_shell();
+
     Vector<String> get_val(StringView name, const Context& context) const;
 
     CandidateList complete_env_var(StringView prefix, ByteCount cursor_pos) const;
 
 private:
     String m_shell;
+    bool m_shell_executing = false;
+    bool m_convert_to_background_pending = false;
+
+    struct BackgroundShell
+    {
+        Shell shell;
+        UniquePtr<CommandFifos> fifos;
+    };
+    Vector<BackgroundShell> m_background_shells;
 
     ConstArrayView<EnvVarDesc> m_env_vars;
 };
