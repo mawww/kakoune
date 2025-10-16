@@ -16,14 +16,13 @@ define-command -hidden autowrap-cursor %{ evaluate-commands -save-regs '/"|^@m' 
         execute-keys -draft "x<a-k>^[^\n]{%opt{autowrap_column},}[^\n]<ret>"
 
         try %{
-
-            ## if we're adding characters past the limit, just wrap them around
+            ## if we're adding characters past the limit, move them onto a
+            ## newline to ensure that the cursor is in the right place after
+            ## the wrapping command
             execute-keys -draft "<a-h><a-k>.{%opt{autowrap_column}}\h*[^\s]*<ret>1s(\h+)[^\h]*\z<ret>c<ret>"
         }
 
         reg m "%val{selections_desc}"
-        ## if we're adding characters in the middle of a sentence, use
-        ## the `fmtcmd` command to wrap the entire paragraph
         evaluate-commands %sh{
             if [ "${kak_opt_autowrap_format_paragraph}" = true ] \
                 && [ -n "${kak_opt_autowrap_fmtcmd}" ]; then
