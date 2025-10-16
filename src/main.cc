@@ -855,6 +855,7 @@ int run_server(StringView session, StringView server_init,
             client_manager.clear_window_trash();
             buffer_manager.clear_buffer_trash();
             global_scope.option_registry().clear_option_trash();
+            shell_manager.clear_removed_background_shell();
 
             if (local_client and not contains(client_manager, local_client))
             {
@@ -1024,8 +1025,11 @@ int main(int argc, char* argv[])
     set_signal_handler(SIGTERM, signal_handler);
     set_signal_handler(SIGPIPE, [](int){});
     set_signal_handler(SIGINT, [](int){});
-    set_signal_handler(SIGCHLD, [](int){});
     set_signal_handler(SIGTTOU, SIG_IGN);
+    set_signal_handler(SIGCHLD, nullptr, [](int, siginfo_t* info, void*) {
+        if (ShellManager::has_instance())
+            ShellManager::instance().remove_background_shell(info->si_pid);
+    });
 
     const ParameterDesc param_desc{
         SwitchMap{ { "c", { ArgCompleter{},  "connect to given session" } },

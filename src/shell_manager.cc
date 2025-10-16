@@ -179,7 +179,7 @@ template<typename OnClose>
 FDWatcher make_reader(int fd, String& contents, OnClose&& on_close)
 {
     return {fd, FdEvents::Read, EventMode::Urgent,
-            [&contents, on_close](FDWatcher& watcher, FdEvents, EventMode) {
+            [&contents, on_close](FDWatcher& watcher, FdEvents, EventMode) mutable {
         const int fd = watcher.fd();
         char buffer[1024];
         while (fd_readable(fd))
@@ -227,6 +227,8 @@ FDWatcher make_pipe_writer(UniqueFd& fd, const FunctionRef<StringView ()>& gener
     }};
 }
 
+}
+
 struct CommandFifos
 {
     String base_dir;
@@ -240,7 +242,7 @@ struct CommandFifos
             mkfifo(command_fifo_path().c_str(), 0600);
             mkfifo(response_fifo_path().c_str(), 0600);
             int fd = open(command_fifo_path().c_str(), O_RDONLY | O_NONBLOCK);
-            return make_reader(fd, command, [&, fd](bool graceful) {
+            return make_reader(fd, command, [&, fd](bool graceful) mutable {
                 if (not graceful)
                 {
                     write_to_debug_buffer(format("error reading from command fifo '{}'", strerror(errno)));
@@ -248,6 +250,10 @@ struct CommandFifos
                 }
                 CommandManager::instance().execute(command, context, shell_context);
                 command.clear();
+                // close and re-open the command fifo so that it wont appear continously readable to pselect
+                // while waiting for another writer to oppen it
+                close(fd);
+                fd = open(command_fifo_path().c_str(), O_RDONLY | O_NONBLOCK);
                 command_watcher.reset_fd(fd);
             });
         }())
@@ -266,7 +272,7 @@ struct CommandFifos
     String response_fifo_path() const { return format("{}/response-fifo", base_dir); }
 };
 
-}
+ShellManager::~ShellManager() = default;
 
 std::pair<String, int> ShellManager::eval(
     StringView cmdline, const Context& context, FunctionRef<StringView ()> input_generator,
@@ -279,13 +285,13 @@ std::pair<String, int> ShellManager::eval(
 
     auto start_time = profile ? Clock::now() : Clock::time_point{};
 
-    Optional<CommandFifos> command_fifos;
+    UniquePtr<CommandFifos> command_fifos;
 
     auto kak_env = generate_env(cmdline, shell_context.params, context, [&](StringView name, Quoting quoting) {
         if (name == "command_fifo" or name == "response_fifo")
         {
             if (not command_fifos)
-                command_fifos.emplace(const_cast<Context&>(context), shell_context);
+                command_fifos = make_unique_ptr<CommandFifos>(const_cast<Context&>(context), shell_context);
             return name == "command_fifo" ?
                 command_fifos->command_fifo_path() : command_fifos->response_fifo_path();
         }
@@ -325,8 +331,13 @@ std::pair<String, int> ShellManager::eval(
     }};
 
     bool cancelling = false;
-    while (not terminated or shell.in or
-           ((flags & Flags::WaitForStdout) and (shell.out or shell.err)))
+    m_shell_executing = true;
+    kak_assert(m_convert_to_background_pending == false);
+    OnScopeEnd clear_flags{[&] { m_shell_executing = false; m_convert_to_background_pending = false; }};
+
+    while (not m_convert_to_background_pending and
+           (not terminated or shell.in or
+            ((flags & Flags::WaitForStdout) and (shell.out or shell.err))))
     {
         try
         {
@@ -344,6 +355,12 @@ std::pair<String, int> ShellManager::eval(
         }
         if (not terminated)
             terminated = waitpid((int)shell.pid, &status, WNOHANG) == (int)shell.pid;
+    }
+
+    if (m_convert_to_background_pending and not terminated)
+    {
+        command_fifos->command_watcher.set_mode(EventMode::Normal);
+        m_background_shells.emplace_back(std::move(shell), std::move(command_fifos));
     }
 
     if (not stderr_contents.empty())
@@ -375,6 +392,27 @@ Shell ShellManager::spawn(StringView cmdline, const Context& context,
     });
 
     return spawn_shell(m_shell.c_str(), cmdline, shell_context.params, kak_env, open_stdin);
+}
+
+void ShellManager::convert_to_background()
+{
+    if (not m_shell_executing)
+        throw runtime_error("No shell process to convert to background");
+    m_convert_to_background_pending = true;
+}
+
+void ShellManager::remove_background_shell(int pid)
+{
+    auto it = find_if(m_background_shells, [&](auto& bg_shell) { return (int)bg_shell.shell.pid == pid; });
+    if (it != m_background_shells.end())
+        it->shell.pid.close();
+}
+
+void ShellManager::clear_removed_background_shell()
+{
+    m_background_shells.erase(
+        remove_if(m_background_shells, [](auto& bg_shell) { return not bg_shell.shell.pid; }),
+        m_background_shells.end());
 }
 
 Vector<String> ShellManager::get_val(StringView name, const Context& context) const

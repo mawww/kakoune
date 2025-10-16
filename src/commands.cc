@@ -2795,6 +2795,20 @@ const CommandDesc require_module_cmd = {
     }
 };
 
+const CommandDesc background_shell_cmd = {
+    "background-shell",
+    nullptr,
+    "background-shell: convert current %sh{...} block to a background child process",
+    no_params,
+    CommandFlags::None,
+    CommandHelper{},
+    CommandCompleter{},
+    [](const ParametersParser& parser, Context& context, const ShellContext&)
+    {
+        ShellManager::instance().convert_to_background();
+    }
+};
+
 }
 
 void register_commands()
@@ -2866,6 +2880,7 @@ void register_commands()
     register_command(enter_user_mode_cmd);
     register_command(provide_module_cmd);
     register_command(require_module_cmd);
+    register_command(background_shell_cmd);
 }
 
 }

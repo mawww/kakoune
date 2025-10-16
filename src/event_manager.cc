@@ -167,13 +167,16 @@ void EventManager::handle_urgent_events()
 }
 
 
-SignalHandler set_signal_handler(int signum, SignalHandler handler)
+SignalHandler set_signal_handler(int signum, SignalHandler handler, SignalAction action)
 {
     struct sigaction new_action, old_action;
 
     sigemptyset(&new_action.sa_mask);
-    new_action.sa_handler = handler;
-    new_action.sa_flags = SA_RESTART;
+    if (action)
+        new_action.sa_sigaction = action;
+    else
+        new_action.sa_handler = handler;
+    new_action.sa_flags = SA_RESTART | (action ? SA_SIGINFO : 0);
     sigaction(signum, &new_action, &old_action);
     return old_action.sa_handler;
 }
