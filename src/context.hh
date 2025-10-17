@@ -229,7 +229,7 @@ struct ScopedSelectionEdition
 
 private:
     Context& m_context;
-    SafePtr<Buffer> m_buffer;
+    bool m_valid;
 };
 
 }

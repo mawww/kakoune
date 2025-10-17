@@ -33,6 +33,7 @@ Here are the requests that can be written by the json ui on stdout:
   style can be:
   - prompt: display the menu as a prompt menu (anchor is ignored)
   - inline: display the menu next to (above or below) the anchor coordinate
+  - search: display the menu as a search menu (anchor is ignored)
 * menu_select(int selected)
 * menu_hide()
 * info_show(Line title, Array<Line> content, Coord anchor, Face face, String style)

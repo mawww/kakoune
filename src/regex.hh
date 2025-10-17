@@ -2,7 +2,7 @@
 #define regex_hh_INCLUDED
 
 #include "string.hh"
-#include "regex_impl.hh"
+#include "regex_vm.hh"
 #include "ref_ptr.hh"
 
 namespace Kakoune

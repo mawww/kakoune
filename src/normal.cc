@@ -234,12 +234,12 @@ void goto_commands(Context& context, NormalParams params)
     else
     {
         on_next_key_with_autoinfo(context, "goto", KeymapMode::Goto,
-                                 [](Key key, Context& context) {
+                                  [params](Key key, Context& context) {
             auto cp = key.codepoint();
             if (not cp or key == Key::Escape)
                 return;
             auto& buffer = context.buffer();
-            switch (to_lower(*cp))
+            switch (auto lower_cp = to_lower(*cp); lower_cp)
             {
             case 'g':
             case 'k':
@@ -297,6 +297,30 @@ void goto_commands(Context& context, NormalParams params)
                 context.change_buffer(*target);
                 break;
             }
+            case 'd':
+            case 'u':
+            {
+                auto offset = (lower_cp == 'd' ? 1_line : -1_line) * std::max(params.count, 1);
+                select(context, mode, [&](Context& context, Selection& sel) -> Optional<Selection> {
+                    if (context.has_window())
+                    {
+                        auto& cursor = sel.cursor();
+                        auto& window = context.window();
+                        if (auto display_coord = window.display_coord(cursor))
+                        {
+                            if (cursor.display_target == -1)
+                                cursor.display_target = display_coord->column;
+                            display_coord->column = cursor.display_target;
+                            if (auto buffer_coord = window.buffer_coord(*display_coord + offset))
+                                return Selection{BufferCoordAndTarget{*buffer_coord, -1, cursor.display_target}};
+                        }
+                    }
+                    const ColumnCount tabstop = context.options()["tabstop"].get<int>();
+                    return Selection{context.buffer().offset_coord(sel.cursor(), offset, tabstop)};
+                });
+                break;
+            }
+
             case 'f':
             {
                 static constexpr char forbidden[] = { '\'', '\\', '\0' };
@@ -306,7 +330,7 @@ void goto_commands(Context& context, NormalParams params)
                     if (any_of(filename, [](char c){ return contains(forbidden, c); }))
                         throw runtime_error(format("filename contains invalid characters: '{}'", filename));
 
-                    const StringView buffer_dir = split_path(buffer.name()).first;
+                    const StringView buffer_dir = split_path(buffer.filename()).first;
                     String path = find_file(filename, buffer_dir, paths_opt);
                     if (path.empty())
                         throw runtime_error(format("unable to find file '{}'", filename));
@@ -385,6 +409,9 @@ void view_commands(Context& context, NormalParams params)
 
         const BufferCoord cursor = context.selections().main().cursor();
         Window& window = context.window();
+        window.update_display_buffer(context);
+        if (context.has_client())
+            context.client().force_redraw(false);
 
         const DisplayCoord scrolloff = context.options()["scrolloff"].get<DisplayCoord>();
         const LineCount line_offset{std::min((window.dimensions().line - 1) / 2, scrolloff.line)};
@@ -688,10 +715,13 @@ void pipe(Context& context, NormalParams params)
                     const auto first = changes_tracker.get_new_coord_tolerant(sel.min());
                     const auto last = changes_tracker.get_new_coord_tolerant(sel.max());
 
+                    Vector<StringDataPtr> keep_alive;
                     Vector<StringView> in_lines;
                     for (auto line = first.line; line <= last.line; ++line)
                     {
-                        auto content = buffer[line];
+                        auto& storage = buffer.line_storage(line);
+                        keep_alive.push_back(storage);
+                        auto content = storage->strview();;
                         if (line == last.line)
                             content = content.substr(0, last.column + utf8::codepoint_size(content[last.column]));
                         if (line == first.line)

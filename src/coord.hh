@@ -75,14 +75,15 @@ struct DisplayCoord : LineAndColumn<DisplayCoord, LineCount, ColumnCount>
 struct BufferCoordAndTarget : BufferCoord
 {
     [[gnu::always_inline]]
-    constexpr BufferCoordAndTarget(LineCount line = 0, ByteCount column = 0, ColumnCount target = -1)
-        : BufferCoord{line, column}, target{target} {}
+    constexpr BufferCoordAndTarget(LineCount line = 0, ByteCount column = 0, ColumnCount target = -1, ColumnCount display_target=-1)
+        : BufferCoord{line, column}, target{target}, display_target{display_target} {}
 
     [[gnu::always_inline]]
-    constexpr BufferCoordAndTarget(BufferCoord coord, ColumnCount target = -1)
-        : BufferCoord{coord}, target{target} {}
+    constexpr BufferCoordAndTarget(BufferCoord coord, ColumnCount target = -1, ColumnCount display_target=-1)
+        : BufferCoord{coord}, target{target}, display_target{display_target} {}
 
     ColumnCount target;
+    ColumnCount display_target;
 };
 
 constexpr size_t hash_value(const BufferCoordAndTarget& val)

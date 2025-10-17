@@ -4,7 +4,7 @@ provide-module -override wren %§
     add-highlighter shared/wren/line_comment region '//' '$' fill comment
     add-highlighter shared/wren/block_comment region -recurse '/\*' '/\*' '\*/' fill comment
 
-    add-highlighter shared/wren/raw_string region '"""' '(?<!\\)(?:\\\\)*"""' fill string
+    add-highlighter shared/wren/raw_string region '"""' '"""' fill string
 
     add-highlighter shared/wren/string region '"' '(?<!\\)(\\\\)*"' group
     add-highlighter shared/wren/string/ fill string

@@ -229,7 +229,7 @@ InsertCompletion complete_filename(const SelectionList& sels,
         for (auto dir : options["path"].get<StringList>())
         {
             dir = real_path(parse_filename(dir, (buffer.flags() & Buffer::Flags::File) ?
-                                           split_path(buffer.name()).first : StringView{}));
+                                           split_path(buffer.filename()).first : StringView{}));
 
             if (not dir.empty() and dir.back() != '/')
                 dir += '/';
@@ -363,7 +363,7 @@ InsertCompletion complete_line(const SelectionList& sels,
     auto add_candidates = [&](const Buffer& buf) {
         for (LineCount l = 0_line; l < buf.line_count(); ++l)
         {
-            if (buf.name() == buffer.name() && l == cursor_pos.line)
+            if (&buf == &buffer and l == cursor_pos.line)
                 continue;
 
             StringView line = buf[l];

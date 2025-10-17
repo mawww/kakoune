@@ -26,13 +26,8 @@ BufferManager::~BufferManager()
 
 Buffer* BufferManager::create_buffer(String name, Buffer::Flags flags, BufferLines lines, ByteOrderMark bom, EolFormat eolformat, FsStatus fs_status)
 {
-    auto path = real_path(parse_filename(name));
-    for (auto& buf : m_buffers)
-    {
-        if (buf->name() == name or
-            (buf->flags() & Buffer::Flags::File and buf->name() == path))
-            throw runtime_error{"buffer name is already in use"};
-    }
+    if (get_buffer_ifp(name) != nullptr)
+        throw runtime_error{"buffer name is already in use"};
 
     m_buffers.push_back(make_unique_ptr<Buffer>(std::move(name), flags, std::move(lines), bom, eolformat, fs_status));
     auto* buffer = m_buffers.back().get();
@@ -64,11 +59,11 @@ void BufferManager::delete_buffer(Buffer& buffer)
 
 Buffer* BufferManager::get_buffer_ifp(StringView name)
 {
-    auto path = real_path(parse_filename(name));
+    auto filename = real_path(parse_filename(name));
     for (auto& buf : m_buffers)
     {
         if (buf->name() == name or
-            (buf->flags() & Buffer::Flags::File and buf->name() == path))
+            (buf->flags() & Buffer::Flags::File and buf->filename() == filename))
             return buf.get();
     }
     return nullptr;
@@ -129,7 +124,8 @@ void BufferManager::arrange_buffers(ConstArrayView<String> first_ones)
     Vector<size_t> indices;
     for (const auto& name : first_ones)
     {
-        auto it = find_if(m_buffers, [&](auto& buf) { return buf->name() == name or buf->display_name() == name; });
+        auto filename = real_path(parse_filename(name));
+        auto it = find_if(m_buffers, [&](auto& buf) { return buf->display_name() == name or (buf->flags() & Buffer::Flags::File and buf->filename() == filename); });
         if (it == m_buffers.end())
             throw runtime_error{format("no such buffer '{}'", name)};
         size_t index = it - m_buffers.begin();

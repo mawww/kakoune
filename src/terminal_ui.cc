@@ -485,6 +485,9 @@ TerminalUI::~TerminalUI()
 
 void TerminalUI::suspend()
 {
+    if (m_on_key)
+        m_on_key(Key::FocusOut);
+
     bool mouse_enabled = m_mouse_enabled;
     enable_mouse(false);
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &m_original_termios);
@@ -507,6 +510,9 @@ void TerminalUI::suspend()
     enable_mouse(mouse_enabled);
 
     refresh(true);
+
+    if (m_on_key)
+        m_on_key(Key::FocusIn);
 }
 
 void TerminalUI::set_raw_mode() const

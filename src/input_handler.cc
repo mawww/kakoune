@@ -1494,7 +1494,7 @@ private:
                 buffer.insert(sel.max().line + inserted_count + 1,
                               String{'\n', CharCount{count}});
                 for (int i = 0; i < count; ++i)
-                    new_sels.push_back({sel.max().line + inserted_count + i + 1});
+                    new_sels.push_back(BufferCoord{sel.max().line + inserted_count + i + 1});
                 inserted_count += count;
             }
             selections.set(std::move(new_sels),
@@ -1512,7 +1512,7 @@ private:
                 buffer.insert(sel.min().line + inserted_count,
                               String{'\n', CharCount{count}});
                 for (int i = 0; i < count; ++i)
-                    new_sels.push_back({sel.min().line + inserted_count + i});
+                    new_sels.push_back(BufferCoord{sel.min().line + inserted_count + i});
                 inserted_count += count;
             }
             selections.set(std::move(new_sels),

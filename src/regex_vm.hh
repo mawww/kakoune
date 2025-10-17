@@ -1,5 +1,5 @@
-#ifndef regex_impl_hh_INCLUDED
-#define regex_impl_hh_INCLUDED
+#ifndef regex_vm_hh_INCLUDED
+#define regex_vm_hh_INCLUDED
 
 #include "exception.hh"
 #include "flags.hh"
@@ -771,4 +771,4 @@ private:
 
 }
 
-#endif // regex_impl_hh_INCLUDED
+#endif // regex_vm_hh_INCLUDED

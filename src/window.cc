@@ -134,6 +134,13 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
     kak_assert(&buffer() == &context.buffer());
     DisplaySetup setup = compute_display_setup(context);
 
+    if (setup.line_count != m_last_display_setup.line_count or
+        setup.widget_columns != m_last_display_setup.widget_columns)
+    {
+        // Technically the window has not resized, but most things that hook WinResize probably want to be notfied anyway
+        m_resize_hook_pending = true;
+    }
+
     for (LineCount line = 0; line < setup.line_count; ++line)
     {
         LineCount buffer_line = setup.first_line + line;
@@ -215,26 +222,23 @@ static void check_display_setup(const DisplaySetup& setup, const Window& window)
 
 DisplaySetup Window::compute_display_setup(const Context& context) const
 {
-    auto win_pos = m_position;
-
     DisplayCoord offset = options()["scrolloff"].get<DisplayCoord>();
     offset.line = std::min(offset.line, (m_dimensions.line + 1) / 2);
     offset.column = std::min(offset.column, (m_dimensions.column + 1) / 2);
-
     const auto& cursor = context.selections().main().cursor();
+    DisplaySetup setup{m_position.line, m_dimensions.line, m_position.column, 0_col, offset};
+    if (context.ensure_cursor_visible and
+        cursor.line - offset.line < setup.first_line)
+        setup.first_line = clamp(cursor.line - offset.line, 0_line, buffer().line_count()-1);
 
-    if (context.ensure_cursor_visible)
-    {
-        if (cursor.line - offset.line < win_pos.line)
-            win_pos.line = std::max(0_line, cursor.line - offset.line);
-        if (cursor.line + offset.line >= win_pos.line + m_dimensions.line)
-            win_pos.line = cursor.line + offset.line - m_dimensions.line + 1;
-    }
-    win_pos.line = std::min(win_pos.line, buffer().line_count()-1);
-
-    DisplaySetup setup{win_pos.line, m_dimensions.line, win_pos.column, 0_col, offset};
     for (auto pass : {HighlightPass::Move, HighlightPass::Wrap, HighlightPass::Replace})
         m_builtin_highlighters.compute_display_setup({context, setup, pass, {}}, setup);
+
+    if (context.ensure_cursor_visible and
+        cursor.line + offset.line >= setup.first_line + setup.line_count)
+        setup.first_line = std::min(cursor.line + offset.line - setup.line_count + 1, buffer().line_count()-1);
+
+    setup.first_line = std::min(setup.first_line, buffer().line_count()-1);
     check_display_setup(setup, *this);
 
     return setup;
@@ -306,9 +310,9 @@ Optional<BufferCoord> Window::buffer_coord(DisplayCoord coord) const
         m_display_buffer.lines().empty())
         return {};
     if (coord <= 0_line)
-        coord = {};
+        return {};
     if ((size_t)coord.line >= m_display_buffer.lines().size())
-        coord = DisplayCoord{(int)m_display_buffer.lines().size()-1, INT_MAX};
+        return {};
 
     return find_buffer_coord(m_display_buffer.lines()[(int)coord.line],
                              buffer(), coord.column);

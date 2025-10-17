@@ -1,0 +1,1 @@
+<c-l>:exec<space>ggi<lt>ret<gt><lt>esc<gt>/^c$<lt>ret<gt>vt<ret>

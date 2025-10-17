@@ -86,9 +86,10 @@ ByteCount get_byte_to_column(const Buffer& buffer, ColumnCount tabstop, DisplayC
     return (int)(it - line.begin());
 }
 
-static BufferLines parse_lines(const char* pos, const char* end, EolFormat eolformat)
+static BufferLines parse_lines(const char* pos, const char* end, EolFormat eolformat, size_t expected_line_count = 0)
 {
     BufferLines lines;
+    lines.reserve(expected_line_count);
     while (pos < end)
     {
         if (lines.size() >= std::numeric_limits<int>::max())
@@ -132,13 +133,14 @@ decltype(auto) parse_file(StringView filename, Func&& func)
         pos += 3;
     }
 
+    size_t line_count = 1;
     bool has_crlf = false, has_lf = false;
-    for (auto it = std::find(pos, end, '\n'); it != end; it = std::find(it+1, end, '\n'))
+    for (auto it = std::find(pos, end, '\n'); it != end; it = std::find(it+1, end, '\n'), ++line_count)
         ((it != pos and *(it-1) == '\r') ? has_crlf : has_lf) = true;
     auto eolformat = (has_crlf and not has_lf) ? EolFormat::Crlf : EolFormat::Lf;
 
     FsStatus fs_status{file.st.st_mtim, file.st.st_size, murmur3(file.data, file.st.st_size)};
-    return func(parse_lines(pos, end, eolformat), bom, eolformat, fs_status);
+    return func(parse_lines(pos, end, eolformat, line_count), bom, eolformat, fs_status);
 }
 
 Buffer* open_file_buffer(StringView filename, Buffer::Flags flags)
@@ -160,7 +162,7 @@ Buffer* open_or_create_file_buffer(StringView filename, Buffer::Flags flags)
 void reload_file_buffer(Buffer& buffer)
 {
     kak_assert(buffer.flags() & Buffer::Flags::File);
-    parse_file(buffer.name(), [&](auto&&... params) {
+    parse_file(buffer.filename(), [&](auto&&... params) {
         buffer.reload(std::forward<decltype(params)>(params)...);
     });
     buffer.flags() &= ~Buffer::Flags::New;
@@ -242,13 +244,13 @@ void write_buffer_to_file(Buffer& buffer, StringView filename,
     }
 
     if ((buffer.flags() & Buffer::Flags::File) and
-        real_path(filename) == real_path(buffer.name()))
+        real_path(filename) == real_path(buffer.filename()))
         buffer.notify_saved(get_fs_status(real_path(filename)));
 }
 
 void write_buffer_to_backup_file(Buffer& buffer)
 {
-    const int fd = open_temp_file(buffer.name());
+    const int fd = open_temp_file(buffer.filename());
     if (fd >= 0)
     {
         write_buffer_to_fd(buffer, fd);

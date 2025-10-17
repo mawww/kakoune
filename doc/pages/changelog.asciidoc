@@ -5,6 +5,12 @@ To control the startup info message, see <<options#startup-info,`:doc options st
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
+== Development Version
+
+* `FocusIn`/`FocusOut` events on suspend
+
+* `%val{buffile}` is now empty for scratch buffers
+
 == Kakoune 2025.06.03
 
 * Expose env vars that are mentioned in the arguments passed to shell expansions

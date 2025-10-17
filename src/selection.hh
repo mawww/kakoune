@@ -27,6 +27,7 @@ struct BasicSelection
 
     BasicSelection() = default;
     BasicSelection(BufferCoord pos) : BasicSelection(pos,pos) {}
+    BasicSelection(BufferCoordAndTarget pos) : BasicSelection(pos,pos) {}
     BasicSelection(BufferCoord anchor, BufferCoordAndTarget cursor)
         : m_anchor{anchor}, m_cursor{cursor} {}
 
@@ -62,6 +63,7 @@ struct Selection : BasicSelection
 {
     Selection() = default;
     Selection(BufferCoord pos) : BasicSelection(pos,pos) {}
+    Selection(BufferCoordAndTarget pos) : BasicSelection(pos,pos) {}
     Selection(BufferCoord anchor, BufferCoordAndTarget cursor, CaptureList captures = {})
         : BasicSelection{anchor, cursor}, m_captures(std::move(captures)) {}
     CaptureList& captures() { return m_captures; }

@@ -1,0 +1,3 @@
+ui_out -ignore 7
+ui_in '{ "jsonrpc": "2.0", "method": "mouse_press", "params": [ "left", 0, 0 ] }'
+ui_in '{ "jsonrpc": "2.0", "method": "keys", "params": [ ":delete-buffer<ret>" ] }'
