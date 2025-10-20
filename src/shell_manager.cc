@@ -248,7 +248,14 @@ struct CommandFifos
                     write_to_debug_buffer(format("error reading from command fifo '{}'", strerror(errno)));
                     return;
                 }
-                CommandManager::instance().execute(command, context, shell_context);
+                try
+                {
+                    CommandManager::instance().execute(command, context, shell_context);
+                }
+                catch (runtime_error& error)
+                {
+                    write_to_debug_buffer(format("error while executing from command fifo: {}", error.what()));
+                }
                 command.clear();
                 // close and re-open the command fifo so that it wont appear continously readable to pselect
                 // while waiting for another writer to oppen it
