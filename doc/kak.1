@@ -14,7 +14,8 @@
 .Op Fl ui Ar ui_type
 .Op Fl e Ar command
 .Op Fl E Ar command
-.Op Sy + Ns Ar line Ns Oo Sy \&: Ns Ar column Oc | Sy +:
+.Op Sy + Ns Oo Ns Ar line Oc | Sy + Ns Ar line Ns Sy \&: Ns Oo Ns Ar column Oc
+.Op Fl Fl
 .Op Ar file ...
 .
 .Nm
@@ -151,10 +152,10 @@ Begin in
 .Em readonly mode ,
 all the buffers opened will not be written to disk.
 .
-.It Sy + Ns Ar line Ns Oo Sy \&: Ns Ar column Oc | Sy +:
+.It Sy + Ns Oo Ns Ar line Oc | Sy + Ns Ar line Ns Sy \&: Ns Oo Ns Ar column Oc
 Specify a target line and column for the first file.
-When the plus sign is followed by only a colon, then the cursor is sent
-to the last line of the file.
+When the line is omitted the cursor will go to the end of the buffer.
+When colon is present but the column is omitted the cursor will got to the end of the given line.
 .
 .It Ar file ...
 One or more
