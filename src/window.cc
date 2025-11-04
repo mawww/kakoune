@@ -128,7 +128,7 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
     m_display_buffer.set_timestamp(buffer().timestamp());
     lines.clear();
 
-    if (m_dimensions == DisplayCoord{0,0})
+    if (m_dimensions.line == 0 or m_dimensions.column == 0)
         return m_display_buffer;
 
     kak_assert(&buffer() == &context.buffer());
