@@ -535,7 +535,7 @@ void command(const Context& context, EnvVarMap env_vars, char reg = 0)
                 if (event == PromptEvent::Change)
                 {
                     auto info = CommandManager::instance().command_info(context, cmdline);
-                    context.input_handler().set_prompt_face(context.faces()[info ? "Prompt" : "Error"]);
+                    context.input_handler().set_prompt_face(context.faces()[info or cmdline.empty() ? "Prompt" : "Error"]);
 
                     auto autoinfo = context.options()["autoinfo"].get<AutoInfo>();
                     if (autoinfo & AutoInfo::Command)

@@ -1089,8 +1089,6 @@ private:
                     context().client().menu_select(0);
             }
         }
-        else
-            m_line_changed = true;
 
         if (not (context().flags() & Context::Flags::Draft))
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
