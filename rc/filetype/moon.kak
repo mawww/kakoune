@@ -1,6 +1,8 @@
 # http://moonscript.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-moon %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -31,6 +33,10 @@ hook -group moon-highlight global WinSetOption filetype=moon %{
     add-highlighter window/moon ref moon
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/moon }
 }
+
+}
+
+require-module detect-moon
 
 
 provide-module moon %[

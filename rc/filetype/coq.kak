@@ -1,3 +1,4 @@
+provide-module detect-coq %{
 
 # Detection
 # --------
@@ -22,6 +23,10 @@ hook global WinSetOption filetype=coq %{
         remove-hooks window coq-indent 
     }
 }
+
+}
+
+require-module detect-coq
 
 provide-module coq %{
 

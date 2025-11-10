@@ -1,6 +1,8 @@
 # http://clojure.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-clojure %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -24,6 +26,10 @@ hook -group clojure-insert global BufNewFile .*[.](clj|cljc|cljs|cljx) %{
     require-module clojure
     clojure-insert-ns
 }
+
+}
+
+require-module detect-clojure
 
 provide-module clojure %{
 

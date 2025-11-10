@@ -1,3 +1,5 @@
+provide-module detect-swift %{
+
 hook global BufCreate .*\.(swift) %{
     set-option buffer filetype swift
 }
@@ -10,6 +12,10 @@ hook -group swift-highlight global WinSetOption filetype=swift %{
     add-highlighter window/swift ref swift
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/swift }
 }
+
+}
+
+require-module detect-swift
 
 
 provide-module swift %{
