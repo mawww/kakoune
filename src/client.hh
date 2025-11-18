@@ -52,8 +52,7 @@ public:
     bool info_pending() const { return m_ui_pending & PendingUI::InfoShow; };
     bool status_line_pending() const { return m_ui_pending & PendingUI::StatusLine; };
 
-    void print_status(DisplayLine status_line);
-    const DisplayLine& current_status() const { return m_status_line; }
+    void print_status(DisplayLine prompt, DisplayLine content, ColumnCount cursor_pos);
 
     DisplayCoord dimensions() const;
 
@@ -80,6 +79,8 @@ public:
     int pid() const { return m_pid; }
 
 private:
+    friend class BusyIndicator;
+
     void on_option_changed(const Option& option) override;
 
     void on_buffer_reload_key(Key key);
@@ -99,7 +100,9 @@ private:
 
     InputHandler m_input_handler;
 
-    DisplayLine m_status_line;
+    DisplayLine m_status_prompt;
+    DisplayLine m_status_content;
+    ColumnCount m_status_cursor_pos;
     DisplayLine m_mode_line;
 
     enum PendingUI : int
@@ -176,7 +179,13 @@ public:
 private:
     const Context& m_context;
     Timer m_timer;
-    Optional<DisplayLine> m_previous_status;
+    struct PreviousStatus
+    {
+        DisplayLine prompt;
+        DisplayLine content;
+        ColumnCount cursor_pos;
+    };
+    Optional<PreviousStatus> m_previous_status;
 };
 
 }

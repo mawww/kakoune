@@ -586,15 +586,27 @@ void TerminalUI::draw(const DisplayBuffer& display_buffer,
     m_dirty = true;
 }
 
-void TerminalUI::draw_status(const DisplayLine& status_line,
+void TerminalUI::draw_status(const DisplayLine& prompt,
+                             const DisplayLine& content,
+                             const ColumnCount cursor_pos,
                              const DisplayLine& mode_line,
                              const Face& default_face)
 {
     const LineCount status_line_pos = m_status_on_top ? 0 : m_dimensions.line;
-    m_window.draw(status_line_pos, status_line.atoms(), default_face);
+
+    auto status_width = m_dimensions.column - prompt.length();
+    if (cursor_pos < m_status_pos)
+        m_status_pos = cursor_pos;
+    if (cursor_pos >= m_status_pos + status_width)
+        m_status_pos = cursor_pos + 1 - status_width;
+
+    auto trimmed_content = content;
+    trimmed_content.trim(m_status_pos, status_width);
+    m_window.draw(status_line_pos, prompt.atoms(), default_face);
+    m_window.draw(DisplayCoord{status_line_pos, prompt.length()}, trimmed_content.atoms(), default_face);
 
     const auto mode_len = mode_line.length();
-    m_status_len = status_line.length();
+    m_status_len = prompt.length() + trimmed_content.length();
     const auto remaining = m_dimensions.column - m_status_len;
     if (mode_len < remaining)
     {

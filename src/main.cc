@@ -579,7 +579,7 @@ UniquePtr<UserInterface> make_ui(UIType ui_type)
         void info_hide() override {}
 
         void draw(const DisplayBuffer&, const Face&, const Face&) override {}
-        void draw_status(const DisplayLine&, const DisplayLine&, const Face&) override {}
+        void draw_status(const DisplayLine&, const DisplayLine&, const ColumnCount, const DisplayLine&, const Face&) override {}
         DisplayCoord dimensions() override { return {24,80}; }
         void set_cursor(CursorMode, DisplayCoord) override {}
         void refresh(bool) override {}
@@ -816,10 +816,10 @@ int run_server(StringView session, StringView server_init,
                  [&](int status) { exit_status = status; });
 
             if (startup_error and local_client)
-                local_client->print_status({
+                local_client->print_status({}, {
                     "error during startup, see `:buffer *debug*` for details",
                     local_client->context().faces()["Error"]
-                });
+                }, -1);
 
             if (flags & ServerFlags::StartupInfo and local_client)
                 show_startup_info(local_client, global_scope.options()["startup_info_version"].get<int>());

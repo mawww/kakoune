@@ -25,7 +25,9 @@ public:
               const Face& default_face,
               const Face& buffer_padding) override;
 
-    void draw_status(const DisplayLine& status_line,
+    void draw_status(const DisplayLine& prompt,
+                     const DisplayLine& content,
+                     const ColumnCount cursor_pos,
                      const DisplayLine& mode_line,
                      const Face& default_face) override;
 

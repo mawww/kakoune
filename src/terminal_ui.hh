@@ -34,7 +34,9 @@ public:
               const Face& default_face,
               const Face& padding_face) override;
 
-    void draw_status(const DisplayLine& status_line,
+    void draw_status(const DisplayLine& prompt,
+                     const DisplayLine& content,
+                     const ColumnCount cursor_pos,
                      const DisplayLine& mode_line,
                      const Face& default_face) override;
 
@@ -176,6 +178,7 @@ private:
     void set_resize_pending();
 
     ColumnCount m_status_len = 0;
+    ColumnCount m_status_pos = 0;
     ColumnCount m_info_max_width = 0;
 };
 

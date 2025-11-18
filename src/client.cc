@@ -57,7 +57,7 @@ Client::Client(UniquePtr<UserInterface>&& ui,
         else if (key == ctrl('g'))
         {
             m_pending_keys.clear();
-            print_status({"operation cancelled", context().faces()["Error"]});
+            print_status({}, {"operation cancelled", context().faces()["Error"]}, -1);
             throw cancel{};
         }
         else if (key.modifiers & Key::Modifiers::Resize)
@@ -120,16 +120,18 @@ bool Client::process_pending_inputs()
         catch (Kakoune::runtime_error& error)
         {
             write_to_debug_buffer(format("Error: {}", error.what()));
-            context().print_status({error.what().str(), context().faces()["Error"]});
+            context().print_status({}, {error.what().str(), context().faces()["Error"]}, -1);
             context().hooks().run_hook(Hook::RuntimeError, error.what(), context());
         }
     }
     return not keys.empty();
 }
 
-void Client::print_status(DisplayLine status_line)
+void Client::print_status(DisplayLine prompt, DisplayLine content, ColumnCount cursor_pos)
 {
-    m_status_line = std::move(status_line);
+    m_status_prompt = std::move(prompt);
+    m_status_content = std::move(content);
+    m_status_cursor_pos = cursor_pos;
     m_ui_pending |= StatusLine;
     m_pending_clear &= ~PendingClear::StatusLine;
 }
@@ -297,7 +299,7 @@ void Client::redraw_ifn()
         m_ui->info_hide();
 
     if (m_ui_pending & StatusLine)
-        m_ui->draw_status(m_status_line, m_mode_line, faces["StatusLine"]);
+        m_ui->draw_status(m_status_prompt, m_status_content, m_status_cursor_pos, m_mode_line, faces["StatusLine"]);
 
     auto cursor = m_input_handler.get_cursor_info();
     m_ui->set_cursor(cursor.first, cursor.second);
@@ -357,15 +359,15 @@ void Client::on_buffer_reload_key(Key key)
     {
         // reread timestamp in case the file was modified again
         buffer.set_fs_status(get_fs_status(buffer.filename()));
-        print_status({ format("'{}' kept", buffer.display_name()),
-                       context().faces()["Information"] });
+        print_status({}, { format("'{}' kept", buffer.display_name()),
+                           context().faces()["Information"] }, -1);
         if (key == 'N')
             set_autoreload(Autoreload::No);
     }
     else
     {
-        print_status({ format("'{}' is not a valid choice", key),
-                       context().faces()["Error"] });
+        print_status({}, { format("'{}' is not a valid choice", key),
+                           context().faces()["Error"] }, -1);
         m_input_handler.on_next_key("buffer-reload", KeymapMode::None, [this](Key key, Context&){ on_buffer_reload_key(key); });
         return;
     }
@@ -509,7 +511,7 @@ void Client::schedule_clear()
 void Client::clear_pending()
 {
     if (m_pending_clear & PendingClear::StatusLine)
-        print_status({});
+        print_status({}, {}, -1);
     if (m_pending_clear & PendingClear::Info)
         info_hide();
     m_pending_clear = PendingClear::None;
@@ -531,9 +533,9 @@ BusyIndicator::BusyIndicator(const Context& context,
 
             auto& client = m_context.client();
             if (not m_previous_status)
-                m_previous_status = client.current_status();
+                m_previous_status.emplace(client.m_status_prompt, client.m_status_content, client.m_status_cursor_pos);
 
-            client.print_status(status_message(duration_cast<seconds>(now - wait_time)));
+            client.print_status({}, status_message(duration_cast<seconds>(now - wait_time)), -1);
             client.redraw_ifn();
         }, EventMode::Urgent} {}
 
@@ -541,7 +543,8 @@ BusyIndicator::~BusyIndicator()
 {
     if (m_previous_status and std::uncaught_exceptions() == 0) // restore the status line
     {
-        m_context.print_status(std::move(*m_previous_status));
+        auto& [prompt, content, cursor_pos] = *m_previous_status;
+        m_context.print_status(std::move(prompt), std::move(content), std::move(cursor_pos));
         m_context.client().redraw_ifn();
     }
 }

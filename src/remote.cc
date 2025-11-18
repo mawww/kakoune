@@ -401,7 +401,9 @@ public:
               const Face& default_face,
               const Face& padding_face) override;
 
-    void draw_status(const DisplayLine& status_line,
+    void draw_status(const DisplayLine& prompt,
+                     const DisplayLine& content,
+                     const ColumnCount cursor_pos,
                      const DisplayLine& mode_line,
                      const Face& default_face) override;
 
@@ -568,11 +570,13 @@ void RemoteUI::draw(const DisplayBuffer& display_buffer,
     send_message(MessageType::Draw, display_buffer, default_face, padding_face);
 }
 
-void RemoteUI::draw_status(const DisplayLine& status_line,
+void RemoteUI::draw_status(const DisplayLine& prompt,
+                           const DisplayLine& content,
+                           const ColumnCount cursor_pos,
                            const DisplayLine& mode_line,
                            const Face& default_face)
 {
-    send_message(MessageType::DrawStatus, status_line, mode_line, default_face);
+    send_message(MessageType::DrawStatus, prompt, content, cursor_pos, mode_line, default_face);
 }
 
 void RemoteUI::set_cursor(CursorMode mode, DisplayCoord coord)
