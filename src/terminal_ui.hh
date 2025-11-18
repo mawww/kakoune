@@ -31,6 +31,7 @@ public:
     bool is_ok() const override { return (bool)m_window; }
 
     void draw(const DisplayBuffer& display_buffer,
+              DisplayCoord cursor_pos,
               const Face& default_face,
               const Face& padding_face) override;
 
@@ -50,8 +51,6 @@ public:
                    DisplayCoord anchor, Face face,
                    InfoStyle style) override;
     void info_hide() override;
-
-    void set_cursor(CursorMode mode, DisplayCoord coord) override;
 
     void refresh(bool force) override;
 
@@ -132,11 +131,7 @@ private:
         InfoStyle style;
     } m_info;
 
-    struct Cursor
-    {
-        CursorMode mode;
-        DisplayCoord coord;
-    } m_cursor;
+    DisplayCoord m_cursor_pos;
 
     FDWatcher m_stdin_watcher;
     OnKeyCallback m_on_key;
@@ -179,6 +174,7 @@ private:
 
     ColumnCount m_status_len = 0;
     ColumnCount m_status_pos = 0;
+    ColumnCount m_status_cursor_pos = 0;
     ColumnCount m_info_max_width = 0;
 };
 

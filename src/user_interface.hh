@@ -35,12 +35,6 @@ enum class InfoStyle
 
 enum class EventMode;
 
-enum class CursorMode
-{
-    Prompt,
-    Buffer,
-};
-
 using OnKeyCallback = Function<void(Key key)>;
 using OnPasteCallback = Function<void(StringView content)>;
 
@@ -64,6 +58,7 @@ public:
     virtual void info_hide() = 0;
 
     virtual void draw(const DisplayBuffer& display_buffer,
+                      DisplayCoord cursor_pos,
                       const Face& default_face,
                       const Face& padding_face) = 0;
 
@@ -74,8 +69,6 @@ public:
                              const Face& default_face) = 0;
 
     virtual DisplayCoord dimensions() = 0;
-
-    virtual void set_cursor(CursorMode mode, DisplayCoord coord) = 0;
 
     virtual void refresh(bool force) = 0;
 

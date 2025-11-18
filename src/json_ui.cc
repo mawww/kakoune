@@ -109,16 +109,6 @@ String to_json(InfoStyle style)
     return "";
 }
 
-String to_json(CursorMode mode)
-{
-    switch (mode)
-    {
-        case CursorMode::Prompt: return R"("prompt")";
-        case CursorMode::Buffer: return R"("buffer")";
-    }
-    return "";
-}
-
 String concat()
 {
     return "";
@@ -150,10 +140,10 @@ JsonUI::JsonUI()
     set_signal_handler(SIGINT, SIG_DFL);
 }
 
-void JsonUI::draw(const DisplayBuffer& display_buffer,
+void JsonUI::draw(const DisplayBuffer& display_buffer, DisplayCoord cursor_pos,
                   const Face& default_face, const Face& padding_face)
 {
-    rpc_call("draw", display_buffer.lines(), default_face, padding_face);
+    rpc_call("draw", display_buffer.lines(), cursor_pos, default_face, padding_face);
 }
 
 void JsonUI::draw_status(const DisplayLine& prompt,
@@ -193,11 +183,6 @@ void JsonUI::info_show(const DisplayLine& title, const DisplayLineList& content,
 void JsonUI::info_hide()
 {
     rpc_call("info_hide");
-}
-
-void JsonUI::set_cursor(CursorMode mode, DisplayCoord coord)
-{
-    rpc_call("set_cursor", mode, coord);
 }
 
 void JsonUI::refresh(bool force)

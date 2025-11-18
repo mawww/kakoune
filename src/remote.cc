@@ -38,7 +38,6 @@ enum class MessageType : uint8_t
     InfoHide,
     Draw,
     DrawStatus,
-    SetCursor,
     Refresh,
     SetOptions,
     Exit,
@@ -398,6 +397,7 @@ public:
     void info_hide() override;
 
     void draw(const DisplayBuffer& display_buffer,
+              DisplayCoord cursor_pos,
               const Face& default_face,
               const Face& padding_face) override;
 
@@ -406,8 +406,6 @@ public:
                      const ColumnCount cursor_pos,
                      const DisplayLine& mode_line,
                      const Face& default_face) override;
-
-    void set_cursor(CursorMode mode, DisplayCoord coord) override;
 
     void refresh(bool force) override;
 
@@ -564,10 +562,11 @@ void RemoteUI::info_hide()
 }
 
 void RemoteUI::draw(const DisplayBuffer& display_buffer,
+                    DisplayCoord cursor_pos,
                     const Face& default_face,
                     const Face& padding_face)
 {
-    send_message(MessageType::Draw, display_buffer, default_face, padding_face);
+    send_message(MessageType::Draw, display_buffer, cursor_pos, default_face, padding_face);
 }
 
 void RemoteUI::draw_status(const DisplayLine& prompt,
@@ -577,11 +576,6 @@ void RemoteUI::draw_status(const DisplayLine& prompt,
                            const Face& default_face)
 {
     send_message(MessageType::DrawStatus, prompt, content, cursor_pos, mode_line, default_face);
-}
-
-void RemoteUI::set_cursor(CursorMode mode, DisplayCoord coord)
-{
-    send_message(MessageType::SetCursor, mode, coord);
 }
 
 void RemoteUI::refresh(bool force)
@@ -731,9 +725,6 @@ RemoteClient::RemoteClient(StringView session, StringView name, UniquePtr<UserIn
                 break;
             case MessageType::DrawStatus:
                 exec(&UserInterface::draw_status);
-                break;
-            case MessageType::SetCursor:
-                exec(&UserInterface::set_cursor);
                 break;
             case MessageType::Refresh:
                 exec(&UserInterface::refresh);

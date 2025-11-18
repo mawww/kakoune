@@ -438,7 +438,7 @@ static void signal_handler(int)
 }
 
 TerminalUI::TerminalUI()
-    : m_cursor{CursorMode::Buffer, {}},
+    : m_cursor_pos{},
       m_stdin_watcher{STDIN_FILENO, FdEvents::Read, EventMode::Urgent,
                       [this](FDWatcher&, FdEvents, EventMode) {
         if (not m_on_key)
@@ -544,15 +544,10 @@ void TerminalUI::redraw(bool force)
     auto set_cursor_pos = [&](DisplayCoord c) {
         format_with(writer, "\033[{};{}H", (int)c.line + 1, (int)c.column + 1);
     };
-    if (m_cursor.mode == CursorMode::Prompt)
-        set_cursor_pos({m_status_on_top ? 0 : m_dimensions.line, m_cursor.coord.column});
+    if (m_status_cursor_pos > 0)
+        set_cursor_pos({m_status_on_top ? 0 : m_dimensions.line, m_status_cursor_pos});
     else
-        set_cursor_pos(m_cursor.coord + content_line_offset());
-}
-
-void TerminalUI::set_cursor(CursorMode mode, DisplayCoord coord)
-{
-    m_cursor = Cursor{mode, coord};
+        set_cursor_pos(m_cursor_pos + content_line_offset());
 }
 
 void TerminalUI::refresh(bool force)
@@ -565,6 +560,7 @@ void TerminalUI::refresh(bool force)
 static const DisplayLine empty_line = { String(" "), {} };
 
 void TerminalUI::draw(const DisplayBuffer& display_buffer,
+                      DisplayCoord cursor_pos,
                       const Face& default_face,
                       const Face& padding_face)
 {
@@ -583,6 +579,8 @@ void TerminalUI::draw(const DisplayBuffer& display_buffer,
     while (line_index < dim.line + line_offset)
         m_window.draw(line_index++, padding, face);
 
+    m_cursor_pos = cursor_pos;
+
     m_dirty = true;
 }
 
@@ -599,6 +597,8 @@ void TerminalUI::draw_status(const DisplayLine& prompt,
         m_status_pos = cursor_pos;
     if (cursor_pos >= m_status_pos + status_width)
         m_status_pos = cursor_pos + 1 - status_width;
+
+    m_status_cursor_pos = cursor_pos >= 0 ? prompt.length() + cursor_pos : -1;
 
     auto trimmed_content = content;
     trimmed_content.trim(m_status_pos, status_width);

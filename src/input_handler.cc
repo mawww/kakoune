@@ -48,13 +48,6 @@ public:
 
     virtual StringView name() const = 0;
 
-    virtual std::pair<CursorMode, DisplayCoord> get_cursor_info() const
-    {
-        const auto cursor = context().selections().main().cursor();
-        auto coord = context().window().display_coord(cursor).value_or(DisplayCoord{});
-        return {CursorMode::Buffer, coord};
-    }
-
     using Insertion = InputHandler::Insertion;
 
 protected:
@@ -978,12 +971,6 @@ public:
 
     StringView name() const override { return "prompt"; }
 
-    std::pair<CursorMode, DisplayCoord> get_cursor_info() const override
-    {
-        DisplayCoord coord{0_line, m_prompt.column_length() + m_line_editor.cursor_display_column()};
-        return { CursorMode::Prompt, coord };
-    }
-
 private:
     template<typename Completer>
     void use_explicit_completer(Completer&& completer)
@@ -1760,11 +1747,6 @@ void InputHandler::stop_recording()
 ModeInfo InputHandler::mode_info() const
 {
     return current_mode().mode_info();
-}
-
-std::pair<CursorMode, DisplayCoord> InputHandler::get_cursor_info() const
-{
-    return current_mode().get_cursor_info();
 }
 
 bool should_show_info(AutoInfo mask, const Context& context)

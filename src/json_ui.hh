@@ -22,6 +22,7 @@ public:
     bool is_ok() const override { return m_stdin_watcher.fd() != -1; }
 
     void draw(const DisplayBuffer& display_buffer,
+              DisplayCoord cursor_pos,
               const Face& default_face,
               const Face& buffer_padding) override;
 
@@ -41,8 +42,6 @@ public:
                    DisplayCoord anchor, Face face,
                    InfoStyle style) override;
     void info_hide() override;
-
-    void set_cursor(CursorMode mode, DisplayCoord coord) override;
 
     void refresh(bool force) override;
 

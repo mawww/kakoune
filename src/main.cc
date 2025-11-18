@@ -578,10 +578,9 @@ UniquePtr<UserInterface> make_ui(UIType ui_type)
         void info_show(const DisplayLine&, const DisplayLineList&, DisplayCoord, Face, InfoStyle) override {}
         void info_hide() override {}
 
-        void draw(const DisplayBuffer&, const Face&, const Face&) override {}
+        void draw(const DisplayBuffer&, DisplayCoord, const Face&, const Face&) override {}
         void draw_status(const DisplayLine&, const DisplayLine&, const ColumnCount, const DisplayLine&, const Face&) override {}
         DisplayCoord dimensions() override { return {24,80}; }
-        void set_cursor(CursorMode, DisplayCoord) override {}
         void refresh(bool) override {}
         void set_on_key(OnKeyCallback) override {}
         void set_on_paste(OnPasteCallback) override {}

@@ -257,8 +257,11 @@ void Client::redraw_ifn()
     const auto& faces = context().faces();
 
     if (m_ui_pending & Draw)
-        m_ui->draw(window.update_display_buffer(context()),
-                   faces["Default"], faces["BufferPadding"]);
+    {
+        auto& display_buffer = window.update_display_buffer(context());
+        auto cursor_pos = window.display_coord(context().selections().main().cursor()).value_or(DisplayCoord{});
+        m_ui->draw(display_buffer, cursor_pos, faces["Default"], faces["BufferPadding"]);
+    }
 
     const bool update_menu_anchor = (m_ui_pending & Draw) and not (m_ui_pending & MenuHide) and
                                     not m_menu.items.empty() and m_menu.style == MenuStyle::Inline;
@@ -300,9 +303,6 @@ void Client::redraw_ifn()
 
     if (m_ui_pending & StatusLine)
         m_ui->draw_status(m_status_prompt, m_status_content, m_status_cursor_pos, m_mode_line, faces["StatusLine"]);
-
-    auto cursor = m_input_handler.get_cursor_info();
-    m_ui->set_cursor(cursor.first, cursor.second);
 
     m_ui->refresh(m_ui_pending & Refresh);
     m_ui_pending = 0;

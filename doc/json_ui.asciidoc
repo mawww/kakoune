@@ -23,11 +23,15 @@ Here are the data structures used:
 
 Here are the requests that can be written by the json ui on stdout:
 
-* draw(Array<Line> lines, Face default_face, Face padding_face)
+* draw(Array<Line> lines, Coord cursor_pos, Face default_face, Face padding_face)
   padding_face is the face of the padding characters '~' in the
   terminal UI.
-* draw_status(Line status_line, Line mode_line,
-              Face default_face)
+  cursor_pos is the main cursor coordinates
+* draw_status(Line prompt, Line content, int cursor_pos, Line mode_line, Face default_face)
+  cursor_pos is the location of the cursor in the content, the UI is expected to trim
+  content in order to ensure the cursor stays visible, if cursor_pos is negative, no
+  cursor should be displayed in the prompt. Prompt cursor show have priority to buffer
+  cursor if only one cursor can be displayed.
 * menu_show(Array<Line> items, Coord anchor, Face selected_item_face, Face menu_face,
             String style)
   style can be:
@@ -46,11 +50,6 @@ Here are the requests that can be written by the json ui on stdout:
   - modal: display the info in a way that shows Kakoune is waiting for a
     special action related to it.
 * info_hide()
-* set_cursor(String mode, Coord coord)
-  set the main cursor position
-  mode can be:
-  - prompt: the coordinate line should be 0, and the cursor is in the prompt area
-  - buffer: the cursor is in the buffer display area
 * set_ui_options(Map<String, String> options)
   called when ui_options changed with a map of options name to option values
 * refresh(bool force)
