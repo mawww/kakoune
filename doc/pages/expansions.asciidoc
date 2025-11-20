@@ -293,6 +293,11 @@ The following expansions are supported (with required context _in italics_):
     _in window scope_ +
     line of the main cursor, the third component of `%val{selection_desc}`
 
+*%val{cursor_line_percent}*::
+    _in window scope_ +
+    line of the main cursor expressed as percentage of the number of lines
+    in the current buffer
+
 *%val{error}*::
     _in `try` command's <on_error_commands> parameter_ +
     the text of the error that cancelled execution of the <commands> parameter
