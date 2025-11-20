@@ -1,6 +1,8 @@
 # http://gittup.org/tup/
 #
 
+provide-module detect-tupfile %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -17,6 +19,10 @@ hook -group tupfile-highlight global WinSetOption filetype=tupfile %{
     add-highlighter window/tupfile ref tupfile
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/tupfile }
 }
+
+}
+
+require-module detect-tupfile
 
 
 provide-module tupfile %{

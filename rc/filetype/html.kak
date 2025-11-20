@@ -1,6 +1,8 @@
 # http://w3.org/html
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-html %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -33,6 +35,10 @@ hook -group html-highlight global WinSetOption filetype=(html|xml) %{
         remove-highlighter ""window/%val{hook_param_capture_1}""
     "
 }
+
+}
+
+require-module detect-html
 
 
 provide-module html %[

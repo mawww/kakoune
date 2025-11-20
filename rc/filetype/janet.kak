@@ -1,6 +1,8 @@
 # http://janet-lang.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-janet %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -23,6 +25,10 @@ hook -group janet-highlight global WinSetOption filetype=janet %{
     add-highlighter window/janet ref janet
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/janet }
 }
+
+}
+
+require-module detect-janet
 
 provide-module janet %{
 

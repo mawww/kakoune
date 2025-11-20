@@ -4,6 +4,8 @@
 # https://mesonbuild.com/Syntax.html
 # https://github.com/mesonbuild/meson/blob/master/data/syntax-highlighting/vim/syntax/meson.vim
 
+provide-module detect-meson %{
+
 ## Detection
 
 hook global BufCreate (.*/|^)(meson\.build|meson_options\.txt) %{
@@ -20,6 +22,10 @@ hook -group meson-highlight global WinSetOption filetype=meson %{
     add-highlighter window/meson ref meson
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/meson }
 }
+
+}
+
+require-module detect-meson
 
 provide-module meson %§
 

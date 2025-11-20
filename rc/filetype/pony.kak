@@ -1,6 +1,8 @@
 # http://ponylang.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-pony %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -30,6 +32,10 @@ hook -group pony-highlight global WinSetOption filetype=pony %{
     add-highlighter window/pony ref pony
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter pony }
 }
+
+}
+
+require-module detect-pony
 
 provide-module pony %§
 

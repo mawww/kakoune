@@ -1,6 +1,8 @@
 # http://haskell.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-haskell %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -26,6 +28,10 @@ hook -group haskell-highlight global WinSetOption filetype=haskell %{
     add-highlighter window/haskell ref haskell
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/haskell }
 }
+
+}
+
+require-module detect-haskell
 
 
 provide-module haskell %[

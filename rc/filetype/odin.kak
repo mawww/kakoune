@@ -1,3 +1,5 @@
+provide-module detect-odin %{
+
 hook global BufCreate .*\.odin %{
     set-option buffer filetype odin
 }
@@ -24,6 +26,10 @@ hook -group odin-highlight global WinSetOption filetype=odin %{
     add-highlighter window/odin ref odin
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/odin }
 }
+
+}
+
+require-module detect-odin
 
 provide-module odin %§
 
