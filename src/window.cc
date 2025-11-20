@@ -166,7 +166,7 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
         }
 
         auto max_first_column = cursor_pos->column - (setup.widget_columns + setup.scroll_offset.column);
-        setup.first_column = std::min(setup.first_column, max_first_column);
+        setup.first_column = std::max(0_col, std::min(setup.first_column, max_first_column));
 
         auto min_first_column = cursor_pos->column - (m_dimensions.column - setup.scroll_offset.column) + 1;
         setup.first_column = std::max(setup.first_column, min_first_column);
