@@ -74,6 +74,9 @@ highlighter is replaced with the new one.
     *-relative*:::
         show line numbers relative to the main cursor line
 
+    *-full-relative*:::
+        same as relative but show main cursor line as 0
+
     *-hlcursor*:::
         highlight the cursor line with a separate face
 

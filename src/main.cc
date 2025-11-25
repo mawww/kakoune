@@ -51,6 +51,7 @@ struct {
         0,
         "» {+b}%val\\{buffile}{} is now empty for scratch buffers\n"
         "» {+b}FocusIn{}/{+b}FocusOut{} events on suspend\n"
+        "» {+u}number-lines -full-relative{} switch to keep a smaller line number gutter\n"
     }, {
         20250603,
         "» kak_* appearing in shell arguments will be added to the environment\n"
