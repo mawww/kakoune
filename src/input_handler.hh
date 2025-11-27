@@ -107,8 +107,6 @@ public:
 
     ModeInfo mode_info() const;
 
-    std::pair<CursorMode, DisplayCoord> get_cursor_info() const;
-
     // Force an input handler into normal mode temporarily
     struct ScopedForceNormal
     {

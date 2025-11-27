@@ -1647,7 +1647,8 @@ const CommandDesc debug_cmd = {
         {
             write_to_debug_buffer("Options:");
             for (auto& option : context.options().flatten_options())
-                write_to_debug_buffer(format(" * {}: {}", option->name(),
+                write_to_debug_buffer(format(" * {} \"{}\"{}: {}", option->name(), option->docstring(),
+                                             option->flags() & OptionFlags::Hidden ? " (hidden)" : "",
                                              option->get_as_string(Quoting::Kakoune)));
         }
         else if (parser[0] == "memory")

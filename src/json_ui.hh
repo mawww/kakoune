@@ -22,15 +22,18 @@ public:
     bool is_ok() const override { return m_stdin_watcher.fd() != -1; }
 
     void draw(const DisplayBuffer& display_buffer,
-          const Range<LineCount> range,
-          const LineCount buffer_line_count,
-          const Vector<LineCount> selection_lines,
-          const Face& default_face,
-          const Face& padding_face,
-          const Face& scroll_bar_gutter_face,
-          const Face& scroll_bar_handle_face) override;
+              const DisplayCoord cursor_pos,
+              const Range<LineCount> range,
+              const LineCount buffer_line_count,
+              const Vector<LineCount> selection_lines,
+              const Face& default_face,
+              const Face& padding_face,
+              const Face& scroll_bar_gutter_face,
+              const Face& scroll_bar_handle_face) override;
 
-    void draw_status(const DisplayLine& status_line,
+    void draw_status(const DisplayLine& prompt,
+                     const DisplayLine& content,
+                     const ColumnCount cursor_pos,
                      const DisplayLine& mode_line,
                      const Face& default_face) override;
 
@@ -44,8 +47,6 @@ public:
                    DisplayCoord anchor, Face face,
                    InfoStyle style) override;
     void info_hide() override;
-
-    void set_cursor(CursorMode mode, DisplayCoord coord) override;
 
     void refresh(bool force) override;
 

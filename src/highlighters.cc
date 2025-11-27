@@ -1000,6 +1000,7 @@ const HighlighterDesc line_numbers_desc = {
     "Display line numbers",
     { {
         { "relative", { {}, "show line numbers relative to the main cursor line" } },
+        { "full-relative", { {}, "show line numbers relative to the main cursor line and the main cursor line as 0" } },
         { "separator", { ArgCompleter{}, "string to separate the line numbers column from the rest of the buffer (default '|')" } },
         { "cursor-separator", { ArgCompleter{}, "identical to -separator but applies only to the line of the cursor (default is the same value passed to -separator)" } },
         { "min-digits", { ArgCompleter{}, "use at least the given number of columns to display line numbers (default 2)" } },
@@ -1009,9 +1010,10 @@ const HighlighterDesc line_numbers_desc = {
 };
 struct LineNumbersHighlighter : Highlighter
 {
-    LineNumbersHighlighter(bool relative, bool hl_cursor_line, String separator, String cursor_separator, int min_digits)
+    LineNumbersHighlighter(bool relative, bool zero_cursor_line, bool hl_cursor_line, String separator, String cursor_separator, int min_digits)
       : Highlighter{HighlightPass::Move},
         m_relative{relative},
+        m_zero_cursor_line{zero_cursor_line},
         m_hl_cursor_line{hl_cursor_line},
         m_separator{std::move(separator)},
         m_cursor_separator{std::move(cursor_separator)},
@@ -1035,8 +1037,9 @@ struct LineNumbersHighlighter : Highlighter
             throw runtime_error("min digits must be positive");
         if (min_digits > 10)
             throw runtime_error("min digits is limited to 10");
-
-        return make_unique_ptr<LineNumbersHighlighter>((bool)parser.get_switch("relative"), (bool)parser.get_switch("hlcursor"), separator.str(), cursor_separator.str(), min_digits);
+        const bool relative = (bool)parser.get_switch("relative");
+        const bool full_relative = (bool)parser.get_switch("full-relative");
+        return make_unique_ptr<LineNumbersHighlighter>(relative or full_relative, full_relative, (bool)parser.get_switch("hlcursor"), separator.str(), cursor_separator.str(), min_digits);
     }
 
 private:
@@ -1051,7 +1054,7 @@ private:
         const Face face = faces["LineNumbers"];
         const Face face_wrapped = faces["LineNumbersWrapped"];
         const Face face_absolute = faces["LineNumberCursor"];
-        int digit_count = compute_digit_count(context.context);
+        int digit_count = compute_digit_count(context);
 
         char format[16];
         format_to(format, "\\{:{}}", digit_count);
@@ -1061,7 +1064,7 @@ private:
         {
             const int current_line = (int)line.range().begin.line + 1;
             const bool is_cursor_line = main_line == current_line;
-            const int line_to_format = (m_relative and not is_cursor_line) ?
+            const int line_to_format = (m_relative and (not is_cursor_line or m_zero_cursor_line)) ?
                                        current_line - main_line : current_line;
             char buffer[16];
             format_to(buffer, format, std::abs(line_to_format));
@@ -1083,7 +1086,7 @@ private:
         if (contains(context.disabled_ids, ms_id))
             return;
 
-        ColumnCount width = compute_digit_count(context.context) + m_separator.column_length();
+        ColumnCount width = compute_digit_count(context) + m_separator.column_length();
         setup.widget_columns += width;
     }
 
@@ -1092,16 +1095,21 @@ private:
         unique_ids.push_back(ms_id);
     }
 
-    int compute_digit_count(const Context& context) const
+    int compute_digit_count(const HighlightContext& context) const
     {
         int digit_count = 0;
-        LineCount last_line = context.buffer().line_count();
-        for (LineCount c = last_line; c > 0; c /= 10)
+        auto cursor_line = context.context.selections().main().cursor().line + 1;
+        LineCount line_count = (m_relative and m_zero_cursor_line)
+            ? std::max(abs(context.setup.first_line - cursor_line),
+                       abs(context.setup.first_line + context.setup.line_count - cursor_line))
+            : context.context.buffer().line_count();
+        for (LineCount c = line_count; c > 0; c /= 10)
             ++digit_count;
         return std::max(digit_count, m_min_digits);
     }
 
     const bool m_relative;
+    const bool m_zero_cursor_line;
     const bool m_hl_cursor_line;
     const String m_separator;
     const String m_cursor_separator;

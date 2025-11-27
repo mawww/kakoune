@@ -128,7 +128,7 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
     m_display_buffer.set_timestamp(buffer().timestamp());
     lines.clear();
 
-    if (m_dimensions == DisplayCoord{0,0})
+    if (m_dimensions.line == 0 or m_dimensions.column == 0)
         return m_display_buffer;
 
     kak_assert(&buffer() == &context.buffer());
@@ -166,7 +166,7 @@ const DisplayBuffer& Window::update_display_buffer(const Context& context)
         }
 
         auto max_first_column = cursor_pos->column - (setup.widget_columns + setup.scroll_offset.column);
-        setup.first_column = std::min(setup.first_column, max_first_column);
+        setup.first_column = std::max(0_col, std::min(setup.first_column, max_first_column));
 
         auto min_first_column = cursor_pos->column - (m_dimensions.column - setup.scroll_offset.column) + 1;
         setup.first_column = std::max(setup.first_column, min_first_column);

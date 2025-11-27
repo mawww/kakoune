@@ -31,6 +31,7 @@ public:
     bool is_ok() const override { return (bool)m_window; }
 
     void draw(const DisplayBuffer& display_buffer,
+              const DisplayCoord cursor_pos,
               const Range<LineCount> range,
               const LineCount buffer_line_count,
               const Vector<LineCount> selection_lines,
@@ -39,7 +40,9 @@ public:
               const Face& scroll_bar_gutter_face,
               const Face& scroll_bar_handle_face) override;
 
-    void draw_status(const DisplayLine& status_line,
+    void draw_status(const DisplayLine& prompt,
+                     const DisplayLine& content,
+                     const ColumnCount cursor_pos,
                      const DisplayLine& mode_line,
                      const Face& default_face) override;
 
@@ -53,8 +56,6 @@ public:
                    DisplayCoord anchor, Face face,
                    InfoStyle style) override;
     void info_hide() override;
-
-    void set_cursor(CursorMode mode, DisplayCoord coord) override;
 
     void refresh(bool force) override;
 
@@ -135,11 +136,7 @@ private:
         InfoStyle style;
     } m_info;
 
-    struct Cursor
-    {
-        CursorMode mode;
-        DisplayCoord coord;
-    } m_cursor;
+    DisplayCoord m_cursor_pos;
 
     FDWatcher m_stdin_watcher;
     OnKeyCallback m_on_key;
@@ -184,6 +181,8 @@ private:
     void set_resize_pending();
 
     ColumnCount m_status_len = 0;
+    ColumnCount m_status_pos = 0;
+    ColumnCount m_status_cursor_pos = 0;
     ColumnCount m_info_max_width = 0;
 };
 

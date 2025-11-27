@@ -1,0 +1,2 @@
+add-highlighter global/ column 71 "default,white"
+set-option global scrolloff 4,4

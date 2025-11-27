@@ -51,6 +51,7 @@ struct {
         0,
         "» {+b}%val\\{buffile}{} is now empty for scratch buffers\n"
         "» {+b}FocusIn{}/{+b}FocusOut{} events on suspend\n"
+        "» {+u}number-lines -full-relative{} switch to keep a smaller line number gutter\n"
     }, {
         20250603,
         "» kak_* appearing in shell arguments will be added to the environment\n"
@@ -580,16 +581,16 @@ UniquePtr<UserInterface> make_ui(UIType ui_type)
         void info_hide() override {}
 
         void draw(const DisplayBuffer& display_buffer,
-              const Range<LineCount> range,
-              const LineCount buffer_line_count,
-              const Vector<LineCount> selection_lines,
-              const Face& default_face,
-              const Face& padding_face,
-              const Face& scroll_bar_gutter_face,
-              const Face& scroll_bar_handle_face) override {}
-        void draw_status(const DisplayLine&, const DisplayLine&, const Face&) override {}
+                  const DisplayCoord,
+                  const Range<LineCount> range,
+                  const LineCount buffer_line_count,
+                  const Vector<LineCount> selection_lines,
+                  const Face& default_face,
+                  const Face& padding_face,
+                  const Face& scroll_bar_gutter_face,
+                  const Face& scroll_bar_handle_face) override {}
+        void draw_status(const DisplayLine&, const DisplayLine&, const ColumnCount, const DisplayLine&, const Face&) override {}
         DisplayCoord dimensions() override { return {24,80}; }
-        void set_cursor(CursorMode, DisplayCoord) override {}
         void refresh(bool) override {}
         void set_on_key(OnKeyCallback) override {}
         void set_on_paste(OnPasteCallback) override {}
@@ -824,10 +825,10 @@ int run_server(StringView session, StringView server_init,
                  [&](int status) { exit_status = status; });
 
             if (startup_error and local_client)
-                local_client->print_status({
+                local_client->print_status({}, {
                     "error during startup, see `:buffer *debug*` for details",
                     local_client->context().faces()["Error"]
-                });
+                }, -1);
 
             if (flags & ServerFlags::StartupInfo and local_client)
                 show_startup_info(local_client, global_scope.options()["startup_info_version"].get<int>());

@@ -114,7 +114,8 @@ public:
     AliasRegistry& aliases() const;
     FaceRegistry&  faces(bool allow_local = true) const;
 
-    void print_status(DisplayLine status) const;
+    void print_status(DisplayLine prompt, DisplayLine content, ColumnCount cursor_pos) const;
+    void print_status(DisplayLine content) const;
 
     StringView main_sel_register_value(StringView reg) const;
 

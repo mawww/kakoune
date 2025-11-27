@@ -48,13 +48,6 @@ public:
 
     virtual StringView name() const = 0;
 
-    virtual std::pair<CursorMode, DisplayCoord> get_cursor_info() const
-    {
-        const auto cursor = context().selections().main().cursor();
-        auto coord = context().window().display_coord(cursor).value_or(DisplayCoord{});
-        return {CursorMode::Buffer, coord};
-    }
-
     using Insertion = InputHandler::Insertion;
 
 protected:
@@ -616,7 +609,6 @@ public:
         m_line = std::move(line);
         m_empty_text = empty_text;
         m_cursor_pos = m_line.char_length();
-        m_display_pos = 0;
     }
 
     const String& line() const { return m_line; }
@@ -624,18 +616,11 @@ public:
 
     ColumnCount cursor_display_column() const
     {
-        return m_line.substr(m_display_pos, m_cursor_pos).column_length();
+        return m_line.substr(0, m_cursor_pos).column_length();
     }
 
     DisplayLine build_display_line(ColumnCount in_width)
     {
-        CharCount width = (int)in_width; // Todo: proper handling of char/column
-        kak_assert(m_cursor_pos <= m_line.char_length());
-        if (m_cursor_pos < m_display_pos)
-            m_display_pos = m_cursor_pos;
-        if (m_cursor_pos >= m_display_pos + width)
-            m_display_pos = m_cursor_pos + 1 - width;
-
         const bool empty = m_line.empty();
         StringView str = empty ? m_empty_text : m_line;
 
@@ -643,16 +628,14 @@ public:
         const Face cursor_face = m_faces["StatusCursor"];
 
         if (m_cursor_pos == str.char_length())
-            return DisplayLine{{ { str.substr(m_display_pos, width-1).str(), line_face },
-                                 { " "_str, cursor_face} } };
+            return DisplayLine{{ { str.str(), line_face }, { " "_str, cursor_face} } };
         else
-            return DisplayLine({ { str.substr(m_display_pos, m_cursor_pos - m_display_pos).str(), line_face },
+            return DisplayLine({ { str.substr(0, m_cursor_pos).str(), line_face },
                                  { str.substr(m_cursor_pos,1).str(), cursor_face },
-                                 { str.substr(m_cursor_pos+1, width - m_cursor_pos + m_display_pos - 1).str(), line_face } });
+                                 { str.substr(m_cursor_pos+1).str(), line_face } });
     }
 private:
     CharCount  m_cursor_pos = 0;
-    CharCount  m_display_pos = 0;
 
     String     m_line;
     StringView m_empty_text = {};
@@ -988,12 +971,6 @@ public:
 
     StringView name() const override { return "prompt"; }
 
-    std::pair<CursorMode, DisplayCoord> get_cursor_info() const override
-    {
-        DisplayCoord coord{0_line, m_prompt.column_length() + m_line_editor.cursor_display_column()};
-        return { CursorMode::Prompt, coord };
-    }
-
 private:
     template<typename Completer>
     void use_explicit_completer(Completer&& completer)
@@ -1070,8 +1047,7 @@ private:
         DisplayLine display_line;
         if (not (m_flags & PromptFlags::Password))
             display_line = m_line_editor.build_display_line(width);
-        display_line.insert(display_line.begin(), { m_prompt, m_prompt_face });
-        context().print_status(display_line);
+        context().print_status({m_prompt, m_prompt_face}, display_line, m_line_editor.cursor_display_column());
     }
 
     void on_enabled(bool from_pop) override
@@ -1089,8 +1065,6 @@ private:
                     context().client().menu_select(0);
             }
         }
-        else
-            m_line_changed = true;
 
         if (not (context().flags() & Context::Flags::Draft))
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
@@ -1773,11 +1747,6 @@ void InputHandler::stop_recording()
 ModeInfo InputHandler::mode_info() const
 {
     return current_mode().mode_info();
-}
-
-std::pair<CursorMode, DisplayCoord> InputHandler::get_cursor_info() const
-{
-    return current_mode().get_cursor_info();
 }
 
 bool should_show_info(AutoInfo mask, const Context& context)

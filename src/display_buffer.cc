@@ -257,7 +257,8 @@ bool DisplayLine::trim_from(ColumnCount first_col, ColumnCount front, ColumnCoun
         }
         else
         {
-            it = ++split(it, front);
+            if (front > 0)
+                it = ++split(it, front);
             first_col = 0;
         }
     }

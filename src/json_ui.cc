@@ -74,6 +74,11 @@ String to_json(const DisplayLine& line)
     return to_json(line.atoms());
 }
 
+String to_json(ColumnCount column)
+{
+    return format("{}", column);
+}
+
 String to_json(DisplayCoord coord)
 {
     return format(R"(\{ "line": {}, "column": {} })", coord.line, coord.column);
@@ -100,16 +105,6 @@ String to_json(InfoStyle style)
         case InfoStyle::InlineBelow: return R"("inlineBelow")";
         case InfoStyle::MenuDoc: return R"("menuDoc")";
         case InfoStyle::Modal: return R"("modal")";
-    }
-    return "";
-}
-
-String to_json(CursorMode mode)
-{
-    switch (mode)
-    {
-        case CursorMode::Prompt: return R"("prompt")";
-        case CursorMode::Buffer: return R"("buffer")";
     }
     return "";
 }
@@ -146,6 +141,7 @@ JsonUI::JsonUI()
 }
 
 void JsonUI::draw(const DisplayBuffer& display_buffer,
+                  const DisplayCoord cursor_pos,
                   const Range<LineCount> range,
                   const LineCount buffer_line_count,
                   const Vector<LineCount> selection_lines,
@@ -154,14 +150,26 @@ void JsonUI::draw(const DisplayBuffer& display_buffer,
                   const Face& scroll_bar_gutter_face,
                   const Face& scroll_bar_handle_face)
 {
-    rpc_call("draw", display_buffer.lines(), range.begin, range.end, buffer_line_count, selection_lines, default_face, padding_face, scroll_bar_gutter_face, scroll_bar_handle_face);
+    rpc_call("draw",
+             display_buffer.lines(),
+             cursor_pos,
+             range.begin,
+             range.end,
+             buffer_line_count,
+             selection_lines,
+             default_face,
+             padding_face,
+             scroll_bar_gutter_face,
+             scroll_bar_handle_face);
 }
 
-void JsonUI::draw_status(const DisplayLine& status_line,
+void JsonUI::draw_status(const DisplayLine& prompt,
+                         const DisplayLine& content,
+                         const ColumnCount cursor_pos,
                          const DisplayLine& mode_line,
                          const Face& default_face)
 {
-    rpc_call("draw_status", status_line, mode_line, default_face);
+    rpc_call("draw_status", prompt, content, cursor_pos, mode_line, default_face);
 }
 
 
@@ -192,11 +200,6 @@ void JsonUI::info_show(const DisplayLine& title, const DisplayLineList& content,
 void JsonUI::info_hide()
 {
     rpc_call("info_hide");
-}
-
-void JsonUI::set_cursor(CursorMode mode, DisplayCoord coord)
-{
-    rpc_call("set_cursor", mode, coord);
 }
 
 void JsonUI::refresh(bool force)

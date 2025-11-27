@@ -38,7 +38,6 @@ enum class MessageType : uint8_t
     InfoHide,
     Draw,
     DrawStatus,
-    SetCursor,
     Refresh,
     SetOptions,
     Exit,
@@ -398,6 +397,7 @@ public:
     void info_hide() override;
 
     void draw(const DisplayBuffer& display_buffer,
+              const DisplayCoord cursor_pos,
               const Range<LineCount> range,
               const LineCount buffer_line_count,
               const Vector<LineCount> selection_lines,
@@ -406,11 +406,11 @@ public:
               const Face& scroll_bar_gutter_face,
               const Face& scroll_bar_handle_face) override;
 
-    void draw_status(const DisplayLine& status_line,
+    void draw_status(const DisplayLine& prompt,
+                     const DisplayLine& content,
+                     const ColumnCount cursor_pos,
                      const DisplayLine& mode_line,
                      const Face& default_face) override;
-
-    void set_cursor(CursorMode mode, DisplayCoord coord) override;
 
     void refresh(bool force) override;
 
@@ -567,6 +567,7 @@ void RemoteUI::info_hide()
 }
 
 void RemoteUI::draw(const DisplayBuffer& display_buffer,
+                    const DisplayCoord cursor_pos,
                     const Range<LineCount> range,
                     const LineCount buffer_line_count,
                     const Vector<LineCount> selection_lines,
@@ -575,19 +576,16 @@ void RemoteUI::draw(const DisplayBuffer& display_buffer,
                     const Face& scroll_bar_gutter_face,
                     const Face& scroll_bar_handle_face)
 {
-    send_message(MessageType::Draw, display_buffer, range, buffer_line_count, selection_lines, default_face, padding_face, scroll_bar_gutter_face, scroll_bar_handle_face);
+    send_message(MessageType::Draw, display_buffer, cursor_pos, range, buffer_line_count, selection_lines, default_face, padding_face, scroll_bar_gutter_face, scroll_bar_handle_face);
 }
 
-void RemoteUI::draw_status(const DisplayLine& status_line,
+void RemoteUI::draw_status(const DisplayLine& prompt,
+                           const DisplayLine& content,
+                           const ColumnCount cursor_pos,
                            const DisplayLine& mode_line,
                            const Face& default_face)
 {
-    send_message(MessageType::DrawStatus, status_line, mode_line, default_face);
-}
-
-void RemoteUI::set_cursor(CursorMode mode, DisplayCoord coord)
-{
-    send_message(MessageType::SetCursor, mode, coord);
+    send_message(MessageType::DrawStatus, prompt, content, cursor_pos, mode_line, default_face);
 }
 
 void RemoteUI::refresh(bool force)
@@ -737,9 +735,6 @@ RemoteClient::RemoteClient(StringView session, StringView name, UniquePtr<UserIn
                 break;
             case MessageType::DrawStatus:
                 exec(&UserInterface::draw_status);
-                break;
-            case MessageType::SetCursor:
-                exec(&UserInterface::set_cursor);
                 break;
             case MessageType::Refresh:
                 exec(&UserInterface::refresh);

@@ -11,6 +11,11 @@ released versions.
 
 * `%val{buffile}` is now empty for scratch buffers
 
+* Reworked Json UI draw_status call to give UI implementation more control,
+  added cursor pos to the draw call and removed the set_cursor call
+
+* `number-lines -full-relative` switch to keep a smaller line number gutter.
+
 == Kakoune 2025.06.03
 
 * Expose env vars that are mentioned in the arguments passed to shell expansions

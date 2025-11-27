@@ -42,7 +42,6 @@ add-highlighter shared/scheme/string region %{(?<!#\\)"} (?<!\\)(\\\\)*" fill st
 add-highlighter shared/scheme/comment region %{(?<!#\\);} '$' fill comment
 add-highlighter shared/scheme/comment-form region -recurse "\(" "#;\(" "\)" fill comment
 add-highlighter shared/scheme/comment-block region "#\|" "\|#" fill comment
-add-highlighter shared/scheme/quoted-form region -recurse "\(" "'\(" "\)" fill variable
 
 add-highlighter shared/scheme/code/ regex (#t|#f) 0:value
 

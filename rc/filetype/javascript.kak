@@ -169,7 +169,7 @@ define-command -hidden init-javascript-filetype -params 1 %~
     add-highlighter "shared/%arg{1}/shebang"       region ^#!  $                       fill meta
     add-highlighter "shared/%arg{1}/division" region '[\w\)\]]\K(/|(\h+/\s+))' '(?=\w)' group # Help Kakoune to better detect /…/ literals
     add-highlighter "shared/%arg{1}/regex"         region /    (?<!\\)(\\\\)*/[gimuy]* fill meta
-    add-highlighter "shared/%arg{1}/jsx"           region -recurse (?<![\w<])<[a-zA-Z>][\w:.-]* (?<![\w<])<[a-zA-Z>][\w:.-]*(?!\hextends)(?=[\s/>])(?!>\()) (</.*?>|/>) regions
+    add-highlighter "shared/%arg{1}/jsx"           region -recurse (?<![\w<])<[\w>][\w:.-]* (?<![\w<])<[\w>][\w:.-]*(?!\hextends)(?=[\s/>])(?!>\()) (</.*?>|/>) regions
 
     # Regular expression flags are: g → global match, i → ignore case, m → multi-lines, u → unicode, y → sticky
     # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
@@ -186,7 +186,7 @@ define-command -hidden init-javascript-filetype -params 1 %~
     # We inline a small XML highlighter here since it anyway need to recurse back up to the starting highlighter.
     # To make things simple we assume that jsx is always enabled.
 
-    add-highlighter "shared/%arg{1}/jsx/tag"  region -recurse <  <(?=[/a-zA-Z>]) (?<!=)> regions
+    add-highlighter "shared/%arg{1}/jsx/tag"  region -recurse <  <(?=[/\w>]) (?<!=)> regions
     add-highlighter "shared/%arg{1}/jsx/expr" region -recurse \{ \{             \}      ref %arg{1}
 
     add-highlighter "shared/%arg{1}/jsx/tag/base" default-region group

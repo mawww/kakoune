@@ -438,7 +438,7 @@ static void signal_handler(int)
 }
 
 TerminalUI::TerminalUI()
-    : m_cursor{CursorMode::Buffer, {}},
+    : m_cursor_pos{},
       m_stdin_watcher{STDIN_FILENO, FdEvents::Read, EventMode::Urgent,
                       [this](FDWatcher&, FdEvents, EventMode) {
         if (not m_on_key)
@@ -544,15 +544,10 @@ void TerminalUI::redraw(bool force)
     auto set_cursor_pos = [&](DisplayCoord c) {
         format_with(writer, "\033[{};{}H", (int)c.line + 1, (int)c.column + 1);
     };
-    if (m_cursor.mode == CursorMode::Prompt)
-        set_cursor_pos({m_status_on_top ? 0 : m_dimensions.line, m_cursor.coord.column});
+    if (m_status_cursor_pos > 0)
+        set_cursor_pos({m_status_on_top ? 0 : m_dimensions.line, m_status_cursor_pos});
     else
-        set_cursor_pos(m_cursor.coord + content_line_offset());
-}
-
-void TerminalUI::set_cursor(CursorMode mode, DisplayCoord coord)
-{
-    m_cursor = Cursor{mode, coord};
+        set_cursor_pos(m_cursor_pos + content_line_offset());
 }
 
 void TerminalUI::refresh(bool force)
@@ -575,6 +570,7 @@ static const DisplayLine empty_line = { String(" "), {} };
 
 
 void TerminalUI::draw(const DisplayBuffer& display_buffer,
+                      const DisplayCoord cursor_pos,
                       const Range<LineCount> range,
                       const LineCount buffer_line_count,
                       const Vector<LineCount> selection_lines,
@@ -629,19 +625,36 @@ void TerminalUI::draw(const DisplayBuffer& display_buffer,
         }
     }
 
+    m_cursor_pos = cursor_pos;
+
     m_dirty = true;
 }
 
-void TerminalUI::draw_status(const DisplayLine& status_line,
+void TerminalUI::draw_status(const DisplayLine& prompt,
+                             const DisplayLine& content,
+                             const ColumnCount cursor_pos,
                              const DisplayLine& mode_line,
                              const Face& default_face)
 {
     const LineCount status_line_pos = m_status_on_top ? 0 : m_dimensions.line;
-    m_window.draw(status_line_pos, status_line.atoms(), default_face);
+
+    auto status_width = m_dimensions.column - prompt.length();
+    if (cursor_pos < m_status_pos)
+        m_status_pos = cursor_pos;
+    if (cursor_pos >= m_status_pos + status_width)
+        m_status_pos = cursor_pos + 1 - status_width;
+
+    m_status_cursor_pos = cursor_pos >= 0 ? prompt.length() + cursor_pos : -1;
+
+    auto trimmed_content = content;
+    trimmed_content.trim(m_status_pos, status_width);
+    m_window.draw(status_line_pos, prompt.atoms(), default_face);
+    m_window.draw(DisplayCoord{status_line_pos, prompt.length()}, trimmed_content.atoms(), default_face);
 
     const auto mode_len = mode_line.length();
-    m_status_len = status_line.length();
-    const auto remaining = m_dimensions.column - m_status_len + 1;
+    // TODO(enricozb): do we need a -1 somewhere to check for scrollbar?
+    m_status_len = prompt.length() + trimmed_content.length();
+    const auto remaining = m_dimensions.column - m_status_len;
     if (mode_len < remaining)
     {
         ColumnCount col = m_dimensions.column - mode_len + 1;
@@ -670,10 +683,11 @@ void TerminalUI::draw_status(const DisplayLine& status_line,
         {
             for (auto& atom : mode_line)
                 write_escaped(atom.content());
+            writer.write(" - Kakoune");
         }
         else
             write_escaped(*m_title);
-        writer.write(" - Kakoune\007");
+        writer.write("\007");
     }
 
     m_dirty = true;
