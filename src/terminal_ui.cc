@@ -636,10 +636,11 @@ void TerminalUI::draw_status(const DisplayLine& prompt,
         {
             for (auto& atom : mode_line)
                 write_escaped(atom.content());
+            writer.write(" - Kakoune");
         }
         else
             write_escaped(*m_title);
-        writer.write(" - Kakoune\007");
+        writer.write("\007");
     }
 
     m_dirty = true;
