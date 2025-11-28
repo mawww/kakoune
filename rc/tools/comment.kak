@@ -45,7 +45,7 @@ hook global BufSetOption filetype=coffee %{
     set-option buffer comment_block_end '###'
 }
 
-hook global BufSetOption filetype=conf %{
+hook global BufSetOption filetype=(capnp|conf) %{
     set-option buffer comment_line '#'
 }
 
