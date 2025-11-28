@@ -16,7 +16,7 @@ hook global BufSetOption filetype=asciidoc %{
     set-option buffer comment_block_end '////'
 }
 
-hook global BufSetOption filetype=(c|cpp|dart|gluon|go|hjson|java|javascript|json5|kdl|objc|odin|php|pony|protobuf|rust|sass|scala|scss|swift|typescript|typst|groovy) %{
+hook global BufSetOption filetype=(c|cpp|dart|gluon|go|hjson|java|javascript|json5|kdl|objc|odin|php|pony|protobuf|ron|rust|sass|scala|scss|swift|typescript|typst|groovy) %{
     set-option buffer comment_line '//'
     set-option buffer comment_block_begin '/*'
     set-option buffer comment_block_end '*/'
