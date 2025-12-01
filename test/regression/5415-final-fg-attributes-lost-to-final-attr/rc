@@ -1,0 +1,9 @@
+face global Whitespace yellow+f
+addhl global/ show-whitespaces -spc .
+face global before_underline cyan
+face global add_underline ,,magenta+c
+face global remove_underline +a
+addhl global/a regex <([^>]*)> 1:before_underline
+addhl global/b regex [a-z] 0:add_underline
+addhl global/c regex <([^>]*)> 1:remove_underline
+addhl global/d regex <([^>]*)> 1:before_underline

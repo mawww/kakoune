@@ -61,7 +61,9 @@ attributes::
                 Same as final, but only applies to a face's background color.
         *a*:::
             final attributes::::
-                Same as final, but only applies to a face's attributes.
+                Same as final, but only applies to a face's attributes, note
+                that this will not clear to the f/g/a attributes of the base
+                face, so `+a` cannot be used to remove `+f` and/or `+g`
 
 base::
     The face onto which other faces apply. Its value can be any face name,
