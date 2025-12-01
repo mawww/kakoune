@@ -857,14 +857,15 @@ void paste_all(Context& context, NormalParams params)
     const char reg = params.reg ? params.reg : '"';
     auto strings = RegisterManager::instance()[reg].get(context);
     String all;
-    Vector<ByteCount> offsets;
+    Vector<std::pair<ByteCount, ByteCount>> offsets;
     for (auto& str : strings)
     {
         if (str.empty())
             continue;
 
         all += str;
-        offsets.push_back(all.length());
+        ByteCount cursor_offset = utf8::previous(str.end(), str.begin()) - str.begin();
+        offsets.emplace_back(cursor_offset, str.length());
     }
     const bool linewise = all_of(strings, [](StringView str) {
         return not str.empty() and str.back() == '\n';
@@ -884,14 +885,12 @@ void paste_all(Context& context, NormalParams params)
                 buffer.replace(sel.min(), buffer.char_next(sel.max()), all)
               : buffer.insert(paste_pos(buffer, sel.min(), sel.max(), mode, linewise), all);
 
-            ByteCount pos_offset = 0;
             BufferCoord pos = range.begin;
-            for (auto offset : offsets)
+            for (auto [cursor_offset, length] : offsets)
             {
-                BufferCoord end = buffer.advance(pos, offset - pos_offset - 1);
-                result.emplace_back(pos, end);
-                pos = buffer.next(end);
-                pos_offset = offset;
+                BufferCoord cursor = buffer.advance(pos, cursor_offset);
+                result.emplace_back(pos, cursor);
+                pos = buffer.advance(cursor, length - cursor_offset);
             }
         }, mode == PasteMode::Append);
     }
