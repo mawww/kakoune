@@ -1,6 +1,8 @@
 # https://www.mercurial-scm.org/
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-mercurial %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -16,6 +18,10 @@ hook -group hg-commit-highlight global WinSetOption filetype=hg-commit %{
     add-highlighter window/hg-commit ref hg-commit
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/hg-commit-highlight }
 }
+
+}
+
+require-module detect-mercurial
 
 provide-module hg-commit %{
 

@@ -1,6 +1,8 @@
 # https://fsharp.org/
 #
 
+provide-module detect-fsharp %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -26,6 +28,10 @@ hook -group fsharp-highlight global WinSetOption filetype=fsharp %{
     add-highlighter window/fsharp ref fsharp
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/fsharp }
 }
+
+}
+
+require-module detect-fsharp
 
 provide-module fsharp %§
 

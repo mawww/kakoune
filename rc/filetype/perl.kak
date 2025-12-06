@@ -1,6 +1,8 @@
 # https://www.perl.org/
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-perl %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -30,6 +32,10 @@ hook -group perl-highlight global WinSetOption filetype=perl %{
     add-highlighter window/perl ref perl
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/perl }
 }
+
+}
+
+require-module detect-perl
 
 provide-module perl %§
 
