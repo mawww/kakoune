@@ -63,8 +63,11 @@ define-command -hidden -params ..3 man-impl %{ evaluate-commands %sh{
 
 define-command -params ..1 \
     -shell-script-candidates %{
-        find /usr/share/man/ $(printf %s "${MANPATH}" |
-            sed 's/:/ /') -name '*.[1-8]*' |
+        : "${MANPATH:="$(manpath)"}"
+        : "${MANPATH:=/usr/share/man}"
+        set -f
+        IFS=:
+        find $MANPATH -name '*.[1-8]*' |
             sed 's,^.*/\(.*\)\.\([1-8][a-zA-Z]*\).*$,\1(\2),'
     } \
     -docstring %{
