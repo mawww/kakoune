@@ -68,7 +68,7 @@ inline Face merge_faces(const Face& base, const Face& face)
 
     return Face{ choose(&Face::fg, Attribute::FinalFg),
                  choose(&Face::bg, Attribute::FinalBg),
-                 face.attributes & Attribute::FinalAttr ? face.attributes :
+                 face.attributes & Attribute::FinalAttr ? face.attributes | Attribute{base.attributes & Attribute::Final} :
                  base.attributes & Attribute::FinalAttr ? base.attributes :
                  face.attributes | base.attributes,
                  choose(&Face::underline, Attribute{0}) };
