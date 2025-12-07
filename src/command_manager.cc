@@ -8,6 +8,7 @@
 #include "file.hh"
 #include "hook_manager.hh"
 #include "optional.hh"
+#include "option_manager.hh"
 #include "option_types.hh"
 #include "profile.hh"
 #include "ranges.hh"

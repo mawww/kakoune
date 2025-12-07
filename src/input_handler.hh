@@ -14,7 +14,6 @@
 #include "utils.hh"
 #include "safe_ptr.hh"
 #include "display_buffer.hh"
-#include "event_manager.hh"
 
 namespace Kakoune
 {
@@ -41,6 +40,8 @@ using KeyCallback = Function<void (Key, Context&)>;
 class InputMode;
 enum class KeymapMode : char;
 enum class CursorMode;
+
+class Timer;
 
 using PromptCompleter = Function<Completions (const Context&, StringView, ByteCount)>;
 enum class InsertMode : unsigned
@@ -88,7 +89,7 @@ public:
     // execute callback on next keypress and returns to normal mode
     // if callback does not change the mode itself
     void on_next_key(StringView mode_name, KeymapMode mode, KeyCallback callback,
-                     Timer::Callback idle_callback = Timer::Callback{});
+                     Function<void (Timer& timer)> idle_callback = {});
 
     // process the given key
     void handle_key(Key key, bool synthesized = true);

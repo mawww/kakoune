@@ -5,6 +5,7 @@
 #include "clock.hh"
 #include "display_buffer.hh"
 #include "env_vars.hh"
+#include "event_manager.hh"
 #include "input_handler.hh"
 #include "safe_ptr.hh"
 #include "unique_ptr.hh"

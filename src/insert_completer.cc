@@ -6,6 +6,7 @@
 #include "command_manager.hh"
 #include "changes.hh"
 #include "context.hh"
+#include "client.hh"
 #include "display_buffer.hh"
 #include "face_registry.hh"
 #include "file.hh"

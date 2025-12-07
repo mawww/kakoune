@@ -19,6 +19,7 @@
 #include "highlighters.hh"
 #include "input_handler.hh"
 #include "insert_completer.hh"
+#include "keymap_manager.hh"
 #include "normal.hh"
 #include "option_manager.hh"
 #include "option_types.hh"
@@ -1753,7 +1754,7 @@ const CommandDesc source_cmd = {
     filename_completer<true>,
     [](const ParametersParser& parser, Context& context, const ShellContext&)
     {
-        ProfileScope profile{context, [&](std::chrono::microseconds duration) {
+        ProfileScope profile{context.options()["debug"].get<DebugFlags>(), [&](std::chrono::microseconds duration) {
             write_to_debug_buffer(format("sourcing '{}' took {} us", parser[0], (size_t)duration.count()));
         }};
 

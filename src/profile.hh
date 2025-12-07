@@ -4,7 +4,6 @@
 #include "clock.hh"
 #include "context.hh"
 #include "debug.hh"
-#include "option_manager.hh"
 
 namespace Kakoune
 {
@@ -17,10 +16,6 @@ public:
       : m_active{active and debug_flags & DebugFlags::Profile},
         m_start_time(m_active ? Clock::now() : Clock::time_point{}),
         m_callback{std::move(callback)}
-    {}
-
-    ProfileScope(const Context& context, Callback&& callback, bool active = true)
-      : ProfileScope{context.options()["debug"].get<DebugFlags>(), std::move(callback), active}
     {}
 
     ~ProfileScope()

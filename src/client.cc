@@ -11,6 +11,7 @@
 #include "client_manager.hh"
 #include "event_manager.hh"
 #include "hook_manager.hh"
+#include "keymap_manager.hh"
 #include "option_manager.hh"
 #include "shell_manager.hh"
 #include "face_registry.hh"
