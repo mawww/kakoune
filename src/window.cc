@@ -8,6 +8,7 @@
 #include "hook_manager.hh"
 #include "input_handler.hh"
 #include "face_registry.hh"
+#include "option_manager.hh"
 #include "client.hh"
 #include "debug.hh"
 #include "option.hh"

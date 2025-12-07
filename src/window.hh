@@ -4,7 +4,7 @@
 #include "client.hh"
 #include "display_buffer.hh"
 #include "highlighter_group.hh"
-#include "option_manager.hh"
+#include "option.hh"
 #include "optional.hh"
 #include "safe_ptr.hh"
 #include "scope.hh"
@@ -15,7 +15,7 @@ namespace Kakoune
 enum class Hook;
 
 // A Window is a view onto a Buffer
-class Window final : public SafeCountable, public Scope, private OptionManagerWatcher
+class Window final : public SafeCountable, public Scope, private OptionWatcher
 {
 public:
     Window(Buffer& buffer);

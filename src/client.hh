@@ -7,8 +7,9 @@
 #include "env_vars.hh"
 #include "input_handler.hh"
 #include "safe_ptr.hh"
+#include "unique_ptr.hh"
 #include "utils.hh"
-#include "option_manager.hh"
+#include "option.hh"
 #include "enum.hh"
 
 namespace Kakoune
@@ -22,7 +23,7 @@ struct Key;
 enum class InfoStyle;
 enum class MenuStyle;
 
-class Client final : public SafeCountable, public OptionManagerWatcher
+class Client final : public SafeCountable, public OptionWatcher
 {
 public:
     using OnExitCallback = Function<void (int status)>;

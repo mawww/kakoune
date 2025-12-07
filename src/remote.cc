@@ -10,6 +10,7 @@
 #include "hash_map.hh"
 #include "optional.hh"
 #include "user_interface.hh"
+#include "ranges.hh"
 
 #include <sys/types.h>
 #include <sys/socket.h>

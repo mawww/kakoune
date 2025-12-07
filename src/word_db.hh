@@ -5,7 +5,7 @@
 #include "hash_map.hh"
 #include "vector.hh"
 #include "ranked_match.hh"
-#include "option_manager.hh"
+#include "option.hh"
 #include "safe_ptr.hh"
 
 namespace Kakoune
@@ -15,7 +15,7 @@ using RankedMatchList = Vector<RankedMatch>;
 class Buffer;
 
 // maintain a database of words available in a buffer
-class WordDB : public OptionManagerWatcher
+class WordDB : public OptionWatcher
 {
 public:
     WordDB(const Buffer& buffer);

@@ -57,7 +57,7 @@ void Scope::reparent(Scope& parent)
     m_data->highlighters.reparent(parent.highlighters());
 }
 
-struct GlobalScope::GlobalData : public OptionManagerWatcher
+struct GlobalScope::GlobalData : public OptionWatcher
 {
     GlobalData(GlobalScope& parent)
     : m_parent(parent),

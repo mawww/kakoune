@@ -7,6 +7,7 @@
 #include "event_manager.hh"
 #include "hook_manager.hh"
 #include "face_registry.hh"
+#include "option_manager.hh"
 #include "insert_completer.hh"
 #include "normal.hh"
 #include "option_types.hh"

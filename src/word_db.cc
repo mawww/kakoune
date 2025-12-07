@@ -5,6 +5,7 @@
 #include "unit_tests.hh"
 #include "value.hh"
 #include "word_splitter.hh"
+#include "option_manager.hh"
 
 namespace Kakoune
 {

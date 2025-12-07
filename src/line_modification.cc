@@ -2,6 +2,7 @@
 
 #include "buffer.hh"
 #include "unit_tests.hh"
+#include "ranges.hh"
 
 namespace Kakoune
 {

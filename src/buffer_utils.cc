@@ -4,6 +4,7 @@
 #include "hook_manager.hh"
 #include "coord.hh"
 #include "event_manager.hh"
+#include "option_manager.hh"
 #include "file.hh"
 #include "selection.hh"
 #include "changes.hh"

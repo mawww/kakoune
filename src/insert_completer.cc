@@ -10,6 +10,7 @@
 #include "face_registry.hh"
 #include "file.hh"
 #include "hook_manager.hh"
+#include "option_manager.hh"
 #include "regex.hh"
 #include "window.hh"
 #include "word_db.hh"
