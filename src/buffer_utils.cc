@@ -1,6 +1,7 @@
 #include "buffer_utils.hh"
 
 #include "buffer_manager.hh"
+#include "hook_manager.hh"
 #include "coord.hh"
 #include "event_manager.hh"
 #include "file.hh"

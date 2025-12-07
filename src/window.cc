@@ -7,6 +7,7 @@
 #include "highlighter.hh"
 #include "hook_manager.hh"
 #include "input_handler.hh"
+#include "face_registry.hh"
 #include "client.hh"
 #include "debug.hh"
 #include "option.hh"

@@ -11,6 +11,7 @@
 #include "event_manager.hh"
 #include "face_registry.hh"
 #include "file.hh"
+#include "hook_manager.hh"
 #include "highlighters.hh"
 #include "insert_completer.hh"
 #include "json_ui.hh"

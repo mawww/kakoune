@@ -7,6 +7,7 @@
 #include "enum.hh"
 #include "file.hh"
 #include "optional.hh"
+#include "option_manager.hh"
 #include "range.hh"
 #include "safe_ptr.hh"
 #include "scope.hh"
@@ -19,6 +20,8 @@
 
 namespace Kakoune
 {
+
+enum class Hook;
 
 enum class EolFormat
 {

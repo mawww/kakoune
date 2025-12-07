@@ -9,6 +9,7 @@
 #include "display_buffer.hh"
 #include "face_registry.hh"
 #include "file.hh"
+#include "hook_manager.hh"
 #include "regex.hh"
 #include "window.hh"
 #include "word_db.hh"

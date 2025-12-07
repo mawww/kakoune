@@ -1,5 +1,6 @@
 #include "commands.hh"
 
+#include "alias_registry.hh"
 #include "buffer.hh"
 #include "buffer_manager.hh"
 #include "buffer_utils.hh"
@@ -13,6 +14,7 @@
 #include "face_registry.hh"
 #include "file.hh"
 #include "hash_map.hh"
+#include "hook_manager.hh"
 #include "highlighter.hh"
 #include "highlighters.hh"
 #include "input_handler.hh"

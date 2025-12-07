@@ -3,6 +3,7 @@
 #include "assert.hh"
 #include "buffer_manager.hh"
 #include "buffer_utils.hh"
+#include "hook_manager.hh"
 #include "client.hh"
 #include "context.hh"
 #include "diff.hh"

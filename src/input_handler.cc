@@ -5,6 +5,7 @@
 #include "command_manager.hh"
 #include "client.hh"
 #include "event_manager.hh"
+#include "hook_manager.hh"
 #include "face_registry.hh"
 #include "insert_completer.hh"
 #include "normal.hh"
