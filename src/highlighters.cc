@@ -28,8 +28,6 @@
 namespace Kakoune
 {
 
-using Utf8Iterator = utf8::iterator<BufferIterator>;
-
 template<typename Func>
 UniquePtr<Highlighter> make_highlighter(Func func, HighlightPass pass = HighlightPass::Colorize)
 {
@@ -793,8 +791,6 @@ struct WrapHighlighter : Highlighter
     const String m_marker;
 };
 
-constexpr StringView WrapHighlighter::ms_id;
-
 struct TabulationHighlighter : Highlighter
 {
     TabulationHighlighter() : Highlighter{HighlightPass::Replace} {}
@@ -1117,9 +1113,6 @@ private:
     const int m_min_digits;
 };
 
-constexpr StringView LineNumbersHighlighter::ms_id;
-
-
 const HighlighterDesc show_matching_desc = {
     "Apply the MatchingChar face to the char matching the one under the cursor",
     { { { "previous", {} } }, ParameterDesc::Flags::SwitchesOnlyAtStart, 0, 0 }
@@ -1137,7 +1130,7 @@ void show_matching_char(HighlightContext context, DisplayBuffer& display_buffer,
         if (pos < range.begin or pos >= range.end)
             continue;
 
-        Utf8Iterator it{buffer.iterator_at(pos), buffer};
+        utf8::iterator it{buffer.iterator_at(pos), buffer};
         auto match = find(matching_pairs, *it);
         bool matching_prev = match == matching_pairs.end() and match_prev;
         if (matching_prev)
