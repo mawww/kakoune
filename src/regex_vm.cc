@@ -357,6 +357,9 @@ private:
     {
         const Codepoint cp = *m_pos++;
 
+        if (cp == 'N')
+            return add_node(ParsedRegex::AnyCharExceptNewLine);
+
         if (cp == 'Q')
         {
             auto escaped_sequence = add_node(ParsedRegex::Sequence);
@@ -1560,6 +1563,12 @@ auto test_regex = UnitTest{[]{
         TestVM<RegexMode::Forward | RegexMode::Search> vm{R"((?i)(?=Foo))"};
         kak_assert(vm.exec("fOO", RegexExecFlags::None));
         kak_assert(*vm.captures()[0] == 'f');
+    }
+
+    {
+        TestVM<> vm{R"(a(?<=\N)\N+(?=.\N)\s(?S)d.+(?!.)\s(?<!\N)g)"};
+        kak_assert(vm.exec("abc\ndef\ng"));
+        kak_assert(not vm.exec("abc\ndef g"));
     }
 
     {
