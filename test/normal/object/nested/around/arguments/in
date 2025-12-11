@@ -1,0 +1,1 @@
+foo(), bar(baz(), qux(foo{})), 10, {}

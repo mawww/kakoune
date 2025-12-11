@@ -619,19 +619,21 @@ For example, for a quoted string this will select the quotes, and
 for a word this will select trailing spaces.
 
 *<a-a>*::
-    select the whole object
+    select the whole surrounding object
 
 *[*::
-    select to the whole object start
+    select to the whole surrounding object start
 
 *]*::
-    select to the whole object end
+    select to the whole surrounding object end
 
 *{*::
-    extend selections to the whole object start
+    extend selections to the whole surrounding object start
 
 *}*::
-    extend selections to the whole object end
+    extend selections to the whole surrounding object end
+
+*<a-'>:: select each whole nested object in selections
 
 === Inner object
 
@@ -640,19 +642,22 @@ For example, for a quoted string this will *not* select the quotes, and
 for a word this will *not* select trailing spaces.
 
 *<a-i>*::
-    select the inner object
+    select the surrounding inner object
 
 *<a-[>*::
-    select to the inner object start
+    select to the surrounding inner object start
 
 *<a-]>*::
-    select to the inner object end
+    select to the surrounding inner object end
 
 *<a-{>*::
-    extend selections to the inner object start
+    extend selections to the surrounding inner object start
 
 *<a-}>*::
-    extend selections to the inner object end
+    extend selections to the surrounding inner object end
+
+*'*::
+    select each inner nested object in selections
 
 === Objects types
 

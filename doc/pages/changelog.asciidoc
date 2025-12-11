@@ -16,6 +16,8 @@ released versions.
 
 * `number-lines -full-relative` switch to keep a smaller line number gutter.
 
+* `'` and `<a-'>` to select nested text objects
+
 == Kakoune 2025.06.03
 
 * Expose env vars that are mentioned in the arguments passed to shell expansions

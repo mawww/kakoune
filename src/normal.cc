@@ -1418,10 +1418,11 @@ void select_object(Context& context, NormalParams params, ObjectFlags flags, Sel
     auto get_title = [&] {
         const auto whole_flags = (ObjectFlags::ToBegin | ObjectFlags::ToEnd);
         const bool whole = (flags & whole_flags) == whole_flags;
-        return format("{} {}{}surrounding object{}",
+        return format("{} {}{}{} object{}",
                       mode == SelectMode::Extend ? "extend" : "select",
                       whole ? "" : "to ",
                       flags & ObjectFlags::Inner ? "inner " : "",
+                      flags & ObjectFlags::Nested ? "nested" : "surronding",
                       whole ? "" : (flags & ObjectFlags::ToBegin ? " begin" : " end"));
     };
 
@@ -1430,25 +1431,42 @@ void select_object(Context& context, NormalParams params, ObjectFlags flags, Sel
         if (key == Key::Escape)
             return;
 
+        const bool nested = flags & ObjectFlags::Nested;
         const int count = params.count <= 0 ? 0 : params.count - 1;
+        auto select_nested_and_set_last = [count, flags](Context& context, auto&& func) {
+            context.set_last_select(
+                [=](Context& context){
+                    ScopedSelectionEdition selection_edition{context};
+                    context.selections() = func(context, count, flags);
+                });
+            ScopedSelectionEdition selection_edition{context};
+            context.selections() = func(context, count, flags);
+        };
+
         static constexpr struct ObjectType
         {
             Key key;
             Optional<Selection> (*func)(const Context&, const Selection&, int, ObjectFlags);
+            Vector<Selection> (*nested_func)(const Context&, int, ObjectFlags);
         } selectors[] = {
-            { 'w', select_word<Word> },
-            { alt('w'), select_word<WORD> },
-            { 's', select_sentence },
-            { 'p', select_paragraph },
-            { Key::Space, select_whitespaces },
-            { 'i', select_indent },
-            { 'n', select_number },
-            { 'u', select_argument },
+            { 'w', select_word<Word>, select_nested_words<Word> },
+            { alt('w'), select_word<WORD>, select_nested_words<WORD> },
+            { 's', select_sentence, select_nested_sentences },
+            { 'p', select_paragraph, select_nested_paragraphs },
+            { Key::Space, select_whitespaces, select_nested_whitespaces },
+            { 'i', select_indent, select_nested_indents },
+            { 'n', select_number, select_nested_numbers },
+            { 'u', select_argument, select_nested_arguments },
         };
         auto obj_it = find(selectors | transform(&ObjectType::key), key).base();
         if (obj_it != std::end(selectors))
-            return select_and_set_last(
-                context, mode, [=](Context& context, Selection& sel) { return obj_it->func(context, sel, count, flags); });
+        {
+            if (nested)
+                return select_nested_and_set_last(context, obj_it->nested_func);
+            else
+                return select_and_set_last(
+                    context, mode, [=](Context& context, Selection& sel) { return obj_it->func(context, sel, count, flags); });
+        }
 
         static constexpr auto regex_selector = [=](StringView open, StringView close, int count, ObjectFlags flags) {
             return [open=Regex{open, RegexCompileFlags::Backward},
@@ -1469,7 +1487,7 @@ void select_object(Context& context, NormalParams params, ObjectFlags flags, Sel
             context.input_handler().prompt(
                 "object desc:", {}, {}, context.faces()["Prompt"],
                 PromptFlags::None, '_', complete_nothing,
-                [count,info,mode, flags](StringView cmdline, PromptEvent event, Context& context) {
+                [count,info,mode,nested,flags,select_nested_and_set_last](StringView cmdline, PromptEvent event, Context& context) {
                     if (event != PromptEvent::Change)
                         hide_auto_info_ifn(context, info);
                     if (event != PromptEvent::Validate)
@@ -1483,7 +1501,13 @@ void select_object(Context& context, NormalParams params, ObjectFlags flags, Sel
                     if (params[0].empty() or params[1].empty())
                         throw error{0};
 
-                    select_and_set_last(context, mode, regex_selector(params[0], params[1], count, flags));
+                    if (nested)
+                        return select_nested_and_set_last(context, [open=Regex{params[0]},close=Regex{params[1]}](Context& context, int count, ObjectFlags flags) {
+                            return open == close ? regex_select_nested(context, open, flags)
+                                                 : regex_select_nested(context, open, close, count, flags);
+                        });
+                    else
+                        select_and_set_last(context, mode, regex_selector(params[0], params[1], count, flags));
                 });
             return;
         }
@@ -1516,13 +1540,26 @@ void select_object(Context& context, NormalParams params, ObjectFlags flags, Sel
         };
         if (auto it = find_if(surrounding_pairs, [key](auto s) { return key == s.open or key == s.close or key == s.name; });
             it != std::end(surrounding_pairs))
-            return select_and_set_last(
-                context, mode, regex_selector(format("\\Q{}", it->open), format("\\Q{}", it->close), count, flags));
+        {
+            if (nested)
+                return select_nested_and_set_last(context, [open=Regex{format("\\Q{}", it->open)},close=Regex{format("\\Q{}", it->close)}](Context& context, int count, ObjectFlags flags) {
+                    return open == close ? regex_select_nested(context, open, flags)
+                                         : regex_select_nested(context, open, close, count, flags);
+                });
+            else
+                return select_and_set_last(
+                    context, mode, regex_selector(format("\\Q{}", it->open), format("\\Q{}", it->close), count, flags));
+        }
 
         if (auto cp = key.codepoint(); cp and is_punctuation(*cp, {}))
         {
             auto re = "\\Q" + to_string(*cp);
-            return select_and_set_last(context, mode, regex_selector(re, re, count, flags));
+            if (nested)
+                return select_nested_and_set_last(context, [re](Context& context, int count, ObjectFlags flags) {
+                    return regex_select_nested(context, Regex{re}, flags);
+                });
+            else
+                return select_and_set_last(context, mode, regex_selector(re, re, count, flags));
         }
     }, get_title(),
     build_autoinfo_for_mapping(context, KeymapMode::Object,
@@ -1548,6 +1585,8 @@ void select_object(Context& context, NormalParams params, ObjectFlags flags, Sel
 template<ObjectFlags flags, SelectMode mode = SelectMode::Replace>
 void select_object(Context& context, NormalParams params)
 {
+    static_assert((not (flags & ObjectFlags::Nested)) or (flags & (ObjectFlags::ToBegin | ObjectFlags::ToEnd)),
+                  "nested selections only can select whole nested objects");
     return select_object(context, params, flags, mode);
 }
 
@@ -2538,6 +2577,8 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
     { {alt(']')}, {"select to inner object end", select_object<ObjectFlags::ToEnd | ObjectFlags::Inner>} },
     { {alt('{')}, {"extend to inner object start", select_object<ObjectFlags::ToBegin | ObjectFlags::Inner, SelectMode::Extend>} },
     { {alt('}')}, {"extend to inner object end", select_object<ObjectFlags::ToEnd | ObjectFlags::Inner, SelectMode::Extend>} },
+    { {'\''}, {"select nested objects", select_object<ObjectFlags::Nested | ObjectFlags::Inner | ObjectFlags::ToBegin | ObjectFlags::ToEnd>} },
+    { {alt('\'')}, {"select nested objects", select_object<ObjectFlags::Nested | ObjectFlags::ToBegin | ObjectFlags::ToEnd>} },
 
     { {alt('j')}, {"join lines", join_lines} },
     { {alt('J')}, {"join lines and select spaces", join_lines_select_spaces} },

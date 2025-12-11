@@ -59,7 +59,8 @@ enum class ObjectFlags
 {
     ToBegin = 1,
     ToEnd   = 2,
-    Inner   = 4
+    Inner   = 4,
+    Nested  = 8,
 };
 
 constexpr bool with_bit_ops(Meta::Type<ObjectFlags>) { return true; }
@@ -74,39 +75,27 @@ constexpr auto enum_desc(Meta::Type<ObjectFlags>)
 }
 
 template<WordType word_type>
-Optional<Selection>
-select_word(const Context& context, const Selection& selection,
-            int count, ObjectFlags flags);
+Optional<Selection> select_word(const Context& context, const Selection& selection, int count, ObjectFlags flags);
+Optional<Selection> select_number(const Context& context, const Selection& selection, int count, ObjectFlags flags);
+Optional<Selection> select_sentence(const Context& context, const Selection& selection, int count, ObjectFlags flags);
+Optional<Selection> select_paragraph(const Context& context, const Selection& selection, int count, ObjectFlags flags);
+Optional<Selection> select_whitespaces(const Context& context, const Selection& selection, int count, ObjectFlags flags);
+Optional<Selection> select_indent(const Context& context, const Selection& selection, int count, ObjectFlags flags);
+Optional<Selection> select_argument(const Context& context, const Selection& selection, int level, ObjectFlags flags);
 
-Optional<Selection>
-select_number(const Context& context, const Selection& selection,
-              int count, ObjectFlags flags);
+template<WordType word_type>
+Vector<Selection, MemoryDomain::Selections> select_nested_words(const Context& context, int count, ObjectFlags flags);
+Vector<Selection, MemoryDomain::Selections> select_nested_numbers(const Context& context, int count, ObjectFlags flags);
+Vector<Selection, MemoryDomain::Selections> select_nested_sentences(const Context& context, int count, ObjectFlags flags);
+Vector<Selection, MemoryDomain::Selections> select_nested_paragraphs(const Context& context, int count, ObjectFlags flags);
+Vector<Selection, MemoryDomain::Selections> select_nested_whitespaces(const Context& context, int count, ObjectFlags flags);
+Vector<Selection, MemoryDomain::Selections> select_nested_indents(const Context& context, int count, ObjectFlags flags);
+Vector<Selection, MemoryDomain::Selections> select_nested_arguments(const Context& context, int count, ObjectFlags flags);
+Vector<Selection, MemoryDomain::Selections> regex_select_nested(const Context& context, const Regex& opening, const Regex& closing, int level, ObjectFlags flags);
+Vector<Selection, MemoryDomain::Selections> regex_select_nested(const Context& context, const Regex& delimiter, ObjectFlags flags);
 
-Optional<Selection>
-select_sentence(const Context& context, const Selection& selection,
-                int count, ObjectFlags flags);
-
-Optional<Selection>
-select_paragraph(const Context& context, const Selection& selection,
-                 int count, ObjectFlags flags);
-
-Optional<Selection>
-select_whitespaces(const Context& context, const Selection& selection,
-                   int count, ObjectFlags flags);
-
-Optional<Selection>
-select_indent(const Context& context, const Selection& selection,
-              int count, ObjectFlags flags);
-
-Optional<Selection>
-select_argument(const Context& context, const Selection& selection,
-                int level, ObjectFlags flags);
-
-Optional<Selection>
-select_lines(const Context& context, const Selection& selection);
-
-Optional<Selection>
-trim_partial_lines(const Context& context, const Selection& selection);
+Optional<Selection> select_lines(const Context& context, const Selection& selection);
+Optional<Selection> trim_partial_lines(const Context& context, const Selection& selection);
 
 enum class RegexMode;
 

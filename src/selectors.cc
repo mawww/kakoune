@@ -142,9 +142,7 @@ template Optional<Selection> select_to_previous_word<WordType::Word>(const Conte
 template Optional<Selection> select_to_previous_word<WordType::WORD>(const Context&, const Selection&);
 
 template<WordType word_type>
-Optional<Selection>
-select_word(const Context& context, const Selection& selection,
-            int count, ObjectFlags flags)
+Optional<Selection> select_word(const Context& context, const Selection& selection, int count, ObjectFlags flags)
 {
     auto extra_word_chars = get_extra_word_chars(context);
     auto& buffer = context.buffer();
@@ -176,8 +174,7 @@ template Optional<Selection> select_word<WordType::Word>(const Context&, const S
 template Optional<Selection> select_word<WordType::WORD>(const Context&, const Selection&, int, ObjectFlags);
 
 template<bool only_move>
-Optional<Selection>
-select_to_line_end(const Context& context, const Selection& selection)
+Optional<Selection> select_to_line_end(const Context& context, const Selection& selection)
 {
     auto& buffer = context.buffer();
     BufferCoord begin = selection.cursor();
@@ -192,8 +189,7 @@ template Optional<Selection> select_to_line_end<false>(const Context&, const Sel
 template Optional<Selection> select_to_line_end<true>(const Context&, const Selection&);
 
 template<bool only_move>
-Optional<Selection>
-select_to_line_begin(const Context&, const Selection& selection)
+Optional<Selection> select_to_line_begin(const Context&, const Selection& selection)
 {
     BufferCoord begin = selection.cursor();
     BufferCoord end = begin.line;
@@ -202,8 +198,7 @@ select_to_line_begin(const Context&, const Selection& selection)
 template Optional<Selection> select_to_line_begin<false>(const Context&, const Selection&);
 template Optional<Selection> select_to_line_begin<true>(const Context&, const Selection&);
 
-Optional<Selection>
-select_to_first_non_blank(const Context& context, const Selection& selection)
+Optional<Selection> select_to_first_non_blank(const Context& context, const Selection& selection)
 {
     auto& buffer = context.buffer();
     auto it = buffer.iterator_at(selection.cursor().line);
@@ -213,8 +208,7 @@ select_to_first_non_blank(const Context& context, const Selection& selection)
 }
 
 template<bool forward>
-Optional<Selection>
-select_matching(const Context& context, const Selection& selection)
+Optional<Selection> select_matching(const Context& context, const Selection& selection)
 {
     auto& buffer = context.buffer();
     auto& matching_pairs = context.options()["matching_pairs"].get<Vector<Codepoint, MemoryDomain::Options>>();
@@ -819,6 +813,227 @@ select_argument(const Context& context, const Selection& selection,
         return Selection{pos.coord(), begin.coord()};
     return Selection{(flags & ObjectFlags::ToBegin ? begin : pos).coord(),
                      end.coord()};
+}
+
+Vector<Selection> for_each_sel(const Context& context, auto&& callback)
+{
+    auto& buffer = context.buffer();
+    Vector<Selection> res;
+    for (auto& sel : context.selections())
+        callback(res, buffer.iterator_at(sel.min()), buffer.iterator_at(buffer.char_next(sel.max())));
+    if (res.empty())
+        throw runtime_error("nothing selected");
+    return res;
+}
+
+template<WordType word_type>
+Vector<Selection> select_nested_words(const Context& context, int count, ObjectFlags flags)
+{
+    auto is_word = [extra_word_chars=get_extra_word_chars(context)](Codepoint c) { return Kakoune::is_word<word_type>(c, extra_word_chars); };
+    auto is_not_word = [&](Codepoint c) { return not is_word(c); };
+
+    return for_each_sel(context, [&](Vector<Selection>& res, BufferIterator beg, BufferIterator end) {
+        for (auto it = Utf8Iterator{beg, context.buffer()}; it != end; )
+        {
+            if (not skip_while(it, end, is_not_word))
+                break;
+            auto start = it;
+            skip_while(it, end, is_word);
+            if (not (flags & ObjectFlags::Inner))
+                skip_while(it, end, is_horizontal_blank);
+            res.push_back({start.base().coord(), context.buffer().char_prev(it.base().coord())});
+        }
+    });
+}
+template Vector<Selection> select_nested_words<Word>(const Context& context, int count, ObjectFlags flags);
+template Vector<Selection> select_nested_words<WORD>(const Context& context, int count, ObjectFlags flags);
+
+Vector<Selection> select_nested_numbers(const Context& context, int count, ObjectFlags flags)
+{
+    auto is_digit = [](char c) { return c >= '0' and c <= '9'; };
+    auto is_number = [&](char c) { return is_digit(c) or (not (flags & ObjectFlags::Inner) and c == '.'); };
+
+    return for_each_sel(context, [&](Vector<Selection>& res, BufferIterator it, BufferIterator end) {
+        while (it != end)
+        {
+            if (not skip_while(it, end, [&](char c) { return not (c == '-' or is_number(c)); }))
+                break;
+
+            auto start = it;
+            if (*it == '-')
+                ++it;
+            skip_while(it, end, is_number);
+            if (it == start)
+                ++it;
+            else if (std::find_if(start, it, is_digit) != it)
+                res.push_back({start.coord(), context.buffer().char_prev(it.coord())});
+        }
+    });
+}
+
+Vector<Selection> select_nested_sentences(const Context& context, int count, ObjectFlags flags)
+{
+    auto is_end_of_sentence = [](char c) { return c == '.' or c == ';' or c == '!' or c == '?'; };
+
+    return for_each_sel(context, [&](Vector<Selection>& res, BufferIterator it, BufferIterator end) {
+        while (it != end)
+        {
+            if (not skip_while(it, end, [](char c) { return c == ' ' or c == '\n' or c == '\t'; }))
+                break;
+            auto start = it;
+            it = std::find_if(it, end, is_end_of_sentence);
+            ++it;
+            if (not (flags & ObjectFlags::Inner))
+                skip_while(it, end, [](char c) { return c == ' '; });
+            res.push_back({start.coord(), context.buffer().char_prev(it.coord())});
+        }
+    });
+}
+
+Vector<Selection> select_nested_paragraphs(const Context& context, int count, ObjectFlags flags)
+{
+    auto is_eol = [](char c) { return c == '\n'; };
+
+    return for_each_sel(context, [&](Vector<Selection>& res, BufferIterator it, BufferIterator end) {
+        while (it != end)
+        {
+            auto start = std::find_if(it, end, [&](char c) {return not is_eol(c); });
+            int consecutive_eols = 0;
+            for  (it = start; it != end; ++it)
+            {
+                if (is_eol(*it))
+                {
+                    ++consecutive_eols;
+                    if (consecutive_eols == 2 and (flags & ObjectFlags::Inner))
+                        break;
+                }
+                else if (consecutive_eols >= 2)
+                    break;
+                else
+                    consecutive_eols = 0;
+            }
+            res.push_back({start.coord(), context.buffer().char_prev(it.coord())});
+        }
+    });
+}
+
+Vector<Selection> select_nested_whitespaces(const Context& context, int count, ObjectFlags flags)
+{
+    auto is_whitespace = [&](char c) { return c == ' ' or c == '\t' or (not (flags & ObjectFlags::Inner) and c == '\n'); };
+
+    return for_each_sel(context, [&](Vector<Selection>& res, BufferIterator it, BufferIterator end) {
+        while (it != end)
+        {
+            if (not skip_while(it, end, [&](char c) { return not is_whitespace(c); }))
+                break;
+            auto start = it;
+            skip_while(it, end, is_whitespace);
+            res.push_back({start.coord(), context.buffer().char_prev(it.coord())});
+        }
+    });
+}
+
+Vector<Selection> select_nested_indents(const Context& context, int count, ObjectFlags flags)
+{
+    throw runtime_error("nested indents are not implemented");
+}
+
+Vector<Selection> select_nested_arguments(const Context& context, int count, ObjectFlags flags)
+{
+    auto is_whitespace = [&](char c) { return c == ' ' or c == '\t' or c == '\n'; };
+    const bool inner = (flags & ObjectFlags::Inner);
+    auto& buffer = context.buffer();
+
+    return for_each_sel(context, [&](Vector<Selection>& res, BufferIterator it, BufferIterator end) {
+        auto start = it;
+        int level = 0;
+        while (it != end)
+        {
+            switch(*it)
+            {
+                case '(': case '[': case '{': ++level; ++it; break;
+                case ')': case ']': case '}': --level; ++it; break;
+                case ',': case ';':
+                    if (level == 0)
+                    {
+                        res.push_back({start.coord(), inner ? buffer.char_prev(it.coord()) : it.coord()});
+                        ++it;
+                        while (inner and it != end and is_whitespace(*it))
+                            ++it;
+                        start = it;
+                        break;
+                    }
+                    [[fallthrough]];
+                default: ++it; break;
+            }
+        }
+        if (start != it)
+            res.push_back({start.coord(), context.buffer().char_prev(it.coord())});
+    });
+}
+
+Vector<Selection> regex_select_nested(const Context& context, const Regex& opening, const Regex& closing, int count, ObjectFlags flags)
+{
+    kak_assert(opening != closing);
+    auto& buffer = context.buffer();
+    const bool inner = (flags & ObjectFlags::Inner);
+
+    return for_each_sel(context, [&](Vector<Selection>& res, BufferIterator beg, BufferIterator end) {
+        RegexIterator opening_matches{beg, end, buffer.begin(), buffer.end(), opening, RegexExecFlags::None, EventManager::handle_urgent_events};
+        RegexIterator closing_matches{beg, end, buffer.begin(), buffer.end(), closing, RegexExecFlags::None, EventManager::handle_urgent_events};
+        auto opening_it = opening_matches.begin(), closing_it = closing_matches.begin();
+        auto opening_end = opening_matches.end(),  closing_end = closing_matches.end();
+
+        Optional<BufferIterator> start;
+        int level = -count - 1;
+        while (opening_it != opening_end and closing_it != closing_end)
+        {
+            while (opening_it != opening_end and (closing_it == closing_end or (*opening_it)[0].first < (*closing_it)[0].first))
+            {
+                if (++level == 0)
+                    start = inner ? (*opening_it)[0].second : (*opening_it)[0].first;
+                ++opening_it;
+            }
+            while (closing_it != closing_end and (opening_it == opening_end or (*closing_it)[0].first < (*opening_it)[0].first))
+            {
+                if (level-- == 0 and start)
+                {
+                    auto end_coord = buffer.char_prev((inner ? (*closing_it)[0].first : (*closing_it)[0].second).coord());
+                    if (start->coord() <= end_coord)
+                        res.push_back({start->coord(), end_coord});
+                    start.reset();
+                }
+                ++closing_it;
+            }
+        }
+        if (start)
+            res.push_back({start->coord(), buffer.char_prev(end.coord())});
+    });
+}
+
+Vector<Selection> regex_select_nested(const Context& context, const Regex& delimiter, ObjectFlags flags)
+{
+    auto& buffer = context.buffer();
+    const bool inner = (flags & ObjectFlags::Inner);
+
+    return for_each_sel(context, [&](Vector<Selection>& res, BufferIterator beg, BufferIterator end) {
+        Optional<BufferIterator> start;
+        for (auto m : RegexIterator{beg, end, buffer.begin(), buffer.end(),
+                                    delimiter, RegexExecFlags::None, EventManager::handle_urgent_events})
+        {
+            if (not start)
+                start = inner ? m[0].second : m[0].first;
+            else
+            {
+                auto end_coord = buffer.char_prev((inner ? m[0].first : m[0].second).coord());
+                if (start->coord() <= end_coord)
+                    res.push_back({start->coord(), end_coord});
+                start.reset();
+            }
+        }
+        if (start)
+            res.push_back({start->coord(), buffer.char_prev(end.coord())});
+    });
 }
 
 Optional<Selection>
