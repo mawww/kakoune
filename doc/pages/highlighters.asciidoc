@@ -131,9 +131,9 @@ highlighter is replaced with the new one.
     This highlights C++ style comments in cyan, with an eventual 'TODO:'
     in yellow on red background:
 
---------------------------------------------------------------------
-add-highlighter window/ regex //\h*(TODO:)[^\n]* 0:cyan 1:yellow,red
---------------------------------------------------------------------
+-----------------------------------------------------------------
+add-highlighter window/ regex //\h*(TODO:)\N* 0:cyan 1:yellow,red
+-----------------------------------------------------------------
 
     capture_id can be either the capture number, or its name if a
     named capture is used in the regex (See
