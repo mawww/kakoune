@@ -31,9 +31,14 @@ public:
     bool is_ok() const override { return (bool)m_window; }
 
     void draw(const DisplayBuffer& display_buffer,
-              DisplayCoord cursor_pos,
+              const DisplayCoord cursor_pos,
+              const Range<LineCount> range,
+              const LineCount buffer_line_count,
+              const Vector<LineCount> selection_lines,
               const Face& default_face,
-              const Face& padding_face) override;
+              const Face& padding_face,
+              const Face& scroll_bar_gutter_face,
+              const Face& scroll_bar_handle_face) override;
 
     void draw_status(const DisplayLine& prompt,
                      const DisplayLine& content,
@@ -166,6 +171,9 @@ private:
     Codepoint m_padding_char = '~';
     bool m_padding_fill = false;
     bool m_cursor_native = false;
+
+    bool m_scroll_bar = false;
+    Vector<char> m_scroll_bar_scratch;
 
     bool m_dirty = false;
 
