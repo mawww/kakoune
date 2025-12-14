@@ -2,6 +2,9 @@
 
 #include "buffer_utils.hh"
 #include "changes.hh"
+#include "format.hh"
+#include "ranges.hh"
+#include "string_utils.hh"
 
 namespace Kakoune
 {

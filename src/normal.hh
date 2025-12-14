@@ -3,7 +3,6 @@
 
 #include "optional.hh"
 #include "keys.hh"
-#include "keymap_manager.hh"
 #include "string.hh"
 #include "exception.hh"
 
@@ -12,6 +11,7 @@ namespace Kakoune
 
 class Buffer;
 class Context;
+enum class KeymapMode : char;
 
 struct no_selections_remaining : runtime_error
 {

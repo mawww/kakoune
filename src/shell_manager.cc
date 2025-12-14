@@ -8,6 +8,7 @@
 #include "display_buffer.hh"
 #include "event_manager.hh"
 #include "face_registry.hh"
+#include "option_manager.hh"
 #include "file.hh"
 #include "flags.hh"
 #include "option_types.hh"

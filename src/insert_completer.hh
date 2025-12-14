@@ -1,7 +1,6 @@
 #ifndef insert_completer_hh_INCLUDED
 #define insert_completer_hh_INCLUDED
 
-#include "option_manager.hh"
 #include "option.hh"
 #include "display_buffer.hh"
 #include "vector.hh"
@@ -14,6 +13,8 @@ namespace Kakoune
 
 struct SelectionList;
 struct Key;
+class Context;
+class OptionManager;
 class FaceRegistry;
 
 struct InsertCompleterDesc
@@ -71,7 +72,7 @@ struct InsertCompletion
     bool is_valid() const { return not candidates.empty(); }
 };
 
-class InsertCompleter : public OptionManagerWatcher
+class InsertCompleter : public OptionWatcher
 {
 public:
     InsertCompleter(Context& context);

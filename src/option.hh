@@ -64,6 +64,15 @@ struct PrefixedList
 template<typename T>
 using TimestampedList = PrefixedList<size_t, T>;
 
+
+class Option;
+
+class OptionWatcher
+{
+public:
+    virtual void on_option_changed(const Option& option) = 0;
+};
+
 }
 
 #endif // option_hh_INCLUDED

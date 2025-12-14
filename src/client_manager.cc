@@ -2,6 +2,7 @@
 
 #include "buffer_manager.hh"
 #include "command_manager.hh"
+#include "hook_manager.hh"
 #include "face_registry.hh"
 #include "file.hh"
 #include "ranges.hh"

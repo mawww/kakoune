@@ -35,7 +35,8 @@ attributes::
             Note: This takes precedence over underline if both are specified.
         *U*:::
             double underline
-            Note: This takes precedence over underline and curly underline if also specified.
+            Note: This takes precedence over underline and curly underline if
+            also specified.
         *r*:::
             reverse
         *b*:::
@@ -61,7 +62,9 @@ attributes::
                 Same as final, but only applies to a face's background color.
         *a*:::
             final attributes::::
-                Same as final, but only applies to a face's attributes.
+                Same as final, but only applies to a face's attributes
+                Note: this will not clear to the f/g/a attributes of the base
+                face, `+a` cannot be used to remove `+f` and/or `+g`.
 
 base::
     The face onto which other faces apply. Its value can be any face name,

@@ -5,7 +5,7 @@
 #include "context.hh"
 #include "display_buffer.hh"
 #include "face_registry.hh"
-#include "option.hh"
+#include "option_manager.hh"
 #include "option_types.hh"
 #include "profile.hh"
 #include "ranges.hh"
@@ -136,7 +136,7 @@ void HookManager::run_hook(Hook hook, StringView param, Context& context)
             m_hooks_trash.clear();
     });
 
-    ProfileScope profile{context, [&](std::chrono::microseconds duration) {
+    ProfileScope profile{context.options()["debug"].get<DebugFlags>(), [&](std::chrono::microseconds duration) {
         write_to_debug_buffer(format("hook '{}({})' took {} us", hook_name, param, (size_t)duration.count()));
     }};
 

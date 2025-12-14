@@ -78,13 +78,7 @@ protected:
     const OptionDesc& m_desc;
 };
 
-class OptionManagerWatcher
-{
-public:
-    virtual void on_option_changed(const Option& option) = 0;
-};
-
-class OptionManager final : private OptionManagerWatcher
+class OptionManager final : private OptionWatcher
 {
 public:
     OptionManager(OptionManager& parent);
@@ -111,8 +105,8 @@ public:
         return merge(merge(grand_parent, parent), m_options) | transform(&OptionMap::Item::value);
     }
 
-    void register_watcher(OptionManagerWatcher& watcher) const;
-    void unregister_watcher(OptionManagerWatcher& watcher) const;
+    void register_watcher(OptionWatcher& watcher) const;
+    void unregister_watcher(OptionWatcher& watcher) const;
 
     void on_option_changed(const Option& option) override;
 private:
@@ -126,7 +120,7 @@ private:
     OptionMap m_options;
     OptionManager* m_parent;
 
-    mutable Vector<OptionManagerWatcher*, MemoryDomain::Options> m_watchers;
+    mutable Vector<OptionWatcher*, MemoryDomain::Options> m_watchers;
 };
 
 template<typename T>

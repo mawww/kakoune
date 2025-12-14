@@ -4,9 +4,12 @@
 #include "buffer.hh"
 #include "buffer_utils.hh"
 #include "context.hh"
+#include "client.hh"
 #include "highlighter.hh"
 #include "hook_manager.hh"
 #include "input_handler.hh"
+#include "face_registry.hh"
+#include "option_manager.hh"
 #include "client.hh"
 #include "debug.hh"
 #include "option.hh"
@@ -42,6 +45,11 @@ Window::Window(Buffer& buffer)
 Window::~Window()
 {
     options().unregister_watcher(*this);
+}
+
+void Window::set_client(Client* client)
+{
+    m_client = client;
 }
 
 void Window::scroll(LineCount offset)
@@ -108,7 +116,7 @@ bool Window::needs_redraw(const Context& context) const
 
 const DisplayBuffer& Window::update_display_buffer(const Context& context)
 {
-    ProfileScope profile{context, [&](std::chrono::microseconds duration) {
+    ProfileScope profile{context.options()["debug"].get<DebugFlags>(), [&](std::chrono::microseconds duration) {
         write_to_debug_buffer(format("window display update for '{}' took {} us",
                                      buffer().display_name(), (size_t)duration.count()));
     }, not (buffer().flags() & Buffer::Flags::Debug)};

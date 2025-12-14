@@ -4,6 +4,7 @@
 #include "context.hh"
 #include "event_manager.hh"
 #include "flags.hh"
+#include "option_manager.hh"
 #include "option_types.hh"
 #include "regex.hh"
 #include "selection.hh"

@@ -4,6 +4,8 @@
 #include "scope.hh"
 #include "buffer_manager.hh"
 #include "register_manager.hh"
+#include "hook_manager.hh"
+#include "face_registry.hh"
 #include "window.hh"
 
 namespace Kakoune

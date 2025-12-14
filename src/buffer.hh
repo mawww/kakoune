@@ -6,7 +6,9 @@
 #include "array.hh"
 #include "enum.hh"
 #include "file.hh"
+#include "flags.hh"
 #include "optional.hh"
+#include "option.hh"
 #include "range.hh"
 #include "safe_ptr.hh"
 #include "scope.hh"
@@ -19,6 +21,8 @@
 
 namespace Kakoune
 {
+
+enum class Hook;
 
 enum class EolFormat
 {
@@ -107,7 +111,7 @@ using BufferRange = Range<BufferCoord>;
 // The Buffer class permits to read and mutate this file
 // representation. It also manage modifications undo/redo and
 // provides tools to deal with the line/column nature of text.
-class Buffer final : public SafeCountable, public Scope, private OptionManagerWatcher
+class Buffer final : public SafeCountable, public Scope, private OptionWatcher
 {
 public:
     enum class Flags

@@ -1,21 +1,22 @@
 #ifndef window_hh_INCLUDED
 #define window_hh_INCLUDED
 
-#include "client.hh"
 #include "display_buffer.hh"
 #include "highlighter_group.hh"
-#include "option_manager.hh"
+#include "option.hh"
 #include "optional.hh"
 #include "safe_ptr.hh"
+#include "selection.hh"
 #include "scope.hh"
 
 namespace Kakoune
 {
 
 enum class Hook;
+class Client;
 
 // A Window is a view onto a Buffer
-class Window final : public SafeCountable, public Scope, private OptionManagerWatcher
+class Window final : public SafeCountable, public Scope, private OptionWatcher
 {
 public:
     Window(Buffer& buffer);
@@ -44,7 +45,7 @@ public:
 
     bool needs_redraw(const Context& context) const;
 
-    void set_client(Client* client) { m_client = client; }
+    void set_client(Client* client);
 
     void clear_display_buffer();
     void run_resize_hook_ifn();
