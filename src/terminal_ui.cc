@@ -651,13 +651,13 @@ void TerminalUI::draw_status(const DisplayLine& prompt,
     m_window.draw(status_line_pos, prompt.atoms(), default_face);
     m_window.draw(DisplayCoord{status_line_pos, prompt.length()}, trimmed_content.atoms(), default_face);
 
+    const auto scroll_bar_gutter = m_scroll_bar ? 1 : 0;
     const auto mode_len = mode_line.length();
-    // TODO(enricozb): do we need a -1 somewhere to check for scrollbar?
     m_status_len = prompt.length() + trimmed_content.length();
     const auto remaining = m_dimensions.column - m_status_len;
     if (mode_len < remaining)
     {
-        ColumnCount col = m_dimensions.column - mode_len + 1;
+        ColumnCount col = m_dimensions.column - mode_len + scroll_bar_gutter;
         m_window.draw({status_line_pos, col}, mode_line.atoms(), default_face);
     }
     else if (remaining > 2)
@@ -667,7 +667,7 @@ void TerminalUI::draw_status(const DisplayLine& prompt,
         trimmed_mode_line.insert(trimmed_mode_line.begin(), { "…", {} });
         kak_assert(trimmed_mode_line.length() == remaining - 1);
 
-        ColumnCount col = m_dimensions.column - remaining + 2;
+        ColumnCount col = m_dimensions.column - remaining + 1 + scroll_bar_gutter;
         m_window.draw({status_line_pos, col}, trimmed_mode_line.atoms(), default_face);
     }
 
@@ -1645,7 +1645,7 @@ void TerminalUI::set_ui_options(const Options& options)
 
     m_padding_char = find("terminal_padding_char").map([](StringView s) { return s.column_length() < 1 ? ' ' : s[0_char]; }).value_or(Codepoint{'~'});
     m_padding_fill = find("terminal_padding_fill").map(to_bool).value_or(false);
-    
+
     bool new_cursor_native = find("terminal_cursor_native").map(to_bool).value_or(false);
     if (new_cursor_native != m_cursor_native)
     {
@@ -1655,8 +1655,12 @@ void TerminalUI::set_ui_options(const Options& options)
 
     m_info_max_width = find("terminal_info_max_width").map(str_to_int_ifp).value_or(0);
 
-    m_scroll_bar = find("terminal_scroll_bar").map(to_bool).value_or(false);
-    m_scroll_bar_scratch.resize((size_t)m_dimensions.line);
+    bool new_scroll_bar = find("terminal_scroll_bar").map(to_bool).value_or(false);
+
+    if (m_scroll_bar != new_scroll_bar) {
+      m_scroll_bar = new_scroll_bar;
+      check_resize(true);
+    }
 }
 
 }
