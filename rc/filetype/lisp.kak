@@ -33,8 +33,8 @@ provide-module lisp %{
 
 add-highlighter shared/lisp regions
 add-highlighter shared/lisp/code default-region group
-add-highlighter shared/lisp/string  region '"' (?<!\\)(\\\\)*" fill string
-add-highlighter shared/lisp/comment region ';' '$'             fill comment
+add-highlighter shared/lisp/string region (?<!#\\)" (?<!\\)(\\\\)*" fill string
+add-highlighter shared/lisp/comment region ';' '$' fill comment
 
 add-highlighter shared/lisp/code/ regex (#?(['`:]|,@?))?\b[a-zA-Z][\w!$%&*+./:<=>?@^_~-]* 0:variable
 add-highlighter shared/lisp/code/ regex \b(nil|true|false)\b 0:value
