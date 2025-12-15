@@ -5,7 +5,7 @@ provide-module kitty %{
 
 # ensure that we're running on kitty
 evaluate-commands %sh{
-    [ -z "${kak_opt_windowing_modules}" ] || [ "$TERM" = "xterm-kitty" ] || echo 'fail Kitty not detected'
+    [ -z "${kak_opt_windowing_modules}" ] || [ "$TERMINAL" = "kitty" ] || echo 'fail Kitty not detected'
 }
 
 declare-option -docstring %{window type that kitty creates on new and repl calls (window|os-window)} str kitty_window_type window
