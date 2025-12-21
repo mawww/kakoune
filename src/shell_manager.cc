@@ -231,18 +231,16 @@ FDWatcher make_pipe_writer(UniqueFd& fd, const FunctionRef<StringView ()>& gener
 
 struct CommandFifos
 {
-    String base_dir;
-    String command;
-    FDWatcher command_watcher;
-
     CommandFifos(Context& context, const ShellContext& shell_context)
-      : base_dir(format("{}/kak-fifo.XXXXXX", tmpdir())),
-        command_watcher([&] {
-            mkdtemp(base_dir.data()),
+      : m_base_dir(format("{}/kak-fifo.XXXXXX", tmpdir())),
+        m_context(&context),
+        m_shell_context(&shell_context),
+        m_command_watcher([&] {
+            mkdtemp(m_base_dir.data()),
             mkfifo(command_fifo_path().c_str(), 0600);
             mkfifo(response_fifo_path().c_str(), 0600);
             int fd = open(command_fifo_path().c_str(), O_RDONLY | O_NONBLOCK);
-            return make_reader(fd, command, [&, fd](bool graceful) mutable {
+            return make_reader(fd, m_command, [this, fd](bool graceful) mutable {
                 if (not graceful)
                 {
                     write_to_debug_buffer(format("error reading from command fifo '{}'", strerror(errno)));
@@ -250,18 +248,22 @@ struct CommandFifos
                 }
                 try
                 {
-                    CommandManager::instance().execute(command, context, shell_context);
+                    Context empty_context{Context::EmptyContextFlag{}};
+                    CommandManager::instance().execute(
+                        m_command,
+                        m_context ? *m_context : empty_context,
+                        m_shell_context ? *m_shell_context : ShellContext{});
                 }
                 catch (runtime_error& error)
                 {
                     write_to_debug_buffer(format("error while executing from command fifo: {}", error.what()));
                 }
-                command.clear();
+                m_command.clear();
                 // close and re-open the command fifo so that it wont appear continously readable to pselect
                 // while waiting for another writer to oppen it
                 close(fd);
                 fd = open(command_fifo_path().c_str(), O_RDONLY | O_NONBLOCK);
-                command_watcher.reset_fd(fd);
+                m_command_watcher.reset_fd(fd);
             });
         }())
     {
@@ -269,14 +271,28 @@ struct CommandFifos
 
     ~CommandFifos()
     {
-        command_watcher.close_fd();
+        m_command_watcher.close_fd();
         unlink(command_fifo_path().c_str());
         unlink(response_fifo_path().c_str());
-        rmdir(base_dir.c_str());
+        rmdir(m_base_dir.c_str());
     }
 
-    String command_fifo_path() const { return format("{}/command-fifo", base_dir); }
-    String response_fifo_path() const { return format("{}/response-fifo", base_dir); }
+    void convert_to_background()
+    {
+        m_context = nullptr;
+        m_shell_context = nullptr;
+        m_command_watcher.set_mode(EventMode::Normal);
+    }
+
+    String command_fifo_path() const { return format("{}/command-fifo", m_base_dir); }
+    String response_fifo_path() const { return format("{}/response-fifo", m_base_dir); }
+
+private:
+    String m_base_dir;
+    String m_command;
+    Context* m_context;
+    const ShellContext* m_shell_context;
+    FDWatcher m_command_watcher;
 };
 
 ShellManager::~ShellManager() = default;
@@ -366,7 +382,7 @@ std::pair<String, int> ShellManager::eval(
 
     if (m_convert_to_background_pending and not terminated)
     {
-        command_fifos->command_watcher.set_mode(EventMode::Normal);
+        command_fifos->convert_to_background();
         m_background_shells.emplace_back(std::move(shell), std::move(command_fifos));
     }
 
