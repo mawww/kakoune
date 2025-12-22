@@ -292,8 +292,8 @@ In most distributions, `/bin/sh` will end up being used.
 
 Data in buffers is a stream of characters, and newlines do not receive special
 treatment compared to other characters, with regards to regex matching. In
-order to select data in a line without any trailing newline characters, one could
-use the `[^\n]+` pattern, which is arguably a good compromise when
+order to select data in a line without any trailing newline characters, one
+could use the `\N+` pattern, which is arguably a good compromise when
 balanced against the ability to select data over several lines.
 
 You can instruct the regex engine to stop matching newline characters with

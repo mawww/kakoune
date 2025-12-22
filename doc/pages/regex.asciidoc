@@ -74,6 +74,8 @@ is equivalent to `[\d]`.
 `.` matches any character, including newlines, by default.
 (see <<regex#modifiers,:doc regex modifiers>> on how to change it)
 
+`\N` matches any character but newlines (not affected by modifiers).
+
 == Groups
 
 Regex atoms can be grouped using `(` and `)` or `(?:` and `)`. If `(` is
@@ -184,7 +186,7 @@ by <https://www.ecma-international.org/ecma-262/8.0/>; some divergence
 exists for ease of use, or performance reasons:
 
 * Lookarounds are not arbitrary, but lookbehind is supported.
-* `\K`, `\Q..\E`, `\A`, `\h` and `\z` are added.
+* `\K`, `\N`, `\Q..\E`, `\A`, `\h` and `\z` are added.
 * Stricter handling of escaping, as we introduce additional escapes;
   identity escapes like `\X` with `X` being a non-special character
   are not accepted, to avoid confusions between `\h` meaning literal
