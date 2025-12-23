@@ -15,7 +15,11 @@ main() {
         } catch %{ exec gg }
         try %{ source rc }
         try %{ eval -draft %{ edit cmd; exec \%H"zy; delete-buffer } }
-        try %{ exec -with-maps -with-hooks %reg{z} }
+        hook global RuntimeError "\d+:\d+: (.+)" %{
+          nop %sh{echo "$kak_hook_param_capture_1" > stderr}
+          kill 1
+        }
+        exec -with-maps -with-hooks %reg{z}
         exec -with-hooks <c-l>
       '
 
@@ -79,10 +83,11 @@ main() {
 
     exec 3>&- 4<&-
 
-    if [ ! -e error ]; then # failure not expected
+    if [ ! -e $root/$dir/error ]; then # failure not expected
       if [ $retval -ne 0 ]; then
         printf "${red}%s${none}\n" "$dir"
         echo "  Kakoune returned error $retval"
+        [ -f stderr ] && printf "  ${yellow}%s${none}\n" "$(cat stderr)"
         failed=1
       else
         for file in out $env_vars; do
@@ -99,9 +104,9 @@ main() {
     else # failure expected
       if [ -f stderr ]; then
         sed -i -e 's/^[0-9]*:[0-9]*: //g' stderr
-        if [ -s error ] && ! cmp -s error stderr; then
+        if [ -s $root/$dir/error ] && ! cmp -s $root/$dir/error stderr; then
           printf "${yellow}%s${none}\n" "$dir"
-          show_diff error stderr
+          show_diff $root/$dir/error stderr
           failed=1
         fi
       elif [ $retval -eq 0 ]; then
