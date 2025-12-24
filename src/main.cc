@@ -232,6 +232,18 @@ const EnvVarDesc builtin_env_vars[] = { {
         [](StringView name, const Context& context) -> Vector<String>
         { return {context.buffer().is_modified() ? "true" : "false"}; }
     }, {
+        "scratch", false,
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {not (context.buffer().flags() & Buffer::Flags::File) ? "true" : "false"}; }
+    }, {
+        "new_file", false,
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {context.buffer().flags() & Buffer::Flags::New ? "true" : "false"}; }
+    }, {
+        "fifo", false,
+        [](StringView name, const Context& context) -> Vector<String>
+        { return {context.buffer().flags() & Buffer::Flags::Fifo ? "true" : "false"}; }
+    }, {
         "cursor_line", false,
         [](StringView name, const Context& context) -> Vector<String>
         { return {to_string(context.selections().main().cursor().line + 1)}; }
