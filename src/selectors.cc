@@ -370,7 +370,7 @@ find_surrounding(const Container& container, Iterator pos,
             return {};
     }
     if (first > last)
-        last = first;
+        return {};
 
     return std::pair<Iterator, Iterator>{first, last};
 }
@@ -1230,7 +1230,9 @@ UnitTest test_find_surrounding{[]()
                                     Regex{"\\Q" + opening, RegexCompileFlags::Backward},
                                     Regex{"\\Q" + closing, RegexCompileFlags::Backward},
                                     flags, level);
-        kak_assert(res);
+        kak_assert((not res) == expected.empty());
+        if (not res)
+            return;
         auto min = std::min(res->first, res->second),
              max = std::max(res->first, res->second);
         kak_assert(StringView{min, max+1} == expected);
@@ -1240,7 +1242,7 @@ UnitTest test_find_surrounding{[]()
     check_equal(s.begin() + 13, '[', ']', ObjectFlags::ToBegin | ObjectFlags::ToEnd | ObjectFlags::Inner, 0, "bar { baz[] }");
     check_equal(s.begin() + 5, '[', ']', ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0, "[bar { baz[] }]");
     check_equal(s.begin() + 10, '{', '}', ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0, "{ baz[] }");
-    check_equal(s.begin() + 16, '[', ']', ObjectFlags::ToBegin | ObjectFlags::ToEnd | ObjectFlags::Inner, 0, "]");
+    check_equal(s.begin() + 16, '[', ']', ObjectFlags::ToBegin | ObjectFlags::ToEnd | ObjectFlags::Inner, 0, "");
     check_equal(s.begin() + 18, '[', ']', ObjectFlags::ToBegin | ObjectFlags::ToEnd, 0, "[bar { baz[] }]");
     check_equal(s.begin() + 6, '[', ']', ObjectFlags::ToBegin, 0, "[b");
 
