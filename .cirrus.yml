@@ -1,7 +1,7 @@
 # TODO move to Github Actions after https://github.com/actions/runner/issues/385
 freebsd_task:
     freebsd_instance:
-        image_family: freebsd-14-2
+        image_family: freebsd-14-3
     matrix:
         - name: freebsd_clang
           env:
