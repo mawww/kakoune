@@ -1,3 +1,5 @@
 mkfifo fifo 2>/dev/null
+echo waiting for fifo
 cat fifo
+echo fifo waiting done
 # We should have jumped to the old version of line 2, assert on kak_selection.

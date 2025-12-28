@@ -4,27 +4,37 @@ source "%val{runtime}/rc/tools/git.kak"
 
 define-command run %{
     try %{
+        echo -end-of-line -to-file /dev/stderr %sh{ ls -l  fifo 2>&1 }
         git init
         git add
         git commit --message 'initial commit'
         execute-keys %{2gIchanged <esc>}
+        echo -end-of-line -to-file /dev/stderr "writing"
         write
         git commit --all --message 'changed line 2'
+        echo -end-of-line -to-file /dev/stderr "commit done"
         # Show the commit, jumping to the new version of line 2.
         git blame-jump
+        echo -end-of-line -to-file /dev/stderr "blame done"
         hook -once buffer BufCloseFifo .* %{
+            echo -end-of-line -to-file /dev/stderr "buf close fifo"
             evaluate-commands -client client0 %{
                 # We've jumped to the new version of line 2. Move to the old
                 # version so we can annotate the old version of the file.
                 execute-keys k
+                echo -end-of-line -to-file /dev/stderr "pre 2nd blame"
                 git blame
+                echo -end-of-line -to-file /dev/stderr "post 2nd blame"
                 hook -once buffer BufCloseFifo .* %{
-                    execute-keys -client client0 x
                     # Wait for a redraw before reporting completion.
                     hook -once buffer NormalIdle .* %{
+                        echo -end-of-line -to-file /dev/stderr "NormalIdle hook"
                         echo -to-file fifo
                     }
+                    execute-keys -client client0 x
+                    echo -end-of-line -to-file /dev/stderr "NormalIdle install"
                 }
+                echo -end-of-line -to-file /dev/stderr "hook installed"
             }
         }
     } catch %{
