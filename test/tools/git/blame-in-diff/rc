@@ -3,27 +3,32 @@ source "%val{runtime}/rc/filetype/diff.kak"
 source "%val{runtime}/rc/tools/git.kak"
 
 define-command run %{
-    git init
-    git add
-    git commit --message 'initial commit'
-    execute-keys %{2gIchanged <esc>}
-    write
-    git commit --all --message 'changed line 2'
-    # Show the commit, jumping to the new version of line 2.
-    git blame-jump
-    hook -once buffer BufCloseFifo .* %{
-        evaluate-commands -client client0 %{
-            # We've jumped to the new version of line 2. Move to the old
-            # version so we can annotate the old version of the file.
-            execute-keys k
-            git blame
-            hook -once buffer BufCloseFifo .* %{
-                execute-keys -client client0 x
-                # Wait for a redraw before reporting completion.
-                hook -once buffer NormalIdle .* %{
-                    echo -to-file fifo
+    try %{
+        git init
+        git add
+        git commit --message 'initial commit'
+        execute-keys %{2gIchanged <esc>}
+        write
+        git commit --all --message 'changed line 2'
+        # Show the commit, jumping to the new version of line 2.
+        git blame-jump
+        hook -once buffer BufCloseFifo .* %{
+            evaluate-commands -client client0 %{
+                # We've jumped to the new version of line 2. Move to the old
+                # version so we can annotate the old version of the file.
+                execute-keys k
+                git blame
+                hook -once buffer BufCloseFifo .* %{
+                    execute-keys -client client0 x
+                    # Wait for a redraw before reporting completion.
+                    hook -once buffer NormalIdle .* %{
+                        echo -to-file fifo
+                    }
                 }
             }
         }
+    } catch %{
+        echo -to-file fifo
+        kill! 1
     }
 }
