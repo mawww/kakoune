@@ -16,7 +16,7 @@ released versions.
 
 * `number-lines -full-relative` switch to keep a smaller line number gutter.
 
-* `'` and `<a-'>` to select nested text objects
+* `<a-I>` and `<a-A>` to select nested text objects
 
 == Kakoune 2025.06.03
 

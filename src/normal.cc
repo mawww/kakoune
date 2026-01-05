@@ -2577,8 +2577,8 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
     { {alt(']')}, {"select to inner object end", select_object<ObjectFlags::ToEnd | ObjectFlags::Inner>} },
     { {alt('{')}, {"extend to inner object start", select_object<ObjectFlags::ToBegin | ObjectFlags::Inner, SelectMode::Extend>} },
     { {alt('}')}, {"extend to inner object end", select_object<ObjectFlags::ToEnd | ObjectFlags::Inner, SelectMode::Extend>} },
-    { {'\''}, {"select nested objects", select_object<ObjectFlags::Nested | ObjectFlags::Inner | ObjectFlags::ToBegin | ObjectFlags::ToEnd>} },
-    { {alt('\'')}, {"select nested objects", select_object<ObjectFlags::Nested | ObjectFlags::ToBegin | ObjectFlags::ToEnd>} },
+    { {alt('I')}, {"select nested objects", select_object<ObjectFlags::Nested | ObjectFlags::Inner | ObjectFlags::ToBegin | ObjectFlags::ToEnd>} },
+    { {alt('A')}, {"select nested objects", select_object<ObjectFlags::Nested | ObjectFlags::ToBegin | ObjectFlags::ToEnd>} },
 
     { {alt('j')}, {"join lines", join_lines} },
     { {alt('J')}, {"join lines and select spaces", join_lines_select_spaces} },

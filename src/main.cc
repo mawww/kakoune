@@ -55,7 +55,7 @@ struct {
         "» {+b}%val\\{buffile}{} is now empty for scratch buffers\n"
         "» {+b}FocusIn{}/{+b}FocusOut{} events on suspend\n"
         "» {+u}number-lines -full-relative{} switch to keep a smaller line number gutter\n"
-        "» {+b}'{} and {+b}<a-'>{} to select nested text objects\n"
+        "» {+b}<a-I>{} and {+b}<a-A>{} to select nested text objects\n"
     }, {
         20250603,
         "» kak_* appearing in shell arguments will be added to the environment\n"

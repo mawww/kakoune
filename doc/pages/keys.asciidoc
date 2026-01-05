@@ -633,7 +633,7 @@ for a word this will select trailing spaces.
 *}*::
     extend selections to the whole surrounding object end
 
-*<a-'>:: select each whole nested object in selections
+*<a-A>:: select each whole nested object in selections
 
 === Inner object
 
@@ -656,7 +656,7 @@ for a word this will *not* select trailing spaces.
 *<a-}>*::
     extend selections to the surrounding inner object end
 
-*'*::
+*<a-I>*::
     select each inner nested object in selections
 
 === Objects types
