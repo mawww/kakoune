@@ -50,6 +50,13 @@ constexpr auto enum_desc(Meta::Type<SelectMode>)
     });
 }
 
+enum class ScrollMode
+{
+    Page,
+    HalfPage,
+    Line,
+};
+
 void merge_selections(Selection& sel, const Selection& new_sel)
 {
     const bool forward = sel.cursor() >= sel.anchor();
@@ -1590,12 +1597,20 @@ void select_object(Context& context, NormalParams params)
     return select_object(context, params, flags, mode);
 }
 
-template<Direction direction, bool half = false>
+template<Direction direction, ScrollMode mode = ScrollMode::Page>
 void scroll(Context& context, NormalParams params)
 {
     const Window& window = context.window();
     const int count = params.count ? params.count : 1;
-    const LineCount offset = (window.dimensions().line - 2) / (half ? 2 : 1) * count;
+
+    const LineCount offset = [](const Window& window, const int count) {
+        if constexpr (mode == ScrollMode::Page)
+            return (window.dimensions().line - 2) / 1 * count;
+        else if constexpr (mode == ScrollMode::HalfPage)
+            return (window.dimensions().line - 2) / 2 * count;
+        else
+            return count;
+    }(window, count);
 
     scroll_window(context, offset * direction, OnHiddenCursor::MoveCursorAndAnchor);
 }
@@ -2625,10 +2640,12 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
     { {Key::PageUp}, {  "scroll one page up", scroll<Backward>} },
     { {Key::PageDown}, {"scroll one page down", scroll<Forward>} },
 
-    { {ctrl('b')}, {"scroll one page up", scroll<Backward >} },
+    { {ctrl('b')}, {"scroll one page up", scroll<Backward>} },
     { {ctrl('f')}, {"scroll one page down", scroll<Forward>} },
-    { {ctrl('u')}, {"scroll half a page up", scroll<Backward, true>} },
-    { {ctrl('d')}, {"scroll half a page down", scroll<Forward, true>} },
+    { {ctrl('u')}, {"scroll half a page up", scroll<Backward, ScrollMode::HalfPage>} },
+    { {ctrl('d')}, {"scroll half a page down", scroll<Forward, ScrollMode::HalfPage>} },
+    { {ctrl('y')}, {"scroll one line up", scroll<Backward, ScrollMode::Line>} },
+    { {ctrl('e')}, {"scroll one line down", scroll<Forward, ScrollMode::Line>} },
 
     { {'z'}, {"restore selections from register", restore_selections<false>} },
     { {alt('z')}, {"combine selections from register", restore_selections<true>} },
