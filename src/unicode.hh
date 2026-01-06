@@ -101,7 +101,7 @@ inline bool is_identifier(Codepoint c) noexcept
 
 inline ColumnCount codepoint_width(Codepoint c) noexcept
 {
-    if (c == '\n')
+    if (c < 0x80) [[likely]]
         return 1;
     const auto width = wcwidth((wchar_t)c);
     return width >= 0 ? width : 1;
