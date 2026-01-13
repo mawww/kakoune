@@ -541,6 +541,28 @@ define-command -params 1.. \
         fi
     }
 
+    empty_commit_message_is_allowed() {
+        ret=1
+        for arg; do
+            case $arg in
+                --) break;;
+                # Allow a prefix match but don't be confused by "--allow-empty"
+                --allow-empty-*)
+                    case --allow-empty-message in
+                        "$arg"*) ret=0;;
+                    esac
+                    ;;
+                # Allow a prefix match but don't be confused by "--no-allow-empty"
+                --no-allow-empty-*)
+                    case --no-allow-empty-message in
+                        "$arg"*) ret=1;;
+                    esac
+                    ;;
+            esac
+        done
+        return $ret
+    }
+
     commit() {
         if ! fifo_dir="$(mktemp -d "${TMPDIR:-/tmp}/kak-git-XXXXXX")" ||
            ! mkfifo "${fifo_dir}/response_fifo"
@@ -555,6 +577,22 @@ define-command -params 1.. \
                 die() {
                     printf "%s\n" "$*" >&2
                     exit 1
+                }
+
+                # the comment string can be set by either core.commentChar
+                # or core.commentString with the last one winning.
+                get_comment_re() {
+                    {
+                        git config --get-regexp \
+                            "^core\.comment(char|string)\$" ||
+                        echo "#"
+                    } | sed -n -e "
+                            \${
+                                s/^[^ ]* //
+                                s/^auto\$/#/
+                                s|[][*./\]|\\\\&|g
+                                p
+                            }"
                 }
 
                 # Nested levels of kakoune single quote quoting
@@ -596,6 +634,12 @@ define-command -params 1.. \
                             echo -to-file $(kak_quote "${response_fifo}" 2) -end-of-line failed
                         ${Q1}" | kak -p "${kak_session}" ||
                             die "could not contact kak session ${kak_session}"
+                    # create a sed expression to print the first uncommented,
+                    # non-empty line before any scissors line.
+                    comment_re="$(get_comment_re)"
+                    re="/^${comment_re} -\{8,\} >8 -\{8,\}\$/q
+                        /^${comment_re}.*/d
+                        /[^ 	]/{p;q;}"
                     # wait for the user to edit the commit message
                     read cancelled <"${response_fifo}"
                     if [ "${cancelled}" = true ]; then
@@ -603,6 +647,9 @@ define-command -params 1.. \
                         die "editing cancelled"
                     elif [ "${cancelled}" != false ]; then
                         die "could not open file ${SQ}$1${SQ}"
+                    fi
+                    if [ -z "$(sed -n -e "$re" "$1")" ]; then
+                        >"${fifo_dir}/empty-message"
                     fi
                 }; editor'
             export fifo_dir GIT_EDITOR
@@ -614,6 +661,11 @@ define-command -params 1.. \
             elif [ -f "${fifo_dir}/cancelled" ]; then
                 cmd="eval -try-client '${kak_client}' %{
                     echo -markup '{Information}Commit cancelled'
+                }"
+            elif [ -f "${fifo_dir}/empty-message" ] &&
+                    ! empty_commit_message_is_allowed "$@"; then
+                cmd="eval -try-client '${kak_client}' %{
+                    echo -markup '{Information}Commit cancelled (empty message)'
                 }"
             else
                 failed=1
