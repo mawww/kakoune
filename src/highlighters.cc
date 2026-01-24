@@ -644,28 +644,25 @@ struct WrapHighlighter : Highlighter
             {
                 auto& line = *it;
 
-                if (pos.byte > 0 and pos.atom_it->type() == DisplayAtom::Range)
+                if (pos.byte > 0)
                     pos.atom_it = ++line.split(pos.atom_it, pos.atom_it->begin() + BufferCoord{0, pos.byte});
 
                 auto coord = pos.atom_it->begin();
-                DisplayLine new_line{ AtomList{ pos.atom_it, line.end() } };
+                DisplayLine new_line{AtomList{std::make_move_iterator(pos.atom_it), std::make_move_iterator(line.end())}};
                 line.erase(pos.atom_it, line.end());
+                auto next_atom_it = new_line.begin();
 
                 if (marker_len != 0)
-                    new_line.insert(new_line.begin(), {m_marker, face_marker});
+                    next_atom_it = ++new_line.insert(new_line.begin(), {m_marker, face_marker});
                 if (indent > marker_len)
                 {
-                    auto it = new_line.insert(new_line.begin() + (marker_len > 0), {buffer, {coord, coord}});
-                    it->replace(String{' ', indent - marker_len});
+                    next_atom_it = new_line.insert(next_atom_it, {buffer, {coord, coord}});
+                    next_atom_it->replace(String{' ', indent - marker_len});
+                    ++next_atom_it;
                 }
 
-                it = display_buffer.lines().insert(it+1, new_line);
-                pos = SplitPos{it->begin(), 0, 0};
-                if (pos.atom_it->type() != DisplayAtom::Range) // avoid infinite loop trying to split too long non-buffer ranges
-                {
-                    pos.column += pos.atom_it->content().column_length();
-                    ++pos.atom_it;
-                }
+                it = display_buffer.lines().insert(it+1, std::move(new_line));
+                pos = SplitPos{next_atom_it, 0, std::max(marker_len, indent)};
             }
         }
     }
@@ -702,8 +699,17 @@ struct WrapHighlighter : Highlighter
                 last_WORD_boundary = pos;
         };
 
+        if (pos.atom_it->type() != DisplayAtom::Range and pos.atom_it->length() > wrap_column)
+        {
+            ++pos.atom_it;
+            return true;
+        }
+
         while (pos.atom_it != line_end and pos.column < wrap_column)
         {
+            if (pos.atom_it->type() != DisplayAtom::Range and pos.column + pos.atom_it->length() > wrap_column)
+                return true;
+
             auto content = pos.atom_it->content();
             const char* it = &content[pos.byte];
             const Codepoint cp = utf8::read_codepoint(it, content.end());
