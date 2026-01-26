@@ -164,7 +164,7 @@ public:
     // Merge together consecutive atoms sharing the same display attributes
     void optimize();
 private:
-    void compute_range();
+    void compute_range(bool preserve_if_no_atoms = false);
     BufferRange m_range = { { INT_MAX, INT_MAX }, { INT_MIN, INT_MIN } };
     AtomList  m_atoms;
 };

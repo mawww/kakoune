@@ -188,14 +188,14 @@ DisplayLine DisplayLine::extract(iterator beg, iterator end)
     m_atoms.erase(beg, end);
     if (extracted.m_range.begin == m_range.begin or
         extracted.m_range.end == m_range.end)
-        compute_range();
+        compute_range(true);
     return extracted;
 }
 
 DisplayLine::iterator DisplayLine::erase(iterator beg, iterator end)
 {
     auto res = m_atoms.erase(beg, end);
-    compute_range();
+    compute_range(true);
     return res;
 }
 
@@ -288,18 +288,17 @@ bool DisplayLine::trim_from(ColumnCount first_col, ColumnCount front, ColumnCoun
     bool did_trim = it != end() && col_count == 0;
     m_atoms.erase(it, end());
 
-    compute_range();
+    compute_range(true);
     return did_trim;
 }
 
 const BufferRange init_range{ {INT_MAX, INT_MAX}, {INT_MIN, INT_MIN} };
 
-void DisplayLine::compute_range()
+void DisplayLine::compute_range(bool preserve_if_no_atoms)
 {
-    m_range = init_range;
     auto first = find_if(m_atoms, [](const auto& atom) { return atom.has_buffer_range(); });
     if (first == m_atoms.end())
-        m_range = { { 0, 0 }, { 0, 0 } };
+        m_range = preserve_if_no_atoms and m_range != init_range ? m_range : BufferRange{{0, 0}, {0, 0}};
     else
     {
         auto last = std::find_if(m_atoms.rbegin(), std::reverse_iterator(first+1), [](const auto& atom) { return atom.has_buffer_range(); });
