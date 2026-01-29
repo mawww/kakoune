@@ -1,6 +1,8 @@
 # http://scala-lang.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-scala %[
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -26,6 +28,10 @@ hook -group scala-highlight global WinSetOption filetype=scala %{
     add-highlighter window/scala ref scala
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/scala }
 }
+
+]
+
+require-module detect-scala
 
 
 provide-module scala %[

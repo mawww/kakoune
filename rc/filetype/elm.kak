@@ -1,6 +1,8 @@
 # http://elm-lang.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-elm %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -25,6 +27,10 @@ hook -group elm-highlight global WinSetOption filetype=elm %{
     add-highlighter window/elm ref elm
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/elm }
 }
+
+}
+
+require-module detect-elm
 
 
 provide-module elm %[

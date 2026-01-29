@@ -1,6 +1,8 @@
 # https://dhall-lang.org
 #                       
 
+provide-module detect-dhall %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -25,6 +27,10 @@ hook -group dhall-highlight global WinSetOption filetype=dhall %{
     add-highlighter window/dhall ref dhall
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/dhall }
 }
+
+}
+
+require-module detect-dhall
 
 
 provide-module dhall %[

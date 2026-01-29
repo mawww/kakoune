@@ -1,6 +1,8 @@
 # https://prql-lang.org/
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-prql %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -27,6 +29,10 @@ hook -group prql-highlight global WinSetOption filetype=prql %{
     add-highlighter window/prql ref prql
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/prql }
 }
+
+}
+
+require-module detect-prql
 
 provide-module prql %§
 
