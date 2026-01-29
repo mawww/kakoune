@@ -82,7 +82,8 @@ public:
     // not change the mode itself
     void prompt(StringView prompt, String initstr, String emptystr,
                 Face prompt_face, PromptFlags flags, char history_register,
-                PromptCompleter completer, PromptCallback callback);
+                PromptCompleter completer, PromptCallback callback,
+                bool for_regex = false);
     void set_prompt_face(Face prompt_face);
     bool history_enabled() const;
 
@@ -171,7 +172,8 @@ enum class AutoComplete
 {
     None = 0,
     Insert = 0b01,
-    Prompt = 0b10
+    Prompt = 0b10,
+    NoRegexPrompt = 0b100,
 };
 constexpr bool with_bit_ops(Meta::Type<AutoComplete>) { return true; }
 
@@ -179,7 +181,8 @@ constexpr auto enum_desc(Meta::Type<AutoComplete>)
 {
     return make_array<EnumDesc<AutoComplete>>({
         { AutoComplete::Insert, "insert"},
-        { AutoComplete::Prompt, "prompt" }
+        { AutoComplete::Prompt, "prompt" },
+        { AutoComplete::NoRegexPrompt, "no_regex_prompt" },
     });
 }
 
