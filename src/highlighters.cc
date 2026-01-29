@@ -363,6 +363,240 @@ private:
     }
 };
 
+/// A replacement string split into parts separated by the match group ID's
+class RegexReplacement
+{
+public:
+
+    RegexReplacement(StringView replacement)
+    {
+        auto iter = replacement.begin();
+        auto last = replacement.end();
+
+        // Beginning of the current string
+        auto first = iter;
+
+        // Whether or not we are currently following an odd number of backslashes
+        bool escaped = false;
+        while (iter != last) {
+            if (*iter == '\\') {
+                escaped = !escaped;
+            }
+            if (escaped and *iter >= '0' and *iter <= '9') {
+                char* number_end;
+                int idx = std::strtol(&*iter, &number_end, 0);
+
+                m_parts.emplace_back(parse_display_line(String{first, iter - 1}), idx);
+
+                escaped = false;
+                first = iter = number_end;
+
+                // We are already incremented enough
+                continue;
+            }
+            if (*iter != '\\') {
+              escaped = false;
+            }
+            iter++;
+        }
+        if (first < iter) m_parts.emplace_back(parse_display_line(String{first, iter}), -1);
+    }
+
+    void replace_range(DisplayLine& line, 
+                       DisplayLine::iterator first, 
+                       DisplayLine::iterator last, 
+                       ConstArrayView<BufferRange> matches) const
+    {
+        Vector<DisplayLine, MemoryDomain::Highlight> match_displays;
+        for (auto& match : matches) {
+            match_displays.emplace_back(AtomList{first, last});
+            auto& line = match_displays.back();
+            for (auto iter = line.begin(); iter != line.end(); ++iter) {
+                if (iter->has_buffer_range() and iter->begin() < match.begin and iter->end() > match.begin) 
+                    iter = line.split(iter, match.begin);
+                if (iter->has_buffer_range() and iter->begin() < match.end and iter->end() > match.end) 
+                    iter = line.split(iter, match.end);
+            }
+            auto start = match.begin.column - matches[0].begin.column;
+            line.trim((int)start, (int)(match.end.column - match.begin.column));
+        }
+        auto pos = line.erase(first, last);
+        for (auto& part : m_parts) {
+            for(auto& atom : part.first)
+                pos = ++line.insert(pos, atom);
+            if (part.second >= 0 and part.second < matches.size()) {
+                for(auto& atom : match_displays[part.second])
+                    pos = ++line.insert(pos, atom);
+            }
+        }
+    }
+
+    /// Pairs of strings and the match group to append
+    Vector<std::pair<DisplayLine, int>, MemoryDomain::Highlight> m_parts;
+};
+
+
+class RegexReplaceHighlighter : public Highlighter
+{
+public:
+    RegexReplaceHighlighter(Regex regex, StringView replacement)
+        : Highlighter{HighlightPass::Colorize},
+          m_regex{std::move(regex)},
+          m_replacement{replacement}
+    {}
+
+    void do_highlight(HighlightContext context, DisplayBuffer& display_buffer, BufferRange range) override
+    {
+        auto overlaps = [](const BufferRange& lhs, const BufferRange& rhs) {
+            return lhs.begin < rhs.begin ? lhs.end > rhs.begin
+                                         : rhs.end > lhs.begin;
+        };
+
+        if (not overlaps(display_buffer.range(), range))
+            return;
+
+        auto& matches = get_matches(context.context.buffer(), display_buffer.range(), range);
+
+        if (matches.size() < 1) return;
+        for (const auto& subs : matches) {
+            auto range_to_replace = subs[0];
+            replace_range(display_buffer, range_to_replace.begin, range_to_replace.end,
+                          [&](DisplayLine& line, int beg_idx, int end_idx){
+                              m_replacement.replace_range(line, line.begin() + beg_idx, line.begin() + end_idx, subs);
+                          });
+        }
+
+    }
+
+    void reset(Regex regex, String replacement)
+    {
+        m_regex = std::move(regex);
+        m_replacement = RegexReplacement{replacement};
+        ++m_regex_version;
+    }
+
+    static HighlighterAndId create(HighlighterParameters params)
+    {
+        if (params.size() < 2)
+            throw runtime_error("wrong parameter count");
+
+        String id = format("regex_replace_'{}'", params[0]);
+
+        Regex ex{params[0], RegexCompileFlags::Optimize};
+
+        return {id, std::make_unique<RegexReplaceHighlighter>(std::move(ex),
+                                                              params[1])};
+    }
+
+private:
+    using SubMatchList = Vector<BufferRange, MemoryDomain::Highlight>;
+    // stores the range for each highlighted capture of each match
+    using MatchList = Vector<SubMatchList, MemoryDomain::Highlight>;
+    struct Cache
+    {
+        size_t m_timestamp = -1;
+        size_t m_regex_version = -1;
+        struct RangeAndMatches { BufferRange range; MatchList matches; };
+        Vector<RangeAndMatches, MemoryDomain::Highlight> m_matches;
+    };
+    BufferSideCache<Cache> m_cache;
+
+    Regex            m_regex;
+    RegexReplacement m_replacement;
+
+    size_t m_regex_version = 0;
+
+    void add_matches(const Buffer& buffer, MatchList& matches,
+                     BufferRange range)
+    {
+        using RegexIt = RegexIterator<BufferIterator>;
+        RegexIt re_it{get_iterator(buffer, range.begin),
+                      get_iterator(buffer, range.end),
+                      buffer.begin(), buffer.end(), m_regex,
+                      match_flags(is_bol(range.begin),
+                                  is_eol(buffer, range.end),
+                                  is_bow(buffer, range.begin),
+                                  is_eow(buffer, range.end))};
+        RegexIt re_end;
+        for (; re_it != re_end; ++re_it)
+        {
+            SubMatchList subs;
+            for (const auto& sub : *re_it)
+            {
+                subs.push_back({sub.first.coord(), sub.second.coord()});
+            }
+            if (subs.front().begin.line != subs.front().end.line) continue;
+            matches.emplace_back(std::move(subs));
+        }
+    }
+
+    MatchList& get_matches(const Buffer& buffer, BufferRange display_range,
+                           BufferRange buffer_range)
+    {
+        Cache& cache = m_cache.get(buffer);
+        auto& matches = cache.m_matches;
+
+        if (cache.m_regex_version != m_regex_version or
+            cache.m_timestamp != buffer.timestamp())
+        {
+            matches.clear();
+            cache.m_timestamp = buffer.timestamp();
+            cache.m_regex_version = m_regex_version;
+        }
+        const LineCount line_offset = 3;
+        BufferRange range{std::max<BufferCoord>(buffer_range.begin, display_range.begin.line - line_offset),
+                          std::min<BufferCoord>(buffer_range.end, display_range.end.line + line_offset)};
+
+        auto it = std::upper_bound(matches.begin(), matches.end(), range,
+                                   [](const BufferRange& lhs, const Cache::RangeAndMatches& rhs)
+                                   { return lhs.begin < rhs.range.end; });
+
+        if (it == matches.end() or it->range.begin > range.end)
+        {
+            it = matches.insert(it, Cache::RangeAndMatches{range, {}});
+            add_matches(buffer, it->matches, range);
+        }
+        else if (it->matches.empty())
+        {
+            it->range = range;
+            add_matches(buffer, it->matches, range);
+        }
+        else
+        {
+            // Here we extend the matches, that is not strictly valid,
+            // but may work nicely with every reasonable regex, and
+            // greatly reduces regex parsing. To change if we encounter
+            // regex that do not work great with that.
+            BufferRange& old_range = it->range;
+            MatchList& matches = it->matches;
+            
+            // End of first/last match capture group 0
+            auto first_end = matches.front().front().end;
+            auto last_end = matches.back().front().end;
+
+            // add regex matches from new begin to old first match end
+            if (range.begin < old_range.begin)
+            {
+                old_range.begin = range.begin;
+                MatchList new_matches;
+                add_matches(buffer, new_matches, {range.begin, first_end});
+                matches.erase(matches.begin());
+
+                std::copy(std::make_move_iterator(new_matches.begin()),
+                          std::make_move_iterator(new_matches.end()),
+                          std::inserter(matches, matches.begin()));
+            }
+            // add regex matches from old last match begin to new end
+            if (old_range.end < range.end)
+            {
+                old_range.end = range.end;    
+                add_matches(buffer, matches, {last_end, range.end});
+            }
+        }
+        return it->matches;
+    }
+};
+
 template<typename RegexGetter, typename FaceGetter>
 class DynamicRegexHighlighter : public Highlighter
 {
@@ -2415,6 +2649,12 @@ void register_highlighters()
     registry.insert({
         "default-region",
         { RegionsHighlighter::create_default_region, &default_region_desc } });
+    registry.insert({
+        "regex-replace",
+        { RegexReplaceHighlighter::create,
+          "Parameters: <regex> <replacement>\n"
+          "Replaces the matches for <regex> with <replacement>. \\N in the replacement string\n"
+          "is expanded to the contents of capture group N. <replacement> may contain markup"} });
     registry.insert({
         "dynregex",
         { create_dynamic_regex_highlighter, &dynamic_regex_desc } });
