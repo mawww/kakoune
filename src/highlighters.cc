@@ -1230,6 +1230,13 @@ void highlight_selections(HighlightContext context, DisplayBuffer& display_buffe
 
 void expand_unprintable(HighlightContext context, DisplayBuffer& display_buffer, BufferRange)
 {
+    auto is_printable = [](Codepoint cp) { // follow musl iswprint set of printable characters, but with straightforward impl
+        if (cp < 0xff)
+            return cp == '\n' or cp >= ' ';
+        else if (cp == 0x2028 or cp == 0x2029 or (cp >= 0xFFF9 and cp <= 0xFFFB))
+            return false;
+        return true;
+    };
     const auto& buffer = context.context.buffer();
     auto error = context.context.faces()[FaceSpec{{}, "Error"}];
     for (auto& line : display_buffer.lines())
@@ -1245,7 +1252,7 @@ void expand_unprintable(HighlightContext context, DisplayBuffer& display_buffer,
             {
                 auto next = it;
                 Codepoint cp = utf8::read_codepoint(next, end);
-                if (cp != '\n' and (cp < ' ' or cp > '~') and not iswprint((wchar_t)cp))
+                if (not is_printable(cp))
                 {
                     if (ByteCount pos(it - line_data); pos != begin.column)
                         atom_it = ++line.split(atom_it, {begin.line, pos});
