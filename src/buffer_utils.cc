@@ -137,7 +137,12 @@ decltype(auto) parse_file(StringView filename, Func&& func)
 
     size_t line_count = 1;
     bool has_crlf = false, has_lf = false;
-    for (auto it = std::find(pos, end, '\n'); it != end; it = std::find(it+1, end, '\n'), ++line_count)
+    for (
+        auto it = static_cast<const char*>(memchr(pos, '\n', end - pos));
+        it;
+        it = static_cast<const char*>(memchr(it+1, '\n', end - (it+1))),
+        ++line_count
+    )
         ((it != pos and *(it-1) == '\r') ? has_crlf : has_lf) = true;
     auto eolformat = (has_crlf and not has_lf) ? EolFormat::Crlf : EolFormat::Lf;
 
