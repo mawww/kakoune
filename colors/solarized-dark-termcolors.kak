@@ -26,7 +26,7 @@ face global bullet             yellow
 face global list               green
 
 # builtin
-face global Default            bright-blue,bright-black
+face global Default            bright-blue
 face global PrimarySelection   bright-black,blue+fg
 face global SecondarySelection bright-green,bright-cyan+fg
 face global PrimaryCursor      bright-black,bright-blue+fg
@@ -50,5 +50,5 @@ face global StatusLineValue    green
 face global StatusCursor       bright-yellow,bright-white
 face global Prompt             yellow+b
 face global MatchingChar       red,bright-green+b
-face global BufferPadding      bright-green,bright-black
+face global BufferPadding      bright-green
 face global Whitespace         blue+f
