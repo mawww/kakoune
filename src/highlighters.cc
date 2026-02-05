@@ -1878,7 +1878,7 @@ public:
 
         auto display_range = display_buffer.range();
         const auto& buffer = context.context.buffer();
-        auto& regions = get_regions_for_range(buffer, range);
+        auto& regions = get_regions_for_range(buffer, display_range);
 
         auto begin = std::lower_bound(regions.begin(), regions.end(), display_range.begin,
                                       [](const Region& r, BufferCoord c) { return r.end < c; });
