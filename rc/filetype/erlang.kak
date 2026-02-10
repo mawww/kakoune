@@ -6,7 +6,7 @@
 
 # Detection
 # ‾‾‾‾‾‾‾‾‾
-hook global BufCreate .*[.](erl|hrl) %{
+hook global BufCreate .*[.](erl|escript|hrl) %{
     set-option buffer filetype erlang
 }
 
@@ -31,6 +31,7 @@ provide-module erlang %[
 add-highlighter shared/erlang regions
 add-highlighter shared/erlang/default default-region group
 
+add-highlighter shared/erlang/shebang region ^#! $ fill meta
 add-highlighter shared/erlang/comment region '(?<!\$)%' '$' fill comment
 add-highlighter shared/erlang/attribute_atom_single_quoted region %{-'} %{(?<!\\)(?:\\\\)*'(?=[\( \.])} fill builtin
 add-highlighter shared/erlang/attribute region '\b-[a-z][\w@]*(?=[\( \.])' '\K' fill builtin
