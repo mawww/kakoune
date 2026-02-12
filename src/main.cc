@@ -56,6 +56,7 @@ struct {
         "» {+b}FocusIn{}/{+b}FocusOut{} events on suspend\n"
         "» {+u}number-lines -full-relative{} switch to keep a smaller line number gutter\n"
         "» {+b}<a-I>{} and {+b}<a-A>{} to select nested text objects\n"
+        "» {+b}kak -C <session>{} to connect-or-create a session\n"
     }, {
         20250603,
         "» kak_* appearing in shell arguments will be added to the environment\n"
@@ -1030,6 +1031,7 @@ int main(int argc, char* argv[])
 
     const ParameterDesc param_desc{
         SwitchMap{ { "c", { ArgCompleter{},  "connect to given session" } },
+                   { "C", { ArgCompleter{},  "connect to given session, create if it does not exist" } },
                    { "e", { ArgCompleter{},  "execute argument on client initialisation" } },
                    { "E", { ArgCompleter{},  "execute argument on server initialisation" } },
                    { "n", { {}, "do not source kakrc files on startup" } },
@@ -1157,16 +1159,22 @@ int main(int argc, char* argv[])
             files.emplace_back(name);
         }
 
-        if (auto server_session = parser.get_switch("c"))
+        if ((bool)parser.get_switch("c") + (bool)parser.get_switch("C") + (bool)parser.get_switch("s") > 1)
         {
-            for (auto opt : { "n", "s", "d", "E", "ro" })
+            write_stderr("error: -s, -c and -C are mutually exclusive\n");
+            return -1;
+        }
+        if (parser.get_switch("c") or (parser.get_switch("C") and check_session(*parser.get_switch("C"))))
+        {
+            for (auto opt : { "n", "d", "E", "ro" })
             {
                 if (parser.get_switch(opt))
                 {
-                    write_stderr(format("error: -{} is incompatible with -c\n", opt));
+                    write_stderr(format("error: -{} incompatible with connecting to an existing session\n", opt));
                     return -1;
                 }
             }
+            StringView session = parser.get_switch("c") ? *parser.get_switch("c") : *parser.get_switch("C");
             String new_files;
             for (auto name : files) {
                 new_files += format("edit '{}'", escape(real_path(name), "'", '\''));
@@ -1177,11 +1185,11 @@ int main(int argc, char* argv[])
                 new_files += ";";
             }
 
-            return run_client(*server_session, {}, new_files + client_init, init_coord, ui_type, false);
+            return run_client(session, {}, new_files + client_init, init_coord, ui_type, false);
         }
         else
         {
-            StringView session = parser.get_switch("s").value_or(StringView{});
+            StringView session = parser.get_switch("C").value_or(parser.get_switch("s").value_or(StringView{}));
             try
             {
                 auto ignore_kakrc = (bool)parser.get_switch("n");

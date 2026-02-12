@@ -18,6 +18,8 @@ released versions.
 
 * `<a-I>` and `<a-A>` to select nested text objects
 
+* `kak -C <session>` connects to a session or creates it if it does not exist.
+
 == Kakoune 2025.06.03
 
 * Expose env vars that are mentioned in the arguments passed to shell expansions
