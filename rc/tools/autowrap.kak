@@ -16,33 +16,32 @@ define-command -hidden autowrap-cursor %{ evaluate-commands -save-regs '/"|^@m' 
         execute-keys -draft "x<a-k>^[^\n]{%opt{autowrap_column},}[^\n]<ret>"
 
         try %{
-            reg m "%val{selections_desc}"
-
-            ## if we're adding characters past the limit, just wrap them around
+            ## if we're adding characters past the limit, move them onto a
+            ## newline to ensure that the cursor is in the right place after
+            ## the wrapping command
             execute-keys -draft "<a-h><a-k>.{%opt{autowrap_column}}\h*[^\s]*<ret>1s(\h+)[^\h]*\z<ret>c<ret>"
-        } catch %{
-            ## if we're adding characters in the middle of a sentence, use
-            ## the `fmtcmd` command to wrap the entire paragraph
-            evaluate-commands %sh{
-                if [ "${kak_opt_autowrap_format_paragraph}" = true ] \
-                    && [ -n "${kak_opt_autowrap_fmtcmd}" ]; then
-                    format_cmd=$(printf %s "${kak_opt_autowrap_fmtcmd}" \
-                                 | sed "s/%c/${kak_opt_autowrap_column}/g")
-                    printf %s "
-                        evaluate-commands -draft %{
-                            execute-keys '<a-]>px<a-j>|${format_cmd}<ret>'
-                            try %{ execute-keys s\h+$<ret> d }
-                        }
-                        select '${kak_main_reg_m}'
-                    "
-                fi
-            }
+        }
+
+        reg m "%val{selections_desc}"
+        evaluate-commands %sh{
+            if [ "${kak_opt_autowrap_format_paragraph}" = true ] \
+                && [ -n "${kak_opt_autowrap_fmtcmd}" ]; then
+                format_cmd=$(printf %s "${kak_opt_autowrap_fmtcmd}" \
+                             | sed "s/%c/${kak_opt_autowrap_column}/g")
+                printf %s "
+                    evaluate-commands -draft %{
+                        execute-keys '<a-]>px<a-j>|${format_cmd}<ret>'
+                        try %{ execute-keys s\h+$<ret> d }
+                    }
+                    select '${kak_main_reg_m}'
+                "
+            fi
         }
     }
 } }
 
 define-command autowrap-enable -docstring "Automatically wrap the lines in which characters are inserted" %{
-    hook -group autowrap window InsertChar [^\n] autowrap-cursor
+    hook -group autowrap window InsertChar '[^\n ]' autowrap-cursor
 }
 
 define-command autowrap-disable -docstring "Disable automatic line wrapping" %{
