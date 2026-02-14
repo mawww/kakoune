@@ -1,0 +1,11 @@
+define-command test-collapse %{
+    execute-keys 1g
+    execute-keys 3g
+    execute-keys j<c-s>j
+    execute-keys %{"aZ}
+    execute-keys <c-o>"bZ
+    execute-keys <c-o>"cZ
+    execute-keys -draft %{"az} i 'current ' <esc>
+    execute-keys -draft %{"bz} i 'parent jump ' <esc>
+    execute-keys -draft %{"cz} i 'grandparent jump ' <esc>
+}
