@@ -1,6 +1,8 @@
 # http://www.scheme-reports.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-scheme %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -27,6 +29,10 @@ hook -group scheme-highlight global WinSetOption filetype=scheme %{
     add-highlighter window/scheme ref scheme
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/scheme }
 }
+
+}
+
+require-module detect-scheme
 
 provide-module scheme %{
 

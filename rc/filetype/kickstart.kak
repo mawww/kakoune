@@ -1,3 +1,5 @@
+provide-module detect-kickstart %{
+
 hook global BufCreate .*\.ks %{
     set-option buffer filetype kickstart
 }
@@ -10,6 +12,10 @@ hook -group kickstart-highlight global WinSetOption filetype=kickstart %{
     add-highlighter window/kickstart ref kickstart
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/kickstart }
 }
+
+}
+
+require-module detect-kickstart
 
 
 provide-module kickstart %{

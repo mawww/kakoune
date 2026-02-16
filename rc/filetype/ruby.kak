@@ -1,6 +1,8 @@
 # http://ruby-lang.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-ruby %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -33,6 +35,10 @@ hook -group ruby-highlight global WinSetOption filetype=ruby %{
     add-highlighter window/ruby ref ruby
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/ruby }
 }
+
+}
+
+require-module detect-ruby
 
 provide-module ruby %§
 

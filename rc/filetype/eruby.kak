@@ -1,6 +1,8 @@
 # eRuby
 # http://www2a.biglobe.ne.jp/~seki/ruby/erb.html
 
+provide-module detect-eruby %{
+
 hook global BufCreate '.*\.erb' %{
   set-option buffer filetype eruby
 }
@@ -14,6 +16,10 @@ hook global WinSetOption filetype=eruby %{
     remove-hooks window eruby-.+
   }
 }
+
+}
+
+require-module detect-eruby
 
 provide-module eruby %{
   require-module ruby

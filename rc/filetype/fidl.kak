@@ -1,3 +1,5 @@
+provide-module detect-fidl %<
+
 # Detection
 hook global BufCreate .*\.fidl %{
     set-option buffer filetype fidl
@@ -15,6 +17,10 @@ hook -group fidl-highlight global WinSetOption filetype=fidl %{
     add-highlighter window/fidl ref fidl
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/fidl }
 }
+
+>
+
+require-module detect-fidl
 
 provide-module fidl %§
 

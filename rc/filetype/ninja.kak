@@ -1,5 +1,7 @@
 # ref: https://ninja-build.org/manual.html#ref_ninja_file
 
+provide-module detect-ninja %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -29,6 +31,10 @@ hook -group ninja-highlight global WinSetOption filetype=ninja %{
     add-highlighter window/ninja ref ninja
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/ninja }
 }
+
+}
+
+require-module detect-ninja
 
 
 provide-module ninja %{

@@ -1,6 +1,8 @@
 # Crystal
 # https://crystal-lang.org
 
+provide-module detect-crystal %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -27,6 +29,10 @@ hook global WinSetOption filetype=crystal %{
         remove-hooks window crystal-.+
     }
 }
+
+}
+
+require-module detect-crystal
 
 provide-module crystal %§
 

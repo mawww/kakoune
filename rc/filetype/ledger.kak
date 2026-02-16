@@ -1,3 +1,5 @@
+provide-module detect-ledger %{
+
 # Detection
 # ---------
 
@@ -36,6 +38,10 @@ hook -group ledger-complete global WinSetOption filetype=ledger %{
         default apply fixed bucket capture comment commodity format nomarket \
         define end include tag test year
 }
+
+}
+
+require-module detect-ledger
 
 provide-module ledger %[
 

@@ -1,3 +1,5 @@
+provide-module detect-tcl %{
+
 hook global BufCreate .*[.](tcl) %{
     set-option buffer filetype tcl
 }
@@ -15,6 +17,10 @@ hook -group tcl-highlight global WinSetOption filetype=tcl %{
     add-highlighter window/tcl ref tcl
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/tcl }
 }
+
+}
+
+require-module detect-tcl
 
 # Using non-ascii characters here so that we can use the '[' command
 provide-module tcl %§

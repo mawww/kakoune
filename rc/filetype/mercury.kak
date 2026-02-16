@@ -1,3 +1,5 @@
+provide-module detect-mercury %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -24,6 +26,10 @@ hook -group mercury-highlight global WinSetOption filetype=mercury %{
     add-highlighter window/mercury ref mercury
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/mercury }
 }
+
+}
+
+require-module detect-mercury
 
 
 provide-module mercury %§
