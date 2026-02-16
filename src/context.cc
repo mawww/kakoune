@@ -133,39 +133,24 @@ const SelectionList& JumpList::forward(Context& context, int count)
 
 const SelectionList& JumpList::backward(Context& context, int count)
 {
-    if ((int)m_current - count < 0)
+    const SelectionList& current = context.selections();
+    const bool should_push_current =
+        m_current == m_jumps.size() or
+        (m_current != m_jumps.size() and m_jumps[m_current] != current);
+    if (should_push_current)
+        push(current);
+
+    const int steps = count + (should_push_current ? 1 : 0);
+    if ((int)m_current - steps < 0)
         throw runtime_error("no previous jump");
 
-    const SelectionList& current = context.selections();
-    if (m_current != m_jumps.size() and
-        m_jumps[m_current] != current)
-    {
-        push(current);
-        m_current -= count;
-        SelectionList& res = m_jumps[m_current];
-        res.update();
-        context.print_status({ format("jumped to #{} ({})",
-                               m_current, m_jumps.size() - 1),
-                               context.faces()["Information"] });
-        return res;
-    }
-    if (m_current != 0)
-    {
-        if (m_current == m_jumps.size())
-        {
-            push(current);
-            if (--m_current == 0)
-                throw runtime_error("no previous jump");
-        }
-        m_current -= count;
-        SelectionList& res = m_jumps[m_current];
-        res.update();
-        context.print_status({ format("jumped to #{} ({})",
-                               m_current, m_jumps.size() - 1),
-                               context.faces()["Information"] });
-        return res;
-    }
-    throw runtime_error("no previous jump");
+    m_current -= steps;
+    SelectionList& res = m_jumps[m_current];
+    res.update();
+    context.print_status({ format("jumped to #{} ({})",
+                           m_current, m_jumps.size() - 1),
+                           context.faces()["Information"] });
+    return res;
 }
 
 void JumpList::forget_buffer(Buffer& buffer)
