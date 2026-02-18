@@ -179,12 +179,12 @@ void FaceRegistry::remove_face(StringView name)
 FaceRegistry::FaceRegistry()
     : m_faces{
         { "Default", {Face{ Color::Default, Color::Default }} },
-        { "PrimarySelection", {Face{ Color::White, Color::Blue }} },
-        { "SecondarySelection", {Face{ Color::Black, Color::Blue }} },
-        { "PrimaryCursor", {Face{ Color::Black, Color::White }} },
-        { "SecondaryCursor", {Face{ Color::Black, Color::White }} },
-        { "PrimaryCursorEol", {Face{ Color::Black, Color::Cyan }} },
-        { "SecondaryCursorEol", {Face{ Color::Black, Color::Cyan }} },
+        { "PrimarySelection", {Face{ Color::White, Color::Blue, Attribute::FinalFg | Attribute::FinalBg }} },
+        { "SecondarySelection", {Face{ Color::Black, Color::Blue, Attribute::FinalFg | Attribute::FinalBg }} },
+        { "PrimaryCursor", {Face{ Color::Black, Color::White, Attribute::FinalFg | Attribute::FinalBg }} },
+        { "SecondaryCursor", {Face{ Color::Black, Color::White, Attribute::FinalFg | Attribute::FinalBg }} },
+        { "PrimaryCursorEol", {Face{ Color::Black, Color::Cyan, Attribute::FinalFg | Attribute::FinalBg }} },
+        { "SecondaryCursorEol", {Face{ Color::Black, Color::Cyan, Attribute::FinalFg | Attribute::FinalBg }} },
         { "LineNumbers", {Face{ Color::Default, Color::Default }} },
         { "LineNumberCursor", {Face{ Color::Default, Color::Default, Attribute::Reverse }} },
         { "LineNumbersWrapped", {Face{ Color::Default, Color::Default, Attribute::Italic }} },
