@@ -234,7 +234,21 @@ are exclusively available to built-in options.
 
 *autoinfo* `flags(command|onkey|normal)`::
     _default_ command|onkey +
-    display automatic information box in the enabled contexts
+    automatically display relevant information in the enabled contexts
+
+        *command*:::
+            Displays the docstrings for commands as they are typed at
+            the `:` prompt
+
+        *onkey*:::
+            Displays a list of mappings when entering a mode other than
+            "normal" or "insert", such as the "goto" or "view" modes
+
+        *normal*:::
+            After each normal-mode command, display a description of the
+            command, like "move left" for `h` (for mappings, displays the
+            description of the last normal-mode command on the
+            right-hand-side of the mapping)
 
 *autocomplete* `flags(insert|prompt)`::
     _default_ insert|prompt +
