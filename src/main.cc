@@ -548,6 +548,8 @@ void register_options()
         "set of pair of characters to be considered as matching pairs",
         { '(', ')', '{', '}', '[', ']', '<', '>' });
     reg.declare_option<int>("startup_info_version", "version up to which startup info changes should be hidden", 0);
+    reg.declare_option("cancel_key", "key used to cancel long-running operations", ctrl('g'));
+    reg.declare_option("interrupt_key", "key used to stop external processes", ctrl('c'));
 }
 
 Client* local_client = nullptr;

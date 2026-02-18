@@ -846,7 +846,9 @@ The following keys are recognized by this mode to help with editing
 These keys are used to cancel long-running operations, either inside
 Kakoune or outside it. Because they are intended as a safety mechanism
 when something goes wrong, these keys are handled very early on in
-Kakoune's input processing, and therefore cannot be remapped in any mode.
+Kakoune's input processing, so they can only be remapped by changing
+the `interrupt_key` and `cancel_key` options (see
+<<options#builtin-options,`:doc options builtin-options`>>).
 
 *<c-c>*::
     Stop any external processes. If you ever see Kakoune display a message
