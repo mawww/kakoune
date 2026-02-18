@@ -1,5 +1,5 @@
 declare-option -docstring "maximum amount of characters per line, after which a newline character will be inserted" \
-    int autowrap_column 80
+    int autowrap_column 0
 
 declare-option -docstring %{
     when enabled, paragraph formatting will reformat the whole paragraph in which characters are being inserted
@@ -47,4 +47,14 @@ define-command autowrap-enable -docstring "Automatically wrap the lines in which
 
 define-command autowrap-disable -docstring "Disable automatic line wrapping" %{
     remove-hooks window autowrap
+}
+
+hook global WinSetOption autowrap_column=0 %{
+    try %{
+        remove-highlighter window/autowrap_column
+    }
+}
+
+hook global WinSetOption autowrap_column=(?!0).* %{
+    add-highlighter -override window/autowrap_column column %sh{ echo $((kak_opt_autowrap_column+1)) } default,bright-black
 }

@@ -50,7 +50,6 @@ define-command editorconfig-load -params ..1 -docstring "editorconfig-load [file
                         if (max_line_length && max_line_length != "off") {
                             print "set window autowrap_column " max_line_length
                             print "autowrap-enable"
-                            print "add-highlighter window/ column %sh{ echo $((" max_line_length "+1)) } default,bright-black"
                         }
                     }
                 ' ;;
