@@ -1045,18 +1045,17 @@ int main(int argc, char* argv[])
                    { "debug", { ArgCompleter{}, "initial debug option value" } },
                    { "version", { {}, "display kakoune version and exit" } },
                    { "ro", { {}, "readonly mode" } },
-                   { "help", { {}, "display a help message and quit" } } }
+                   { "help", { {}, "display a help message and quit" } } },
+        ParameterDesc::Flags::WithCoord
     };
 
     try
     {
         auto show_usage = [&]() {
-            write_stdout(format("Usage: {} [options] [file]... [+<line>[:<col>]|+:]\n\n"
+            write_stdout(format("Usage: {} [options] [+[line] | +line:[column]] [--] [file]...\n\n"
                     "Options:\n"
                     "{}\n"
-                    "Prefixing a positional argument with a plus (`+`) sign will place the\n"
-                    "cursor at a given set of coordinates, or the end of the buffer if the plus\n"
-                    "sign is followed only by a colon (`:`)\n",
+                    "You can specify the initial position of the cursor using +[line] or +line:[column].\n",
                     argv[0], generate_switches_doc(param_desc.switches)));
             return 0;
         };
@@ -1064,9 +1063,6 @@ int main(int argc, char* argv[])
         const auto params = ArrayView<char*>{argv+1, argv + argc}
                           | transform([](auto* s) { return String{s}; })
                           | gather<Vector<String>>();
-
-        if (contains(params, "--help"_sv))
-            return show_usage();
 
         ParametersParser parser{params, param_desc};
 
@@ -1130,32 +1126,8 @@ int main(int argc, char* argv[])
                               parser.get_switch("i").value_or(StringView{}));
         }
 
-        Vector<StringView> files;
-        Optional<BufferCoord> init_coord;
-        for (auto& name : parser)
-        {
-            if (not name.empty() and name[0_byte] == '+')
-            {
-                if (name == "+" or name  == "+:")
-                {
-                    client_init = client_init + "; exec gj";
-                    continue;
-                }
-                auto colon = find(name, ':');
-                if (auto line = str_to_int_ifp({name.begin()+1, colon}))
-                {
-                    init_coord = std::max<BufferCoord>({0,0}, {
-                        *line - 1,
-                        colon != name.end() ?
-                            str_to_int_ifp({colon+1, name.end()}).value_or(1) - 1
-                          : 0
-                    });
-                    continue;
-                }
-            }
-
-            files.emplace_back(name);
-        }
+        auto init_coord = parser.get_coord();
+        auto files = parser | gather<Vector<StringView>>();
 
         if (auto server_session = parser.get_switch("c"))
         {
@@ -1167,14 +1139,11 @@ int main(int argc, char* argv[])
                     return -1;
                 }
             }
+
             String new_files;
-            for (auto name : files) {
-                new_files += format("edit '{}'", escape(real_path(name), "'", '\''));
-                if (init_coord) {
-                    new_files += format(" {} {}", init_coord->line + 1, init_coord->column + 1);
-                    init_coord.reset();
-                }
-                new_files += ";";
+            for (auto file : files)
+            {
+                new_files += format("edit -- '{}'\n", escape(real_path(file), "'", '\''));
             }
 
             return run_client(*server_session, {}, new_files + client_init, init_coord, ui_type, false);
