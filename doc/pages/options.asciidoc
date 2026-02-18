@@ -236,7 +236,7 @@ are exclusively available to built-in options.
     _default_ command|onkey +
     display automatic information box in the enabled contexts
 
-*autocomplete* `flags(insert|prompt)`::
+*autocomplete* `flags(insert|prompt|no-regex-prompt)`::
     _default_ insert|prompt +
     automatically display possible completions in the enabled modes.
 
