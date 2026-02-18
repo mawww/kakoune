@@ -1339,7 +1339,7 @@ void TerminalUI::info_show(const DisplayLine& title, const DisplayLineList& cont
     m_info.face = face;
     m_info.style = style;
 
-    const bool framed = style == InfoStyle::Prompt or style == InfoStyle::Modal;
+    const bool framed = style == InfoStyle::Prompt or style == InfoStyle::Modal or m_info_inline_borders;
     const bool assisted = style == InfoStyle::Prompt and m_assistant.size() != 0;
 
     DisplayCoord max_size = m_dimensions;
@@ -1602,6 +1602,7 @@ void TerminalUI::set_ui_options(const Options& options)
     }
 
     m_info_max_width = find("terminal_info_max_width").map(str_to_int_ifp).value_or(0);
+    m_info_inline_borders = find("terminal_info_inline_borders").map(to_bool).value_or(false);
 }
 
 }
