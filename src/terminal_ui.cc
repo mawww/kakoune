@@ -557,12 +557,27 @@ void TerminalUI::refresh(bool force)
     m_dirty = false;
 }
 
+template<typename T>
+T scale_to(T val, Range<T> from, Range<T> to)
+{
+    T from_size = from.end - from.begin + 1;
+    T to_size = to.end - to.begin + 1;
+
+    return ((val - from.begin) * to_size + from_size / 2) / from_size + to.begin;
+}
+
 static const DisplayLine empty_line = { String(" "), {} };
 
+
 void TerminalUI::draw(const DisplayBuffer& display_buffer,
-                      DisplayCoord cursor_pos,
+                      const DisplayCoord cursor_pos,
+                      const Range<LineCount> range,
+                      const LineCount buffer_line_count,
+                      const Vector<LineCount> selection_lines,
                       const Face& default_face,
-                      const Face& padding_face)
+                      const Face& padding_face,
+                      const Face& scroll_bar_gutter_face,
+                      const Face& scroll_bar_handle_face)
 {
     check_resize();
 
@@ -576,8 +591,39 @@ void TerminalUI::draw(const DisplayBuffer& display_buffer,
 
     DisplayAtom padding{String{m_padding_char, m_padding_fill ? dim.column : 1}};
 
+    const auto padding_lines = (dim.line + line_offset) - line_index;
     while (line_index < dim.line + line_offset)
         m_window.draw(line_index++, padding, face);
+
+    if (m_scroll_bar)
+    {
+        Range<LineCount> gutter_range = {0_line, dim.line - 1};
+        Range<LineCount> buffer_range = {0_line, buffer_line_count - 1 + dim.line - 1};
+
+        std::fill(m_scroll_bar_scratch.begin(), m_scroll_bar_scratch.end(), 0);
+
+        for (const LineCount selection_line : selection_lines)
+            m_scroll_bar_scratch[(int) scale_to(selection_line, buffer_range, gutter_range)]++;
+
+        const auto visible_lines = range.end - range.begin + padding_lines;
+        const auto mark_height = scale_to(visible_lines, buffer_range, gutter_range);
+
+        const auto mark_begin = scale_to(range.begin, buffer_range, gutter_range);
+        const auto mark_end = mark_begin + mark_height;
+
+        for (auto line = 0_line; line < dim.line; ++line) {
+            const bool is_mark = line >= mark_begin and line <= mark_end;
+            String selections;
+            switch (m_scroll_bar_scratch[(int)line]) {
+                case 0: selections = " "; break;
+                case 1: selections = "-"; break;
+                case 2: selections = "="; break;
+                default: selections = "≡"; break;
+            }
+
+            m_window.draw({line + line_offset, m_window.size.column - 1}, DisplayAtom(selections), is_mark ? scroll_bar_handle_face : scroll_bar_gutter_face);
+        }
+    }
 
     m_cursor_pos = cursor_pos;
 
@@ -605,12 +651,13 @@ void TerminalUI::draw_status(const DisplayLine& prompt,
     m_window.draw(status_line_pos, prompt.atoms(), default_face);
     m_window.draw(DisplayCoord{status_line_pos, prompt.length()}, trimmed_content.atoms(), default_face);
 
+    const auto scroll_bar_gutter = m_scroll_bar ? 1 : 0;
     const auto mode_len = mode_line.length();
     m_status_len = prompt.length() + trimmed_content.length();
     const auto remaining = m_dimensions.column - m_status_len;
     if (mode_len < remaining)
     {
-        ColumnCount col = m_dimensions.column - mode_len;
+        ColumnCount col = m_dimensions.column - mode_len + scroll_bar_gutter;
         m_window.draw({status_line_pos, col}, mode_line.atoms(), default_face);
     }
     else if (remaining > 2)
@@ -620,7 +667,7 @@ void TerminalUI::draw_status(const DisplayLine& prompt,
         trimmed_mode_line.insert(trimmed_mode_line.begin(), { "…", {} });
         kak_assert(trimmed_mode_line.length() == remaining - 1);
 
-        ColumnCount col = m_dimensions.column - remaining + 1;
+        ColumnCount col = m_dimensions.column - remaining + 1 + scroll_bar_gutter;
         m_window.draw({status_line_pos, col}, trimmed_mode_line.atoms(), default_face);
     }
 
@@ -674,6 +721,11 @@ void TerminalUI::check_resize(bool force)
     kak_assert(m_window);
 
     m_dimensions = terminal_size - 1_line;
+
+    if (m_scroll_bar) {
+        m_dimensions -= {0_line, 1_col};
+        m_scroll_bar_scratch.resize((size_t)m_dimensions.line);
+    }
 
     // if (char* csr = tigetstr((char*)"csr"))
     //     putp(tparm(csr, 0, ws.ws_row));
@@ -1593,7 +1645,7 @@ void TerminalUI::set_ui_options(const Options& options)
 
     m_padding_char = find("terminal_padding_char").map([](StringView s) { return s.column_length() < 1 ? ' ' : s[0_char]; }).value_or(Codepoint{'~'});
     m_padding_fill = find("terminal_padding_fill").map(to_bool).value_or(false);
-    
+
     bool new_cursor_native = find("terminal_cursor_native").map(to_bool).value_or(false);
     if (new_cursor_native != m_cursor_native)
     {
@@ -1602,6 +1654,13 @@ void TerminalUI::set_ui_options(const Options& options)
     }
 
     m_info_max_width = find("terminal_info_max_width").map(str_to_int_ifp).value_or(0);
+
+    bool new_scroll_bar = find("terminal_scroll_bar").map(to_bool).value_or(false);
+
+    if (m_scroll_bar != new_scroll_bar) {
+      m_scroll_bar = new_scroll_bar;
+      check_resize(true);
+    }
 }
 
 }

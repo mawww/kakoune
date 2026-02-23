@@ -264,7 +264,20 @@ void Client::redraw_ifn()
     {
         auto& display_buffer = window.update_display_buffer(context());
         auto cursor_pos = window.display_coord(context().selections().main().cursor()).value_or(DisplayCoord{});
-        m_ui->draw(display_buffer, cursor_pos, faces["Default"], faces["BufferPadding"]);
+        auto selections = context().selections();
+        auto sel = selections.begin();
+        Vector<LineCount> selection_lines;
+        selection_lines.reserve(selections.size());
+        std::generate_n(std::back_inserter(selection_lines), selections.size(), [&sel] { return (sel++)->min().line; });
+        m_ui->draw(display_buffer,
+                   cursor_pos,
+                   {display_buffer.range().begin.line, display_buffer.range().end.line},
+                   context().buffer().line_count(),
+                   selection_lines,
+                   faces["Default"],
+                   faces["BufferPadding"],
+                   faces["ScrollBarGutter"],
+                   faces["ScrollBarHandle"]);
     }
 
     const bool update_menu_anchor = (m_ui_pending & Draw) and not (m_ui_pending & MenuHide) and

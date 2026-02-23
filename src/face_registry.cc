@@ -207,6 +207,8 @@ FaceRegistry::FaceRegistry()
         { "BufferPadding", {Face{ Color::Blue, Color::Default }} },
         { "Whitespace", {Face{ Color::Default, Color::Default, Attribute::FinalFg }} },
         { "WhitespaceIndent", {Face{}, "Whitespace"} },
+        { "ScrollBarGutter", {Face{ Color::Blue, Color::Default }} },
+        { "ScrollBarHandle", {Face{ Color::Blue, Color::Default, Attribute::Reverse }} },
       }
 {}
 

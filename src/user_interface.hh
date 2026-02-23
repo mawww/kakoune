@@ -2,8 +2,13 @@
 #define user_interface_hh_INCLUDED
 
 #include "array_view.hh"
-#include "hash_map.hh"
 #include "function.hh"
+#include "hash_map.hh"
+#include "range.hh"
+#include "selection.hh"
+#include "units.hh"
+
+#include <functional>
 
 namespace Kakoune
 {
@@ -58,9 +63,14 @@ public:
     virtual void info_hide() = 0;
 
     virtual void draw(const DisplayBuffer& display_buffer,
-                      DisplayCoord cursor_pos,
+                      const DisplayCoord cursor_pos,
+                      const Range<LineCount> range,
+                      const LineCount buffer_line_count,
+                      const Vector<LineCount> selection_lines,
                       const Face& default_face,
-                      const Face& padding_face) = 0;
+                      const Face& padding_face,
+                      const Face& scroll_bar_gutter_face,
+                      const Face& scroll_bar_handle_face) = 0;
 
     virtual void draw_status(const DisplayLine& prompt,
                              const DisplayLine& content,

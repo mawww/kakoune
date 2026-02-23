@@ -140,10 +140,27 @@ JsonUI::JsonUI()
     set_signal_handler(SIGINT, SIG_DFL);
 }
 
-void JsonUI::draw(const DisplayBuffer& display_buffer, DisplayCoord cursor_pos,
-                  const Face& default_face, const Face& padding_face)
+void JsonUI::draw(const DisplayBuffer& display_buffer,
+                  const DisplayCoord cursor_pos,
+                  const Range<LineCount> range,
+                  const LineCount buffer_line_count,
+                  const Vector<LineCount> selection_lines,
+                  const Face& default_face,
+                  const Face& padding_face,
+                  const Face& scroll_bar_gutter_face,
+                  const Face& scroll_bar_handle_face)
 {
-    rpc_call("draw", display_buffer.lines(), cursor_pos, default_face, padding_face);
+    rpc_call("draw",
+             display_buffer.lines(),
+             cursor_pos,
+             range.begin,
+             range.end,
+             buffer_line_count,
+             selection_lines,
+             default_face,
+             padding_face,
+             scroll_bar_gutter_face,
+             scroll_bar_handle_face);
 }
 
 void JsonUI::draw_status(const DisplayLine& prompt,

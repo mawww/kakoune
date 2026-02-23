@@ -388,6 +388,9 @@ are exclusively available to built-in options.
             set the maximum allowable width of an info box. set to zero for
             no limit.
 
+        *terminal_scroll_bar*:::
+            if *yes* or *true* a scroll bar will be displayed.
+
         *terminal_cursor_native*:::
             if *yes* or *true*, use native terminal cursor visibility control
             instead of Kakoune's cursor management (defaults to *false*)

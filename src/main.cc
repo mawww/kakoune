@@ -532,6 +532,7 @@ void register_options()
                        "    terminal_shift_function_key    int\n"
                        "    terminal_padding_char          codepoint\n"
                        "    terminal_padding_fill          bool\n"
+                       "    terminal_scroll_bar            bool\n"
                        "    terminal_cursor_native         bool\n"
                        "    terminal_info_max_width        int\n",
                        UserInterface::Options{});
@@ -584,7 +585,15 @@ UniquePtr<UserInterface> make_ui(UIType ui_type)
         void info_show(const DisplayLine&, const DisplayLineList&, DisplayCoord, Face, InfoStyle) override {}
         void info_hide() override {}
 
-        void draw(const DisplayBuffer&, DisplayCoord, const Face&, const Face&) override {}
+        void draw(const DisplayBuffer& display_buffer,
+                  const DisplayCoord,
+                  const Range<LineCount> range,
+                  const LineCount buffer_line_count,
+                  const Vector<LineCount> selection_lines,
+                  const Face& default_face,
+                  const Face& padding_face,
+                  const Face& scroll_bar_gutter_face,
+                  const Face& scroll_bar_handle_face) override {}
         void draw_status(const DisplayLine&, const DisplayLine&, const ColumnCount, const DisplayLine&, const Face&) override {}
         DisplayCoord dimensions() override { return {24,80}; }
         void refresh(bool) override {}
