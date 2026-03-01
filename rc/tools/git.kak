@@ -133,11 +133,28 @@ define-command -params 1.. \
             update-diff \
         ;
     else
+        # Quote POSIX extended regular expressions, see SPEC_CHAR/QUOTED_CHAR in
+        # https://pubs.opengroup.org/onlinepubs/009696899/basedefs/xbd_chap09.html#tag_09_05_01
+        sed_quote_ext_re() {
+            # SED uses BREs by default, and matching in a group the ERE SPEC_CHAR
+            sed -e 's/[\^\.\[\$\\()|\*+?{]/\\&/g' "$@"
+            # to balance kakoune %<lbrace>: }
+        }
+        suggest_refs() {
+            # Ten most recent refs
+            git for-each-ref --format='%(refname:short)' --sort=-comitterdate --count=10
+            # Commits, using name to match instead of hash (in the absence of having subject
+            # as a comment for completion).
+            git log -100 --format='%s' | sed_quote_ext_re -e 's|.*|@^{/&}|g'
+        }
         case "$1" in
             commit) printf -- "--amend\n--no-edit\n--all\n--reset-author\n--fixup\n--squash\n"; git ls-files -m ;;
             add) git ls-files -dmo --exclude-standard ;;
             apply) printf -- "--reverse\n--cached\n--index\n--3way\n" ;;
             grep|edit) git ls-files -c --recurse-submodules ;;
+            diff) printf -- "--cached\n----merge-base\n--stat\n--word-diff\n"; suggest_refs ;;
+            show) printf -- "--patch\n--stat\n--remerge-diff\n"; suggest_refs ;;
+            log) printf -- "--patch\n--stat\n--remerge-diff\n--walk-reflogs\n--grep\n"; suggest_refs ;;
         esac
     fi
   } \
