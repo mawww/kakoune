@@ -248,16 +248,6 @@ void Client::redraw_ifn()
     if (window.needs_redraw(context()))
         m_ui_pending |= Draw;
 
-    DisplayLine mode_line = generate_mode_line();
-    if (mode_line.atoms() != m_mode_line.atoms())
-    {
-        m_ui_pending |= StatusLine;
-        m_mode_line = std::move(mode_line);
-    }
-
-    if (m_ui_pending == 0)
-        return;
-
     const auto& faces = context().faces();
 
     if (m_ui_pending & Draw)
@@ -305,6 +295,14 @@ void Client::redraw_ifn()
     if (m_ui_pending & InfoHide)
         m_ui->info_hide();
 
+    // This needs to be done *after* update_display_buffer as ithe mode line may rely on it to
+    // compute whether selections are visible.
+    DisplayLine mode_line = generate_mode_line();
+    if (mode_line.atoms() != m_mode_line.atoms())
+    {
+        m_ui_pending |= StatusLine;
+        m_mode_line = std::move(mode_line);
+    }
     if (m_ui_pending & StatusLine)
         m_ui->draw_status(m_status_prompt, m_status_content, m_status_cursor_pos, m_mode_line, faces["StatusLine"]);
 

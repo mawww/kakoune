@@ -381,23 +381,37 @@ public:
 
     ModeInfo mode_info() const override
     {
+        auto info_face = context().faces()["StatusLineInfo"];
+        auto value_face = context().faces()["StatusLineValue"];
+
+        auto& sels = context().selections();
+        int hidden_count = 0;
+        for (auto& sel : sels)
+            hidden_count += context().has_window() and not context().window().display_coord(sel.cursor());
+
         AtomList atoms;
-        auto num_sel = context().selections().size();
-        auto main_index = context().selections().main_index();
-        if (num_sel == 1)
-            atoms.emplace_back(format("{} sel", num_sel), context().faces()["StatusLineInfo"]);
+        if (sels.size() == 1)
+        {
+            atoms.emplace_back(format("{} sel", sels.size()), info_face);
+            if (hidden_count)
+                atoms.emplace_back(" (hidden)", info_face);
+        }
         else
-            atoms.emplace_back(format("{} sels ({})", num_sel, main_index + 1), context().faces()["StatusLineInfo"]);
+        {
+            atoms.emplace_back(format("{} sels ({})", sels.size(), sels.main_index() + 1), info_face);
+            if (hidden_count)
+                atoms.emplace_back(format(" ({} hidden)", hidden_count), info_face);
+        }
 
         if (m_params.count != 0)
         {
-            atoms.emplace_back(" param=", context().faces()["StatusLineInfo"]);
-            atoms.emplace_back(to_string(m_params.count), context().faces()["StatusLineValue"]);
+            atoms.emplace_back(" param=", info_face);
+            atoms.emplace_back(to_string(m_params.count), value_face);
         }
         if (m_params.reg)
         {
-            atoms.emplace_back(" reg=", context().faces()["StatusLineInfo"]);
-            atoms.emplace_back(StringView(m_params.reg).str(), context().faces()["StatusLineValue"]);
+            atoms.emplace_back(" reg=", info_face);
+            atoms.emplace_back(StringView(m_params.reg).str(), value_face);
         }
         return {atoms, m_params};
     }
