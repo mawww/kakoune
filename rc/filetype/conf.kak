@@ -1,3 +1,5 @@
+provide-module detect-conf %{
+
 hook global BufCreate .+\.(repo|cfg|properties|desktop) %{
     set-option buffer filetype conf
 }
@@ -17,6 +19,10 @@ hook -group conf-highlight global WinSetOption filetype=conf %{
     add-highlighter window/conf ref conf
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/conf }
 }
+
+}
+
+require-module detect-conf
 
 provide-module conf %{
 

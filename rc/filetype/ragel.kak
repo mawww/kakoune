@@ -3,6 +3,8 @@
 
 # ragel.kak does not try to detect host language.
 
+provide-module detect-ragel %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -28,6 +30,10 @@ hook -group ragel-highlight global WinSetOption filetype=ragel %{
     add-highlighter window/ragel ref ragel
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/ragel }
 }
+
+}
+
+require-module detect-ragel
 
 provide-module ragel %§
 

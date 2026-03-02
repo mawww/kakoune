@@ -3,6 +3,8 @@
 
 # See https://docs.docker.com/reference/builder
 
+provide-module detect-dockerfile %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -22,6 +24,10 @@ hook -group dockerfile-highlight global WinSetOption filetype=dockerfile %{
     add-highlighter window/dockerfile ref dockerfile
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/dockerfile }
 }
+
+}
+
+require-module detect-dockerfile
 
 provide-module dockerfile %{
 

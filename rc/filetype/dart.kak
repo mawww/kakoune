@@ -1,6 +1,8 @@
 # https://dartlang.org/
 #
 
+provide-module detect-dart %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -30,6 +32,10 @@ hook -group dart-highlight global WinSetOption filetype=dart %{
     add-highlighter window/dart ref dart
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/dart }
 }
+
+}
+
+require-module detect-dart
 
 
 provide-module dart %§

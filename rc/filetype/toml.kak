@@ -1,6 +1,8 @@
 # https://github.com/toml-lang/toml/tree/v0.4.0
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-toml %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -25,6 +27,10 @@ hook -group toml-highlight global WinSetOption filetype=toml %{
     add-highlighter window/toml ref toml
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/toml }
 }
+
+}
+
+require-module detect-toml
 
 
 provide-module toml %{

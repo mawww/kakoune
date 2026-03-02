@@ -1,3 +1,5 @@
+provide-module detect-awk %{
+
 # Detection
 # ---------
 
@@ -21,6 +23,10 @@ hook -group awk-highlight global WinSetOption filetype=awk %{
     add-highlighter window/awk ref awk
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/awk }
 }
+
+}
+
+require-module detect-awk
 
 provide-module awk %@
 

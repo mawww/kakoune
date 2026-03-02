@@ -6,6 +6,8 @@
 # Kdoc 2020, Documenting Kotlin Code, Block Tags, v1.4.0, viewed 9 September 2020, https://kotlinlang.org/docs/reference/kotlin-doc.html
 # Oracle 2020, Java Platform, Standard Edition & Java Development Kit, Version 14 API Specification, viewed 8 September 2020, https://docs.oracle.com/en/java/javase/14/docs/api/index.html
 #
+provide-module detect-kotlin %{
+
 # File types --------------------------------------------------------------------------------------- #
 # ‾‾‾‾‾‾‾‾‾‾
 hook global BufCreate .*[.](kt|kts)  %{
@@ -48,6 +50,10 @@ hook global BufSetOption filetype=kotlin %{
 
   hook -once -always buffer BufSetOption filetype=.* %{ remove-hooks buffer kotlin-.+ }
 }
+
+}
+
+require-module detect-kotlin
 
 # Module ------------------------------------------------------------------------------------------- #
 # ‾‾‾‾‾‾

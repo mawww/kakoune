@@ -1,5 +1,7 @@
 # Syntax highlighting and indentation for Elvish (https://elv.sh)
 
+provide-module detect-elvish %<
+
 hook global BufCreate .*\.elv %{
     set-option buffer filetype elvish
 }
@@ -17,6 +19,10 @@ hook -group elvish-highlight global WinSetOption filetype=elvish %{
     add-highlighter window/elvish ref elvish
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/elvish }
 }
+
+>
+
+require-module detect-elvish
 
 provide-module elvish %§
 

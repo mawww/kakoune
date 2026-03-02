@@ -1,6 +1,8 @@
 # https://smlfamily.github.io
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-sml %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -21,6 +23,10 @@ hook -group sml-highlight global WinSetOption filetype=sml %{
     add-highlighter window/sml ref sml
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/sml }
 }
+
+}
+
+require-module detect-sml
 
 provide-module sml %[
 

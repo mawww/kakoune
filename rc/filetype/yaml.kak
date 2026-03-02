@@ -1,6 +1,8 @@
 # http://yaml.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-yaml %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -24,6 +26,10 @@ hook -group yaml-highlight global WinSetOption filetype=yaml %{
     add-highlighter window/yaml ref yaml
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/yaml }
 }
+
+}
+
+require-module detect-yaml
 
 
 provide-module yaml %{

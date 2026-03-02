@@ -1,6 +1,8 @@
 # https://freedesktop.org/wiki/Software/systemd/
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-systemd %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -12,3 +14,7 @@ hook global BufCreate .*/systemd/.+\.(automount|conf|link|mount|network|path|ser
         set-option buffer comment_line "#"
     }
 }
+
+}
+
+require-module detect-systemd

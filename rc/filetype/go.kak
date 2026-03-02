@@ -1,6 +1,8 @@
 # https://golang.org/
 #
 
+provide-module detect-go %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -36,6 +38,10 @@ hook -group go-highlight global WinSetOption filetype=go %{
     add-highlighter window/go ref go
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/go }
 }
+
+}
+
+require-module detect-go
 
 provide-module go %§
 

@@ -1,3 +1,5 @@
+provide-module detect-typst %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -15,6 +17,10 @@ hook -group typst-highlight global WinSetOption filetype=typst %{
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/typst }
     hook window InsertChar \n -group typst typst-on-new-line
 }
+
+}
+
+require-module detect-typst
 
 provide-module typst %§
 

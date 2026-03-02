@@ -1,3 +1,5 @@
+provide-module detect-git %{
+
 hook global BufCreate .*(COMMIT_EDITMSG|MERGE_MSG) %{
     set-option buffer filetype git-commit
 }
@@ -41,6 +43,10 @@ hook -group git-rebase-highlight global WinSetOption filetype=git-rebase %{
     add-highlighter window/git-rebase ref git-rebase
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/git-rebase }
 }
+
+}
+
+require-module detect-git
 
 provide-module git-commit %{
 require-module diff

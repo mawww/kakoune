@@ -1,6 +1,8 @@
 # https://cuelang.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-cue %[
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -28,6 +30,10 @@ hook -group cue-highlight global WinSetOption filetype=cue %{
     add-highlighter window/cue ref cue
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/cue }
 }
+
+]
+
+require-module detect-cue
 
 provide-module cue %§
 

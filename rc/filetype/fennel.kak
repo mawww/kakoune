@@ -1,6 +1,8 @@
 # http://fennel-lang.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-fennel %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -19,6 +21,10 @@ hook -group fennel-highlight global WinSetOption filetype=fennel %{
     add-highlighter window/fennel ref fennel
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/fennel }
 }
+
+}
+
+require-module detect-fennel
 
 provide-module fennel %{
 

@@ -1,3 +1,5 @@
+provide-module detect-javascript %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -34,6 +36,10 @@ hook -group typescript-highlight global WinSetOption filetype=typescript %{
     add-highlighter window/typescript ref typescript
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/typescript }
 }
+
+}
+
+require-module detect-javascript
 
 
 provide-module javascript %§

@@ -1,6 +1,8 @@
 # Terraform configuration language
 # https://www.terraform.io/docs/configuration/
 
+provide-module detect-terraform %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -25,6 +27,10 @@ hook -group terraform-highlight global WinSetOption filetype=terraform %{
     add-highlighter window/terraform ref terraform
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/terraform }
 }
+
+}
+
+require-module detect-terraform
 
 
 provide-module terraform %§

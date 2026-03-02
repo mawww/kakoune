@@ -1,3 +1,5 @@
+provide-module detect-forth %{
+
 hook global BufCreate .+\.(fth|4th|fs|forth) %{
     set-option buffer filetype forth
 }
@@ -10,6 +12,10 @@ hook -group forth-highlight global WinSetOption filetype=forth %{
     add-highlighter window/forth ref forth
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/forth }
 }
+
+}
+
+require-module detect-forth
 
 provide-module forth %{
 

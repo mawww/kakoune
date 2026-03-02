@@ -1,6 +1,8 @@
 # http://sass-lang.com
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-sass %<
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -27,6 +29,10 @@ hook -group sass-highlight global WinSetOption filetype=sass %{
     add-highlighter window/sass ref sass
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/sass }
 }
+
+>
+
+require-module detect-sass
 
 
 provide-module sass %§

@@ -1,6 +1,8 @@
 # Nix package manager language
 # https://nixos.org/nix/manual/
 
+provide-module detect-nix %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -27,6 +29,10 @@ hook -group nix-highlight global WinSetOption filetype=nix %{
     add-highlighter window/nix ref nix
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/nix }
 }
+
+}
+
+require-module detect-nix
 
 provide-module nix %§
 

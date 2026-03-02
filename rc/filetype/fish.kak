@@ -1,6 +1,8 @@
 # http://fishshell.com
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-fish %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -26,6 +28,10 @@ hook -group fish-highlight global WinSetOption filetype=fish %{
     add-highlighter window/fish ref fish
     hook -once -always window WinSetOption filetype=.* %{ remove-highlighter window/fish }
 }
+
+}
+
+require-module detect-fish
 
 
 provide-module fish %{

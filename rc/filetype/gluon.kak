@@ -1,6 +1,8 @@
 # http://gluon-lang.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+provide-module detect-gluon %{
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
@@ -30,6 +32,10 @@ hook -group gluon-highlight global WinSetOption filetype=gluon %{
         remove-highlighter window/gluon
     }
 }
+
+}
+
+require-module detect-gluon
 
 
 provide-module gluon %§
