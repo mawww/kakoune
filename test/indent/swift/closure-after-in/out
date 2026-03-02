@@ -1,0 +1,2 @@
+array.map { item in
+    return item * 2
