@@ -34,8 +34,15 @@ provide-module swift %§
 
 add-highlighter shared/swift regions
 add-highlighter shared/swift/code default-region group
-add-highlighter shared/swift/string_multiline region %{(?<!')"""} %{(?<!\\)(\\\\)*"""} ref swift/string
-add-highlighter shared/swift/string region %{(?<!')"} %{(?<!\\)(\\\\)*"} fill string
+
+add-highlighter shared/swift/string_multiline region %{(?<!')"""} %{(?<!\\)(\\\\)*"""} regions
+add-highlighter shared/swift/string_multiline/base default-region fill string
+add-highlighter shared/swift/string_multiline/interpolation region -recurse \( \Q\( \) fill meta
+
+add-highlighter shared/swift/string region %{(?<!')"} %{(?<!\\)(\\\\)*"} regions
+add-highlighter shared/swift/string/base default-region fill string
+add-highlighter shared/swift/string/interpolation region -recurse \( \Q\( \) fill meta
+
 add-highlighter shared/swift/comment region /\* \*/ group
 add-highlighter shared/swift/line_comment region // $ ref swift/comment
 
