@@ -1,0 +1,3 @@
+source "%val{runtime}/colors/default.kak"
+source "%val{runtime}/rc/filetype/swift.kak"
+set buffer filetype swift
