@@ -306,7 +306,9 @@ void Client::redraw_ifn()
     if (m_ui_pending & StatusLine)
         m_ui->draw_status(m_status_prompt, m_status_content, m_status_cursor_pos, m_mode_line, faces["StatusLine"]);
 
-    m_ui->refresh(m_ui_pending & Refresh);
+    if (m_ui_pending != 0)
+        m_ui->refresh(m_ui_pending & Refresh);
+
     m_ui_pending = 0;
 }
 
