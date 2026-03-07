@@ -1,3 +1,4 @@
+cat <&4 >/dev/null &
 mkfifo fifo 2>/dev/null
 cat fifo
 # We should have jumped to the old version of line 2, assert on kak_selection.
