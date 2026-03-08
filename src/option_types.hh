@@ -14,7 +14,6 @@
 #include "ranges.hh"
 
 #include <tuple>
-#include <vector>
 
 namespace Kakoune
 {
