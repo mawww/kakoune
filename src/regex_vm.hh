@@ -680,6 +680,9 @@ private:
         }
     }
 
+    // This stores both the current thread stack and next thread stack in a ring buffer
+    // current threads go from m_current to m_next_begin (pushing decrements m_current)
+    // next thrads go from m_next_begin to m_next_end (pushing increments m_next_end)
     struct DualThreadStack
     {
         bool current_is_empty() const { return m_current == m_next_begin; }
@@ -726,6 +729,7 @@ private:
             const auto new_capacity = capacity * 2;
             Thread* new_data = new Thread[new_capacity];
             Thread* old_data = m_data.get();
+            // copy the whole data to avoid having to consider either stack wrapping around
             std::rotate_copy(old_data, old_data + m_current, old_data + capacity, new_data);
             m_next_begin = (m_next_begin - m_current) & m_capacity_mask;
             if (pushed_current and m_next_begin == 0)
