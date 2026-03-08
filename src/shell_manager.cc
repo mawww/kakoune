@@ -14,7 +14,6 @@
 #include "option_types.hh"
 #include "regex.hh"
 
-#include <array>
 #include <chrono>
 #include <cstring>
 #include <sys/types.h>
@@ -107,13 +106,13 @@ Shell spawn_shell(const char* shell, StringView cmdline,
         execparams.push_back(param.c_str());
     execparams.push_back(nullptr);
 
-    auto make_pipe = []() -> std::array<UniqueFd, 2> {
+    auto make_pipe = []() -> Array<UniqueFd, 2> {
         if (int pipefd[2] = {-1, -1}; ::pipe(pipefd) == 0)
             return {UniqueFd{pipefd[0]}, UniqueFd{pipefd[1]}};
         throw runtime_error(format("unable to create pipe, errno: {}", ::strerror(errno)));
     };
 
-    auto stdin_pipe = open_stdin ? make_pipe() : std::array{UniqueFd{open("/dev/null", O_RDONLY)}, UniqueFd{}};
+    auto stdin_pipe = open_stdin ? make_pipe() : Array{UniqueFd{open("/dev/null", O_RDONLY)}, UniqueFd{}};
     auto stdout_pipe = make_pipe();
     auto stderr_pipe = make_pipe();
     if (pid_t pid = vfork())
