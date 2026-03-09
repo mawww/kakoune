@@ -1,2 +1,2 @@
-hook global NormalBegin .* 'exec s'
-hook global NormalEnd .* 'exec s'
+hook global ModeChange push:.*:normal 'exec s'
+hook global ModeChange pop:normal:.* 'exec s'

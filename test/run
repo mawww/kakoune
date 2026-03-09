@@ -13,7 +13,10 @@ main() {
         try %{
             exec -save-regs / %{%s%\(\K[^)]+\)<ret>a<backspace><esc>i<backspace><backspace><c-u><esc><a-;>}
         } catch %{ exec gg }
-        try %{ source rc }
+        try %{
+            eval -draft %{ edit -existing rc; delete-buffer; }
+            try %{ source rc } catch %{ echo -to-file stderr "error while sourcing rc: %val{error}"; kill! 1 }
+        }
         try %{ eval -draft %{ edit cmd; exec \%H"zy; delete-buffer } }
         hook global RuntimeError "\d+:\d+: (.+)" %{
           nop %sh{echo "$kak_hook_param_capture_1" > stderr}

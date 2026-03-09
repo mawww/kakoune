@@ -1,1 +1,1 @@
-hook global NormalBegin .* %{ face StatusLine default }
+hook global ModeChange push:.*:normal %{ face StatusLine default }
