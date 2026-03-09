@@ -52,6 +52,7 @@ struct {
     StringView notes;
 } constexpr version_notes[] = { {
         0,
+        "» {+u}finaleol{} option to preserve files with no final end-of-line\n"
         "» {+b}%val\\{buffile}{} is now empty for scratch buffers\n"
         "» {+b}FocusIn{}/{+b}FocusOut{} events on suspend\n"
         "» {+u}number-lines -full-relative{} switch to keep a smaller line number gutter\n"
@@ -475,6 +476,7 @@ void register_options()
         "scrolloff", "number of lines and columns to keep visible main cursor when scrolling",
         {0,0});
     reg.declare_option("eolformat", "end of line format", EolFormat::Lf);
+    reg.declare_option("finaleol", "write and end of line at end of file", FinalEol::Present);
     reg.declare_option("BOM", "byte order mark to use when writing buffer",
                        ByteOrderMark::None);
     reg.declare_option("incsearch",

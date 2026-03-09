@@ -27,7 +27,7 @@ Buffer::HistoryNode::HistoryNode(HistoryId parent)
 {}
 
 Buffer::Buffer(String name, Flags flags, BufferLines lines,
-               ByteOrderMark bom, EolFormat eolformat,
+               ByteOrderMark bom, EolFormat eolformat, FinalEol finaleol,
                FsStatus fs_status)
     : Scope{GlobalScope::instance()},
       m_filename{(flags & Flags::File) ? real_path(parse_filename(name)) : String{}},
@@ -48,6 +48,7 @@ Buffer::Buffer(String name, Flags flags, BufferLines lines,
     m_changes.push_back({ Change::Insert, {0,0}, line_count() });
 
     options().get_local_option("eolformat").set(eolformat);
+    options().get_local_option("finaleol").set(finaleol);
     options().get_local_option("BOM").set(bom);
     options().get_local_option("readonly").set((bool)(flags & Flags::ReadOnly));
 
@@ -198,7 +199,7 @@ Buffer::Modification Buffer::Modification::inverse() const
     return {type == Insert ? Erase : Insert, coord, content};
 }
 
-void Buffer::reload(BufferLines lines, ByteOrderMark bom, EolFormat eolformat, FsStatus fs_status)
+void Buffer::reload(BufferLines lines, ByteOrderMark bom, EolFormat eolformat, FinalEol finaleol, FsStatus fs_status)
 {
     const bool record_undo = not (m_flags & Flags::NoUndo);
 
@@ -279,8 +280,8 @@ void Buffer::reload(BufferLines lines, ByteOrderMark bom, EolFormat eolformat, F
     commit_undo_group();
 
     options().get_local_option("eolformat").set(eolformat);
+    options().get_local_option("finaleol").set(finaleol);
     options().get_local_option("BOM").set(bom);
-
 
     m_last_save_history_id = m_history_id;
     m_fs_status = fs_status;

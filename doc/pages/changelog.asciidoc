@@ -7,6 +7,9 @@ released versions.
 
 == Development Version
 
+* `finaleol` option to support writing files that do not end with an final
+  end-of-line byte
+
 * `FocusIn`/`FocusOut` events on suspend
 
 * `%val{buffile}` is now empty for scratch buffers

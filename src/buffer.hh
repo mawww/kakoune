@@ -52,6 +52,22 @@ constexpr auto enum_desc(Meta::Type<ByteOrderMark>)
     });
 }
 
+enum class FinalEol
+{
+    Present,
+    Missing,
+    IfNotEmpty,
+};
+
+constexpr auto enum_desc(Meta::Type<FinalEol>)
+{
+    return make_array<EnumDesc<FinalEol>>({
+        { FinalEol::Present, "present" },
+        { FinalEol::Missing, "missing" },
+        { FinalEol::IfNotEmpty, "ifnotempty" },
+    });
+}
+
 class Buffer;
 
 // A BufferIterator permits to iterate over the characters of a buffer
@@ -135,6 +151,7 @@ public:
     Buffer(String name, Flags flags, BufferLines lines,
            ByteOrderMark bom = ByteOrderMark::None,
            EolFormat eolformat = EolFormat::Lf,
+           FinalEol = FinalEol::Present,
            FsStatus fs_status = {InvalidTime, {}, {}});
     Buffer(const Buffer&) = delete;
     Buffer& operator= (const Buffer&) = delete;
@@ -219,7 +236,7 @@ public:
     void run_hook_in_own_context(Hook hook, StringView param,
                                  String client_name = {});
 
-    void reload(BufferLines lines, ByteOrderMark bom, EolFormat eolformat, FsStatus status);
+    void reload(BufferLines lines, ByteOrderMark bom, EolFormat eolformat, FinalEol finaleol, FsStatus status);
 
     void check_invariant() const;
 

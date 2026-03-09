@@ -1,1 +1,1 @@
-<a-|>sed -n "s/foo/bar/; P" > out<ret>:e! out<ret>
+%<a-|>sed -n "s/foo/bar/; P" > out<ret>:e! out<ret>

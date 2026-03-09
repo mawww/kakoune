@@ -116,7 +116,7 @@ Buffer* create_buffer_from_string(String name, Buffer::Flags flags, StringView d
     return BufferManager::instance().create_buffer(
         std::move(name), flags,
         parse_lines(data.begin(), data.end(), EolFormat::Lf),
-        ByteOrderMark::None, EolFormat::Lf,
+        ByteOrderMark::None, EolFormat::Lf, FinalEol::Present,
         FsStatus{InvalidTime, {}, {}});
 }
 
@@ -140,16 +140,17 @@ decltype(auto) parse_file(StringView filename, Func&& func)
     for (auto it = std::find(pos, end, '\n'); it != end; it = std::find(it+1, end, '\n'), ++line_count)
         ((it != pos and *(it-1) == '\r') ? has_crlf : has_lf) = true;
     auto eolformat = (has_crlf and not has_lf) ? EolFormat::Crlf : EolFormat::Lf;
-
+    auto finaleol = pos == end ? FinalEol::IfNotEmpty
+                               : *(end-1) == '\n' ? FinalEol::Present : FinalEol::Missing;
     FsStatus fs_status{file.st.st_mtim, file.st.st_size, murmur3(file.data, file.st.st_size)};
-    return func(parse_lines(pos, end, eolformat, line_count), bom, eolformat, fs_status);
+    return func(parse_lines(pos, end, eolformat, line_count), bom, eolformat, finaleol, fs_status);
 }
 
 Buffer* open_file_buffer(StringView filename, Buffer::Flags flags)
 {
-    return parse_file(filename, [&](BufferLines&& lines, ByteOrderMark bom, EolFormat eolformat, FsStatus fs_status)  {
+    return parse_file(filename, [&](BufferLines&& lines, ByteOrderMark bom, EolFormat eolformat, FinalEol finaleol, FsStatus fs_status)  {
         return BufferManager::instance().create_buffer(filename.str(), Buffer::Flags::File | flags,
-                                                       std::move(lines), bom, eolformat, fs_status);
+                                                       std::move(lines), bom, eolformat, finaleol, fs_status);
     });
 }
 
@@ -178,7 +179,9 @@ void write_buffer_to_fd(Buffer& buffer, int fd)
         eoldata = "\r\n";
     else
         eoldata = "\n";
-
+    auto finaleol = buffer.options()["finaleol"].get<FinalEol>();
+    bool write_eol_at_eof = finaleol == FinalEol::Present or
+                           (finaleol == FinalEol::IfNotEmpty and (buffer.line_count() != 1 or buffer[0] != "\n"));
 
     BufferedWriter<false> writer{fd};
     if (buffer.options()["BOM"].get<ByteOrderMark>() == ByteOrderMark::Utf8)
@@ -190,7 +193,8 @@ void write_buffer_to_fd(Buffer& buffer, int fd)
         // stored as \n
         StringView linedata = buffer[i];
         writer.write(linedata.substr(0, linedata.length()-1));
-        writer.write(eoldata);
+        if (write_eol_at_eof or i != buffer.line_count()-1)
+            writer.write(eoldata);
     }
 }
 
@@ -270,13 +274,13 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, AutoScroll 
     {
         buffer->flags() |= Buffer::Flags::NoUndo | flags;
         buffer->values().clear();
-        buffer->reload({StringData::create("\n")}, ByteOrderMark::None, EolFormat::Lf, {InvalidTime, {}, {}});
+        buffer->reload({StringData::create("\n")}, ByteOrderMark::None, EolFormat::Lf, FinalEol::Present, {InvalidTime, {}, {}});
         buffer_manager.make_latest(*buffer);
     }
     else
         buffer = buffer_manager.create_buffer(
             std::move(name), flags | Buffer::Flags::Fifo | Buffer::Flags::NoUndo,
-            {StringData::create("\n")}, ByteOrderMark::None, EolFormat::Lf, {InvalidTime, {}, {}});
+            {StringData::create("\n")}, ByteOrderMark::None, EolFormat::Lf, FinalEol::Present, {InvalidTime, {}, {}});
 
     struct FifoWatcher : FDWatcher
     {

@@ -25,12 +25,12 @@ BufferManager::~BufferManager()
         ClientManager::instance().clear(true);
 }
 
-Buffer* BufferManager::create_buffer(String name, Buffer::Flags flags, BufferLines lines, ByteOrderMark bom, EolFormat eolformat, FsStatus fs_status)
+Buffer* BufferManager::create_buffer(String name, Buffer::Flags flags, BufferLines lines, ByteOrderMark bom, EolFormat eolformat, FinalEol finaleol, FsStatus fs_status)
 {
     if (get_buffer_ifp(name) != nullptr)
         throw runtime_error{"buffer name is already in use"};
 
-    m_buffers.push_back(make_unique_ptr<Buffer>(std::move(name), flags, std::move(lines), bom, eolformat, fs_status));
+    m_buffers.push_back(make_unique_ptr<Buffer>(std::move(name), flags, std::move(lines), bom, eolformat, finaleol, fs_status));
     auto* buffer = m_buffers.back().get();
     buffer->on_registered();
 
@@ -100,7 +100,7 @@ Buffer& BufferManager::get_first_buffer()
 {
     if (all_of(m_buffers, [](auto& b) { return (b->flags() & Buffer::Flags::Debug); }))
         create_buffer("*scratch*", Buffer::Flags::None, {StringData::create("\n")},
-                      ByteOrderMark::None, EolFormat::Lf, {InvalidTime, {}, {}});
+                      ByteOrderMark::None, EolFormat::Lf, FinalEol::Present, {InvalidTime, {}, {}});
 
     return *m_buffers.back();
 }

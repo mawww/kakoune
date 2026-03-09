@@ -212,6 +212,16 @@ are exclusively available to built-in options.
     on load; values of this option assigned to the `window` scope are
     ignored
 
+*finaleol* `enum(present|missing|ifnotempty)`::
+    _default_ present +
+    Whether to drop the end-of-line of the last line the buffer when writing
+    to the filesystem, this is autodetected on load; values of this option
+    assigned to the `window` scope are ignored.
+
+    When set to `ifnotempty` the final end-of-line will only be written if
+    the buffer has a single empty line.
+
+
 *BOM* `enum(none|utf8)`::
     _default_ none +
     define if the file should be written with a unicode byte order mark;
