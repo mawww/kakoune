@@ -14,14 +14,11 @@ main() {
             exec -save-regs / %{%s%\(\K[^)]+\)<ret>a<backspace><esc>i<backspace><backspace><c-u><esc><a-;>}
         } catch %{ exec gg }
         try %{
-            eval -draft %{ edit -existing rc; delete-buffer; }
-            try %{ source rc } catch %{ echo -to-file stderr "error while sourcing rc: %val{error}"; kill! 1 }
+            eval -no-hooks -draft %{ edit -existing rc; delete-buffer }
+            try %{ source rc } catch %{ echo -to-file stderr -end-of-line %val{error}; kill! 1 }
         }
-        try %{ eval -draft %{ edit cmd; exec \%H"zy; delete-buffer } }
-        hook global RuntimeError "\d+:\d+: (.+)" %{
-          nop %sh{echo "$kak_hook_param_capture_1" > stderr}
-          kill 1
-        }
+        try %{ eval -no-hooks -draft %{ edit cmd; exec \%H"zy; delete-buffer } }
+        hook global RuntimeError "\d+:\d+: (.+)" %{ echo -to-file stderr -end-of-line %val{hook_param_capture_1}; kill! 1 }
         exec -with-maps -with-hooks %reg{z}
         exec -with-hooks <c-l>
       '
