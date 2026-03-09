@@ -136,7 +136,7 @@ test: src/kak
 	if [ $(os) = OpenBSD ]; then \
         	export KAKOUNE_RUNTIME=$$PWD/share/kak; \
 	fi && \
-	cd test && ./run
+	test/run
 
 TAGS: tags
 tags:
