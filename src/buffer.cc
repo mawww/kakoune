@@ -172,9 +172,10 @@ BufferCoordAndTarget Buffer::offset_coord(BufferCoordAndTarget coord, LineCount 
     const auto column = coord.target == -1 ? get_column(*this, tabstop, coord) : coord.target;
     const bool avoid_eol = coord.target < max_column;
     const auto line = Kakoune::clamp(coord.line + offset, 0_line, line_count()-1);
-    const auto max_column = get_column(*this, tabstop, {line, m_lines[line].length()-1});
+    const auto max_byte = m_lines[line].length()-1;
+    const auto max_column = get_column(*this, tabstop, {line, max_byte});
     const auto final_column = std::max(0_col, std::min(column, max_column - (avoid_eol ? 1 : 0)));
-    return {line, get_byte_to_column(*this, tabstop, {line, final_column}), column};
+    return {line, std::min(max_byte, get_byte_to_column(*this, tabstop, {line, final_column})), column};
 }
 
 String Buffer::string(BufferCoord begin, BufferCoord end) const
