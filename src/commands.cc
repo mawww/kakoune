@@ -1064,40 +1064,35 @@ Completions highlighter_cmd_completer(
         return {};
 }
 
-Highlighter& get_highlighter(const Context& context, StringView path)
+static std::pair<HighlighterGroup&, Highlighter&> get_highlighter(const Context& context, StringView path)
 {
     if (not path.empty() and path.back() == '/')
         path = path.substr(0_byte, path.length() - 1);
 
     auto sep_it = find(path, '/');
+    if (path.starts_with("buffer="))
+    {
+        auto& buffer_manager = BufferManager::instance();
+        while (sep_it != path.end() and not buffer_manager.get_buffer_ifp({path.begin()+7, sep_it}))
+            sep_it = std::find(sep_it+1, path.end(), '/');
+    }
+
     StringView scope{path.begin(), sep_it};
     auto* root = (scope == "shared") ? static_cast<HighlighterGroup*>(&SharedHighlighters::instance())
                                      : static_cast<HighlighterGroup*>(&get_scope(scope, context).highlighters().group());
     if (sep_it != path.end())
-        return root->get_child(StringView{sep_it+1, path.end()});
-    return *root;
+        return {*root, root->get_child(StringView{sep_it+1, path.end()})};
+    return {*root, *root};
 }
 
-static void redraw_relevant_clients(Context& context, StringView highlighter_path)
+static void redraw_relevant_clients(Context& context, HighlighterGroup& root)
 {
-    StringView scope{highlighter_path.begin(), find(highlighter_path, '/')};
-    if (scope == "window")
+    for (auto&& client : ClientManager::instance())
     {
-        if (context.has_client())
-            context.client().force_redraw();
-    }
-    else if (scope == "buffer" or prefix_match(scope, "buffer="))
-    {
-        auto& buffer = scope == "buffer" ? context.buffer() : BufferManager::instance().get_buffer(scope.substr(7_byte));
-        for (auto&& client : ClientManager::instance())
-        {
-            if (&client->context().buffer() == &buffer)
-                client->force_redraw();
-        }
-    }
-    else
-    {
-        for (auto&& client : ClientManager::instance())
+        if (&root == &SharedHighlighters::instance() or
+            &root == &GlobalScope::instance().highlighters().group() or
+            &root == &client->context().buffer().highlighters().group() or
+            &root == &client->context().window().highlighters().group())
             client->force_redraw();
     }
 }
@@ -1180,11 +1175,11 @@ const CommandDesc add_highlighter_cmd = {
         };
 
         String name{slash.base(), path.end()};
-        Highlighter& parent = get_highlighter(context, {path.begin(), slash.base() - 1});
+        auto [root, parent] = get_highlighter(context, {path.begin(), slash.base() - 1});
         parent.add_child(name.empty() ? auto_name(parser.positionals_from(1)) : std::move(name),
                          it->value.factory(highlighter_params, &parent), (bool)parser.get_switch("override"));
 
-        redraw_relevant_clients(context, path);
+        redraw_relevant_clients(context, root);
     }
 };
 
@@ -1206,8 +1201,9 @@ const CommandDesc remove_highlighter_cmd = {
         auto sep_it = find(rev_path, '/');
         if (sep_it == rev_path.end())
             return;
-        get_highlighter(context, {path.begin(), sep_it.base()}).remove_child({sep_it.base(), path.end()});
-        redraw_relevant_clients(context, path);
+        auto [root, parent] = get_highlighter(context, {path.begin(), sep_it.base()});
+        parent.remove_child({sep_it.base(), path.end()});
+        redraw_relevant_clients(context, root);
     }
 };
 
