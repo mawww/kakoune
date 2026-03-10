@@ -27,9 +27,9 @@ add-highlighter shared/jinja/statement/ regex \b(do|extends|include)\b 0:keyword
 add-highlighter shared/jinja/statement/ regex \bignore\s+missing\b 0:meta
 add-highlighter shared/jinja/statement/ regex \bwith(out)?\s+context\b 0:meta
 
-add-highlighter shared/jinja/expression region '\{\{' '\}\}' group
+add-highlighter shared/jinja/expression region \{\{(?!\{) (?<!\})\}\} group
 add-highlighter shared/jinja/expression/ ref python
-add-highlighter shared/jinja/expression/ regex \{\{|\}\} 0:value
+add-highlighter shared/jinja/expression/ regex \{\{(?!\{)|(?<!\})\}\} 0:value
 add-highlighter shared/jinja/expression/filters regex \|\s*(abs|attr|batch|capitalize|center|default|dictsort|e|escape|filesizeformat|first|float|forceescape|format|groupby|indent|int|join|last|length|list|lower|map|max|min|pprint|random|reject|rejectattr|replace|reverse|round|safe|select|selectattr|slice|sort|string|striptags|sum|title|tojson|trim|truncate|unique|upper|urlencode|urlize|wordcount|wordwrap|xmlattr)\b 1:builtin
 
 ]
