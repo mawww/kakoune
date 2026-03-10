@@ -24,7 +24,8 @@ public:
     void draw(const DisplayBuffer& display_buffer,
               DisplayCoord cursor_pos,
               const Face& default_face,
-              const Face& buffer_padding) override;
+              const Face& buffer_padding,
+              ColumnCount widget_columns) override;
 
     void draw_status(const DisplayLine& prompt,
                      const DisplayLine& content,

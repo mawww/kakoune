@@ -60,7 +60,8 @@ public:
     virtual void draw(const DisplayBuffer& display_buffer,
                       DisplayCoord cursor_pos,
                       const Face& default_face,
-                      const Face& padding_face) = 0;
+                      const Face& padding_face,
+                      ColumnCount widget_columns) = 0;
 
     virtual void draw_status(const DisplayLine& prompt,
                              const DisplayLine& content,

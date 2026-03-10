@@ -141,9 +141,11 @@ JsonUI::JsonUI()
 }
 
 void JsonUI::draw(const DisplayBuffer& display_buffer, DisplayCoord cursor_pos,
-                  const Face& default_face, const Face& padding_face)
+                  const Face& default_face, const Face& padding_face,
+                  ColumnCount widget_columns)
 {
-    rpc_call("draw", display_buffer.lines(), cursor_pos, default_face, padding_face);
+    rpc_call("draw", display_buffer.lines(), cursor_pos, default_face, padding_face,
+             widget_columns);
 }
 
 void JsonUI::draw_status(const DisplayLine& prompt,
