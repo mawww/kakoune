@@ -23,10 +23,11 @@ Here are the data structures used:
 
 Here are the requests that can be written by the json ui on stdout:
 
-* draw(Array<Line> lines, Coord cursor_pos, Face default_face, Face padding_face)
+* draw(Array<Line> lines, Coord cursor_pos, Face default_face, Face padding_face, int widget_columns)
   padding_face is the face of the padding characters '~' in the
   terminal UI.
   cursor_pos is the main cursor coordinates
+  widget_columns is the number of columns at the start of each line used by flag-lines highlighters.
 * draw_status(Line prompt, Line content, int cursor_pos, Line mode_line, Face default_face)
   cursor_pos is the location of the cursor in the content, the UI is expected to trim
   content in order to ensure the cursor stays visible, if cursor_pos is negative, no

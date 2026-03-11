@@ -400,7 +400,8 @@ public:
     void draw(const DisplayBuffer& display_buffer,
               DisplayCoord cursor_pos,
               const Face& default_face,
-              const Face& padding_face) override;
+              const Face& padding_face,
+              ColumnCount widget_columns) override;
 
     void draw_status(const DisplayLine& prompt,
                      const DisplayLine& content,
@@ -565,9 +566,10 @@ void RemoteUI::info_hide()
 void RemoteUI::draw(const DisplayBuffer& display_buffer,
                     DisplayCoord cursor_pos,
                     const Face& default_face,
-                    const Face& padding_face)
+                    const Face& padding_face,
+                    ColumnCount widget_columns)
 {
-    send_message(MessageType::Draw, display_buffer, cursor_pos, default_face, padding_face);
+    send_message(MessageType::Draw, display_buffer, cursor_pos, default_face, padding_face, widget_columns);
 }
 
 void RemoteUI::draw_status(const DisplayLine& prompt,

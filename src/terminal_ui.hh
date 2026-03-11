@@ -33,7 +33,8 @@ public:
     void draw(const DisplayBuffer& display_buffer,
               DisplayCoord cursor_pos,
               const Face& default_face,
-              const Face& padding_face) override;
+              const Face& padding_face,
+              ColumnCount widget_columns) override;
 
     void draw_status(const DisplayLine& prompt,
                      const DisplayLine& content,
