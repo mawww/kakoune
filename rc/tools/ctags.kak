@@ -109,6 +109,8 @@ declare-option -docstring "shell command to run" \
     str ctagscmd "ctags -R --fields=+S"
 declare-option -docstring "path to the directory in which the tags file will be generated" str ctagspaths "."
 
+hook global EnterDirectory .* %{ nop %sh{ [ -d .tags.kaklock ] && rmdir .tags.kaklock } }
+
 define-command ctags-generate -docstring 'Generate tag file asynchronously' %{
     echo -markup "{Information}launching tag generation in the background"
     nop %sh{ (
