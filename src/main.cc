@@ -826,7 +826,7 @@ int run_server(StringView session, StringView server_init,
                 local_client->print_status({}, {
                     "error during startup, see `:buffer *debug*` for details",
                     local_client->context().faces()["Error"]
-                }, -1);
+                }, -1, StatusStyle::Status);
 
             if (flags & ServerFlags::StartupInfo and local_client)
                 show_startup_info(local_client, global_scope.options()["startup_info_version"].get<int>());
