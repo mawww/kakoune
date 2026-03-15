@@ -1064,7 +1064,11 @@ private:
         DisplayLine display_line;
         if (not (m_flags & PromptFlags::Password))
             display_line = m_line_editor.build_display_line(width);
-        context().print_status({m_prompt, m_prompt_face}, display_line, m_line_editor.cursor_display_column());
+
+        StringView status_context = (m_flags & PromptFlags::Search) ? "search"
+                                  : m_prompt == ":" ? "command"
+                                  : "prompt";
+        context().print_status({m_prompt, m_prompt_face}, display_line, m_line_editor.cursor_display_column(), status_context);
     }
 
     void on_enabled(bool from_pop) override

@@ -82,10 +82,10 @@ void Context::set_window(Window& window)
         m_local_scopes.front()->reparent(window);
 }
 
-void Context::print_status(DisplayLine prompt, DisplayLine content, ColumnCount cursor_pos) const
+void Context::print_status(DisplayLine prompt, DisplayLine content, ColumnCount cursor_pos, StringView context) const
 {
     if (has_client())
-        client().print_status(std::move(prompt), std::move(content), cursor_pos);
+        client().print_status(std::move(prompt), std::move(content), cursor_pos, context);
 }
 
 void Context::print_status(DisplayLine status) const

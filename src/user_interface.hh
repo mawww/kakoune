@@ -67,7 +67,8 @@ public:
                              const DisplayLine& content,
                              const ColumnCount cursor_pos,
                              const DisplayLine& mode_line,
-                             const Face& default_face) = 0;
+                             const Face& default_face,
+                             StringView context) = 0;
 
     virtual DisplayCoord dimensions() = 0;
 

@@ -131,11 +131,12 @@ bool Client::process_pending_inputs()
     return not keys.empty();
 }
 
-void Client::print_status(DisplayLine prompt, DisplayLine content, ColumnCount cursor_pos)
+void Client::print_status(DisplayLine prompt, DisplayLine content, ColumnCount cursor_pos, StringView context)
 {
     m_status_prompt = std::move(prompt);
     m_status_content = std::move(content);
     m_status_cursor_pos = cursor_pos;
+    m_status_context = context.str();
     m_ui_pending |= StatusLine;
     m_pending_clear &= ~PendingClear::StatusLine;
 }
@@ -305,7 +306,7 @@ void Client::redraw_ifn()
         m_mode_line = std::move(mode_line);
     }
     if (m_ui_pending & StatusLine)
-        m_ui->draw_status(m_status_prompt, m_status_content, m_status_cursor_pos, m_mode_line, faces["StatusLine"]);
+        m_ui->draw_status(m_status_prompt, m_status_content, m_status_cursor_pos, m_mode_line, faces["StatusLine"], m_status_context);
 
     if (m_ui_pending != 0)
         m_ui->refresh(m_ui_pending & Refresh);
@@ -538,7 +539,7 @@ BusyIndicator::BusyIndicator(const Context& context,
 
             auto& client = m_context.client();
             if (not m_previous_status)
-                m_previous_status.emplace(client.m_status_prompt, client.m_status_content, client.m_status_cursor_pos);
+                m_previous_status.emplace(client.m_status_prompt, client.m_status_content, client.m_status_cursor_pos, client.m_status_context);
 
             client.print_status({}, status_message(duration_cast<seconds>(now - wait_time)), -1);
             client.redraw_ifn();
@@ -548,8 +549,8 @@ BusyIndicator::~BusyIndicator()
 {
     if (m_previous_status and std::uncaught_exceptions() == 0) // restore the status line
     {
-        auto& [prompt, content, cursor_pos] = *m_previous_status;
-        m_context.print_status(std::move(prompt), std::move(content), std::move(cursor_pos));
+        auto& [prompt, content, cursor_pos, context] = *m_previous_status;
+        m_context.print_status(std::move(prompt), std::move(content), std::move(cursor_pos), context);
         m_context.client().redraw_ifn();
     }
 }

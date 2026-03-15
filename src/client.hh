@@ -54,7 +54,7 @@ public:
     bool info_pending() const { return m_ui_pending & PendingUI::InfoShow; };
     bool status_line_pending() const { return m_ui_pending & PendingUI::StatusLine; };
 
-    void print_status(DisplayLine prompt, DisplayLine content, ColumnCount cursor_pos);
+    void print_status(DisplayLine prompt, DisplayLine content, ColumnCount cursor_pos, StringView context = "");
 
     DisplayCoord dimensions() const;
 
@@ -105,6 +105,7 @@ private:
     DisplayLine m_status_prompt;
     DisplayLine m_status_content;
     ColumnCount m_status_cursor_pos;
+    String m_status_context;
     DisplayLine m_mode_line;
 
     enum PendingUI : int
@@ -186,6 +187,7 @@ private:
         DisplayLine prompt;
         DisplayLine content;
         ColumnCount cursor_pos;
+        String context;
     };
     Optional<PreviousStatus> m_previous_status;
 };
