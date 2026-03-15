@@ -33,6 +33,14 @@ enum class InfoStyle
     Modal
 };
 
+enum class StatusStyle
+{
+    Status,
+    Command,
+    Search,
+    Prompt
+};
+
 enum class EventMode;
 
 using OnKeyCallback = Function<void(Key key)>;
@@ -67,7 +75,8 @@ public:
                              const DisplayLine& content,
                              const ColumnCount cursor_pos,
                              const DisplayLine& mode_line,
-                             const Face& default_face) = 0;
+                             const Face& default_face,
+                             StatusStyle style) = 0;
 
     virtual DisplayCoord dimensions() = 0;
 

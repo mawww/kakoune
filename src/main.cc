@@ -587,7 +587,7 @@ UniquePtr<UserInterface> make_ui(UIType ui_type)
         void info_hide() override {}
 
         void draw(const DisplayBuffer&, DisplayCoord, const Face&, const Face&, ColumnCount) override {}
-        void draw_status(const DisplayLine&, const DisplayLine&, const ColumnCount, const DisplayLine&, const Face&) override {}
+        void draw_status(const DisplayLine&, const DisplayLine&, const ColumnCount, const DisplayLine&, const Face&, StatusStyle) override {}
         DisplayCoord dimensions() override { return {24,80}; }
         void refresh(bool) override {}
         void set_on_key(OnKeyCallback) override {}

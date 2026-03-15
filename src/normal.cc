@@ -525,7 +525,7 @@ void command(const Context& context, EnvVarMap env_vars, char reg = 0)
 
     context.input_handler().prompt(
         ":", {}, default_command,
-        context.faces()["Prompt"], PromptFlags::DropHistoryEntriesWithBlankPrefix,
+        context.faces()["Prompt"], PromptFlags::DropHistoryEntriesWithBlankPrefix | PromptFlags::Command,
         ':',
         [completer=CommandManager::Completer{}](const Context& context,
            StringView cmd_line, ByteCount pos) mutable {
