@@ -587,7 +587,7 @@ UniquePtr<UserInterface> make_ui(UIType ui_type)
         void info_hide() override {}
 
         void draw(const DisplayBuffer&, DisplayCoord, const Face&, const Face&, ColumnCount) override {}
-        void draw_status(const DisplayLine&, const DisplayLine&, const ColumnCount, const DisplayLine&, const Face&) override {}
+        void draw_status(const DisplayLine&, const DisplayLine&, const ColumnCount, const DisplayLine&, const Face&, StatusStyle) override {}
         DisplayCoord dimensions() override { return {24,80}; }
         void refresh(bool) override {}
         void set_on_key(OnKeyCallback) override {}
@@ -826,7 +826,7 @@ int run_server(StringView session, StringView server_init,
                 local_client->print_status({}, {
                     "error during startup, see `:buffer *debug*` for details",
                     local_client->context().faces()["Error"]
-                }, -1);
+                }, -1, StatusStyle::Status);
 
             if (flags & ServerFlags::StartupInfo and local_client)
                 show_startup_info(local_client, global_scope.options()["startup_info_version"].get<int>());

@@ -32,6 +32,7 @@ enum class PromptFlags
     Password = 1 << 0,
     DropHistoryEntriesWithBlankPrefix = 1 << 1,
     Search = 1 << 2,
+    Command = 1 << 3,
 };
 constexpr bool with_bit_ops(Meta::Type<PromptFlags>) { return true; }
 

@@ -1,6 +1,7 @@
 #include "context.hh"
 
 #include "client.hh"
+#include "user_interface.hh"
 #include "scope.hh"
 #include "buffer_manager.hh"
 #include "register_manager.hh"
@@ -82,15 +83,15 @@ void Context::set_window(Window& window)
         m_local_scopes.front()->reparent(window);
 }
 
-void Context::print_status(DisplayLine prompt, DisplayLine content, ColumnCount cursor_pos) const
+void Context::print_status(DisplayLine prompt, DisplayLine content, ColumnCount cursor_pos, StatusStyle style) const
 {
     if (has_client())
-        client().print_status(std::move(prompt), std::move(content), cursor_pos);
+        client().print_status(std::move(prompt), std::move(content), cursor_pos, style);
 }
 
 void Context::print_status(DisplayLine status) const
 {
-    print_status({}, std::move(status), {-1});
+    print_status({}, std::move(status), {-1}, StatusStyle::Status);
 }
 
 void Context::push_jump(bool force)

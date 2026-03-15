@@ -109,6 +109,18 @@ String to_json(InfoStyle style)
     return "";
 }
 
+String to_json(StatusStyle style)
+{
+    switch (style)
+    {
+        case StatusStyle::Status: return R"("")";
+        case StatusStyle::Command: return R"("command")";
+        case StatusStyle::Search: return R"("search")";
+        case StatusStyle::Prompt: return R"("prompt")";
+    }
+    return "";
+}
+
 String concat()
 {
     return "";
@@ -152,9 +164,10 @@ void JsonUI::draw_status(const DisplayLine& prompt,
                          const DisplayLine& content,
                          const ColumnCount cursor_pos,
                          const DisplayLine& mode_line,
-                         const Face& default_face)
+                         const Face& default_face,
+                         StatusStyle style)
 {
-    rpc_call("draw_status", prompt, content, cursor_pos, mode_line, default_face);
+    rpc_call("draw_status", prompt, content, cursor_pos, mode_line, default_face, style);
 }
 
 

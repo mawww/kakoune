@@ -28,11 +28,17 @@ Here are the requests that can be written by the json ui on stdout:
   terminal UI.
   cursor_pos is the main cursor coordinates
   widget_columns is the number of columns at the start of each line used by flag-lines highlighters.
-* draw_status(Line prompt, Line content, int cursor_pos, Line mode_line, Face default_face)
+* draw_status(Line prompt, Line content, int cursor_pos, Line mode_line, Face default_face,
+              String style)
   cursor_pos is the location of the cursor in the content, the UI is expected to trim
   content in order to ensure the cursor stays visible, if cursor_pos is negative, no
   cursor should be displayed in the prompt. Prompt cursor show have priority to buffer
   cursor if only one cursor can be displayed.
+  style can be:
+  - "command": command prompt (:)
+  - "search": search prompt (/, ?)
+  - "prompt": general prompt (e.g. pipe, object desc)
+  - "": normal status (file info, echo messages)
 * menu_show(Array<Line> items, Coord anchor, Face selected_item_face, Face menu_face,
             String style)
   style can be:

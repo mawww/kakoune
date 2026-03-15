@@ -1064,7 +1064,11 @@ private:
         DisplayLine display_line;
         if (not (m_flags & PromptFlags::Password))
             display_line = m_line_editor.build_display_line(width);
-        context().print_status({m_prompt, m_prompt_face}, display_line, m_line_editor.cursor_display_column());
+
+        auto status_style = (m_flags & PromptFlags::Search)  ? StatusStyle::Search
+                           : (m_flags & PromptFlags::Command) ? StatusStyle::Command
+                           : StatusStyle::Prompt;
+        context().print_status({m_prompt, m_prompt_face}, display_line, m_line_editor.cursor_display_column(), status_style);
     }
 
     void on_enabled(bool from_pop) override

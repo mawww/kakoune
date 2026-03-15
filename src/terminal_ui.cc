@@ -589,7 +589,8 @@ void TerminalUI::draw_status(const DisplayLine& prompt,
                              const DisplayLine& content,
                              const ColumnCount cursor_pos,
                              const DisplayLine& mode_line,
-                             const Face& default_face)
+                             const Face& default_face,
+                             StatusStyle)
 {
     const LineCount status_line_pos = m_status_on_top ? 0 : m_dimensions.line;
 
