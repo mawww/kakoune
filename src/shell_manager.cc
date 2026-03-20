@@ -235,9 +235,11 @@ struct CommandFifos
     CommandFifos(Context& context, const ShellContext& shell_context)
       : base_dir(format("{}/kak-fifo.XXXXXX", tmpdir())),
         command_watcher([&] {
-            mkdtemp(base_dir.data()),
-            mkfifo(command_fifo_path().c_str(), 0600);
-            mkfifo(response_fifo_path().c_str(), 0600);
+            if (mkdtemp(base_dir.data()) == nullptr or
+                mkfifo(command_fifo_path().c_str(), 0600) != 0 or
+                mkfifo(response_fifo_path().c_str(), 0600) != 0)
+                throw runtime_error(format("unable to create command/response fifos, errno: {}", ::strerror(errno)));
+
             int fd = open(command_fifo_path().c_str(), O_RDONLY | O_NONBLOCK);
             return make_reader(fd, command, [&, fd](bool graceful) {
                 if (not graceful)
