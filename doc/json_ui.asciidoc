@@ -38,7 +38,7 @@ Here are the requests that can be written by the json ui on stdout:
   - "command": command prompt (:)
   - "search": search prompt (/, ?)
   - "prompt": general prompt (e.g. pipe, object desc)
-  - "": normal status (file info, echo messages)
+  - "status": normal status (file info, echo messages)
 * menu_show(Array<Line> items, Coord anchor, Face selected_item_face, Face menu_face,
             String style)
   style can be:

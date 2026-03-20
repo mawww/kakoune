@@ -113,7 +113,7 @@ String to_json(StatusStyle style)
 {
     switch (style)
     {
-        case StatusStyle::Status: return R"("")";
+        case StatusStyle::Status: return R"("status")";
         case StatusStyle::Command: return R"("command")";
         case StatusStyle::Search: return R"("search")";
         case StatusStyle::Prompt: return R"("prompt")";
