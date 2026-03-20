@@ -1654,8 +1654,9 @@ private:
                 range.first.line <= setup.first_line + setup.line_count and
                 range.first.line != last.line)
             {
+                auto added_count = std::count(spec.begin(), spec.end(), '\n');
                 auto removed_count = last.line - range.first.line;
-                setup.line_count += removed_count;
+                setup.line_count += removed_count - added_count;
             }
         }
     }
