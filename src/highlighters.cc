@@ -124,7 +124,7 @@ void replace_range(DisplayBuffer& display_buffer,
         first_it = --lines.erase(first_it+1, last_it);
     }
 
-    func(*first_it, first_atom_it);
+    func(lines, first_it, first_atom_it);
 }
 
 auto apply_face = [](const Face& face)
@@ -1606,15 +1606,25 @@ private:
             {
                 if (!is_valid(buffer, range.first) or (!is_empty(range) and !is_valid(buffer, range.last)) or !is_fully_selected(sels, range))
                     continue;
-                auto replacement = parse_display_line(spec, context.context.faces());
                 auto end = is_empty(range) ? range.first : buffer.char_next(range.last);
                 replace_range(display_buffer, range.first, end,
                               [&, range=BufferRange{range.first, end}]
-                              (DisplayLine& line, DisplayLine::iterator pos){
-                                  for (auto& atom : replacement)
+                              (DisplayLineList& lines, DisplayLineList::iterator line, DisplayLine::iterator pos){
+                                  auto it = spec.begin(), eol = find(spec, '\n');
+                                  while (true)
                                   {
-                                      atom.replace(range);
-                                      pos = ++line.insert(pos, std::move(atom));
+                                      for (auto& atom : parse_display_line({it, eol}, context.context.faces()))
+                                      {
+                                          atom.replace(range);
+                                          pos = ++line->insert(pos, std::move(atom));
+                                      }
+                                      if (eol == spec.end())
+                                          break;
+                                      auto remaining = line->extract(pos, line->end());
+                                      line = lines.insert(++line, remaining);
+                                      pos = line->begin();
+                                      it = ++eol;
+                                      eol = std::find(it, spec.end(), '\n');
                                   }
                               });
             }
