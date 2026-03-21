@@ -541,30 +541,186 @@ define-command -params 1.. \
         fi
     }
 
-    commit() {
-        # Handle case where message needs not to be edited
-        if grep -E -q -e "-m|-F|-C|--message=.*|--file=.*|--reuse-message=.*|--no-edit|--fixup.*|--squash.*"; then
-            if git commit "$@" > /dev/null 2>&1; then
-                echo 'echo -markup "{Information}Commit succeeded"'
+    classify_new_commit() {
+        {
+            git log --no-walk=unsorted --format='%H:%T:%P:%s' \
+                HEAD HEAD@{1} -- ||
+            git log --no-walk=unsorted --format='%H:%T:%P:%s' \
+                HEAD --
+        } 2>/dev/null | (
+            IFS=:
+            read -r _ head_tree head_parents head_subject
+            read -r last_commit last_tree last_parents last_subject
+            if [ -z "${head_parents}" ] &&
+               { [ -z "${last_commit}" ] || [ -n "${last_parents}" ]; }; then
+                if [ "${head_tree}" = "$(git mktree </dev/null)" ]; then
+                    echo "Created empty root commit '${head_subject}'"
+                else
+                    echo "Created root commit '${head_subject}'"
+                fi
+            elif [ "${head_parents}" = "${last_parents}" ]; then
+                if [ "${head_tree}" = "${last_tree}" ]; then
+                    echo "Reworded commit '${last_subject}'"
+                else
+                    echo "Amended commit '${last_subject}'"
+                fi
             else
-                echo 'fail Commit failed'
+                if [ "${head_parents}" = "${last_commit}" ]; then
+                    parent_tree="${last_tree}"
+                elif [ "${head_parents#* }" = "${head_parents}" ]; then
+                    parent_tree="$(git rev-parse HEAD^:)"
+                else
+                    parent_tree="merges-are-never-empty"
+                fi
+                if [ "${head_tree}" = "${parent_tree}" ]; then
+                    echo "Created empty commit '${head_subject}'"
+                else
+                    echo "Created commit '${head_subject}'"
+                fi
             fi
-            exit
-        fi <<-EOF
-			$@
-		EOF
+        )
+   }
 
-        # fails, and generate COMMIT_EDITMSG
-        GIT_EDITOR='' EDITOR='' git commit "$@" > /dev/null 2>&1
-        msgfile="$(git rev-parse --git-dir)/COMMIT_EDITMSG"
-        printf %s "edit '$msgfile'
-              hook buffer BufWritePost '.*\Q$msgfile\E' %{ evaluate-commands %sh{
-                  if git commit -F '$msgfile' --cleanup=strip $* > /dev/null; then
-                     printf %s 'evaluate-commands -client $kak_client echo -markup %{{Information}Commit succeeded}; delete-buffer'
-                  else
-                     printf 'evaluate-commands -client %s fail Commit failed\n' "$kak_client"
-                  fi
-              } }"
+    empty_commit_message_is_allowed() {
+        ret=1
+        for arg; do
+            case $arg in
+                --) break;;
+                # Allow a prefix match but don't be confused by "--allow-empty"
+                --allow-empty-*)
+                    case --allow-empty-message in
+                        "$arg"*) ret=0;;
+                    esac
+                    ;;
+                # Allow a prefix match but don't be confused by "--no-allow-empty"
+                --no-allow-empty-*)
+                    case --no-allow-empty-message in
+                        "$arg"*) ret=1;;
+                    esac
+                    ;;
+            esac
+        done
+        return $ret
+    }
+
+    commit() {
+        if ! fifo_dir="$(mktemp -d "${TMPDIR:-/tmp}/kak-git-XXXXXX")" ||
+           ! mkfifo "${fifo_dir}/response_fifo"
+        then
+            echo "fail %{failed to run git commit (see *debug* buffer)}"
+            [ -n "${fifo_dir}" ] && rmdir "${fifo_dir}"
+            exit 1
+        fi
+        {
+            trap 'rm -r "${fifo_dir}"' EXIT INT
+            GIT_EDITOR='
+                die() {
+                    printf "%s\n" "$*" >&2
+                    exit 1
+                }
+
+                # the comment string can be set by either core.commentChar
+                # or core.commentString with the last one winning.
+                get_comment_re() {
+                    {
+                        git config --get-regexp \
+                            "^core\.comment(char|string)\$" ||
+                        echo "#"
+                    } | sed -n -e "
+                            \${
+                                s/^[^ ]* //
+                                s/^auto\$/#/
+                                s|[][*./\]|\\\\&|g
+                                p
+                            }"
+                }
+
+                # Nested levels of kakoune single quote quoting
+                SQ="'\''"
+                Q1="${SQ}"
+                Q2="${Q1}${Q1}"
+                Q3="${Q2}${Q2}"
+                kak_quote() {
+                    level=${2:-1}
+                    Q="${Q1}"
+                    while [ ${level} -gt 1 ]; do
+                        Q="${Q}${Q}"
+                        level=$((${level} - 1))
+                    done
+
+                    printf "%s\n" "$1" |
+                        sed "s/${SQ}/${Q}${Q}/g; 1s/^/${Q}/; \$s/\$/${Q}/"
+                }
+
+                editor() {
+                    response_fifo="${fifo_dir}/response_fifo" &&
+                    # The quoting here is slightly awkward but it is works when
+                    # the path of the file being edited contains single quotes
+                    # or unbalanced braces.
+                    printf %s "
+                        try ${Q1}
+                            eval -client $(kak_quote "${kak_client}" 2) ${Q2}
+                                edit $(kak_quote "$1" 3)
+                                hook buffer BufWritePost .* ${Q3}
+                                    echo -to-file $(kak_quote "${response_fifo}" 4) -end-of-line false
+                                    remove-hooks buffer giteditor
+                                    delete-buffer
+                                ${Q3}
+                                hook -group giteditor buffer BufClose .* ${Q3}
+                                    echo -to-file $(kak_quote "${response_fifo}" 4) -end-of-line true
+                                ${Q3}
+                            ${Q2}
+                        ${Q1} catch ${Q1}
+                            echo -to-file $(kak_quote "${response_fifo}" 2) -end-of-line failed
+                        ${Q1}" | kak -p "${kak_session}" ||
+                            die "could not contact kak session ${kak_session}"
+                    # create a sed expression to print the first uncommented,
+                    # non-empty line before any scissors line.
+                    comment_re="$(get_comment_re)"
+                    re="/^${comment_re} -\{8,\} >8 -\{8,\}\$/q
+                        /^${comment_re}.*/d
+                        /[^ 	]/{p;q;}"
+                    # wait for the user to edit the commit message
+                    read cancelled <"${response_fifo}"
+                    if [ "${cancelled}" = true ]; then
+                        >"${fifo_dir}/cancelled"
+                        die "editing cancelled"
+                    elif [ "${cancelled}" != false ]; then
+                        die "could not open file ${SQ}$1${SQ}"
+                    fi
+                    if [ -z "$(sed -n -e "$re" "$1")" ]; then
+                        >"${fifo_dir}/empty-message"
+                    fi
+                }; editor'
+            export fifo_dir GIT_EDITOR
+            failed=0
+            if err="$(git commit "$@" 2>&1)"; then
+                cmd="eval -try-client '${kak_client}' '
+                    echo -markup ''{Information}{\}$(classify_new_commit | sed "s/'/''''/g")''
+                '"
+            elif [ -f "${fifo_dir}/cancelled" ]; then
+                cmd="eval -try-client '${kak_client}' %{
+                    echo -markup '{Information}Commit cancelled'
+                }"
+            elif [ -f "${fifo_dir}/empty-message" ] &&
+                    ! empty_commit_message_is_allowed "$@"; then
+                cmd="eval -try-client '${kak_client}' %{
+                    echo -markup '{Information}Commit cancelled (empty message)'
+                }"
+            else
+                failed=1
+                cmd="eval -try-client '${kak_client}' %{
+                    try %{
+                        edit! -fifo $(kakquote "${fifo_dir}/response_fifo") '*git-commit*'
+                    }
+                    echo -markup '{Error}Commit failed'
+                }"
+            fi
+            printf %s "${cmd}" | kak -p "${kak_session}"
+            if [ ${failed} = 1 ]; then
+                printf %s "$err" >"${fifo_dir}/response_fifo"
+            fi
+        } 2>/dev/null 1>&2 </dev/null &
     }
 
     blame_jump() {
