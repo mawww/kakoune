@@ -407,7 +407,8 @@ public:
                      const DisplayLine& content,
                      const ColumnCount cursor_pos,
                      const DisplayLine& mode_line,
-                     const Face& default_face) override;
+                     const Face& default_face,
+                     StatusStyle style) override;
 
     void refresh(bool force) override;
 
@@ -576,9 +577,10 @@ void RemoteUI::draw_status(const DisplayLine& prompt,
                            const DisplayLine& content,
                            const ColumnCount cursor_pos,
                            const DisplayLine& mode_line,
-                           const Face& default_face)
+                           const Face& default_face,
+                           StatusStyle style)
 {
-    send_message(MessageType::DrawStatus, prompt, content, cursor_pos, mode_line, default_face);
+    send_message(MessageType::DrawStatus, prompt, content, cursor_pos, mode_line, default_face, style);
 }
 
 void RemoteUI::refresh(bool force)
