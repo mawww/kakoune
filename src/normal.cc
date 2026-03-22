@@ -2289,6 +2289,9 @@ void repeated(Context& context, NormalParams params)
 template<typename Type>
 void move_cursor(Context& context, NormalParams params, Direction direction, SelectMode mode)
 {
+    if (params.count != 0) {
+        context.push_jump(true);
+    }
     kak_assert(mode == SelectMode::Replace or mode == SelectMode::Extend);
     const Type offset{direction * std::max(params.count,1)};
     const ColumnCount tabstop = context.options()["tabstop"].get<int>();
