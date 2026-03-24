@@ -1,0 +1,1 @@
+!diff -u a b<ret>/\+bar<ret>:diff-jump<ret>

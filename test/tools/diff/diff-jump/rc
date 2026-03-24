@@ -1,0 +1,6 @@
+declare-option str jumpclient
+source "%val{runtime}/rc/filetype/diff.kak"
+require-module diff
+
+echo -end-of-line -to-file a foo
+echo -end-of-line -to-file b bar
