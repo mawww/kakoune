@@ -542,29 +542,42 @@ define-command -params 1.. \
     }
 
     commit() {
-        # Handle case where message needs not to be edited
-        if grep -E -q -e "-m|-F|-C|--message=.*|--file=.*|--reuse-message=.*|--no-edit|--fixup.*|--squash.*"; then
-            if git commit "$@" > /dev/null 2>&1; then
-                echo 'echo -markup "{Information}Commit succeeded"'
+        if ! fifo_dir="$(mktemp -d "${TMPDIR:-/tmp}/kak-git-commit-XXXXXX")" ||
+           ! mkfifo "${fifo_dir}/response_fifo"
+        then
+            echo "fail %{failed to run git commit (see *debug* buffer)}"
+            [ -n "${fifo_dir}" ] && rmdir "${fifo_dir}"
+            exit 1
+        fi
+        {
+            trap 'rm -r "${fifo_dir}"' EXIT
+            export GIT_EDITOR="$(git rev-parse --sq-quote \
+                "${KAKOUNE_POSIX_SHELL:-/bin/sh}" \
+                "${kak_runtime}/rc/tools/blocking-editor-in-client" \
+                "${fifo_dir}" "${kak_session}" "${kak_client}")"
+            failed=false
+            if err="$(git commit "$@" 2>&1)"; then
+                cmd="eval -try-client ${kak_client} %{
+                    echo -markup '{Information}Commit succeeded'
+                }"
+            elif [ -f "${fifo_dir}/cancelled" ]; then
+                cmd="eval -try-client ${kak_client} %{
+                    echo -markup '{Information}Commit cancelled'
+                }"
             else
-                echo 'fail Commit failed'
+                failed=true
+                cmd="eval -try-client ${kak_client} %{
+                    try %{
+                        edit! -fifo $(kakquote "${fifo_dir}/response_fifo") '*git-commit*'
+                    }
+                    echo -markup '{Error}Commit failed'
+                }"
             fi
-            exit
-        fi <<-EOF
-			$@
-		EOF
-
-        # fails, and generate COMMIT_EDITMSG
-        GIT_EDITOR='' EDITOR='' git commit "$@" > /dev/null 2>&1
-        msgfile="$(git rev-parse --git-dir)/COMMIT_EDITMSG"
-        printf %s "edit '$msgfile'
-              hook buffer BufWritePost '.*\Q$msgfile\E' %{ evaluate-commands %sh{
-                  if git commit -F '$msgfile' --cleanup=strip $* > /dev/null; then
-                     printf %s 'evaluate-commands -client $kak_client echo -markup %{{Information}Commit succeeded}; delete-buffer'
-                  else
-                     printf 'evaluate-commands -client %s fail Commit failed\n' "$kak_client"
-                  fi
-              } }"
+            printf %s "${cmd}" | kak -p "${kak_session}"
+            if [ ${failed} = true ]; then
+                printf %s "$err" >"${fifo_dir}/response_fifo"
+            fi
+        } 2>/dev/null 1>&2 </dev/null &
     }
 
     blame_jump() {
