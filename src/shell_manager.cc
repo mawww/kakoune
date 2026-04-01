@@ -249,6 +249,10 @@ struct CommandFifos
                     write_to_debug_buffer(format("error reading from command fifo '{}'", strerror(errno)));
                     return;
                 }
+                // close and re-open the command fifo so that it wont appear continously readable to pselect
+                // while waiting for another writer to oppen it
+                close(fd);
+                fd = open(command_fifo_path().c_str(), O_RDONLY | O_NONBLOCK);
                 try
                 {
                     CommandManager::instance().execute(command, context, shell_context);
@@ -258,10 +262,6 @@ struct CommandFifos
                     write_to_debug_buffer(format("error while executing from command fifo: {}", error.what()));
                 }
                 command.clear();
-                // close and re-open the command fifo so that it wont appear continously readable to pselect
-                // while waiting for another writer to oppen it
-                close(fd);
-                fd = open(command_fifo_path().c_str(), O_RDONLY | O_NONBLOCK);
                 command_watcher.reset_fd(fd);
             });
         }())
