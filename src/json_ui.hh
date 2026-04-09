@@ -25,7 +25,10 @@ public:
               DisplayCoord cursor_pos,
               const Face& default_face,
               const Face& buffer_padding,
-              ColumnCount widget_columns) override;
+              ColumnCount widget_columns,
+              LineCount first_buffer_line,
+              LineCount last_buffer_line,
+              LineCount buffer_line_count) override;
 
     void draw_status(const DisplayLine& prompt,
                      const DisplayLine& content,
