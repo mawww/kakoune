@@ -58,6 +58,9 @@ add-highlighter shared/prql/triple_string region -match-capture ("""|''') (?<!\\
 add-highlighter shared/prql/double_string region '"'   (?<!\\)(\\\\)*" fill string
 add-highlighter shared/prql/single_string region "'"   (?<!\\)(\\\\)*' fill string
 
+# Parameter references
+add-highlighter shared/prql/code/ regex '\$\d+\b' 0:value
+
 # Integer formats
 add-highlighter shared/prql/code/ regex '(?i)\b0b[01]+l?\b' 0:value
 add-highlighter shared/prql/code/ regex '(?i)\b0x[\da-f]+l?\b' 0:value
@@ -89,15 +92,20 @@ evaluate-commands %sh{
         add-highlighter shared/prql/code/ regex '\b($(join "${values}" '|'))\b' 0:value
         add-highlighter shared/prql/code/ regex '\b($(join "${meta}" '|'))\b' 0:meta
         add-highlighter shared/prql/code/ regex '\b($(join "${keywords}" '|'))\b' 0:keyword
-        add-highlighter shared/prql/code/ regex '\b($(join "${functions}" '|'))\b\(' 1:builtin
+        add-highlighter shared/prql/code/ regex '\b($(join "${functions}" '|'))\b' 0:builtin
         add-highlighter shared/prql/code/ regex '\b($(join "${types}" '|'))\b' 0:type
-        add-highlighter shared/prql/code/ regex '^\h*(@\{[\w_.]+\}))' 1:attribute
+        add-highlighter shared/prql/code/ regex '^\h*(@\{\w+(?:=\w+)?(?:,\w+(?:=\w+)?)*\})' 1:attribute
     "
 }
 
-add-highlighter shared/prql/code/ regex (?<=[\w\s\d\)\]'"_])(<=|>=|<>?|>|!=|==|~=|\||\^|&|\+|-|\*\*?|//?|%|~) 0:operator
+add-highlighter shared/prql/code/ regex (?<=[\w\s\d\)\]'"_])(\?\?|\|\||&&|<=|>=|<>?|>|!=|==|~=|\||\^|&|\+|-|\*\*?|//?|%|~) 0:operator
 add-highlighter shared/prql/code/ regex (?<=[\w\s\d'"_])((?<![=<>!]):?=(?![=])|[+*-]=) 0:builtin
 add-highlighter shared/prql/code/ regex ^\h*(?:module)\h+(\S+) 1:module
+
+# Date/time literals: @2024-12-20, @2024-12-20T14:30:00, @14:30, @14:30:00
+# These are added last so they override number and operator faces within the literal.
+add-highlighter shared/prql/code/ regex '@\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?)?' 0:value
+add-highlighter shared/prql/code/ regex '@\d{2}:\d{2}(?::\d{2})?' 0:value
 
 # Commands
 # ‾‾‾‾‾‾‾‾
