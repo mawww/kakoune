@@ -51,7 +51,7 @@ struct {
     unsigned int version;
     StringView notes;
 } constexpr version_notes[] = { {
-        0,
+        20260412,
         "» {+u}finaleol{} option to preserve files with no final end-of-line\n"
         "» {+b}%val\\{buffile}{} is now empty for scratch buffers\n"
         "» {+b}FocusIn{}/{+b}FocusOut{} events on suspend\n"
@@ -67,19 +67,6 @@ struct {
     }, {
         20240518,
         "» Fix tests failing on some platforms\n"
-    }, {
-        20240509,
-        "» {+u}flag-lines -after{} highlighter\n"
-        "» asynchronous {+u}shell-script-candidates{} completion\n"
-        "» {+b}%val\\{window_range}{} is now emitted as separate strings\n"
-        "» {+b}+{} only duplicates identical selections a single time\n"
-        "» {+u}daemonize-session{} command\n"
-        "» view mode and mouse scrolling no longer change selections\n"
-        "» {+u}git apply/blame-jump/edit/grep{} commands\n"
-        "» {+u}git blame{} works in {+u}git-diff{} and {+u}git-log{} buffers\n"
-        "» custom completions are no longer sorted if the typed text is empty\n"
-        "» {+u}terminal{} now selects implementation based on windowing options\n"
-        "» {+u}local{} scopes\n"
     }
 };
 

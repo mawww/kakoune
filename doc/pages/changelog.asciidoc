@@ -5,7 +5,7 @@ To control the startup info message, see <<options#startup-info,`:doc options st
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
-== Development Version
+== Kakoune 2026.04.12
 
 * `finaleol` option to support writing files that do not end with an final
   end-of-line byte
