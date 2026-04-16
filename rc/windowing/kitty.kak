@@ -14,7 +14,7 @@ define-command kitty-terminal-window -params 1.. -docstring '
 kitty-terminal-window <program> [<arguments>]: create a new terminal as a kitty window
 The program passed as argument will be executed in the new terminal' \
 %{
-    nop %sh{
+    evaluate-commands %sh{
         match=""
         if [ -n "$kak_client_env_KITTY_WINDOW_ID" ]; then
             match="--match=window_id:$kak_client_env_KITTY_WINDOW_ID"
@@ -25,7 +25,8 @@ The program passed as argument will be executed in the new terminal' \
             listen="--to=$kak_client_env_KITTY_LISTEN_ON"
         fi
 
-        kitty @ $listen launch --no-response --type="$kak_opt_kitty_window_type" --cwd="$PWD" $match "$@"
+        kitty @ $listen launch --type="$kak_opt_kitty_window_type" --cwd="$PWD" $match "$@" >/dev/null ||
+            echo 'fail %{kitty-terminal-window: failure running `kitty @`, see `:buffer *debug*`}'
     }
 }
 complete-command kitty-terminal-window shell
@@ -34,7 +35,7 @@ define-command kitty-terminal-tab -params 1.. -docstring '
 kitty-terminal-tab <program> [<arguments>]: create a new terminal as kitty tab
 The program passed as argument will be executed in the new terminal' \
 %{
-    nop %sh{
+    evaluate-commands %sh{
         match=""
         if [ -n "$kak_client_env_KITTY_WINDOW_ID" ]; then
             match="--match=window_id:$kak_client_env_KITTY_WINDOW_ID"
@@ -45,7 +46,8 @@ The program passed as argument will be executed in the new terminal' \
             listen="--to=$kak_client_env_KITTY_LISTEN_ON"
         fi
 
-        kitty @ $listen launch --no-response --type=tab --cwd="$PWD" $match "$@"
+        kitty @ $listen launch --type=tab --cwd="$PWD" $match "$@" >/dev/null ||
+            echo 'fail %{kitty-terminal-tab: failure running `kitty @`, see `:buffer *debug*`}'
     }
 }
 complete-command kitty-terminal-tab shell
@@ -68,7 +70,8 @@ If no client is passed then the current one is used' \
                 listen="--to=$kak_client_env_KITTY_LISTEN_ON"
             fi
 
-            kitty @ $listen focus-window --no-response $match
+            kitty @ $listen focus-window $match >/dev/null ||
+                echo 'fail %{kitty-focus: failure running `kitty @`, see `:buffer *debug*`}'
         fi
     }
 }
