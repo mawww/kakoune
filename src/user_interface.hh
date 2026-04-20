@@ -69,7 +69,10 @@ public:
                       DisplayCoord cursor_pos,
                       const Face& default_face,
                       const Face& padding_face,
-                      ColumnCount widget_columns) = 0;
+                      ColumnCount widget_columns,
+                      LineCount first_buffer_line,
+                      LineCount last_buffer_line,
+                      LineCount buffer_line_count) = 0;
 
     virtual void draw_status(const DisplayLine& prompt,
                              const DisplayLine& content,
