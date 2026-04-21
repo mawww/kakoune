@@ -403,12 +403,16 @@ void view_commands(Context& context, NormalParams params)
         if (key == Key::Escape)
             return;
 
-        if (lock)
-            view_commands<true>(context, { count, 0 });
-
         auto cp = key.codepoint();
         if (not cp or not context.has_window())
             return;
+
+        if (lock and isdigit(*cp))
+        {
+            const long long new_count = (long long)count * 10 + *cp - '0';
+            if (new_count <= std::numeric_limits<int>::max())
+                return view_commands<true>(context, {(int)new_count, 0});
+        }
 
         const BufferCoord cursor = context.selections().main().cursor();
         Window& window = context.window();
@@ -458,6 +462,9 @@ void view_commands(Context& context, NormalParams params)
         default:
             throw runtime_error("key not mapped");
         }
+
+        if (lock)
+            view_commands<true>(context, {0, 0});
     }, lock ? "view (lock)" : "view",
     build_autoinfo_for_mapping(context, KeymapMode::View,
         {{{'v','c'}, "center cursor (vertically)"},
