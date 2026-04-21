@@ -40,25 +40,27 @@ add-highlighter shared/groovy/code/numbers regex '\b[-+]?0x[A-Fa-f0-9_]+[.A-Fa-f
 add-highlighter shared/groovy/slashy_string region "\b/\w" "(?<!\\)\w/\b"   fill string
 
 evaluate-commands %sh{
-  keywords="as|assert|break|case|catch|class|const|continue|def|default"
-  keywords="${keywords}|do|else|enum|extends|finally|for|goto|if|implements|import|in"
-  keywords="${keywords}|instanceof|interface|new|package|return|super|switch|this|throw"
-  keywords="${keywords}|throws|trait|try|while"
-  builtins="true|false|null"
-  types="byte|char|short|int|long|BigInteger|float|double|BigDecimal|boolean"
+    keywords='
+      as assert break case catch class const continue def default
+      do else enum extends finally for goto if implements import in
+      instanceof interface new package return super switch this throw
+      throws trait try while
+    '
+    builtins='true false null println'
+    types='byte char short int long BigInteger float double BigDecimal boolean'
 
-  printf %s "
-    add-highlighter shared/groovy/code/keyword regex \b(${keywords})\b 0:keyword
-    add-highlighter shared/groovy/code/builtin regex \b(${builtins})\b 0:builtin
-    add-highlighter shared/groovy/code/types   regex \b(${types})\b    0:type
+    join() { sep=$2; eval set -- $1; IFS="$sep"; echo "$*"; }
 
-    declare-option str-list groovy_static_words \"${keywords}|${types}|${builtins}\"
-  "
+    printf %s\\n "add-highlighter shared/groovy/code/keyword regex \\b($(join "$keywords" '|'))\\b 0:keyword"
+    printf %s\\n "add-highlighter shared/groovy/code/builtin regex \\b($(join "$builtins" '|'))\\b 0:builtin"
+    printf %s\\n "add-highlighter shared/groovy/code/types   regex \\b($(join "$types" '|'))\\b    0:type"
+
+    printf %s\\n "declare-option str-list groovy_static_words $(join "$keywords $builtins $types" ' ')"
 }
 
 define-command -hidden groovy-insert-on-new-line %[
-        # copy // comments prefix and following white spaces
-        try %{ execute-keys -draft <semicolon><c-s>kx s ^\h*\K/{2,}\h* <ret> y<c-o>P<esc> }
+    # copy // comments prefix and following white spaces
+    try %{ execute-keys -draft <semicolon><c-s>kx s ^\h*\K/{2,}\h* <ret> y<c-o>P<esc> }
 ]
 
 define-command -hidden groovy-indent-on-new-line %~
