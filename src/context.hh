@@ -25,6 +25,7 @@ class KeymapManager;
 class HookManager;
 
 enum Direction { Backward = -1, Forward = 1 };
+enum Distance { FullScreen = 0, HalfScreen = 1, Line = 2 };
 
 struct JumpList
 {
