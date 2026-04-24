@@ -128,7 +128,7 @@ define-command ctags-generate -docstring 'Generate tag file asynchronously' %{
         while ! mkdir .tags.kaklock 2>/dev/null; do sleep 1; done
         trap 'rmdir .tags.kaklock' EXIT
 
-        if ${kak_opt_ctagscmd} -f .tags.kaktmp ${kak_opt_ctagspaths}; then
+        if eval "${kak_opt_ctagscmd}" -f .tags.kaktmp ${kak_opt_ctagspaths}; then
             mv .tags.kaktmp tags
             msg="tags generation complete"
         else
