@@ -10,7 +10,7 @@ declare-option -docstring "list of paths to tag files to parse when looking up a
 
 declare-option -hidden completions ctags_completions
 
-declare-option -docstring "shell command to run" str readtagscmd "readtags"
+declare-option -docstring "shell command used to read tag files" str readtagscmd "readtags"
 
 define-command -params ..1 \
     -shell-script-candidates %{
@@ -65,7 +65,7 @@ define-command -params ..1 \
             function path(x) { return x ~/^\// ? x : tagroot x }'
     ]]
 
-define-command ctags-complete -docstring "Complete the current selection" %{
+define-command ctags-complete -docstring "Generate completions for the current selection from the tag file" %{
     nop %sh{
         (
             header="${kak_cursor_line}.${kak_cursor_column}@${kak_timestamp}"
@@ -81,7 +81,13 @@ define-command ctags-complete -docstring "Complete the current selection" %{
     }
 }
 
-define-command ctags-funcinfo -docstring "Display ctags information about a selected function" %{
+define-command \
+    -docstring %{
+        Display ctags information about the current function
+
+        Expects the cursor to be after the opening parenthesis of a function invocation.
+    } \
+    ctags-funcinfo %{
     evaluate-commands -draft %{
         try %{
             execute-keys '[(;B<a-k>[a-zA-Z_]+\(<ret><a-;>'
@@ -98,14 +104,20 @@ define-command ctags-funcinfo -docstring "Display ctags information about a sele
     }
 }
 
-define-command ctags-enable-autoinfo -docstring "Automatically display ctags information about function" %{
+define-command \
+    -docstring %{
+        Automatically show matching symbols from the tag file in this window.
+
+        Expects the cursor to be after the opening parenthesis of a function invocation.
+    } \
+    ctags-enable-autoinfo %{
      hook window -group ctags-autoinfo NormalIdle .* ctags-funcinfo
      hook window -group ctags-autoinfo InsertIdle .* ctags-funcinfo
 }
 
-define-command ctags-disable-autoinfo -docstring "Disable automatic ctags information displaying" %{ remove-hooks window ctags-autoinfo }
+define-command ctags-disable-autoinfo -docstring "Disable automatically showing matching symbols from the tag file in this window" %{ remove-hooks window ctags-autoinfo }
 
-declare-option -docstring "shell command to run" \
+declare-option -docstring "shell command used to generate tag files" \
     str ctagscmd "ctags -R --fields=+S"
 declare-option -docstring "path to the directory in which the tags file will be generated" str ctagspaths "."
 
@@ -127,7 +139,7 @@ define-command ctags-generate -docstring 'Generate tag file asynchronously' %{
     ) > /dev/null 2>&1 < /dev/null & }
 }
 
-define-command ctags-update-tags -docstring 'Update tags for the given file' %{
+define-command ctags-update-tags -docstring 'Update tags for the current file' %{
     nop %sh{ (
         trap - INT QUIT
         while ! mkdir .tags.kaklock 2>/dev/null; do sleep 1; done
@@ -148,7 +160,7 @@ define-command ctags-update-tags -docstring 'Update tags for the given file' %{
     ) > /dev/null 2>&1 < /dev/null & }
 }
 
-define-command ctags-enable-autocomplete -docstring "Enable automatic ctags completion" %{
+define-command ctags-enable-autocomplete -docstring "Enable tags as autocomplete suggestions in this window" %{
     set-option window completers "option=ctags_completions" %opt{completers}
     hook window -group ctags-autocomplete InsertIdle .* %{
         try %{
@@ -160,9 +172,7 @@ define-command ctags-enable-autocomplete -docstring "Enable automatic ctags comp
     }
 }
 
-define-command ctags-disable-autocomplete -docstring "Disable automatic ctags completion" %{
-    evaluate-commands %sh{
-        printf "set-option window completers %s\n" $(printf %s "${kak_opt_completers}" | sed -e "s/'option=ctags_completions'//g")
-    }
+define-command ctags-disable-autocomplete -docstring "Disable tags as autocomplete suggestions in this window" %{
+    set-option -remove window completers option=ctags_completions
     remove-hooks window ctags-autocomplete
 }
