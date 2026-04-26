@@ -1422,7 +1422,7 @@ void select_object(Context& context, NormalParams params, ObjectFlags flags, Sel
                       mode == SelectMode::Extend ? "extend" : "select",
                       whole ? "" : "to ",
                       flags & ObjectFlags::Inner ? "inner " : "",
-                      flags & ObjectFlags::Nested ? "nested" : "surronding",
+                      flags & ObjectFlags::Nested ? "nested" : "surrounding",
                       whole ? "" : (flags & ObjectFlags::ToBegin ? " begin" : " end"));
     };
 
