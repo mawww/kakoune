@@ -20,6 +20,7 @@ enum class KeymapMode : char
     View,
     User,
     Object,
+    Combine,
     FirstUserMode,
 };
 

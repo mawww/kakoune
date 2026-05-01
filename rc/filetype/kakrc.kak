@@ -64,7 +64,7 @@ evaluate-commands %sh{
               unalias unmap unset-face unset-option update-option
               write write! write-all write-all-quit write-quit write-quit!"
     attributes="global buffer window current
-                normal insert prompt goto view user object
+                normal insert prompt goto view user object combine
                 number-lines show-matching show-whitespaces fill regex dynregex group flag-lines
                 ranges line column wrap ref regions region default-region replace-ranges"
     types="int bool str regex int-list str-list completions line-specs range-specs str-to-str-map"
@@ -112,7 +112,7 @@ define-command -hidden kak-indent-on-new-line %~
         try %{ execute-keys -draft k x <a-k> \%\w*[^\s\w]$ <ret> j <a-gt> }
         # deindent closing brace when after cursor
         try %_ execute-keys -draft -itersel x <a-k> ^\h*([>)}\]]) <ret> gh / <c-r>1 <ret> m <a-S> 1<a-&> _
-        # deindent closing char(s) 
+        # deindent closing char(s)
         try %{ execute-keys -draft -itersel x <a-k> ^\h*([^\s\w]) <ret> gh / <c-r>1 <ret> <a-?> <c-r>1 <ret> <a-T>% <a-k> \w*<c-r>1$ <ret> <a-S> 1<a-&> }
     =
 ~
