@@ -20,6 +20,7 @@
 #include "unit_tests.hh"
 
 #include <algorithm>
+#include <cstdlib>
 
 namespace Kakoune
 {
@@ -231,6 +232,8 @@ Token::Type token_type(StringView type_name, bool throw_on_invalid)
         return Token::Type::ArgExpand;
     else if (type_name == "file")
         return Token::Type::FileExpand;
+    else if (type_name == "env")
+        return Token::Type::EnvExpand;
     else if (type_name == "exp")
         return Token::Type::Expand;
     else if (throw_on_invalid)
@@ -410,6 +413,14 @@ void expand_token(Token&& token, const Context& context, const ShellContext& she
     }
     case Token::Type::FileExpand:
         return set_target(read_file(content));
+    case Token::Type::EnvExpand:
+    {
+        const char* result = getenv(StringView{content}.zstr());
+        if (!result)
+            throw runtime_error(format("unknown environment variable {0}", content));
+
+        return set_target(String{String::NoCopy{}, result});
+    }
     case Token::Type::Expand:
         return set_target(expand(content, context, shell_context));
     case Token::Type::Raw:
