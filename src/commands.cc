@@ -1591,14 +1591,15 @@ const CommandDesc echo_cmd = {
 
 KeymapMode parse_keymap_mode(StringView str, const KeymapManager::UserModeList& user_modes)
 {
-    if (prefix_match("normal", str)) return KeymapMode::Normal;
-    if (prefix_match("insert", str)) return KeymapMode::Insert;
-    if (prefix_match("menu", str))   return KeymapMode::Menu;
-    if (prefix_match("prompt", str)) return KeymapMode::Prompt;
-    if (prefix_match("goto", str))   return KeymapMode::Goto;
-    if (prefix_match("view", str))   return KeymapMode::View;
-    if (prefix_match("user", str))   return KeymapMode::User;
-    if (prefix_match("object", str)) return KeymapMode::Object;
+    if (prefix_match("normal", str))  return KeymapMode::Normal;
+    if (prefix_match("insert", str))  return KeymapMode::Insert;
+    if (prefix_match("menu", str))    return KeymapMode::Menu;
+    if (prefix_match("prompt", str))  return KeymapMode::Prompt;
+    if (prefix_match("goto", str))    return KeymapMode::Goto;
+    if (prefix_match("view", str))    return KeymapMode::View;
+    if (prefix_match("user", str))    return KeymapMode::User;
+    if (prefix_match("object", str))  return KeymapMode::Object;
+    if (prefix_match("combine", str)) return KeymapMode::Combine;
 
     auto it = find(user_modes, str);
     if (it == user_modes.end())
@@ -1608,7 +1609,7 @@ KeymapMode parse_keymap_mode(StringView str, const KeymapManager::UserModeList& 
     return (KeymapMode)(std::distance(user_modes.begin(), it) + offset);
 }
 
-static constexpr auto modes = make_array<StringView>({ "normal", "insert", "menu", "prompt", "goto", "view", "user", "object" });
+static constexpr auto modes = make_array<StringView>({ "normal", "insert", "menu", "prompt", "goto", "view", "user", "object", "combine" });
 
 const CommandDesc debug_cmd = {
     "debug",

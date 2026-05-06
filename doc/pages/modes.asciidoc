@@ -82,6 +82,13 @@ It aims at crafting semantic selections, often called *text-objects*.
 
 See object commands <<keys#object-selection,`:doc keys object-selection`>>.
 
+=== Combine mode
+
+Mode entered with `<a-z>` or `<a-Z>` keys.
+It aims at crafting ways to combine selections with ones in registers.
+
+See marks commands <<keys#marks,`:doc keys marks`>>.
+
 === User mode
 
 Mode entered with `<space>`. The user mode is empty by default and is the

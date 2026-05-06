@@ -2074,41 +2074,42 @@ void combine_selections(Context& context, SelectionList list, Func func, StringV
     if (&context.buffer() != &list.buffer())
         throw runtime_error{"cannot combine selections from different buffers"};
 
-    on_next_key_with_autoinfo(context, "combine-selections", KeymapMode::None,
+    on_next_key_with_autoinfo(context, "combine-selections", KeymapMode::Combine,
                              [func, list](Key key, Context& context) mutable {
-                                 if (key == Key::Escape)
-                                     return;
+        if (key == Key::Escape)
+            return;
 
-                                 const auto op = key_to_combine_op(key);
-                                 ScopedSelectionEdition selection_edition{context};
-                                 auto& sels = context.selections();
-                                 list.update();
-                                 if (op == CombineOp::Append)
-                                 {
-                                     const auto main_index = list.size() + sels.main_index();
-                                     for (auto& sel : sels)
-                                         list.push_back(sel);
-                                     list.set_main_index(main_index);
-                                     list.sort_and_merge_overlapping();
-                                 }
-                                 else
-                                 {
-                                     if (list.size() != sels.size())
-                                         throw runtime_error{format("the two selection lists don't have the same number of elements ({} vs {})",
-                                                                    list.size(), sels.size())};
-                                     for (int i = 0; i < list.size(); ++i)
-                                         combine_selection(sels.buffer(), list[i], sels[i], op);
-                                     list.set_main_index(sels.main_index());
-                                 }
-                                 func(context, std::move(list));
-                             }, title.str(),
-                             "'a': append lists\n"
-                             "'u': union\n"
-                             "'i': intersection\n"
-                             "'<': select leftmost cursor\n"
-                             "'>': select rightmost cursor\n"
-                             "'+': select longest\n"
-                             "'-': select shortest\n");
+        const auto op = key_to_combine_op(key);
+        ScopedSelectionEdition selection_edition{context};
+        auto& sels = context.selections();
+        list.update();
+        if (op == CombineOp::Append)
+        {
+            const auto main_index = list.size() + sels.main_index();
+            for (auto& sel : sels)
+                list.push_back(sel);
+            list.set_main_index(main_index);
+            list.sort_and_merge_overlapping();
+        }
+        else
+        {
+            if (list.size() != sels.size())
+                throw runtime_error{format("the two selection lists don't have the same number of elements ({} vs {})",
+                                           list.size(), sels.size())};
+            for (int i = 0; i < list.size(); ++i)
+                combine_selection(sels.buffer(), list[i], sels[i], op);
+            list.set_main_index(sels.main_index());
+        }
+        func(context, std::move(list));
+    }, title.str(),
+    build_autoinfo_for_mapping(context, KeymapMode::Combine,
+        {{{'a'}, "append lists"},
+         {{'u'}, "union"},
+         {{'i'}, "intersection"},
+         {{'<'}, "select leftmost cursor"},
+         {{'>'}, "select rightmost cursor"},
+         {{'+'}, "select longest"},
+         {{'-'}, "select shortest"}}));
 }
 
 template<bool combine>

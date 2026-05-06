@@ -63,7 +63,7 @@ KeymapManager::KeyList KeymapManager::get_mapped_keys(KeymapMode mode) const
 
 void KeymapManager::add_user_mode(String user_mode_name)
 {
-    auto modes = {"normal", "insert", "prompt", "menu", "goto", "view", "user", "object"};
+    auto modes = {"normal", "insert", "prompt", "menu", "goto", "view", "user", "object", "combine"};
 
     if (contains(modes, user_mode_name))
         throw runtime_error(format("'{}' is already a regular mode", user_mode_name));
