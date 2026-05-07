@@ -31,7 +31,7 @@ add-highlighter shared/odin regions
 add-highlighter shared/odin/code default-region group
 add-highlighter shared/odin/string region %{(?<!')"} %{(?<!\\)(\\\\)*"} fill string
 add-highlighter shared/odin/rawstring region ` ` fill string
-add-highlighter shared/odin/character region %{'} %{(?<!\\)'} fill value
+add-highlighter shared/odin/code/character regex %{(\b|\B)'((\\.)|[^'\\])'\B} 0:value
 
 add-highlighter shared/odin/comment region -recurse /\* /\* \*/ fill comment
 add-highlighter shared/odin/inline_documentation region /// $ fill documentation
