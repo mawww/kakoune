@@ -2,5 +2,5 @@ gj
 /bar<ret>
 /qux<ret>
 <c-o><c-o><c-o>
-<tab><tab><tab>
+<c-i><c-i><c-i>
 aend<esc>

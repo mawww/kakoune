@@ -2594,7 +2594,6 @@ static constexpr HashMap<Key, NormalCmd, MemoryDomain::Undefined, KeymapBackend>
     { {alt('<')}, {"deindent, not including incomplete indent", deindent<false>} },
 
     { {ctrl('i')}, {"jump forward in jump list",jump<Forward>} },
-    { {Key::Tab}, {"jump forward in jump list",jump<Forward>} }, // legacy terminals encode <tab> / <c-i> the same way
     { {ctrl('o')}, {"jump backward in jump list", jump<Backward>} },
     { {ctrl('s')}, {"push current selections in jump list", push_selections} },
 
