@@ -222,6 +222,12 @@ of the file onto the filesystem
     *-lock*:::
         stay in mode until `<esc>` is pressed
 
+    *-count <count>*:::
+        Forward *count* to the underlying normal mode parameters
+
+    *-register <register>*:::
+        Forward *register* to the underlying normal mode parameters
+
 == Hooks
 
 *hook* [<switches>] <scope> <hook_name> <filtering_regex> <command>::

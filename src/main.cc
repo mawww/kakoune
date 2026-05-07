@@ -53,6 +53,7 @@ struct {
 } constexpr version_notes[] = { {
         0,
         "» support the {+b}\\N{} escape sequence in regex (matches {+b}[^\\n]{})\n"
+        "» count and register forwarding to user modes\n"
     }, {
         20260412,
         "» {+u}finaleol{} option to preserve files with no final end-of-line\n"

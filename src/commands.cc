@@ -2695,10 +2695,10 @@ const CommandDesc declare_user_mode_cmd = {
 };
 
 // We need ownership of the mode_name in the lock case
-void enter_user_mode(Context& context, String mode_name, KeymapMode mode, bool lock)
+void enter_user_mode(Context& context, NormalParams params, String mode_name, KeymapMode mode, bool lock)
 {
     on_next_key_with_autoinfo(context, format("user.{}", mode_name), KeymapMode::None,
-                             [mode_name, mode, lock](Key key, Context& context) mutable {
+                             [params, mode_name, mode, lock](Key key, Context& context) mutable {
         if (key == Key::Escape)
             return;
 
@@ -2706,7 +2706,7 @@ void enter_user_mode(Context& context, String mode_name, KeymapMode mode, bool l
         {
             ScopedSetBool disable_keymaps(context.keymaps_disabled());
 
-            InputHandler::ScopedForceNormal force_normal{context.input_handler(), {}};
+            InputHandler::ScopedForceNormal force_normal{context.input_handler(), params};
 
             ScopedEdition edition(context);
             for (auto& key : context.keymaps().get_mapping_keys(key, mode))
@@ -2714,7 +2714,7 @@ void enter_user_mode(Context& context, String mode_name, KeymapMode mode, bool l
         }
 
         if (lock)
-            enter_user_mode(context, std::move(mode_name), mode, true);
+            enter_user_mode(context, params, std::move(mode_name), mode, true);
     }, lock ? format("{} (lock)", mode_name) : mode_name,
     build_autoinfo_for_mapping(context, mode, {}));
 }
@@ -2722,9 +2722,11 @@ void enter_user_mode(Context& context, String mode_name, KeymapMode mode, bool l
 const CommandDesc enter_user_mode_cmd = {
     "enter-user-mode",
     nullptr,
-    "enter-user-mode [<switches>] <name>: enable <name> keymap mode for next key",
+    "enter-user-mode [<switches>] <name> [<count>] [<register>]: enable <name> keymap mode for next key",
     ParameterDesc{
-        { { "lock", { {}, "stay in mode until <esc> is pressed" } } },
+        { { "lock", { {}, "stay in mode until <esc> is pressed" } },
+          { "count", { ArgCompleter{}, "count to forward to normal mode parameters" } },
+          { "register", { ArgCompleter{}, "register to forward to normal mode parameters" } } },
         ParameterDesc::Flags::None, 1, 1
     },
     CommandFlags::None,
@@ -2745,7 +2747,11 @@ const CommandDesc enter_user_mode_cmd = {
     {
         auto lock = (bool)parser.get_switch("lock");
         KeymapMode mode = parse_keymap_mode(parser[0], context.keymaps().user_modes());
-        enter_user_mode(context, parser[0], mode, lock);
+        NormalParams params{
+            parser.get_switch("count").map(str_to_int_ifp).value_or(0),
+            parser.get_switch("register").map([](auto&& s) { return s.empty() ? '\0' : s[0]; }).value_or('\0')
+        };
+        enter_user_mode(context, params, parser[0], mode, lock);
     }
 };
 
