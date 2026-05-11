@@ -2628,15 +2628,7 @@ const CommandDesc change_directory_cmd = {
     single_optional_param,
     CommandFlags::None,
     CommandHelper{},
-    make_completer(
-         [](const Context& context,
-            StringView prefix, ByteCount cursor_pos) -> Completions {
-             return { 0_byte, cursor_pos,
-                      complete_filename(prefix,
-                                        context.options()["ignored_files"].get<Regex>(),
-                                        cursor_pos, FilenameFlags::OnlyDirectories),
-                      Completions::Flags::Menu };
-        }),
+    make_completer(filename_arg_completer<true>),
     [](const ParametersParser& parser, Context& ctx, const ShellContext&)
     {
         StringView target = parser.positional_count() == 1 ? StringView{parser[0]} : "~";
