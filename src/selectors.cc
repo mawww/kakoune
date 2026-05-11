@@ -882,9 +882,12 @@ Vector<Selection> select_nested_sentences(const Context& context, int count, Obj
                 break;
             auto start = it;
             it = std::find_if(it, end, is_end_of_sentence);
-            ++it;
-            if (not (flags & ObjectFlags::Inner))
-                skip_while(it, end, [](char c) { return c == ' '; });
+            if (it != end)
+            {
+                ++it;
+                if (not (flags & ObjectFlags::Inner))
+                    skip_while(it, end, [](char c) { return c == ' '; });
+            }
             res.push_back({start.coord(), context.buffer().char_prev(it.coord())});
         }
     });
