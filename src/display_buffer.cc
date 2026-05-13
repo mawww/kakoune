@@ -6,8 +6,6 @@
 #include "format.hh"
 #include "utf8.hh"
 
-#include "face_registry.hh"
-
 namespace Kakoune
 {
 
