@@ -54,6 +54,7 @@ struct {
         0,
         "» support the {+b}\\N{} escape sequence in regex (matches {+b}[^\\n]{})\n"
         "» count and register forwarding to user modes\n"
+        "» back switch added for the arrange-buffers command\n"
     }, {
         20260412,
         "» {+u}finaleol{} option to preserve files with no final end-of-line\n"

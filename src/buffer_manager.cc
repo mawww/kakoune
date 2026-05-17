@@ -120,10 +120,10 @@ void BufferManager::clear_buffer_trash()
     m_buffer_trash.clear();
 }
 
-void BufferManager::arrange_buffers(ConstArrayView<String> first_ones)
+void BufferManager::arrange_buffers(ConstArrayView<String> buffers, bool to_back)
 {
     Vector<size_t> indices;
-    for (const auto& name : first_ones)
+    for (const auto& name : buffers)
     {
         auto filename = real_path(parse_filename(name));
         auto it = find_if(m_buffers, [&](auto& buf) { return buf->display_name() == name or (buf->flags() & Buffer::Flags::File and buf->filename() == filename); });
@@ -143,6 +143,9 @@ void BufferManager::arrange_buffers(ConstArrayView<String> first_ones)
         if (buf)
             res.push_back(std::move(buf));
     }
+    if (to_back)
+        std::rotate(res.begin(), res.begin() + indices.size(), res.end());
+
     m_buffers = std::move(res);
 }
 

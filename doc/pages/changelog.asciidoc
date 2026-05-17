@@ -12,6 +12,9 @@ released versions.
 * `enter-user-mode` support the `-count` and `-register` switches to forward
   those parameters to the underlying normal mode
 
+* `arrange-buffers -back` switch to arrange provided buffers to the back of
+  the buffer list.
+
 == Kakoune 2026.04.12
 
 * `finaleol` option to support writing files that do not end with an final
