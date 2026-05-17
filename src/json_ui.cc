@@ -79,6 +79,11 @@ String to_json(ColumnCount column)
     return format("{}", column);
 }
 
+String to_json(LineCount line)
+{
+    return format("{}", line);
+}
+
 String to_json(DisplayCoord coord)
 {
     return format(R"(\{ "line": {}, "column": {} })", coord.line, coord.column);
@@ -154,10 +159,13 @@ JsonUI::JsonUI()
 
 void JsonUI::draw(const DisplayBuffer& display_buffer, DisplayCoord cursor_pos,
                   const Face& default_face, const Face& padding_face,
-                  ColumnCount widget_columns)
+                  ColumnCount widget_columns,
+                  LineCount first_buffer_line,
+                  LineCount last_buffer_line,
+                  LineCount buffer_line_count)
 {
     rpc_call("draw", display_buffer.lines(), cursor_pos, default_face, padding_face,
-             widget_columns);
+             widget_columns, first_buffer_line, last_buffer_line, buffer_line_count);
 }
 
 void JsonUI::draw_status(const DisplayLine& prompt,

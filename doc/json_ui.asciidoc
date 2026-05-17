@@ -23,11 +23,15 @@ Here are the data structures used:
 
 Here are the requests that can be written by the json ui on stdout:
 
-* draw(Array<Line> lines, Coord cursor_pos, Face default_face, Face padding_face, int widget_columns)
+* draw(Array<Line> lines, Coord cursor_pos, Face default_face, Face padding_face, int widget_columns,
+       int first_buffer_line, int last_buffer_line, int buffer_line_count)
   padding_face is the face of the padding characters '~' in the
   terminal UI.
   cursor_pos is the main cursor coordinates
   widget_columns is the number of columns at the start of each line used by flag-lines highlighters.
+  first_buffer_line and last_buffer_line are the 0-based buffer line numbers of the first
+  and last lines visible in the viewport.
+  buffer_line_count is the total number of lines in the buffer.
 * draw_status(Line prompt, Line content, int cursor_pos, Line mode_line, Face default_face,
               String style)
   cursor_pos is the location of the cursor in the content, the UI is expected to trim

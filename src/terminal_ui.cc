@@ -563,7 +563,10 @@ void TerminalUI::draw(const DisplayBuffer& display_buffer,
                       DisplayCoord cursor_pos,
                       const Face& default_face,
                       const Face& padding_face,
-                      ColumnCount)
+                      ColumnCount,
+                      LineCount,
+                      LineCount,
+                      LineCount)
 {
     check_resize();
 

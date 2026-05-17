@@ -255,8 +255,12 @@ void Client::redraw_ifn()
     {
         auto& display_buffer = window.update_display_buffer(context());
         auto cursor_pos = window.display_coord(context().selections().main().cursor()).value_or(DisplayCoord{});
+        auto& db_lines = display_buffer.lines();
         m_ui->draw(display_buffer, cursor_pos, faces["Default"], faces["BufferPadding"],
-                   window.last_display_setup().widget_columns);
+                   window.last_display_setup().widget_columns,
+                   db_lines.empty() ? 0_line : window.last_display_setup().first_line,
+                   db_lines.empty() ? 0_line : db_lines.back().range().begin.line,
+                   context().buffer().line_count());
     }
 
     const bool update_menu_anchor = (m_ui_pending & Draw) and not (m_ui_pending & MenuHide) and
