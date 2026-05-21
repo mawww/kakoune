@@ -1,0 +1,3 @@
+BACKUP='.out.kak.AABBCC'
+echo BACKUP > "$BACKUP"
+while [ ! "$BACKUP" -nt out ]; do touch "$BACKUP"; done

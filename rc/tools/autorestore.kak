@@ -16,22 +16,27 @@ define-command autorestore-restore-buffer \
     evaluate-commands %sh{
         buffer_basename="${kak_buffile##*/}"
         buffer_dirname=$(dirname "${kak_buffile}")
+        backup_prefix="${buffer_dirname}"/".${buffer_basename}.kak."
 
         if [ -f "${kak_buffile}" ]; then
-            newer=$(find "${buffer_dirname}"/".${buffer_basename}.kak."* -newer "${kak_buffile}" -exec ls -1t {} + 2>/dev/null | head -n 1)
-            older=$(find "${buffer_dirname}"/".${buffer_basename}.kak."* \! -newer "${kak_buffile}" -exec ls -1t {} + 2>/dev/null | head -n 1)
+            newer=$(find "${backup_prefix}"* -newer "${kak_buffile}" -exec ls -1t {} + 2>/dev/null | head -n 1)
+            older=$(find "${backup_prefix}"* \! -newer "${kak_buffile}" -exec ls -1t {} + 2>/dev/null | head -n 1)
         else
             # New buffers that were never written to disk.
-            newer=$(ls -1t "${buffer_dirname}"/".${buffer_basename}.kak."* 2>/dev/null | head -n 1)
+            newer=$(ls -1t "${backup_prefix}"* 2>/dev/null | head -n 1)
             older=""
         fi
 
         if [ -z "${newer}" ]; then
             if [ -n "${older}" ]; then
-                printf %s\\n "
-                    echo -debug Old backup file(s) found: will not restore ${older} .
-                "
+                printf "echo -debug 'Old backup file(s) found: will not restore %s.'" "$(printf %s "${older}" | sed s/\'/\'\'/g)"
             fi
+            exit
+        fi
+
+        # ensure backup suffix only contains portable filename characters
+        if ! pathchk -p "$(printf %s "${newer}" | cut -b ${#backup_prefix}-)" >/dev/null 2>&1; then
+            printf "echo -debug 'backup file suffix contains unexpected characters %s, ignored.'" "$(printf %s "${newer}" | sed s/\'/\'\'/g)"
             exit
         fi
 
