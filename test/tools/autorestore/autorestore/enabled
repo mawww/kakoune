@@ -1,0 +1,2 @@
+#!/bin/sh
+command -v pathchk >/dev/null
