@@ -51,7 +51,7 @@ struct {
     unsigned int version;
     StringView notes;
 } constexpr version_notes[] = { {
-        0,
+        20260521,
         "» support the {+b}\\N{} escape sequence in regex (matches {+b}[^\\n]{})\n"
         "» count and register forwarding to user modes\n"
         "» back switch added for the arrange-buffers command\n"
@@ -69,9 +69,6 @@ struct {
         "» {+U}double underline{} support\n"
         "» {+u}git apply{} can stage/revert selected changes to current buffer\n"
         "» {+u}exec/eval -client{} accepts '*' and comma separated list\n"
-    }, {
-        20240518,
-        "» Fix tests failing on some platforms\n"
     }
 };
 
