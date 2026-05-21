@@ -71,11 +71,7 @@ class BufferIterator:
     def to_string(self):
         line = self.val['m_coord']['line']
         column = self.val['m_coord']['column']
-        if self.val['m_buffer']['m_ptr'] != 0:
-            buf = self.val['m_buffer']['m_ptr'].dereference()['m_name']
-            return "buffer<%s>@(%s, %s)" % (buf, line, column)
-        else:
-            return "buffer<none>@(%s, %s)" % (line, column)
+        return "BufferIterator(%s, %s)" % (line, column)
 
 
 class String:
