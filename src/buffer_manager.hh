@@ -32,7 +32,7 @@ public:
     Buffer& get_buffer_matching(const FunctionRef<bool (Buffer&)>& filter);
 
     void make_latest(Buffer& buffer);
-    void arrange_buffers(ConstArrayView<String> first_ones);
+    void arrange_buffers(ConstArrayView<String> buffers, bool to_back);
 
     Buffer& get_first_buffer();
 

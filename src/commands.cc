@@ -1103,7 +1103,10 @@ const CommandDesc arrange_buffers_cmd = {
     "arrange-buffers <buffer>...: reorder the buffers in the buffers list\n"
     "    the named buffers will be moved to the front of the buffer list, in the order given\n"
     "    buffers that do not appear in the parameters will remain at the end of the list, keeping their current order",
-    ParameterDesc{{}, ParameterDesc::Flags::None, 1},
+    ParameterDesc{
+        { { "back", { {}, "place the named buffers at the back, rather than the front, of the buffer list" } }, },
+        ParameterDesc::Flags::None, 1
+    },
     CommandFlags::None,
     CommandHelper{},
     [](const Context& context, CommandParameters params, size_t, ByteCount cursor_pos)
@@ -1112,7 +1115,8 @@ const CommandDesc arrange_buffers_cmd = {
     },
     [](const ParametersParser& parser, Context&, const ShellContext&)
     {
-        BufferManager::instance().arrange_buffers(parser.positionals_from(0));
+        const auto to_back = (bool)parser.get_switch("back");
+        BufferManager::instance().arrange_buffers(parser.positionals_from(0), to_back);
     }
 };
 

@@ -25,6 +25,9 @@ of the file onto the filesystem
     given. Buffers that do not appear in the parameters will remain at the
     end of the list, keeping their current order.
 
+    *-back*:::
+        Move the named buffers to the back, rather than the fron, of the buffer list..
+
 *change-directory* [<directory>]::
     *alias* cd +
     change the current directory to *directory*, or the home directory if
