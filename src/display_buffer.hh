@@ -85,7 +85,6 @@ public:
                content() == other.content();
     }
 
-public:
     Face face;
 
 private:
