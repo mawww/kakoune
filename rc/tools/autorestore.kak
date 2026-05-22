@@ -35,10 +35,12 @@ define-command autorestore-restore-buffer \
         fi
 
         # ensure backup suffix only contains portable filename characters
-        if ! pathchk -p "$(printf %s "${newer}" | cut -b ${#backup_prefix}-)" >/dev/null 2>&1; then
-            printf "echo -debug 'backup file suffix contains unexpected characters %s, ignored.'" "$(printf %s "${newer}" | sed s/\'/\'\'/g)"
-            exit
-        fi
+        case "$(printf %s "${newer}" | cut -b ${#backup_prefix}-)" in
+            *[!A-Za-z0-9_.-]*)
+                printf "echo -debug 'backup file suffix contains unexpected characters %s, ignored.'" "$(printf %s "${newer}" | sed s/\'/\'\'/g)"
+                exit
+                ;;
+        esac
 
         printf %s\\n "
             ## Replace the content of the buffer with the content of the backup file
