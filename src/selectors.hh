@@ -30,9 +30,6 @@ template<WordType word_type>
 Optional<Selection>
 select_to_previous_word(const Context& context, const Selection& selection);
 
-Optional<Selection>
-select_line(const Context& context, const Selection& selection);
-
 template<bool forward>
 Optional<Selection>
 select_matching(const Context& context, const Selection& selection);
