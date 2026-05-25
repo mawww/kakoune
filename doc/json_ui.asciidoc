@@ -64,6 +64,7 @@ Here are the requests that can be written by the json ui on stdout:
 The requests that the json ui can interpret on stdin are:
 
 * keys(String key1, String key2...): keystrokes
+* paste(String content): paste content at selections
 * resize(int rows, int columns): notify ui resize
 * scroll(int amount, int line, int colum): scroll by given line amount, line and
   column relate to cursor position
