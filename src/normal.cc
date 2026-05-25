@@ -969,7 +969,7 @@ void regex_prompt(Context& context, String prompt, char reg, RegexMode mode, Fun
                     return res;
 
                 int backslashes = 0;
-                for (auto bs = it; bs != s.begin() && *(bs-1) == '\\'; --bs)
+                for (auto bs = it; bs != s.begin() and *(bs-1) == '\\'; --bs)
                     ++backslashes;
                 return (backslashes % 2 == 1) ? res.substr(1_byte) : res;
             };

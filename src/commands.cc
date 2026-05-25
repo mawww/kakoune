@@ -176,7 +176,7 @@ static Completions complete_buffer_name(const Context& context, StringView prefi
 {
     struct RankedMatchAndBuffer : RankedMatch
     {
-        RankedMatchAndBuffer(RankedMatch  m, const Buffer* b)
+        RankedMatchAndBuffer(RankedMatch m, const Buffer* b)
             : RankedMatch{std::move(m)}, buffer{b} {}
 
         using RankedMatch::operator==;
@@ -601,7 +601,7 @@ void do_write_buffer(Context& context, Optional<String> filename, WriteFlags fla
     Buffer& buffer = context.buffer();
     const bool is_file = (bool)(buffer.flags() & Buffer::Flags::File);
 
-    if (not filename and !is_file)
+    if (not filename and not is_file)
         throw runtime_error("cannot write a non file buffer without a filename");
 
     const bool is_readonly = (bool)(context.buffer().flags() & Buffer::Flags::ReadOnly);
@@ -674,7 +674,7 @@ void write_all_buffers(const Context& context, bool sync = false, Optional<Write
         if ((buffer->flags() & Buffer::Flags::File) and
             ((buffer->flags() & Buffer::Flags::New) or
              buffer->is_modified())
-            and !(buffer->flags() & Buffer::Flags::ReadOnly))
+            and not (buffer->flags() & Buffer::Flags::ReadOnly))
         {
             auto method = write_method.value_or_compute([&] { return context.options()["writemethod"].get<WriteMethod>(); });
             auto flags = sync ? WriteFlags::Sync : WriteFlags::None;
@@ -1817,7 +1817,7 @@ const CommandDesc set_option_cmd = {
             return { 0_byte, params[1].length(),
                      GlobalScope::instance().option_registry().complete_option_name(params[1], pos_in_token),
                      Completions::Flags::Menu };
-        else if (token_to_complete == 2  and params[2].empty() and
+        else if (token_to_complete == 2 and params[2].empty() and
                  GlobalScope::instance().option_registry().option_exists(params[1]))
         {
             OptionManager& options = get_scope(params[0], context).options();

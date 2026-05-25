@@ -305,7 +305,7 @@ private:
         m_write_pos += res;
 
         if (cmsghdr* cmsg = CMSG_FIRSTHDR(&msg);
-            cmsg && cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_RIGHTS && cmsg->cmsg_len == CMSG_LEN(sizeof(int)))
+            cmsg and cmsg->cmsg_level == SOL_SOCKET and cmsg->cmsg_type == SCM_RIGHTS and cmsg->cmsg_len == CMSG_LEN(sizeof(int)))
         {
             m_ancillary_fd.map(close);
             memcpy(&m_ancillary_fd.emplace(), CMSG_DATA(cmsg), sizeof(int));
@@ -612,7 +612,7 @@ const String& session_directory()
         StringView xdg_runtime_dir = getenv("XDG_RUNTIME_DIR");
         if (not xdg_runtime_dir.empty())
         {
-            if (struct stat st; stat(xdg_runtime_dir.zstr(), &st) == 0 && st.st_uid == geteuid())
+            if (struct stat st; stat(xdg_runtime_dir.zstr(), &st) == 0 and st.st_uid == geteuid())
                 return format("{}/kakoune", xdg_runtime_dir);
             else
                 write_to_debug_buffer("XDG_RUNTIME_DIR does not exist or not owned by current user, using tmpdir");

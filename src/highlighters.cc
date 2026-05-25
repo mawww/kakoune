@@ -1076,7 +1076,7 @@ private:
             const auto atom_face = last_line == current_line ? face_wrapped :
                 ((m_hl_cursor_line and is_cursor_line) ? face_absolute : face);
 
-            const auto& separator = is_cursor_line && last_line != current_line
+            const auto& separator = is_cursor_line and last_line != current_line
                                     ? m_cursor_separator : m_separator;
 
             line.insert(line.begin(), {buffer, atom_face});
@@ -1606,7 +1606,7 @@ private:
         {
             try
             {
-                if (!is_valid(buffer, range.first) or (!is_empty(range) and !is_valid(buffer, range.last)) or !is_fully_selected(sels, range))
+                if (not is_valid(buffer, range.first) or (not is_empty(range) and not is_valid(buffer, range.last)) or not is_fully_selected(sels, range))
                     continue;
                 auto end = is_empty(range) ? range.first : buffer.char_next(range.last);
                 replace_range(display_buffer, range.first, end,
@@ -1645,7 +1645,7 @@ private:
 
         for (auto& [range, spec] : range_and_faces.list)
         {
-            if (!is_valid(buffer, range.first) or (!is_empty(range) and !is_valid(buffer, range.last)) or !is_fully_selected(sels, range))
+            if (not is_valid(buffer, range.first) or (not is_empty(range) and not is_valid(buffer, range.last)) or not is_fully_selected(sels, range))
                 continue;
 
             auto last = is_empty(range) ? range.first : buffer.char_next(range.last);

@@ -97,7 +97,7 @@ CandidateList HookManager::complete_hook_group(StringView prefix, ByteCount pos_
         auto container = list | transform([](const UniquePtr<HookData>& h) -> const String& { return h->group; });
         for (auto& c : complete(prefix, pos_in_token, container))
         {
-            if (!contains(res, c))
+            if (not contains(res, c))
                 res.push_back(c);
         }
     }

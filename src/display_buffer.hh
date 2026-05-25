@@ -165,7 +165,7 @@ public:
 private:
     void compute_range(bool preserve_if_no_atoms = false);
     BufferRange m_range = { { INT_MAX, INT_MAX }, { INT_MIN, INT_MIN } };
-    AtomList  m_atoms;
+    AtomList m_atoms;
 };
 
 using DisplayLineList = Vector<DisplayLine>;

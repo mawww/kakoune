@@ -636,7 +636,7 @@ int run_client(StringView session, StringView name, StringView client_init,
         // So only worry about making the tty your stdin if:
         // (a) ui_type is Terminal, *and*
         // (b) fd 0 is not interactive.
-        if (ui_type == UIType::Terminal && not isatty(0))
+        if (ui_type == UIType::Terminal and not isatty(0))
         {
             // move stdin to another fd, and restore tty as stdin
             stdin_fd = dup(0);
@@ -1129,7 +1129,7 @@ int main(int argc, char* argv[])
         {
             if (not name.empty() and name[0_byte] == '+')
             {
-                if (name == "+" or name  == "+:")
+                if (name == "+" or name == "+:")
                 {
                     client_init = client_init + "; exec gj";
                     continue;

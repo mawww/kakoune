@@ -503,14 +503,14 @@ void to_prev_word_begin(CharCount& pos, StringView line)
     {
         while (pos != 0_char and is_punctuation(line[pos]))
             --pos;
-        if (!is_punctuation(line[pos]))
+        if (not is_punctuation(line[pos]))
             ++pos;
     }
     else if (is_word<word_type>(line[pos]))
     {
         while (pos != 0_char and is_word<word_type>(line[pos]))
             --pos;
-        if (!is_word<word_type>(line[pos]))
+        if (not is_word<word_type>(line[pos]))
             ++pos;
      }
 }

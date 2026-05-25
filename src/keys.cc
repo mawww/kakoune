@@ -33,7 +33,7 @@ static Key canonicalize_ifn(Key key)
             key.modifiers &= ~Key::Modifiers::Shift;
             key.key = to_upper(key.key);
         }
-        else if (key.key < 0xD800 || key.key > 0xDFFF)
+        else if (key.key < 0xD800 or key.key > 0xDFFF)
         {
             // Shift + any other printable character is not allowed.
             throw key_parse_error(format("Shift modifier only works on special keys and lowercase ASCII, not '{}'", key.key));

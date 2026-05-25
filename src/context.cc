@@ -335,7 +335,7 @@ void Context::forget_buffer(Buffer& buffer)
 
     if (&this->buffer() == &buffer)
     {
-        if (is_editing() && has_input_handler())
+        if (is_editing() and has_input_handler())
             input_handler().reset_normal_mode();
 
         auto last_buffer = this->last_buffer();

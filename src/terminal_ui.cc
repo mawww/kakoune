@@ -790,11 +790,11 @@ Optional<Key> TerminalUI::get_next_key()
             private_mode = c;
             c = next_char();
         }
-        for (int count = 0, subcount = 0; count < 16 and c >= 0x30 && c <= 0x3f; c = next_char())
+        for (int count = 0, subcount = 0; count < 16 and c >= 0x30 and c <= 0x3f; c = next_char())
         {
             if (isdigit(c))
                 params[count][subcount] = params[count][subcount] * 10 + c - '0';
-            else if (c == ':' && subcount < 3)
+            else if (c == ':' and subcount < 3)
                 ++subcount;
             else if (c == ';')
             {
@@ -1595,7 +1595,7 @@ void TerminalUI::set_ui_options(const Options& options)
 
     m_padding_char = find("terminal_padding_char").map([](StringView s) { return s.column_length() < 1 ? ' ' : s[0_char]; }).value_or(Codepoint{'~'});
     m_padding_fill = find("terminal_padding_fill").map(to_bool).value_or(false);
-    
+
     bool new_cursor_native = find("terminal_cursor_native").map(to_bool).value_or(false);
     if (new_cursor_native != m_cursor_native)
     {

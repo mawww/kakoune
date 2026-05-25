@@ -103,7 +103,7 @@ String compact_path(StringView filename)
     String real_filename = real_path(filename);
 
     char cwd[1024];
-    if (!::getcwd(cwd, 1024))
+    if (not ::getcwd(cwd, 1024))
         throw runtime_error(format("unable to get the current working directory (errno: {})", ::strerror(errno)));
 
     String real_cwd = real_path(cwd) + "/";
@@ -144,7 +144,7 @@ StringView homedir()
 bool fd_readable(int fd)
 {
     kak_assert(fd >= 0);
-    fd_set  rfds;
+    fd_set rfds;
     FD_ZERO(&rfds);
     FD_SET(fd, &rfds);
 
@@ -155,7 +155,7 @@ bool fd_readable(int fd)
 bool fd_writable(int fd)
 {
     kak_assert(fd >= 0);
-    fd_set  wfds;
+    fd_set wfds;
     FD_ZERO(&wfds);
     FD_SET(fd, &wfds);
 
@@ -173,7 +173,7 @@ String read_fd(int fd, bool text)
         if (size == -1)
             throw file_access_error{fd, strerror(errno)};
 
-        if  (text)
+        if (text)
         {
             for (StringView data{buf, buf + size}; not data.empty();)
             {
@@ -414,7 +414,7 @@ String get_kak_binary_path()
     char buffer[2048];
 #if defined(__linux__) or defined(__CYGWIN__) or defined(__gnu_hurd__)
     ssize_t res = readlink("/proc/self/exe", buffer, 2048);
-    if (res != -1 && res < 2048) {
+    if (res != -1 and res < 2048) {
         buffer[res] = '\0';
         return buffer;
     }
@@ -446,7 +446,7 @@ String get_kak_binary_path()
     }
 #elif defined(__DragonFly__)
     ssize_t res = readlink("/proc/curproc/file", buffer, 2048);
-    if (res != -1 && res < 2048) {
+    if (res != -1 and res < 2048) {
         buffer[res] = '\0';
         return buffer;
     }
@@ -455,7 +455,7 @@ String get_kak_binary_path()
     return KAK_BIN_PATH;
 #elif defined(__sun__)
     ssize_t res = readlink("/proc/self/path/a.out", buffer, 2048);
-    if (res != -1 && res < 2048) {
+    if (res != -1 and res < 2048) {
         buffer[res] = '\0';
         return buffer;
     }

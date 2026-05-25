@@ -902,7 +902,7 @@ Vector<Selection> select_nested_paragraphs(const Context& context, int count, Ob
         {
             auto start = std::find_if(it, end, [&](char c) {return not is_eol(c); });
             int consecutive_eols = 0;
-            for  (it = start; it != end; ++it)
+            for (it = start; it != end; ++it)
             {
                 if (is_eol(*it))
                 {
@@ -1044,7 +1044,7 @@ select_lines(const Context& context, const Selection& selection)
 {
     auto& buffer = context.buffer();
     BufferCoord anchor = selection.anchor();
-    BufferCoord cursor  = selection.cursor();
+    BufferCoord cursor = selection.cursor();
     BufferCoord& to_line_start = anchor <= cursor ? anchor : cursor;
     BufferCoord& to_line_end = anchor <= cursor ? cursor : anchor;
 
@@ -1059,7 +1059,7 @@ trim_partial_lines(const Context& context, const Selection& selection)
 {
     auto& buffer = context.buffer();
     BufferCoord anchor = selection.anchor();
-    BufferCoord cursor  = selection.cursor();
+    BufferCoord cursor = selection.cursor();
     BufferCoord& to_line_start = anchor <= cursor ? anchor : cursor;
     BufferCoord& to_line_end = anchor <= cursor ? cursor : anchor;
 

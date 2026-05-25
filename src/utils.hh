@@ -162,7 +162,7 @@ public:
     FunctionRef()
       : m_target{nullptr},
         m_invoker{[](void* target, Args... args) {
-            if constexpr (!std::is_same_v<Res, void>) return Res{};
+            if constexpr (not std::is_same_v<Res, void>) return Res{};
         }}
     {}
 

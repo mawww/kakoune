@@ -90,7 +90,7 @@ InsertCompletion complete_word(const SelectionList& sels,
     for (int i = 0; i < sels.size(); ++i)
     {
         int len = 0;
-        auto is_short_enough_word = [&] (Codepoint c) { return len++ < WordSplitter::max_word_len && is_word_pred(c); };
+        auto is_short_enough_word = [&] (Codepoint c) { return len++ < WordSplitter::max_word_len and is_word_pred(c); };
 
         Utf8It end{buffer.iterator_at(sels[i].cursor()), buffer};
         Utf8It begin = end-1;
@@ -115,7 +115,7 @@ InsertCompletion complete_word(const SelectionList& sels,
 
     struct RankedMatchAndBuffer : RankedMatch
     {
-        RankedMatchAndBuffer(RankedMatch  m, const Buffer* b)
+        RankedMatchAndBuffer(RankedMatch m, const Buffer* b)
             : RankedMatch{std::move(m)}, buffer{b} {}
 
         using RankedMatch::operator==;
@@ -174,7 +174,7 @@ InsertCompletion complete_word(const SelectionList& sels,
         if (not candidates.empty() and candidates.back().completion == m.candidate())
             return false;
         DisplayLine menu_entry;
-        if (other_buffers && m.buffer)
+        if (other_buffers and m.buffer)
         {
             const auto pad_len = longest + 1 - m.candidate().char_length();
             menu_entry.push_back({ m.candidate().str(), {} });
@@ -523,7 +523,7 @@ void InsertCompleter::reset()
 
 bool InsertCompleter::setup_ifn()
 {
-    if (!m_enabled)
+    if (not m_enabled)
         return false;
     if (not m_completions.is_valid())
     {

@@ -148,7 +148,7 @@ DisplayLine::iterator DisplayLine::split(iterator it, ColumnCount count)
 DisplayLine::iterator DisplayLine::split(BufferCoord pos)
 {
     auto it = find_if(begin(), end(), [pos](const DisplayAtom& a) {
-        return (a.has_buffer_range() && a.begin() >= pos) ||
+        return (a.has_buffer_range() and a.begin() >= pos) or
                (a.type() == DisplayAtom::Range and a.end() > pos);
     });
     if (it == end() or it->begin() >= pos)
@@ -160,7 +160,7 @@ DisplayLine::iterator DisplayLine::insert(iterator it, DisplayAtom atom)
 {
     if (atom.has_buffer_range())
     {
-        m_range.begin  = std::min(m_range.begin, atom.begin());
+        m_range.begin = std::min(m_range.begin, atom.begin());
         m_range.end = std::max(m_range.end, atom.end());
     }
     return m_atoms.insert(it, std::move(atom));
@@ -170,7 +170,7 @@ DisplayAtom& DisplayLine::push_back(DisplayAtom atom)
 {
     if (atom.has_buffer_range())
     {
-        m_range.begin  = std::min(m_range.begin, atom.begin());
+        m_range.begin = std::min(m_range.begin, atom.begin());
         m_range.end = std::max(m_range.end, atom.end());
     }
     m_atoms.push_back(std::move(atom));
@@ -283,7 +283,7 @@ bool DisplayLine::trim_from(ColumnCount first_col, ColumnCount front, ColumnCoun
     it = begin();
     for (; it != end() and col_count > 0; ++it)
         col_count -= it->trim_end_to_length(col_count);
-    bool did_trim = it != end() && col_count == 0;
+    bool did_trim = it != end() and col_count == 0;
     m_atoms.erase(it, end());
 
     compute_range(true);
@@ -312,7 +312,7 @@ void DisplayBuffer::compute_range()
     m_range = init_range;
     for (auto& line : m_lines)
     {
-        m_range.begin  = std::min(line.range().begin, m_range.begin);
+        m_range.begin = std::min(line.range().begin, m_range.begin);
         m_range.end = std::max(line.range().end, m_range.end);
     }
     if (m_range == init_range)

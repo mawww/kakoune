@@ -41,7 +41,7 @@ public:
 private:
     String m_name;
     String m_docstring;
-    OptionFlags  m_flags;
+    OptionFlags m_flags;
 };
 
 class Option : public UseMemoryDomain<MemoryDomain::Options>

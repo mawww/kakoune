@@ -47,7 +47,7 @@ static int count_word_boundaries_match(StringView candidate, StringView query)
     {
         const Codepoint c = *it;
         const bool is_word_boundary = prev == 0 or
-                                      (!is_word(prev, {}) and is_word(c, {})) or
+                                      (not is_word(prev, {}) and is_word(c, {})) or
                                       (is_lower(prev) and is_upper(c));
         prev = c;
 

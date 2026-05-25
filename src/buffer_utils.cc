@@ -22,7 +22,7 @@ namespace Kakoune
 void replace(Buffer& buffer, ArrayView<BufferRange> ranges, ConstArrayView<String> strings)
 {
     ForwardChangesTracker changes_tracker;
-    size_t timestamp  = buffer.timestamp();
+    size_t timestamp = buffer.timestamp();
     for (size_t index = 0; index < ranges.size(); ++index)
     {
         auto& range = ranges[index];
@@ -129,7 +129,7 @@ decltype(auto) parse_file(StringView filename, Func&& func)
     const char* end = pos + file.st.st_size;
 
     auto bom = ByteOrderMark::None;
-    if (file.st.st_size >= 3 && StringView{pos, 3_byte} == "\xEF\xBB\xBF")
+    if (file.st.st_size >= 3 and StringView{pos, 3_byte} == "\xEF\xBB\xBF")
     {
         bom = ByteOrderMark::Utf8;
         pos += 3;
@@ -357,7 +357,7 @@ Buffer* create_fifo_buffer(String name, int fd, Buffer::Flags flags, AutoScroll 
                     }
                     m_had_trailing_newline = have_trailing_newline;
                 }
-                while (++loop < max_loop  and fd_readable(fifo));
+                while (++loop < max_loop and fd_readable(fifo));
             }
 
             if (insert_begin)

@@ -143,7 +143,7 @@ ParseResult parse_quoted(ParseState& state, Delimiter delimiter)
         if (c == delimiter)
         {
             auto next = state.pos;
-            if (next == end || read(next, end) != delimiter)
+            if (next == end or read(next, end) != delimiter)
             {
                 if (str.empty())
                     return {String{String::NoCopy{}, {beg, cur}}, true};
