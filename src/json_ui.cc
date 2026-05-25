@@ -263,6 +263,12 @@ void JsonUI::eval_json(const Value& json)
             for (auto& key : parse_keys(key_val.as<String>()))
                 m_on_key(key);
         }
+    }else if (method == "paste")
+    {
+        if (params.size() != 1 or not params[0].is_a<String>())
+            throw invalid_rpc_request("paste requires a string parameter");
+        if (m_on_paste)
+            m_on_paste(params[0].as<String>());
     }
     else if (method == "mouse_move")
     {
