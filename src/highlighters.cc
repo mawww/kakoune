@@ -699,7 +699,8 @@ struct WrapHighlighter : Highlighter
                 last_WORD_boundary = pos;
         };
 
-        if (pos.atom_it->type() != DisplayAtom::Range and pos.column + pos.atom_it->length() >= wrap_column)
+        if (pos.atom_it != line_end && pos.atom_it->type() != DisplayAtom::Range and
+            pos.column + pos.atom_it->length() >= wrap_column)
         {
             ++pos.atom_it;
             return true;

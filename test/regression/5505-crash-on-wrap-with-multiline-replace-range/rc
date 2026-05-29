@@ -1,0 +1,5 @@
+add-highlighter global/ wrap
+declare-option range-specs ranges
+set-option buffer ranges %val{timestamp} "2.1,2.97|NOTE a multi-line replace-range whose first display line is long enough to exceed the window width
+  let x = compute_a_really_long_value_that_will_exceed_the_wrap_column_width_for_sure(1, 2, 3);"
+add-highlighter buffer/ replace-ranges ranges
