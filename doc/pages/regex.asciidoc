@@ -122,7 +122,8 @@ as possible.
 == Zero width assertions
 
 Assertions do not consume any character, but they will prevent the regex
-from matching if not fulfilled.
+from matching if not fulfilled. If you search for one of these on its own,
+Kakoune will select the character *after* the point where it matches.
 
 * `^` matches at the start of a line; that is, just after a newline
       character, or at the subject's beginning (unless it is specified
@@ -137,7 +138,8 @@ from matching if not fulfilled.
        character and the current character are word characters, or both
        are not.
 * `\A` matches at the subject string's beginning.
-* `\z` matches at the subject string's end.
+* `\z` matches at the subject string's end. Use `.\z` to match the last
+       character in the subject string.
 * `\K` matches anything, and resets the start position of capture group
        0 to the current position.
 
