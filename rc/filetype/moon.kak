@@ -69,18 +69,18 @@ add-highlighter shared/moon/code/ regex ^\h*local\h+\*\h*$ 0:meta
 # ‾‾‾‾‾‾‾‾
 
 define-command moon-alternative-file -docstring 'Jump to the alternate file (implementation ↔ test)' %{ evaluate-commands %sh{
-    case $kak_buffile in
+    case "$kak_buffile" in
         *spec/*_spec.moon)
-            altfile=$(eval printf %s\\n $(printf %s\\n $kak_buffile | sed s+spec/+'*'/+';'s/_spec//))
+            altfile=$(find "$(dirname "$kak_buffile" | sed s,spec$,,g)"*/ -name "$(basename "$kak_buffile" | sed s/_spec//)" | head -n1)
             [ ! -f $altfile ] && echo "fail 'implementation file not found'" && exit
         ;;
         *.moon)
-            path=$kak_buffile
+            path="$kak_buffile"
             dirs=$(while [ $path ]; do printf %s\\n $path; path=${path%/*}; done | tail -n +2)
             for dir in $dirs; do
                 altdir=$dir/spec
                 if [ -d $altdir ]; then
-                    altfile=$altdir/$(realpath $kak_buffile --relative-to $dir | sed s+[^/]'*'/++';'s/.moon$/_spec.moon/)
+                    altfile=$altdir/$(realpath "$kak_buffile" --relative-to $dir | sed s+[^/]'*'/++';'s/.moon$/_spec.moon/)
                     break
                 fi
             done

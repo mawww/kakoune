@@ -111,25 +111,25 @@ add-highlighter shared/ruby/code/ regex \b(\w+:(?!:))|(:?(\$(-[0FIKWadilpvw]|["'
 # ‾‾‾‾‾‾‾‾
 
 define-command ruby-alternative-file -docstring 'Jump to the alternate file (implementation ↔ test)' %{ evaluate-commands %sh{
-    case $kak_buffile in
+    case "$kak_buffile" in
         *spec/*_spec.rb)
-            altfile=$(eval echo $(echo $kak_buffile | sed s+spec/+'*'/+';'s/_spec//))
+            altfile=$(find "$(dirname "$kak_buffile" | sed s,spec$,,g)"*/ -name "$(basename "$kak_buffile" | sed s/_spec//)" | head -n1)
             [ ! -f $altfile ] && echo "fail 'implementation file not found'" && exit
         ;;
         *test/*_test.rb)
-            altfile=$(eval echo $(echo $kak_buffile | sed s+test/+'*'/+';'s/_test//))
+            altfile=$(find "$(dirname "$kak_buffile" | sed s,test$,,g)"*/ -name "$(basename "$kak_buffile" | sed s/_test//)" | head -n1)
             [ ! -f $altfile ] && echo "fail 'implementation file not found'" && exit
         ;;
         *.rb)
             altfile=""
             altdir=""
-            path=$kak_buffile
+            path="$kak_buffile"
             dirs=$(while [ $path ]; do echo $path; path=${path%/*}; done | tail -n +2)
             for dir in $dirs; do
                 altdir=$dir/spec && suffix=spec
                 [ ! -d $altdir ] && altdir=$dir/test && suffix=test
                 if [ -d $altdir ]; then
-                    altfile=$altdir/$(realpath $kak_buffile --relative-to $dir | sed s+[^/]'*'/++';'s/.rb$/_${suffix}.rb/)
+                    altfile=$altdir/$(realpath "$kak_buffile" --relative-to $dir | sed s+[^/]'*'/++';'s/.rb$/_${suffix}.rb/)
                     break
                 fi
             done
