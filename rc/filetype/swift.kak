@@ -2,7 +2,7 @@
 # MARK: - detection
 #
 
-hook global BufCreate .*\.(swift) %{
+hook global BufCreate .*\.(swift|swiftinterface) %{
     set-option buffer filetype swift
 }
 
