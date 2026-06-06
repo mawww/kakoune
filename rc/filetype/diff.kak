@@ -118,7 +118,7 @@ define-command \
                 evaluate-commands -itersel -save-regs 'ose/' %{
         try %{
             execute-keys '"oZgl<a-?>^diff <ret>;"sZ' 'Ge"eZ'
-            try %{ execute-keys '"sz?\n(?=diff )<ret>"e<a-Z><lt>' }
+            try %{ execute-keys '"sz?\n(?=diff )<ret>"e2<a-Z><lt>' }
             execute-keys '"ez'
         } catch %{
             execute-keys '"oz'
@@ -134,8 +134,8 @@ define-command \
     evaluate-commands -itersel -save-regs 'ose/' %{
         try %{
             execute-keys '"oZgl<a-?>^@@ <ret>;"sZ' 'Ge"eZ'
-            try %{ execute-keys '"sz?\n(?=diff )<ret>"e<a-Z><lt>' }
-            try %{ execute-keys '"sz?\n(?=@@ )<ret>"e<a-Z><lt>' }
+            try %{ execute-keys '"sz?\n(?=diff )<ret>"e2<a-Z><lt>' }
+            try %{ execute-keys '"sz?\n(?=@@ )<ret>"e2<a-Z><lt>' }
             execute-keys '"ez'
         } catch %{
             execute-keys '"oz'

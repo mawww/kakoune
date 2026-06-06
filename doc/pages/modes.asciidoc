@@ -87,6 +87,9 @@ See object commands <<keys#object-selection,`:doc keys object-selection`>>.
 Mode entered with `<a-z>` or `<a-Z>` keys.
 It aims at crafting ways to combine selections with ones in registers.
 
+If this mode is entered while the current `count` is `2`,
+combinations are performed "pairwise".
+
 See marks commands <<keys#marks,`:doc keys marks`>>.
 
 === User mode

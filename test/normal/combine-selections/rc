@@ -1,0 +1,139 @@
+define-command assert-command-fails -params 1 %{
+    eval -save-regs e %{
+        reg e ''
+        try %{
+            exec %arg{1}
+            reg e 'quit! 1'
+        }
+        eval %reg{e}
+    }
+}
+
+define-command assert-selections-are -params 1 %{
+    eval %sh{
+        if [ "$1" != "$kak_quoted_selections" ]; then
+            printf 'quit! 1'
+        fi
+    }
+}
+
+define-command do-operation-and-check -params 2 %{
+    eval -draft %{
+        exec <a-z> %arg{1} <ret>
+        assert-selections-are %arg{2}
+    }
+}
+
+define-command set-buffer -params 1 %{
+    eval -save-regs t %{
+        reg dquote %arg{1}
+
+        exec '%R'
+        exec -draft '%s[()]<ret>d'
+        exec '%1s\{(.+?)\}<ret>'
+        exec -draft '<a-;>hd'
+        exec -draft 'ld'
+        reg t %val{selections_desc}
+
+        exec '%R'
+        exec -draft '%s[{}]<ret>d'
+        exec '%1s\((.+?)\)<ret>'
+        exec -draft '<a-;>hd'
+        exec -draft 'ld'
+
+        reg caret "%val{buffile}@%val{timestamp}@0" %reg{t}
+    }
+}
+
+set-buffer '(a)b{c}'
+do-operation-and-check u "'a' 'c'"
+assert-command-fails %{ '<a-z>i' }
+do-operation-and-check b "'a'"
+do-operation-and-check s "'a' 'c'"
+
+set-buffer '(ab{c})'
+do-operation-and-check u "'abc'"
+do-operation-and-check i "'c'"
+do-operation-and-check b "'ab'"
+do-operation-and-check s "'ab'"
+
+set-buffer '{(a)b}c'
+do-operation-and-check u "'ab'"
+do-operation-and-check i "'a'"
+assert-command-fails %{ '<a-z>b' }
+do-operation-and-check s "'b'"
+
+set-buffer '(a{b}c)'
+do-operation-and-check u "'abc'"
+do-operation-and-check i "'b'"
+do-operation-and-check b "'a' 'c'"
+do-operation-and-check s "'a' 'c'"
+
+set-buffer '{(a)(b)(c)}'
+do-operation-and-check u "'abc'"
+do-operation-and-check i "'a' 'b' 'c'"
+assert-command-fails %{ '<a-z>b' }
+assert-command-fails %{ '<a-z>s' }
+
+set-buffer '{a(b}c)'
+do-operation-and-check u "'abc'"
+do-operation-and-check i "'b'"
+do-operation-and-check b "'c'"
+do-operation-and-check s "'a' 'c'"
+
+set-buffer '({a}{b}{c})'
+do-operation-and-check u "'abc'"
+do-operation-and-check i "'a' 'b' 'c'"
+assert-command-fails %{ '<a-z>b' }
+assert-command-fails %{ '<a-z>s' }
+
+set-buffer '(foo bar)
+{abc def}'
+do-operation-and-check u "'foo bar' 'abc def'"
+assert-command-fails %{ '<a-z>i' }
+do-operation-and-check b "'foo bar'"
+do-operation-and-check s "'foo bar' 'abc def'"
+
+set-buffer '(foo) {bar}
+(abc) {def}'
+do-operation-and-check u "'foo' 'bar' 'abc' 'def'"
+assert-command-fails %{ '<a-z>i' }
+do-operation-and-check b "'foo' 'abc'"
+do-operation-and-check s "'foo' 'bar' 'abc' 'def'"
+
+set-buffer '{(foo) (bar)
+(abc) (def)}'
+do-operation-and-check u "'foo bar
+abc def'"
+do-operation-and-check i "'foo' 'bar' 'abc' 'def'"
+assert-command-fails %{ '<a-z>b' }
+do-operation-and-check s "' ' '
+' ' '"
+
+set-buffer '(foo bar
+{abc) de}'
+do-operation-and-check u "'foo bar
+abc de'"
+do-operation-and-check i "'abc'"
+do-operation-and-check b "'foo bar
+'"
+do-operation-and-check s "'foo bar
+' ' de'"
+
+set-buffer 'f{oo (ba}r ){ab}c (def)'
+do-operation-and-check u "'oo bar ' 'ab' 'def'"
+do-operation-and-check i "'ba'"
+do-operation-and-check b "'r ' 'def'"
+do-operation-and-check s "'oo ' 'r ' 'ab' 'def'"
+
+set-buffer '{f(oo)( b)a}(r {b)(a}z) {abc} (de{f) g}hi'
+do-operation-and-check u "'foo ba' 'r baz' 'abc' 'def g'"
+do-operation-and-check i "'oo' ' b' 'b' 'a' 'f'"
+do-operation-and-check b "'r ' 'z' 'de'"
+do-operation-and-check s "'f' 'a' 'r ' 'z' 'abc' 'de' ' g'"
+
+set-buffer '(abc)d(efg{hi)j(kl}{m}no){pq}rstu{vwxyz}ABCD(E{FG}HIJK)L({M}NO{P}QRSTUVW{X)(Y)Z}0{1}2{3}456789'
+do-operation-and-check u "'abc' 'efghijklmno' 'pq' 'vwxyz' 'EFGHIJK' 'MNOPQRSTUVWXYZ' '1' '3'"
+do-operation-and-check i "'hi' 'kl' 'm' 'FG' 'M' 'P' 'X' 'Y'"
+do-operation-and-check b "'abc' 'efg' 'no' 'E' 'HIJK' 'NO' 'QRSTUVW'"
+do-operation-and-check s "'abc' 'efg' 'j' 'no' 'pq' 'vwxyz' 'E' 'HIJK' 'NO' 'QRSTUVW' 'Z' '1' '3'"

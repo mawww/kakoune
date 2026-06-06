@@ -60,19 +60,19 @@ define-command -hidden janet-indent-on-new-line %{
     evaluate-commands -draft -save-regs '/"|^@iw' -itersel %{
         execute-keys -draft 'gk"iZ'
         try %{
-            execute-keys -draft '[bl"i<a-Z><gt>"wZ'
+            execute-keys -draft '[bl"i2<a-Z><gt>"wZ'
 
             try %{
                 # If a special form, indent another j
-                execute-keys -draft '"wze<a-k>\A' %opt{janet_special_indent_forms} '\z<ret><a-L>s.\K.*<ret><a-;>;"i<a-Z><gt>'
+                execute-keys -draft '"wze<a-k>\A' %opt{janet_special_indent_forms} '\z<ret><a-L>s.\K.*<ret><a-;>;"i2<a-Z><gt>'
             } catch %{
                 # If not special and parameter appears on line 1, indent to parameter
-                execute-keys -draft '"wze<a-l>s\h\K[^\s].*<ret><a-;>;"i<a-Z><gt>'
+                execute-keys -draft '"wze<a-l>s\h\K[^\s].*<ret><a-;>;"i2<a-Z><gt>'
             }
         }
-        try %{ execute-keys -draft '[rl"i<a-Z><gt>' }
-        try %{ execute-keys -draft '[Bl"i<a-Z><gt>' }
-        execute-keys -draft '"i<a-z>a&,'
+        try %{ execute-keys -draft '[rl"i2<a-Z><gt>' }
+        try %{ execute-keys -draft '[Bl"i2<a-Z><gt>' }
+        execute-keys -draft '"i<a-z>u&,'
         # trim trailing whitespace on the previous line
         try %{ execute-keys -draft k : janet-trim-indent <ret> }
     }

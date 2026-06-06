@@ -110,13 +110,13 @@ define-command -hidden modeline-parse-impl %{
 
 # Add the following function to a hook on BufOpenFile to automatically parse modelines
 # Select the first and last `modelines` lines in the buffer, only keep modelines
-# ref. options.txt (in vim `:help options`) : 2 forms of modelines: 
+# ref. options.txt (in vim `:help options`) : 2 forms of modelines:
 #   [text]{white}{vi:|vim:|ex:}[white]{options}
 #   [text]{white}{vi:|vim:|Vim:|ex:}[white]se[t] {options}:[text]
 define-command modeline-parse -docstring "Read and interpret vi-format modelines at the beginning/end of the buffer" %{
     try %{ evaluate-commands -draft -save-regs ^ %{
         execute-keys -save-regs "" gk %opt{modelines} JK x Z
-        execute-keys gj %opt{modelines} KJ x <a-z> a
+        execute-keys gj %opt{modelines} KJ x <a-z> u
         execute-keys s^\S*?\s+?\w+:\s?\N+<ret> x
         evaluate-commands -draft -itersel modeline-parse-impl
     } }

@@ -511,22 +511,49 @@ Marks use the *^* register by default (See <<registers#,`:doc registers`>>)
 *<a-z>*, *<a-Z>*::
     *<a-z>* combines selections from the register with the current ones, whereas
     *<a-Z>* combines current selections with the ones in the register; a menu
-    is then displayed which waits for one of the following additional keys:
+    is then displayed which waits for one of the following additional keys.
 
-    *a*:::
-        append selections
+    In the mathematical set expressions below:
+
+    - *B* stands for "selections currently in the buffer"
+    - *R* stands for "selections currently in the register"
 
     *u*:::
-        keep a union of selections
+        keep the union of selections `B ∪ R`
 
     *i*:::
-        keep an intersection of selections
+        keep the intersection of selections `B ∩ R`
+
+    *b*:::
+        keep the buffer difference of selections `B \ R`
+
+    *r*:::
+        keep the register difference of selections `R \ B`
+
+    *s*:::
+        keep the symmetric difference of selections `B Δ R`
+
+    If the *<a-z>* or *<a-Z>* keys are preceded with the `count` *2*,
+    this time the combinations are performed *pairwise*.
+    (It implies the selections lists have the same length)
+
+    It means the first buffer selection will be combined with the first
+    register selection, the second buffer selection with the second register
+    selection and so on…
+
+    So for each pair:
+
+    *u*:::
+        select the union (gap included if they don't overlap)
+
+    *i*:::
+        select from intersection (gap included if they don't overlap)
 
     *<*:::
-        select the selection with the leftmost cursor for each pair
+        select the selection with the leftmost cursor
 
     *>*:::
-        select the selection with the rightmost cursor for each pair
+        select the selection with the rightmost cursor
 
     *+*:::
         select the longest selection
