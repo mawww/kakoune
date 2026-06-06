@@ -5,6 +5,9 @@ To control the startup info message, see <<options#startup-info,`:doc options st
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
+* Combine mode, `<a-z>`, `<a-Z>`, now has distinct regular and pairwise operations.
+  Regular combinations now include: difference in both directions and symmetric difference.
+
 == Kakoune 2026.05.21
 
 * Support the `\N` escape sequence in regex (like in PCRE, matches `[^\n]`).
@@ -131,7 +134,7 @@ released versions.
   (See <<expansions#command-and-response-fifo,`:doc expansions command-and-response-fifo`>>)
 
 * Shell expansions only trim the last trailing newline instead of all of
-  them to make is possible to losslessly pass text through `%sh{...}`. 
+  them to make is possible to losslessly pass text through `%sh{...}`.
 
 * `set-option -remove` support for subtracting/removing from option values
 
@@ -171,7 +174,7 @@ released versions.
 * clients stdin is transferred to the server, making it possible
   to pipe into `kak -c <session>`
 
-* Faces can have an alpha channel, specified using the 
+* Faces can have an alpha channel, specified using the
   `rgba:RRGGBBAA` format.
 
 * replace-ranges highlighter now support empty and multi-lines ranges
@@ -181,7 +184,7 @@ released versions.
 
 * `*SetOption` hooks filter string will contain a value only for options
   of int/str/bool types to avoid performance issue with generating those
-  on more complex option types. 
+  on more complex option types.
 
 == Kakoune 2020.01.16
 
@@ -195,7 +198,7 @@ released versions.
 
 * Arrow keys and `<home>`, `<end>` are not normal mode commands
   anymore but default key mappings.
-  
+
 * `ModeChange` hook parameter now takes `push:` or `pop:` prefix,
   `InsertBegin`, `InsertEnd`, `NormalBegin` and `NormalEnd`
   were removed.
@@ -208,7 +211,7 @@ released versions.
 * `info` supports markup with the `-markup` switch
 
 * `rename-buffer` gained `-file` and `-scratch` switches
-  to support converting buffer types.  
+  to support converting buffer types.
 
 == Kakoune 2019.07.01
 

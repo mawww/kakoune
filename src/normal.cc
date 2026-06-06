@@ -2010,9 +2010,8 @@ SelectionList read_selections_from_register(char reg, const Context& context)
     return selection_list_from_strings(buffer, ColumnType::Byte, content.subrange(1), timestamp, main);
 }
 
-enum class CombineOp
+enum class CombinePairwiseOp
 {
-    Append,
     Union,
     Intersect,
     SelectLeftmostCursor,
@@ -2021,46 +2020,45 @@ enum class CombineOp
     SelectShortest,
 };
 
-CombineOp key_to_combine_op(Key key)
+CombinePairwiseOp key_to_combine_pairwise_op(Key key)
 {
     switch (key.key)
     {
-        case 'a': return CombineOp::Append;
-        case 'u': return CombineOp::Union;
-        case 'i': return CombineOp::Intersect;
-        case '<': return CombineOp::SelectLeftmostCursor;
-        case '>': return CombineOp::SelectRightmostCursor;
-        case '+': return CombineOp::SelectLongest;
-        case '-': return CombineOp::SelectShortest;
+        case 'u': return CombinePairwiseOp::Union;
+        case 'i': return CombinePairwiseOp::Intersect;
+        case '<': return CombinePairwiseOp::SelectLeftmostCursor;
+        case '>': return CombinePairwiseOp::SelectRightmostCursor;
+        case '+': return CombinePairwiseOp::SelectLongest;
+        case '-': return CombinePairwiseOp::SelectShortest;
     }
-    throw runtime_error{format("no such combine operator: '{}'", key.key)};
+    throw runtime_error{format("no such combine pairwise operator: '{}'", key.key)};
 }
 
-void combine_selection(const Buffer& buffer, Selection& sel, const Selection& other, CombineOp op)
+void combine_selection_pairwise(const Buffer& buffer, Selection& sel, const Selection& other, CombinePairwiseOp op)
 {
     switch (op)
     {
-        case CombineOp::Union:
+        case CombinePairwiseOp::Union:
             sel.set(std::min(sel.min(), other.min()),
                     std::max(sel.max(), other.max()));
             break;
-        case CombineOp::Intersect:
+        case CombinePairwiseOp::Intersect:
             sel.set(std::max(sel.min(), other.min()),
                     std::min(sel.max(), other.max()));
             break;
-        case CombineOp::SelectLeftmostCursor:
+        case CombinePairwiseOp::SelectLeftmostCursor:
             if (sel.cursor() > other.cursor())
                 sel = other;
             break;
-        case CombineOp::SelectRightmostCursor:
+        case CombinePairwiseOp::SelectRightmostCursor:
             if (sel.cursor() < other.cursor())
                 sel = other;
             break;
-        case CombineOp::SelectLongest:
+        case CombinePairwiseOp::SelectLongest:
             if (char_length(buffer, sel) < char_length(buffer, other))
                 sel = other;
             break;
-        case CombineOp::SelectShortest:
+        case CombinePairwiseOp::SelectShortest:
             if (char_length(buffer, sel) > char_length(buffer, other))
                 sel = other;
             break;
@@ -2068,48 +2066,258 @@ void combine_selection(const Buffer& buffer, Selection& sel, const Selection& ot
     }
 }
 
+enum class CombineOp
+{
+    Union,
+    Intersect,
+    BufferDifference,
+    RegisterDifference,
+    SymmetricDifference,
+};
+
+CombineOp key_to_combine_op(Key key)
+{
+    switch (key.key)
+    {
+        case 'u': return CombineOp::Union;
+        case 'i': return CombineOp::Intersect;
+        case 'b': return CombineOp::BufferDifference;
+        case 'r': return CombineOp::RegisterDifference;
+        case 's': return CombineOp::SymmetricDifference;
+    }
+    throw runtime_error{format("no such combine operator: '{}'", key.key)};
+}
+
+enum class Overlap
+{
+    FIRST_ENTIRELY_BEFORE_SECOND,
+    FIRST_END_OVERLAPS_SECOND_BEGIN,
+    FIRST_ENTIRELY_AFTER_SECOND,
+    FIRST_BEGIN_OVERLAPS_SECOND_END,
+    FIRST_CONTAINS_SECOND,
+    FIRST_CONTAINED_BY_SECOND,
+    FIRST_EQUALS_SECOND,
+};
+
+Overlap compute_overlap(BufferCoord& min_a, BufferCoord& max_a, BufferCoord& min_b, BufferCoord& max_b) {
+  if ((max_a <=> min_b) == std::strong_ordering::less) return Overlap::FIRST_ENTIRELY_BEFORE_SECOND;
+  if ((min_a <=> max_b) == std::strong_ordering::greater) return Overlap::FIRST_ENTIRELY_AFTER_SECOND;
+
+  auto min = min_a <=> min_b;
+  auto max = max_a <=> max_b;
+
+  if (min == 0 and max == 0) return Overlap::FIRST_EQUALS_SECOND;
+  if (min <= 0 and max >= 0) return Overlap::FIRST_CONTAINS_SECOND;
+  if (min >= 0 and max <= 0) return Overlap::FIRST_CONTAINED_BY_SECOND;
+  if (min < 0) return Overlap::FIRST_END_OVERLAPS_SECOND_BEGIN;
+  if (min > 0) return Overlap::FIRST_BEGIN_OVERLAPS_SECOND_END;
+  kak_assert(false);
+}
+
+auto selections_union(SelectionList& sels, SelectionList& list) {
+    const auto main_index = list.size() + sels.main_index();
+    for (auto& sel : sels)
+        list.push_back(sel);
+    list.set_main_index(main_index);
+    list.sort_and_merge_overlapping();
+    return list;
+}
+
+auto selections_intersection(SelectionList& sels, SelectionList& list) {
+  Vector<Selection> res;
+  size_t i = 0, j = 0;
+
+  while (true) {
+    auto overlap = compute_overlap(sels[i].min(), sels[i].max(), list[j].min(), list[j].max());
+
+    if (overlap == Overlap::FIRST_CONTAINS_SECOND)
+      res.push_back(list[j]);
+    else if (overlap == Overlap::FIRST_CONTAINED_BY_SECOND or overlap == Overlap::FIRST_EQUALS_SECOND)
+      res.push_back(sels[i]);
+    else if (overlap == Overlap::FIRST_END_OVERLAPS_SECOND_BEGIN)
+      res.push_back({list[j].min(), sels[i].max()});
+    else if (overlap == Overlap::FIRST_BEGIN_OVERLAPS_SECOND_END)
+      res.push_back({sels[i].min(), list[j].max()});
+
+    auto last_i = i == sels.size() - 1;
+    auto last_j = j == list.size() - 1;
+    if (last_i and last_j)
+      break;
+    else if (last_i)
+      j++;
+    else if (last_j)
+      i++;
+    else if ((sels[i].max() <=> list[j].max()) >= 0)
+      j++;
+    else
+      i++;
+  }
+  return res;
+}
+
+auto selections_difference(Buffer& buffer, SelectionList& sels, SelectionList& list) {
+  Vector<Selection> res;
+  size_t i = 0, j = 0;
+  auto sels_min = sels[i].min();
+  auto sels_max = sels[i].max();
+  auto list_min = list[j].min();
+  auto list_max = list[j].max();
+
+  while (true) {
+    auto sels_adv = false;
+    auto list_adv = false;
+    auto overlap = compute_overlap(sels_min, sels_max, list_min, list_max);
+
+    if (overlap == Overlap::FIRST_ENTIRELY_BEFORE_SECOND) {
+      res.push_back({sels_min, sels_max});
+      sels_adv = true;
+    } else if (overlap == Overlap::FIRST_EQUALS_SECOND) {
+      sels_adv = true;
+      list_adv = true;
+    } else if (overlap == Overlap::FIRST_CONTAINS_SECOND) {
+      if ((sels_min <=> list_min) == std::strong_ordering::less) {
+        auto min = buffer.offset_coord(list_min, CharCount{-1}, 0);
+        res.push_back({sels_min, min});
+      }
+      if ((sels_max <=> list_max) == std::strong_ordering::greater)
+        sels_min = buffer.offset_coord(list_max, CharCount{1}, 0);
+      else
+        sels_adv = true;
+      list_adv = true;
+    } else if (overlap == Overlap::FIRST_END_OVERLAPS_SECOND_BEGIN) {
+      auto min = buffer.offset_coord(list_min, CharCount{-1}, 0);
+      res.push_back({sels_min, min});
+      sels_adv = true;
+    }
+    else if (overlap == Overlap::FIRST_ENTIRELY_AFTER_SECOND)
+      list_adv = true;
+    else if (overlap == Overlap::FIRST_CONTAINED_BY_SECOND)
+      sels_adv = true;
+    else if (overlap == Overlap::FIRST_BEGIN_OVERLAPS_SECOND_END) {
+      sels_min = buffer.offset_coord(list_max, CharCount{1}, 0);
+      list_adv = true;
+    }
+
+    if (sels_adv) {
+      i++;
+      if (i == sels.size()) {
+        break;
+      }
+      sels_min = sels[i].min();
+      sels_max = sels[i].max();
+    }
+    if (list_adv) {
+      j++;
+      if (j == list.size()) {
+        res.push_back({sels_min, sels_max});
+        i++;
+        while (i < sels.size()) {
+          res.push_back(sels[i]);
+          i++;
+        }
+        break;
+      }
+      list_min = list[j].min();
+      list_max = list[j].max();
+    }
+  }
+  return res;
+}
+
 template<typename Func>
-void combine_selections(Context& context, SelectionList list, Func func, StringView title)
+void combine_selections(Context& context, SelectionList list, Func func, bool pairwise, StringView title)
 {
     if (&context.buffer() != &list.buffer())
         throw runtime_error{"cannot combine selections from different buffers"};
 
     on_next_key_with_autoinfo(context, "combine-selections", KeymapMode::Combine,
-                             [func, list](Key key, Context& context) mutable {
+                             [func, list, pairwise](Key key, Context& context) mutable {
         if (key == Key::Escape)
             return;
 
-        const auto op = key_to_combine_op(key);
         ScopedSelectionEdition selection_edition{context};
         auto& sels = context.selections();
         list.update();
-        if (op == CombineOp::Append)
+
+        if (pairwise)
         {
-            const auto main_index = list.size() + sels.main_index();
-            for (auto& sel : sels)
-                list.push_back(sel);
-            list.set_main_index(main_index);
-            list.sort_and_merge_overlapping();
-        }
-        else
-        {
+            const auto op = key_to_combine_pairwise_op(key);
             if (list.size() != sels.size())
                 throw runtime_error{format("the two selection lists don't have the same number of elements ({} vs {})",
                                            list.size(), sels.size())};
             for (int i = 0; i < list.size(); ++i)
-                combine_selection(sels.buffer(), list[i], sels[i], op);
+                combine_selection_pairwise(sels.buffer(), list[i], sels[i], op);
             list.set_main_index(sels.main_index());
+        }
+        else
+        {
+            const auto op = key_to_combine_op(key);
+            switch (op) {
+                case CombineOp::Union:
+                    list = selections_union(sels, list);
+                    break;
+                case CombineOp::Intersect:
+                {
+                    auto intersections = selections_intersection(sels, list);
+                    if (intersections.empty())
+                        throw runtime_error("nothing selected");
+                    list = intersections;
+                    break;
+                }
+                case CombineOp::BufferDifference:
+                {
+                    auto differences = selections_difference(context.buffer(), sels, list);
+                    if (differences.empty())
+                        throw runtime_error("nothing selected");
+                    list = differences;
+                    break;
+                }
+                case CombineOp::RegisterDifference:
+                {
+                    auto differences = selections_difference(context.buffer(), list, sels);
+                    if (differences.empty())
+                        throw runtime_error("nothing selected");
+                    list = differences;
+                    break;
+                }
+                case CombineOp::SymmetricDifference:
+                {
+                    auto b_diffs = selections_difference(context.buffer(), sels, list);
+                    auto r_diffs = selections_difference(context.buffer(), list, sels);
+                    if (b_diffs.empty() and r_diffs.empty())
+                        throw runtime_error("nothing selected");
+                    if (b_diffs.empty())
+                        list = r_diffs;
+                    else if (r_diffs.empty())
+                        list = b_diffs;
+                    else
+                    {
+                        SelectionList buffer_diff {context.buffer(), b_diffs};
+                        SelectionList register_diff {context.buffer(), r_diffs};
+                        list = selections_union(buffer_diff, register_diff);
+                    }
+                    break;
+                }
+                default: kak_assert(false);
+            }
         }
         func(context, std::move(list));
     }, title.str(),
-    build_autoinfo_for_mapping(context, KeymapMode::Combine,
-        {{{'a'}, "append lists"},
-         {{'u'}, "union"},
-         {{'i'}, "intersection"},
+    pairwise
+    ? build_autoinfo_for_mapping(context, KeymapMode::Combine,
+        {{{'u'}, "pairwise union"},
+         {{'i'}, "pairwise intersection"},
          {{'<'}, "select leftmost cursor"},
          {{'>'}, "select rightmost cursor"},
          {{'+'}, "select longest"},
-         {{'-'}, "select shortest"}}));
+         {{'-'}, "select shortest"}})
+    : build_autoinfo_for_mapping(context, KeymapMode::Combine,
+        {{{'u'}, "union"},
+         {{'i'}, "intersection"},
+         {{'b'}, "buffer difference"},
+         {{'r'}, "register difference"},
+         {{'s'}, "symmetric difference"}})
+    );
 }
 
 template<bool combine>
@@ -2137,7 +2345,7 @@ void save_selections(Context& context, NormalParams params)
     if (combine and not empty)
     {
         ScopedSelectionEdition selection_edition{context};
-        combine_selections(context, read_selections_from_register(reg, context), save_to_reg, "combine selections to register");
+        combine_selections(context, read_selections_from_register(reg, context), save_to_reg, params.count == 2, "combine selections to register");
     }
     else
         save_to_reg(context, context.selections());
@@ -2166,7 +2374,7 @@ void restore_selections(Context& context, NormalParams params)
         set_selections(context, std::move(selections));
     }
     else
-        combine_selections(context, std::move(selections), set_selections, "combine selections from register");
+        combine_selections(context, std::move(selections), set_selections, params.count == 2, "combine selections from register");
 }
 
 void undo(Context& context, NormalParams params)

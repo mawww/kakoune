@@ -200,20 +200,20 @@ define-command -hidden clojure-indent-on-new-line %{
     evaluate-commands -draft -save-regs '/"|^@iw' -itersel %{
         execute-keys -draft 'gk"iZ'
         try %{
-            execute-keys -draft '[bl"i<a-Z><gt>"wZ'
+            execute-keys -draft '[bl"i2<a-Z><gt>"wZ'
 
             try %{
                 # If a special form, indent another (indentwidth - 1) spaces
                 execute-keys -draft '"wze<a-K>[\s()\[\]\{\}]<ret><a-k>\A' %opt{clojure_special_indent_forms} '\z<ret>'
-                execute-keys -draft '"wze<a-L>s.{' %sh{printf $(( kak_opt_indentwidth - 1 ))} '}\K.*<ret><a-;>;"i<a-Z><gt>'
+                execute-keys -draft '"wze<a-L>s.{' %sh{printf $(( kak_opt_indentwidth - 1 ))} '}\K.*<ret><a-;>;"i2<a-Z><gt>'
             } catch %{
                 # If not special and parameter appears on line 1, indent to parameter
-                execute-keys -draft '"wz<a-K>[()[\]{}]<ret>e<a-K>[\s()\[\]\{\}]<ret><a-l>s\h\K[^\s].*<ret><a-;>;"i<a-Z><gt>'
+                execute-keys -draft '"wz<a-K>[()[\]{}]<ret>e<a-K>[\s()\[\]\{\}]<ret><a-l>s\h\K[^\s].*<ret><a-;>;"i2<a-Z><gt>'
             }
         }
-        try %{ execute-keys -draft '[rl"i<a-Z><gt>' }
-        try %{ execute-keys -draft '[Bl"i<a-Z><gt>' }
-        execute-keys -draft ';"i<a-z>a&,'
+        try %{ execute-keys -draft '[rl"i2<a-Z><gt>' }
+        try %{ execute-keys -draft '[Bl"i2<a-Z><gt>' }
+        execute-keys -draft ';"i<a-z>u&,'
     }
 }
 

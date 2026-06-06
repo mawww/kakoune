@@ -42,7 +42,7 @@ using the built-in `:doc` command.
        .---,        described in this document are "editing primitives" that
        |esc|        have to be hit in normal mode, which is the default mode
        `---'        when you start the editor. To enter insert mode, hit the
-                    `i` key, and to leave it and return to normal mode, hit the 
+                    `i` key, and to leave it and return to normal mode, hit the
                     escape key.
 
 
@@ -322,7 +322,7 @@ using the built-in `:doc` command.
    | " |_. .---,    temporary search, one could make this primitive save the
    `---'  `| _ |    pattern to a different register, to preserve the default one,
            `---'    e.g., `"m*` to save the pattern to the `m` register, or even
-                    `"_*` to save the pattern to a "null" register, which does 
+                    `"_*` to save the pattern to a "null" register, which does
                     not store anything written to it.
 
                     ==[ CAPTURE GROUPS
@@ -373,11 +373,11 @@ using the built-in `:doc` command.
         .---,       expressions. To allow that, the save mark (`Z`) and append
         | Z |       mark (`<a-z>`) come in handy, as they respectively save
         `---'       the current selection to the mark register (`^`), and
-                    show a menu that allows appending the current selection
-.---, .---,         to the mark register upon hitting the `a` key. That way,
+                    show a menu that allows combining the current selection
+.---, .---,         to the mark register upon hitting the `u` key. That way,
 |alt|+| z |_.       it becomes possible to chain and save (append) several
 `---' `---'  `.---, selections made using completely different methods
-              | a | (select, split etc) without being forced to preserve
+              | u | (select, split etc) without being forced to preserve
               `---' them at all times.
         .---,
         | z |       Restoring a mark saved to the mark register using those
