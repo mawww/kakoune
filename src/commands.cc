@@ -20,6 +20,7 @@
 #include "input_handler.hh"
 #include "insert_completer.hh"
 #include "keymap_manager.hh"
+#include "local_scope.hh"
 #include "normal.hh"
 #include "option_manager.hh"
 #include "option_types.hh"
@@ -50,24 +51,6 @@ namespace Kakoune
 {
 
 extern const char* version;
-
-struct LocalScope : Scope
-{
-    LocalScope(Context& context)
-        : Scope(context.scope()), m_context{context}
-    {
-        m_context.m_local_scopes.push_back(this);
-    }
-
-    ~LocalScope()
-    {
-        kak_assert(not m_context.m_local_scopes.empty() and m_context.m_local_scopes.back() == this);
-        m_context.m_local_scopes.pop_back();
-    }
-
-private:
-    Context& m_context;
-};
 
 namespace
 {

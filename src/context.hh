@@ -159,7 +159,7 @@ private:
     SafePtr<InputHandler> m_input_handler;
     SafePtr<Window>       m_window;
     SafePtr<Client>       m_client;
-    Vector<Scope*>   m_local_scopes;
+    Vector<Scope*>        m_local_scopes;
 
     class SelectionHistory {
     public:

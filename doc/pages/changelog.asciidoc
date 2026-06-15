@@ -5,6 +5,10 @@ To control the startup info message, see <<options#startup-info,`:doc options st
 This changelog contains major and/or breaking changes to Kakoune between
 released versions.
 
+== Development Version
+
+* A local scope is now active when evaluating a command line
+
 == Kakoune 2026.05.21
 
 * Support the `\N` escape sequence in regex (like in PCRE, matches `[^\n]`).

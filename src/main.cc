@@ -51,6 +51,9 @@ struct {
     unsigned int version;
     StringView notes;
 } constexpr version_notes[] = { {
+        0,
+        "» local scope for command line evaluation\n"
+    }, {
         20260521,
         "» support the {+b}\\N{} escape sequence in regex (matches {+b}[^\\n]{})\n"
         "» count and register forwarding to user modes\n"

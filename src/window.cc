@@ -95,7 +95,7 @@ Window::Setup Window::build_setup(const Context& context) const
 {
     return {m_position, m_dimensions,
             context.buffer().timestamp(),
-            compute_faces_hash(context.faces()),
+            compute_faces_hash(context.faces(false)),
             context.selections().main_index(),
             context.selections() | gather<Vector<BasicSelection, MemoryDomain::Display>>()};
 }
@@ -108,7 +108,7 @@ bool Window::needs_redraw(const Context& context) const
         context.buffer().timestamp() != m_last_setup.timestamp or
         selections.main_index() != m_last_setup.main_selection or
         selections.size() != m_last_setup.selections.size() or
-        compute_faces_hash(context.faces()) != m_last_setup.faces_hash or
+        compute_faces_hash(context.faces(false)) != m_last_setup.faces_hash or
         not std::equal(selections.begin(), selections.end(),
                        m_last_setup.selections.begin(), m_last_setup.selections.end());
 }

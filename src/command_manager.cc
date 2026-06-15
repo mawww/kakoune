@@ -7,6 +7,7 @@
 #include "flags.hh"
 #include "file.hh"
 #include "hook_manager.hh"
+#include "local_scope.hh"
 #include "optional.hh"
 #include "option_manager.hh"
 #include "option_types.hh"
@@ -550,6 +551,7 @@ void CommandManager::execute(StringView command_line,
 {
     CommandParser parser(command_line);
 
+    LocalScope local_scope(context);
     ByteCount command_pos{};
     Vector<String> params;
     while (true)
