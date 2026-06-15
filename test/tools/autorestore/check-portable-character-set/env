@@ -1,3 +1,3 @@
 BACKUP='.out.kak.;"foo"'
 echo BACKUP > "$BACKUP"
-while find "$BACKUP" -newer out | grep -vqF "$BACKUP"; do touch "$BACKUP"; done
+while [ -z "$(find "$BACKUP" -newer out)" ]; do touch "$BACKUP"; done
