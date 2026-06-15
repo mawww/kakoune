@@ -46,6 +46,8 @@ If no client is passed then the current one is used' \
 %{ evaluate-commands %sh{
     if [ $# -eq 1 ]; then
         printf "evaluate-commands -client '%s' focus" "$1"
+    elif [ -n "${kak_client_env_ZELLIJ_PANE_ID}" ]; then
+        zellij action focus-pane-id "${kak_client_env_ZELLIJ_PANE_ID}"
     elif [ -n "${kak_client_env_ZELLIJ}" ]; then
         output=$(mktemp -d "${TMPDIR:-/tmp}"/kak-zellij.XXXXXXXX)/dump-screen
         pane_count=0
