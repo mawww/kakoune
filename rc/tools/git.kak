@@ -78,7 +78,7 @@ declare-option -hidden line-specs git_blame_index
 declare-option -hidden str git_blame
 declare-option -hidden str git_blob
 declare-option -hidden line-specs git_diff_flags
-declare-option -hidden int-list git_hunk_list
+declare-option -hidden str-list git_hunk_list
 
 define-command -params 1.. \
     -docstring %{
@@ -496,10 +496,11 @@ define-command -params 1.. \
             for line in "$@"; do
                 line="${line%%|*}"
                 if [ "$((line - prev_line))" -gt 1 ]; then
-                    hunks="$hunks $line"
+                    hunks="$hunks.1,$prev_line.1 $line"
                 fi
                 prev_line="$line"
             done
+            hunks="$hunks.1,$prev_line.1"
             echo "set-option buffer git_hunk_list $hunks"
             hunks=${hunks#* }
         else
@@ -509,9 +510,9 @@ define-command -params 1.. \
         prev_hunk=""
         next_hunk=""
         for hunk in ${hunks}; do
-            if   [ "$hunk" -lt "$kak_cursor_line" ]; then
+            if   [ "${hunk%%.*}" -lt "$kak_cursor_line" ]; then
                 prev_hunk=$hunk
-            elif [ "$hunk" -gt "$kak_cursor_line" ]; then
+            elif [ "${hunk%%.*}" -gt "$kak_cursor_line" ]; then
                 next_hunk=$hunk
                 break
             fi
@@ -524,7 +525,8 @@ define-command -params 1.. \
                 wrapped=true
             fi
             if [ -n "$next_hunk" ]; then
-                echo "select $next_hunk.1,$next_hunk.1"
+                echo "select $next_hunk"
+                echo 'execute-keys x'
             fi
         elif [ "$direction" = "prev" ]; then
             if [ -z "$prev_hunk" ]; then
@@ -532,7 +534,8 @@ define-command -params 1.. \
                 prev_hunk=${hunks##* }
             fi
             if [ -n "$prev_hunk" ]; then
-                echo "select $prev_hunk.1,$prev_hunk.1"
+                echo "select $prev_hunk"
+                echo 'execute-keys x'
             fi
         fi
 
