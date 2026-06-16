@@ -122,31 +122,37 @@ as possible.
 == Zero width assertions
 
 Assertions do not consume any character, but they will prevent the regex
-from matching if not fulfilled.
+from matching if their specific property is not true at the current
+position.
 
-* `^` matches at the start of a line; that is, just after a newline
-      character, or at the subject's beginning (unless it is specified
-      that the subject's beginning is not a start of line).
-* `$` matches at the end of a line; that is, just before a newline, or
-      at the subject end (unless it is specified that the subject's end
-      is not an end of line).
-* `\b` matches at a word boundary; which is to say that between the
-       previous character and the current character, one is a word
-       character, and the other is not.
-* `\B` matches at a non-word boundary; meaning, when both the previous
-       character and the current character are word characters, or both
-       are not.
-* `\A` matches at the subject string's beginning.
-* `\z` matches at the subject string's end.
-* `\K` matches anything, and resets the start position of capture group
-       0 to the current position.
+* `^` matches at the start of a line; that is, the current position is
+      immediately after a newline character, or at the first character
+      in the subject string (unless the subject is a selection that
+      begins part-way through a line).
+* `$` matches at the end of a line; that is, the current position is at
+      a newline character, or after the last character in the subject
+      string (unless the subject is a selection that ends part-way
+      through a line).
+* `\b` matches at a word boundary; that is, the current position is at a
+       word character and immediately after a non-word character (or the
+       other way around).
+* `\B` matches at a word non-boundary; that is, the current position is
+       at a word character and immediately after a word character, or
+       both are non-word characters.
+* `\A` matches if the current position is at the first character in the
+       subject string.
+* `\z` matches if the current position is after the last character in
+       the subject string. This cannot match at any position in the
+       subject string; use `.\z` to match the subject's last character.
+* `\K` matches at any position, and resets the start position of capture
+       group 0 to the current position.
 
 More complex assertions can be expressed with lookarounds:
 
 * `(?=...)` is a lookahead; it will match if its content matches the
-            text following the current position.
+            text starting at the current position.
 * `(?!...)` is a negative lookahead; it will match if its content does
-            not match the text following the current position.
+            not match the text starting at the current position.
 * `(?<=...)` is a lookbehind; it will match if its content matches
              the text preceding the current position.
 * `(?<!...)` is a negative lookbehind; it will match if its content does
