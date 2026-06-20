@@ -180,6 +180,7 @@ define-command -hidden init-javascript-filetype -params 1 %~
     add-highlighter "shared/%arg{1}/code/" regex (?:^|[^$_])\b(document|false|null|parent|self|this|true|undefined|window)\b 1:value
     add-highlighter "shared/%arg{1}/code/" regex "-?\b[0-9]*\.?[0-9]+" 0:value
     add-highlighter "shared/%arg{1}/code/" regex \b(Array|Boolean|Date|Function|Number|Object|RegExp|String|Symbol)\b 0:type
+    add-highlighter "shared/%arg{1}/code/" regex \b([a-zA-Z_]\w*)\h*(?=[\(]) 1:function
 
     # jsx: In well-formed xml the number of opening and closing tags match up regardless of tag name.
     #
