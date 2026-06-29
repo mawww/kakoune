@@ -90,8 +90,9 @@ enum class WriteFlags
 constexpr bool with_bit_ops(Meta::Type<WriteFlags>) { return true; }
 
 void write_buffer_to_file(Buffer& buffer, StringView filename,
-                          WriteMethod method, WriteFlags flags);
-void write_buffer_to_fd(Buffer& buffer, int fd);
+                          WriteMethod method, WriteFlags flags,
+                          Optional<FinalEol> finaleol = {});
+void write_buffer_to_fd(Buffer& buffer, int fd, Optional<FinalEol> finaleol = {});
 void write_buffer_to_backup_file(Buffer& buffer);
 
 

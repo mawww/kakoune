@@ -171,17 +171,18 @@ void reload_file_buffer(Buffer& buffer)
     buffer.flags() &= ~Buffer::Flags::New;
 }
 
-void write_buffer_to_fd(Buffer& buffer, int fd)
+void write_buffer_to_fd(Buffer& buffer, int fd, Optional<FinalEol> finaleol)
 {
+    if (not finaleol)
+        finaleol = buffer.options()["finaleol"].get<FinalEol>();
     auto eolformat = buffer.options()["eolformat"].get<EolFormat>();
     StringView eoldata;
     if (eolformat == EolFormat::Crlf)
         eoldata = "\r\n";
     else
         eoldata = "\n";
-    auto finaleol = buffer.options()["finaleol"].get<FinalEol>();
-    bool write_eol_at_eof = finaleol == FinalEol::Present or
-                           (finaleol == FinalEol::IfNotEmpty and (buffer.line_count() != 1 or buffer[0] != "\n"));
+    bool write_eol_at_eof = *finaleol == FinalEol::Present or
+                           (*finaleol == FinalEol::IfNotEmpty and (buffer.line_count() != 1 or buffer[0] != "\n"));
 
     BufferedWriter<false> writer{fd};
     if (buffer.options()["BOM"].get<ByteOrderMark>() == ByteOrderMark::Utf8)
@@ -199,7 +200,8 @@ void write_buffer_to_fd(Buffer& buffer, int fd)
 }
 
 void write_buffer_to_file(Buffer& buffer, StringView filename,
-                          WriteMethod method, WriteFlags flags)
+                          WriteMethod method, WriteFlags flags,
+                          Optional<FinalEol> finaleol)
 {
     auto zfilename = filename.zstr();
     struct stat st;
@@ -230,7 +232,7 @@ void write_buffer_to_file(Buffer& buffer, StringView filename,
 
     {
         auto close_fd = OnScopeEnd([fd]{ close(fd); });
-        write_buffer_to_fd(buffer, fd);
+        write_buffer_to_fd(buffer, fd, finaleol);
         if (flags & WriteFlags::Sync)
             ::fsync(fd);
     }

@@ -607,7 +607,8 @@ void do_write_buffer(Context& context, Optional<String> filename, WriteFlags fla
         return DisplayLine{format("waiting while writing buffer '{}' ({}s)", buffer.filename(), elapsed.count()),
                            context.faces()["Information"]};
     }};
-    write_buffer_to_file(buffer, effective_filename, method, flags);
+    FinalEol finaleol = context.options()["finaleol"].get<FinalEol>();
+    write_buffer_to_file(buffer, effective_filename, method, flags, finaleol);
     context.hooks().run_hook(Hook::BufWritePost, effective_filename, context);
 }
 
