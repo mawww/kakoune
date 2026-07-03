@@ -16,7 +16,7 @@ define-command format-selections -docstring "Format the selections individually"
     }
     evaluate-commands -draft -no-hooks -save-regs 'e|' %{
         set-register e nop
-        set-register '|' %{
+        set-register '|' %exp{
             format_in="$(mktemp "${TMPDIR:-/tmp}"/kak-formatter.XXXXXX)"
             format_out="$(mktemp "${TMPDIR:-/tmp}"/kak-formatter.XXXXXX)"
 
@@ -29,6 +29,15 @@ define-command format-selections -docstring "Format the selections individually"
                 cat "$format_in"
             fi
             rm -f "$format_in" "$format_out"
+
+            # We want the format command to be literally present in this
+            # command, so that Kakoune will supply any any $kak_* variables
+            # it mentions, but we don't want to evaluate the command here
+            # so we'll tell the shell to exit before it gets to it.
+            # Just commenting it out would not be sufficient, since it might
+            # include newlines.
+            exit
+            %opt{formatcmd}
         }
         execute-keys '|<ret>'
         %reg{e}
