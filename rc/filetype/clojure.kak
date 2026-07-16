@@ -4,7 +4,7 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate .*[.](clj|cljc|cljs|cljx|edn) %{
+hook global BufCreate .*[.](clj|cljc|cljs|cljx|edn|jank) %{
     set-option buffer filetype clojure
 }
 
@@ -55,8 +55,8 @@ evaluate-commands %sh{
 
         split( \
         "* *' + +' - -' -> ->> ->ArrayChunk ->Eduction ->Vec ->VecNode ->VecSeq / < "\
-        "<= = == > >= StackTraceElement->vec Throwable->map accessor aclone "\
-        "add-classpath add-watch agent agent-error agent-errors aget alength alias "\
+        "<= = == > >= abs accessor aclone "\
+        "add-classpath add-tap add-watch agent agent-error agent-errors aget alength alias "\
         "all-ns alter alter-meta! alter-var-root amap ancestors and any? apply "\
         "areduce array-map as-> aset aset-boolean aset-byte aset-char aset-double "\
         "aset-float aset-int aset-long aset-short assert assoc assoc! assoc-in "\
@@ -64,17 +64,17 @@ evaluate-commands %sh{
         "binding bit-and bit-and-not bit-clear bit-flip bit-not bit-or bit-set "\
         "bit-shift-left bit-shift-right bit-test bit-xor boolean boolean-array "\
         "boolean? booleans bound-fn bound-fn* bound? bounded-count butlast byte "\
-        "byte-array bytes bytes?  cast cat catch char char-array char-escape-string "\
+        "byte-array bytes bytes? cast cat catch char char-array char-escape-string "\
         "char-name-string char? chars class class? clear-agent-errors "\
         "clojure-version coll? comment commute comp comparator compare "\
-        "compare-and-set! compile complement completing concat  conj conj! cons "\
+        "compare-and-set! compile complement completing concat conj conj! cons "\
         "constantly construct-proxy contains? count counted? create-ns "\
         "create-struct cycle dec dec' decimal? declare dedupe default-data-readers "\
         "delay delay? deliver denominator deref derive descendants disj disj! "\
         "dissoc dissoc! distinct distinct? do doall dorun doseq dosync dotimes doto "\
         "double double-array double? doubles drop drop-last drop-while eduction "\
         "empty empty? ensure ensure-reduced enumeration-seq error-handler "\
-        "error-mode eval even? every-pred every? ex-data ex-info extend "\
+        "error-mode eval even? every-pred every? ex-cause ex-data ex-info ex-message extend "\
         "extend-protocol extend-type extenders extends? false? ffirst file-seq "\
         "filter filterv finally find find-keyword find-ns find-var first flatten "\
         "float float-array float? floats flush fn? fnext fnil for force format "\
@@ -82,41 +82,43 @@ evaluate-commands %sh{
         "future-done? future? gen-class gen-interface gensym get get-in get-method "\
         "get-proxy-class get-thread-bindings get-validator group-by halt-when hash "\
         "hash-map hash-ordered-coll hash-set hash-unordered-coll ident? identical? "\
-        "identity ifn? import in-ns inc inc' indexed? init-proxy inst-ms inst? "\
+        "identity ifn? import in-ns inc inc' indexed? infinite? init-proxy inst-ms inst? "\
         "instance? int int-array int? integer? interleave intern interpose into "\
-        "into-array ints io! isa? iterate iterator-seq juxt keep keep-indexed key "\
+        "into-array ints io! isa? iterate iteration iterator-seq juxt keep keep-indexed key "\
         "keys keyword keyword? last lazy-cat lazy-seq line-seq list list* list? "\
         "load load-file load-reader load-string loaded-libs locking long long-array "\
         "longs loop macroexpand macroexpand-1 make-array make-hierarchy map "\
         "map-entry? map-indexed map? mapcat mapv max max-key memfn memoize merge "\
         "merge-with meta methods min min-key mix-collection-hash mod monitor-enter "\
-        "monitor-exit name namespace namespace-munge nat-int? neg-int? neg? newline "\
+        "monitor-exit name namespace namespace-munge NaN? nat-int? neg-int? neg? newline "\
         "next nfirst nil? nnext not not-any? not-empty not-every? not= ns-aliases "\
         "ns-imports ns-interns ns-map ns-name ns-publics ns-refers ns-resolve "\
         "ns-unalias ns-unmap nth nthnext nthrest num number? numerator object-array "\
-        "odd? or parents partial partition partition-all partition-by pcalls peek "\
+        "odd? or parents parse-boolean parse-double parse-long parse-uuid partial "\
+        "partition partition-all partition-by partitionv partitionv-all pcalls peek "\
         "persistent! pmap pop pop! pop-thread-bindings pos-int? pos? pr pr-str "\
-        "prefer-method prefers print print-str printf println println-str prn "\
+        "prefer-method prefers print print-str printf println println-str PrintWriter-on prn "\
         "prn-str promise proxy proxy-mappings proxy-super push-thread-bindings "\
         "pvalues qualified-ident? qualified-keyword? qualified-symbol? quot quote "\
-        "rand rand-int rand-nth random-sample range ratio? rational? rationalize "\
-        "re-find re-groups re-matcher re-matches re-pattern re-seq read read-line "\
+        "rand rand-int rand-nth random-sample random-uuid range ratio? rational? rationalize "\
+        "re-find re-groups re-matcher re-matches re-pattern re-seq read read+string read-line "\
         "read-string reader-conditional reader-conditional? realized? record? recur "\
         "reduce reduce-kv reduced reduced? reductions ref ref-history-count "\
         "ref-max-history ref-min-history ref-set refer refer-clojure reify "\
         "release-pending-sends rem remove remove-all-methods remove-method "\
-        "remove-ns remove-watch repeat repeatedly replace replicate require reset! "\
+        "remove-ns remove-watch repeat repeatedly replace replicate require requiring-resolve reset! "\
         "reset-meta! reset-vals! resolve rest restart-agent resultset-seq reverse "\
         "reversible? rseq rsubseq run! satisfies? second select-keys send send-off "\
-        "send-via seq seq? seqable? seque sequence sequential? set set! "\
+        "send-via seq seq-to-map-for-destructuring seq? seqable? seque sequence sequential? set set! "\
         "set-agent-send-executor! set-agent-send-off-executor! set-error-handler! "\
         "set-error-mode! set-validator! set? short short-array shorts shuffle "\
         "shutdown-agents simple-ident? simple-keyword? simple-symbol? slurp some "\
         "some-> some->> some-fn some? sort sort-by sorted-map sorted-map-by "\
-        "sorted-set sorted-set-by sorted? special-symbol? spit split-at split-with "\
-        "str string? struct struct-map subs subseq subvec supers swap! swap-vals! "\
+        "sorted-set sorted-set-by sorted? special-symbol? spit split-at split-with splitv-at "\
+        "StackTraceElement->vec str stream-into! stream-reduce! stream-seq! stream-transduce! "\
+        "string? struct struct-map subs subseq subvec supers swap! swap-vals! "\
         "symbol symbol? sync tagged-literal tagged-literal? take take-last take-nth "\
-        "take-while test the-ns thread-bound? throw time to-array to-array-2d "\
+        "take-while tap> test the-ns thread-bound? throw Throwable->map time to-array to-array-2d "\
         "trampoline transduce transient tree-seq true? try type unchecked-add "\
         "unchecked-add-int unchecked-byte unchecked-char unchecked-dec "\
         "unchecked-dec-int unchecked-divide-int unchecked-double unchecked-float "\
@@ -124,18 +126,18 @@ evaluate-commands %sh{
         "unchecked-multiply unchecked-multiply-int unchecked-negate "\
         "unchecked-negate-int unchecked-remainder-int unchecked-short "\
         "unchecked-subtract unchecked-subtract-int underive unreduced "\
-        "unsigned-bit-shift-right update update-in update-proxy uri? use uuid? val "\
+        "unsigned-bit-shift-right update update-in update-keys update-proxy update-vals uri? use uuid? val "\
         "vals var var-get var-set var? vary-meta vec vector vector-of vector? "\
-        "volatile! volatile? vreset! vswap!  while with-bindings with-bindings* "\
+        "volatile! volatile? vreset! vswap! while with-bindings with-bindings* "\
         "with-in-str with-local-vars with-meta with-open with-out-str "\
         "with-precision with-redefs with-redefs-fn xml-seq zero? zipmap", core_fns);
 
         split( \
-        "*1 *2 *3 *agent* *clojure-version* *command-line-args* *compile-files* "\
+        "*1 *2 *3 *agent* *assert* *clojure-version* *command-line-args* *compile-files* "\
         "*compile-path* *compiler-options* *data-readers* *default-data-reader-fn* "\
         "*e *err* *file* *flush-on-newline* *in* *ns* *out* *print-dup* "\
         "*print-length* *print-level* *print-meta* *print-namespace-maps* "\
-        "*print-readably* *read-eval* *unchecked-math* *warn-on-reflection*", core_vars);
+        "*print-readably* *read-eval* *repl* *unchecked-math* *warn-on-reflection*", core_vars);
     }
     function print_word_highlighter(words, face, first) {
         printf("add-highlighter shared/clojure/code/ regex (?<!%s)%s(", \
