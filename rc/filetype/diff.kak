@@ -14,10 +14,14 @@ hook -group diff-highlight global WinSetOption filetype=diff %{
 
 provide-module diff %§
 
+set-face global DiffAdd green
+set-face global DiffRm red
+set-face global DiffMeta cyan
+
 add-highlighter shared/diff group
-add-highlighter shared/diff/ regex "^\+\N*\n" 0:green,default
-add-highlighter shared/diff/ regex "^-\N*\n" 0:red,default
-add-highlighter shared/diff/ regex "^@@\N*@@" 0:cyan,default
+add-highlighter shared/diff/ regex "^\+\N*\n" 0:DiffAdd
+add-highlighter shared/diff/ regex "^-\N*\n" 0:DiffRm
+add-highlighter shared/diff/ regex "^@@\N*@@" 0:DiffMeta
 # If any trailing whitespace was introduced in diff, show it with red background
 add-highlighter shared/diff/ regex "^\+\N*?(\h+)\n" 1:default,red
 
