@@ -1,10 +1,8 @@
 # https://ghostty.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
-# Ghostty has some bugs that affect this module:
-# - Commands that return fast are treated as failing. `sleep 0.1s` fails but `sleep 0.5s` is fine.
-#   - As at 2026-07-16 this error is less frightening, but it still happens.
-# - 'wait after command false' does not work: it still waits for a keypress.
+# Bug: Ghostty (up to at least nightly build 2026-07-16) ignores our `set wait after command
+# of cfg to false` instruction and requires a keypress to close a terminal.
 
 provide-module ghostty %{
 
