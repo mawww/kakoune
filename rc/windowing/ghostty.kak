@@ -111,14 +111,14 @@ If no client is passed then the current one is used' \
         # Works on Ghostty commit 73534c4680a809398b396c94ac7f12fcccb7963d (2026-07-16).
         # Expected to be officially supported beginning with Ghostty 1.4.0.
         THIS_TTY=$(ps -p "$kak_client_pid" -o tty=)
-        osascript                                                       \
-        -e 'tell application "Ghostty"'                                 \
-        -e '  repeat with term in terminals'                            \
-        -e '    if tty of term as text = "/dev/'"${THIS_TTY% }"'" then' \
-        -e '      focus term'                                           \
-        -e '      exit'                                                 \
-        -e '    end if'                                                 \
-        -e '  end repeat'                                               \
+        osascript                                                           \
+        -e 'tell application "Ghostty"'                                     \
+        -e '    repeat with term in terminals'                              \
+        -e '        if tty of term as text = "/dev/'"${THIS_TTY% }"'" then' \
+        -e '            focus term'                                         \
+        -e '            exit'                                               \
+        -e '        end if'                                                 \
+        -e '    end repeat'                                                 \
         -e 'end tell' >/dev/null
     fi
 }}
