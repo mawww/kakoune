@@ -104,7 +104,6 @@ define-command ghostty-focus -override -params ..1 -docstring '
 ghostty-focus [<client>]: focus the given client
 If no client is passed then the current one is used' \
 %{ evaluate-commands %sh{
-  set -x
     if [ $# -eq 1 ]; then
         printf "evaluate-commands -client '%s' focus" "$1"
     else
