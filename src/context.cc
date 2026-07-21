@@ -305,7 +305,7 @@ void Context::change_buffer(Buffer& buffer, Optional<FunctionRef<void()>> set_se
     if (has_buffer() and m_edition_level > 0)
        this->buffer().commit_undo_group();
 
-    if (has_client())
+    if (has_client() and &client().context() == this) // Hook contexts may set the client but not be the client's context
     {
         client().info_hide();
         client().menu_hide();

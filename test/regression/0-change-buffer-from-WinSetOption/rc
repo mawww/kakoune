@@ -1,0 +1,2 @@
+declare-option str foo out
+hook global WinSetOption foo=bar %{ edit foo; set-register dquote %val{bufname} }
