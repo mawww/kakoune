@@ -23,12 +23,12 @@ CXXFLAGS-debug-no = -O3 -g3
 tag-debug-no = .opt
 
 CXXFLAGS-sanitize-address = -fsanitize=address
-LDFLAGS-sanitize-address = -lasan
+LDFLAGS-sanitize-address = -fsanitize=address
 tag-sanitize-address = .san_a
 
 CXXFLAGS-sanitize-undefined = -fsanitize=undefined
 
-LDFLAGS-sanitize-undefined = -lasan -lubsan
+LDFLAGS-sanitize-undefined = -fsanitize=undefined
 tag-sanitize-undefined = .san_u
 
 LDFLAGS-static-yes = -static -pthread

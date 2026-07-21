@@ -1,15 +1,16 @@
 image: debian/stable
 packages:
     - clang
+    - libclang-rt-dev
     - gcc
     - make
 tasks:
     - clang-build: |
         cd kakoune
-        make CXX=clang++ -j$(nproc)
+        make CXX=clang++ sanitize=address -j$(nproc)
     - clang-test: |
         cd kakoune
-        LC_ALL=C.utf8 make test
+        LC_ALL=C.utf8 make sanitize=address test
     - gcc-build: |
         cd kakoune
         make clean

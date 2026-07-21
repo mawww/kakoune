@@ -18,11 +18,13 @@ jobs:
               sudo apt update
               sudo apt install g++
             CXX: g++
+            make_args:
           - os: ubuntu
             toolchain: llvm
             install_cmd: |
               sudo apt update
               sudo apt install clang
+            make_args: sanitize=address
             CXX: clang++
           - os: macos
             toolchain: gcc
@@ -30,16 +32,18 @@ jobs:
               brew update
               brew install gcc
             CXX: g++
+            make_args:
           - os: macos
             toolchain: llvm
             install_cmd: |
               brew update
               brew install llvm
             CXX: clang++
+            make_args:
     runs-on: ${{ matrix.os }}-latest
     steps:
     - uses: actions/checkout@v3
     - name: Install dependencies
       run: ${{ matrix.install_cmd }}
     - name: Build and test
-      run: make CXX=${{ matrix.CXX }} -j$(nproc 2>/dev/null || sysctl -n hw.ncpu) test
+      run: make CXX=${{ matrix.CXX }} ${{ matrix.make_args }} -j$(nproc 2>/dev/null || sysctl -n hw.ncpu) test
