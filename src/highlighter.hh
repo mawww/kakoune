@@ -39,12 +39,12 @@ struct Highlighter;
 
 struct DisplaySetup
 {
-    LineCount first_line;
-    LineCount line_count;
-    ColumnCount first_column;
-    ColumnCount widget_columns;
+    LineCount first_line{};
+    LineCount line_count{};
+    ColumnCount first_column{};
+    ColumnCount widget_columns{};
     // Offset of line and columns that must remain visible around cursor
-    DisplayCoord scroll_offset;
+    DisplayCoord scroll_offset{};
 };
 
 using HighlighterIdList = ConstArrayView<StringView>;
