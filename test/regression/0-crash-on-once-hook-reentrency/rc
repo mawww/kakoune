@@ -1,0 +1,3 @@
+declare-option str foo
+hook -once window WinSetOption foo=.* %{ exec ionce<esc> }
+hook buffer WinSetOption foo=x %{ set-option window foo y }

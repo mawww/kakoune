@@ -118,9 +118,6 @@ void HookManager::run_hook(Hook hook, StringView param, Context& context)
             hooks_to_run.push_back({hook.get(), std::move(captures)});
     }
 
-    if (m_parent)
-        m_parent->run_hook(hook, param, context);
-
     auto hook_name = enum_desc(Meta::Type<Hook>{})[to_underlying(hook)].name;
     if (contains(m_running_hooks, std::make_pair(hook, param)))
     {
@@ -136,6 +133,9 @@ void HookManager::run_hook(Hook hook, StringView param, Context& context)
             m_hooks_trash.clear();
     });
 
+    if (m_parent)
+        m_parent->run_hook(hook, param, context);
+
     ProfileScope profile{context.options()["debug"].get<DebugFlags>(), [&](std::chrono::microseconds duration) {
         write_to_debug_buffer(format("hook '{}({})' took {} us", hook_name, param, (size_t)duration.count()));
     }};
@@ -145,6 +145,9 @@ void HookManager::run_hook(Hook hook, StringView param, Context& context)
     {
         try
         {
+            if (contains(m_hooks_trash, to_run.hook))
+                continue;
+
             to_run.hook->exec(hook, param, context, to_run.captures);
 
             if (to_run.hook->flags & HookFlags::Once)
