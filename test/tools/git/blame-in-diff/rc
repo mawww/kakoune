@@ -4,6 +4,7 @@ source "%val{runtime}/rc/tools/git.kak"
 
 define-command run %{
     try %{
+        nop %sh{ ( sleep 1s; echo "kill!" | kak -p "$kak_session"; echo fail > fifo ) >/dev/null 2>&1 </dev/null & }
         git init
         git add
         git commit --message 'initial commit'
@@ -22,13 +23,13 @@ define-command run %{
                     execute-keys -client client0 x
                     # Wait for a redraw before reporting completion.
                     hook -once buffer NormalIdle .* %{
-                        echo -to-file fifo
+                        echo -to-file fifo done
                     }
                 }
             }
         }
     } catch %{
-        echo -to-file fifo
+        echo -to-file fifo fail
         kill! 1
     }
 }
