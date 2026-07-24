@@ -1,0 +1,1 @@
+ui_out -until '{ "jsonrpc": "2.0", "method": "draw_status", "params": [[], [{ "face": { "fg": "default", "bg": "default", "underline": "default", "attributes": [] }, "contents": "60" }], { "fg": "cyan", "bg": "default", "underline": "default", "attributes": [] }] }'
