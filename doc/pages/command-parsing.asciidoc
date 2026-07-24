@@ -9,6 +9,14 @@ prompt, are parsed according to the following rules:
 
 - Words (command names and parameters) are delimited by whitespaces.
 
+- <<expansions#, Expansions>> are parsed and replaced before the execution of
+  the commands.
+
+== Comments parsing
+
+Commands are commented out after `#` until end of line (not `;`).
+`#` takes effect _after_ the expansions are parsed.
+
 == Quoted Strings
 
 If a word starts with `'`, `"`, or `%X` with `X` a _non-nestable_ punctuation
