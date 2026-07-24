@@ -1,0 +1,27 @@
+#!/bin/sh
+
+if [ -z "$*" ] ; then
+	cat <<EOF >&2
+Usage: $(basename "$0") <file> ...
+
+Edit the files in a connected Kakoune session.
+EOF
+	exit 1
+fi
+
+if [ -z "$KAKOUNE_CLIENT" ] || [ -z "$KAKOUNE_SESSION" ]; then
+	cat <<EOF >&2
+No connected Kakoune session.
+EOF
+	exit 1
+fi
+
+while [ -n "$1" ]; do
+	realpath "$1" | \
+		tr '\n' '\0' | \
+		sed 's| |\\ |g' | \
+		xargs -0 printf 'evaluate-commands -try-client %s edit "%s"\n' "$KAKOUNE_CLIENT" | \
+		kak -p "$KAKOUNE_SESSION"
+	shift
+done
+
