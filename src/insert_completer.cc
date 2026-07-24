@@ -224,7 +224,13 @@ InsertCompletion complete_filename(const SelectionList& sels,
     {
         for (auto& filename : Kakoune::complete_filename(prefix,
                                                          options["ignored_files"].get<Regex>()))
-            candidates.push_back({ filename, "", {filename, {}} });
+        {
+            if (filename.back() == '/')
+                candidates.push_back({ filename.substr(0, filename.length()-1).str(), "",
+                                       {filename, {}} });
+            else
+                candidates.push_back({ filename, "", {filename, {}} });
+        }
     }
     else
     {
@@ -244,7 +250,11 @@ InsertCompletion complete_filename(const SelectionList& sels,
                                                              options["ignored_files"].get<Regex>()))
             {
                 StringView candidate = filename.substr(dir.length());
-                candidates.push_back({ candidate.str(), "", {candidate.str(), {}} });
+                if (filename.back() == '/')
+                    candidates.push_back({ candidate.substr(0, candidate.length()-1).str(), "",
+                                           {candidate.str(), {}} });
+                else
+                    candidates.push_back({ candidate.str(), "", {candidate.str(), {}} });
             }
 
             visited_dirs.push_back(std::move(dir));
