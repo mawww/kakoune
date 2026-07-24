@@ -2036,7 +2036,7 @@ template<size_t... P>
 ParameterDesc make_context_wrap_params_impl(Array<HashItem<String, SwitchDesc>, sizeof...(P)>&& additional_params,
                                             std::index_sequence<P...>)
 {
-    return { { { "client",     { {client_arg_completer},  "run in the client context for each client in the given comma separatd list" } },
+    return { { { "client",     { {client_arg_completer},  "run in the client context for each client in the given comma separated list" } },
                { "try-client", { {client_arg_completer},  "run in given client context if it exists, or else in the current one" } },
                { "buffer",     { {complete_buffer_name<false>},  "run in a disposable context for each given buffer in the comma separated list argument" } },
                { "draft",      { {}, "run in a disposable context" } },
