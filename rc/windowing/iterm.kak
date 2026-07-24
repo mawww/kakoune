@@ -29,7 +29,7 @@ define-command -hidden -params 2.. iterm-terminal-impl %{
         escaped=$(do_esc "$args")
         esc_path=$(do_esc "$PATH")
         esc_tmp=$(do_esc "$TMPDIR")
-        cmd="env PATH='${esc_path}' TMPDIR='${esc_tmp}' $escaped"
+        cmd=$(do_esc "/bin/sh -c \"PATH='${esc_path}' TMPDIR='${esc_tmp}' exec $escaped\"")
         if [ "$direction" = 'tab' ]; then
             osascript                                                       \
             -e "tell application \"iTerm\""                                 \
