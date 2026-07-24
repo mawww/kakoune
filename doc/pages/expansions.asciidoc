@@ -243,6 +243,10 @@ The following expansions are supported (with required context _in italics_):
     window (e.g. `%val{client_env_SHELL}` is `$SHELL` in the client's
     environment)
 
+*%val{env_X}*::
+    value of the `$X` environment variable in the server context
+    (e.g. `%val{env_SHELL}` is `$SHELL` in the server's environment)
+
 *%val{client_list}*::
     unquoted list of the names of clients (as seen in `%val{client}`)
     connected to the current session
