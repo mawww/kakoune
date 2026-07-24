@@ -1,0 +1,29 @@
+Welcome to the Kakoune Tutorial
+===============================
+
+Kakoune is a vim-inspired, modal, modern editor. Thank you for giving a try!
+
+This tutorial is inspired by vimtutor and aims at giving you enough skills to
+feel comfortable when editing with kak.
+
+To vim users, you should do well, but there are some slight differences even
+in basic commands and keybindings, so reading this turorial is worth it.
+
+Tutorial Usage
+--------------
+
+Use `<esc>,l` and `<esc>,h` to navigate to, respectively the next and the
+previous page.
+
+The tutorial pages are editable and contain instructions to change them. At
+any time, you can restore the pages to their original content with `<esc>,r`.
+
+These commands may seem odd at first, they will make sense soon.
+
+When stuck, typing `<esc>` always aborts the current action and you can reload
+the page (`,r`) or navigate (`,h`, `,l`) in the tutorial.
+
+Each page of the tutorial has a list of instructions to follow, like this one:
+
+  1. Make sure that Shift-Lock key is not depressed
+  2. Type `<esc>,l` to see the next lesson
