@@ -106,6 +106,12 @@ hook global BufSetOption filetype=markdown %{
     set-option buffer comment_block_end '"'
 }
 
+hook global BufSetOption filetype=applescript %{
+    set-option buffer comment_line '--'
+    set-option buffer comment_block_begin '(*'
+    set-option buffer comment_block_end '*)'
+}
+
 hook global BufSetOption filetype=(ocaml|coq) %{
     set-option buffer comment_line ''
     set-option buffer comment_block_begin '(* '
