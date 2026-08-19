@@ -1,0 +1,5 @@
+if x then
+    set y to 1
+end if
+repeat 3 times
+end repeat

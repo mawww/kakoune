@@ -1,0 +1,2 @@
+repeat 3 times
+    set i to i + 1

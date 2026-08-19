@@ -1,0 +1,2 @@
+tell application "Finder"
+    do shell script "ls"
