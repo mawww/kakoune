@@ -297,6 +297,10 @@ void Client::redraw_ifn()
     if (m_ui_pending & InfoHide)
         m_ui->info_hide();
 
+    if (m_ui_pending & InfoScroll)
+        m_ui->info_scroll(m_info_scroll);
+    m_info_scroll = 0;
+
     // This needs to be done *after* update_display_buffer as ithe mode line may rely on it to
     // compute whether selections are visible.
     DisplayLine mode_line = generate_mode_line();
@@ -502,13 +506,21 @@ void Client::info_hide(bool even_modal)
         return;
 
     m_info = Info{};
+    m_info_scroll = 0;
     m_ui_pending |= InfoHide;
-    m_ui_pending &= ~InfoShow;
+    m_ui_pending &= ~(InfoShow | InfoScroll);
+}
+
+void Client::info_scroll(int amount)
+{
+    m_info_scroll += amount;
+    m_ui_pending |= InfoScroll;
+    m_pending_clear &= ~PendingClear::Info;
 }
 
 void Client::schedule_clear()
 {
-    if (not (m_ui_pending & InfoShow))
+    if (not (m_ui_pending & (InfoShow | InfoScroll)))
         m_pending_clear |= PendingClear::Info;
     if (not (m_ui_pending & StatusLine))
         m_pending_clear |= PendingClear::StatusLine;

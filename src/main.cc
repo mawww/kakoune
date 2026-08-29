@@ -577,6 +577,7 @@ UniquePtr<UserInterface> make_ui(UIType ui_type)
 
         void info_show(const DisplayLine&, const DisplayLineList&, DisplayCoord, Face, InfoStyle) override {}
         void info_hide() override {}
+        void info_scroll(int) override {}
 
         void draw(const DisplayBuffer&, DisplayCoord, const Face&, const Face&, ColumnCount) override {}
         void draw_status(const DisplayLine&, const DisplayLine&, const ColumnCount, const DisplayLine&, const Face&, StatusStyle) override {}
