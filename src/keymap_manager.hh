@@ -32,7 +32,8 @@ public:
     void reparent(KeymapManager& parent) { m_parent = &parent; }
 
     using KeyList = Vector<Key, MemoryDomain::Mapping>;
-    void map_key(Key key, KeymapMode mode, KeyList mapping, String docstring);
+    void map_key(Key key, KeymapMode mode, KeyList mapping, String docstring,
+                 bool atomic = false);
     void unmap_key(Key key, KeymapMode mode);
     void unmap_keys(KeymapMode mode);
 
@@ -42,6 +43,8 @@ public:
     auto get_mapping_keys(Key key, KeymapMode mode) {
         return get_mapping(key, mode).keys;
     }
+
+    bool is_atomic(Key key, KeymapMode mode) const { return get_mapping(key, mode).atomic; }
 
     const String& get_mapping_docstring(Key key, KeymapMode mode) { return get_mapping(key, mode).docstring; }
 
@@ -58,6 +61,7 @@ private:
     {
         KeyList keys;
         String docstring;
+        bool atomic = false;
     };
     const KeymapInfo& get_mapping(Key key, KeymapMode mode) const;
 

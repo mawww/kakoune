@@ -42,6 +42,8 @@ public:
 
     virtual void refresh_ifn() {}
 
+    virtual unsigned int take_pending_count() { return 1; }
+
     bool enabled() const { return &m_input_handler.current_mode() == this; }
     Context& context() const { return m_input_handler.context(); }
 
@@ -425,6 +427,13 @@ public:
                 context().client().schedule_clear();
             m_idle_timer.set_next_date(Clock::now() + get_idle_timeout(context()));
         }
+    }
+
+    unsigned int take_pending_count() override
+    {
+        unsigned int count = std::max(m_params.count, 1);
+        m_params.count = 0;
+        return count;
     }
 
     KeymapMode keymap_mode() const override { return KeymapMode::Normal; }
@@ -1693,8 +1702,12 @@ void InputHandler::handle_key(Key key, bool synthesized)
     KeymapManager& keymaps = m_context.keymaps();
     if (keymaps.is_mapped(key, keymap_mode) and not m_context.keymaps_disabled())
     {
-        for (auto& k : keymaps.get_mapping_keys(key, keymap_mode))
-            process_key(k);
+        const auto mapping = keymaps.get_mapping_keys(key, keymap_mode);
+        unsigned int count = keymaps.is_atomic(key, keymap_mode) ?
+            current_mode().take_pending_count() : 1;
+        while (count--)
+            for (auto& k : mapping)
+                process_key(k);
     }
     else
         process_key(key);

@@ -9,9 +9,9 @@ namespace Kakoune
 {
 
 void KeymapManager::map_key(Key key, KeymapMode mode,
-                            KeyList mapping, String docstring)
+                            KeyList mapping, String docstring, bool atomic)
 {
-    m_mapping[KeyAndMode{key, mode}] = {std::move(mapping), std::move(docstring)};
+    m_mapping[KeyAndMode{key, mode}] = {std::move(mapping), std::move(docstring), atomic};
 }
 
 void KeymapManager::unmap_key(Key key, KeymapMode mode)

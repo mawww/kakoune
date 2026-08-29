@@ -1979,7 +1979,8 @@ const CommandDesc map_key_cmd = {
     nullptr,
     "map [<switches>] <scope> <mode> <key> <keys>: map <key> to <keys> in given <mode> in <scope>",
     ParameterDesc{
-        { { "docstring", { ArgCompleter{},  "specify mapping description" } } },
+        { { "atomic", { {}, "repeat whole mapping if count given" } },
+          { "docstring", { ArgCompleter{}, "specify mapping description" } } },
         ParameterDesc::Flags::None, 4, 4
     },
     CommandFlags::None,
@@ -1996,7 +1997,8 @@ const CommandDesc map_key_cmd = {
 
         KeyList mapping = parse_keys(parser[3]);
         keymaps.map_key(key[0], keymap_mode, std::move(mapping),
-                        trim_indent(parser.get_switch("docstring").value_or("")));
+                        trim_indent(parser.get_switch("docstring").value_or("")),
+                        (bool) parser.get_switch("atomic"));
     }
 };
 
