@@ -44,6 +44,7 @@ public:
                    DisplayCoord anchor, Face face,
                    InfoStyle style) override;
     void info_hide() override;
+    void info_scroll(int amount) override;
 
     void refresh(bool force) override;
 

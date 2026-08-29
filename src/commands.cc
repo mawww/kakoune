@@ -2425,6 +2425,38 @@ const CommandDesc info_cmd = {
     }
 };
 
+template<int direction>
+void scroll_info(const ParametersParser& parser, Context& context, const ShellContext&)
+{
+    if (not context.has_client())
+        return;
+
+    const int count = parser.positional_count() > 0 ? str_to_int(parser[0]) : 1;
+    context.client().info_scroll(direction * count);
+}
+
+const CommandDesc info_scroll_down_cmd = {
+    "info-scroll-down",
+    nullptr,
+    "info-scroll-down [<count>]: scroll the info box down by <count> lines (default 1)",
+    ParameterDesc{ {}, ParameterDesc::Flags::None, 0, 1 },
+    CommandFlags::None,
+    CommandHelper{},
+    CommandCompleter{},
+    scroll_info<1>
+};
+
+const CommandDesc info_scroll_up_cmd = {
+    "info-scroll-up",
+    nullptr,
+    "info-scroll-up [<count>]: scroll the info box up by <count> lines (default 1)",
+    ParameterDesc{ {}, ParameterDesc::Flags::None, 0, 1 },
+    CommandFlags::None,
+    CommandHelper{},
+    CommandCompleter{},
+    scroll_info<-1>
+};
+
 const CommandDesc try_catch_cmd = {
     "try",
     nullptr,
@@ -2836,6 +2868,8 @@ void register_commands()
     register_command(prompt_cmd);
     register_command(on_key_cmd);
     register_command(info_cmd);
+    register_command(info_scroll_down_cmd);
+    register_command(info_scroll_up_cmd);
     register_command(try_catch_cmd);
     register_command(set_face_cmd);
     register_command(unset_face_cmd);

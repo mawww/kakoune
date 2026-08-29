@@ -684,7 +684,7 @@ void TerminalUI::check_resize(bool force)
         menu_show(Vector<DisplayLine>(std::move(m_menu.items)),
                   m_menu.anchor, m_menu.fg, m_menu.bg, m_menu.style);
     if (info)
-        info_show(m_info.title, m_info.content, m_info.anchor, m_info.face, m_info.style);
+        draw_info();
 
     set_resize_pending();
 }
@@ -1198,8 +1198,7 @@ void TerminalUI::menu_show(ConstArrayView<DisplayLine> items,
     draw_menu();
 
     if (m_info)
-        info_show(m_info.title, m_info.content,
-                  m_info.anchor, m_info.face, m_info.style);
+        draw_info();
 }
 
 void TerminalUI::menu_select(int selected)
@@ -1254,7 +1253,7 @@ void TerminalUI::menu_hide()
 
     // Recompute info as it does not have to avoid the menu anymore
     if (m_info)
-        info_show(m_info.title, m_info.content, m_info.anchor, m_info.face, m_info.style);
+        draw_info();
 }
 
 static DisplayCoord compute_pos(DisplayCoord anchor, DisplayCoord size,
@@ -1333,13 +1332,37 @@ static DisplayLineList wrap_lines(const DisplayLineList& lines, ColumnCount max_
 void TerminalUI::info_show(const DisplayLine& title, const DisplayLineList& content,
                            DisplayCoord anchor, Face face, InfoStyle style)
 {
-    info_hide();
+    auto same_lines = [](const DisplayLineList& lhs, const DisplayLineList& rhs) {
+        if (lhs.size() != rhs.size())
+            return false;
+        for (size_t i = 0; i < lhs.size(); ++i)
+            if (not (lhs[i].atoms() == rhs[i].atoms()))
+                return false;
+        return true;
+    };
+    // Only reset the scroll position when the info box actually changed, so
+    // that it survives the redisplays triggered by resizes and menu changes.
+    if (not (m_info.title.atoms() == title.atoms()) or not same_lines(m_info.content, content))
+        m_info.scroll_offset = 0;
 
     m_info.title = title;
     m_info.content = content;
     m_info.anchor = anchor;
     m_info.face = face;
     m_info.style = style;
+
+    draw_info();
+}
+
+void TerminalUI::draw_info()
+{
+    info_hide();
+
+    const DisplayLine& title = m_info.title;
+    const DisplayLineList& content = m_info.content;
+    DisplayCoord anchor = m_info.anchor;
+    const Face& face = m_info.face;
+    const InfoStyle style = m_info.style;
 
     const bool framed = style == InfoStyle::Prompt or style == InfoStyle::Modal;
     const bool assisted = style == InfoStyle::Prompt and m_assistant.size() != 0;
@@ -1350,6 +1373,11 @@ void TerminalUI::info_show(const DisplayLine& title, const DisplayLineList& cont
                                    m_menu.pos.column);
     else if (style != InfoStyle::Modal)
         max_size.line -= m_menu.size.line;
+
+    // Like terminal_info_max_width, the limit applies to the content, the frame
+    // is drawn on top of it. Overflowing content stays reachable with info-scroll-*.
+    if (m_info_max_height > 0)
+        max_size.line = std::min(max_size.line, m_info_max_height + (framed ? 2 : 0));
 
     const auto max_content_width = (m_info_max_width > 0 ? std::min(max_size.column, m_info_max_width) : max_size.column) -
                                    (framed ? 4 : 0) -
@@ -1381,6 +1409,13 @@ void TerminalUI::info_show(const DisplayLine& title, const DisplayLineList& cont
     if ((framed and size.line < 3) or size.line <= 0)
         return;
 
+    const LineCount line_count{(int)lines.size()};
+    const LineCount visible = framed ? size.line - 2 : size.line;
+    m_info.scroll_offset = clamp(m_info.scroll_offset, 0_line,
+                                 std::max(0_line, line_count - visible));
+    const LineCount offset = m_info.scroll_offset;
+    const LineCount remaining = line_count - offset;
+
     const Rect rect = {content_line_offset(), m_dimensions};
     if (style == InfoStyle::Prompt)
     {
@@ -1408,6 +1443,11 @@ void TerminalUI::info_show(const DisplayLine& title, const DisplayLineList& cont
         anchor.line += content_line_offset();
     }
 
+    constexpr Codepoint dash{L'─'};
+    constexpr Codepoint dotted_dash{L'┄'};
+    // a dotted border edge means there is more content in that direction
+    const Codepoint top_dash = offset > 0 ? dotted_dash : dash;
+
     m_info.create(anchor, size);
     for (auto line = 0_line; line < size.line; ++line)
     {
@@ -1428,8 +1468,6 @@ void TerminalUI::info_show(const DisplayLine& title, const DisplayLineList& cont
             (draw(args), ...);
         };
 
-        constexpr Codepoint dash{L'─'};
-        constexpr Codepoint dotted_dash{L'┄'};
         if (assisted)
         {
             const auto assistant_top_margin = (size.line - m_assistant.size()+1) / 2;
@@ -1440,32 +1478,47 @@ void TerminalUI::info_show(const DisplayLine& title, const DisplayLineList& cont
             draw_atoms(assistant_line.str());
         }
         if (not framed)
-            draw_atoms(lines[(int)line]);
+        {
+            if (line + offset < line_count)
+                draw_atoms(lines[(int)(line + offset)]);
+        }
         else if (line == 0)
         {
             if (title.atoms().empty() or content_size.column < 2)
-                draw_atoms("╭─" + String{dash, content_size.column} + "─╮");
+                draw_atoms("╭─" + String{top_dash, content_size.column} + "─╮");
             else
             {
                 auto trimmed_title = title;
                 trimmed_title.trim(0, content_size.column - 2);
                 auto dash_count = content_size.column - trimmed_title.length() - 2;
-                String left{dash, dash_count / 2};
-                String right{dash, dash_count - dash_count / 2};
+                String left{top_dash, dash_count / 2};
+                String right{top_dash, dash_count - dash_count / 2};
                 draw_atoms("╭─" + left + "┤", trimmed_title, "├" + right +"─╮");
             }
         }
-        else if (line < size.line - 1 and line <= lines.size())
+        else if (line < size.line - 1 and line <= remaining)
         {
-            auto info_line = lines[(int)line - 1];
+            auto info_line = lines[(int)(line - 1 + offset)];
             const bool trimmed = info_line.trim(0, content_size.column);
             const ColumnCount padding = content_size.column - info_line.length();
             draw_atoms("│ ", info_line, padding, (trimmed ? "…│" : " │"));
         }
-        else if (line == std::min<LineCount>((int)lines.size() + 1, size.line - 1))
-            draw_atoms("╰─", String(line > lines.size() ? dash : dotted_dash, content_size.column), "─╯");
+        else if (line == std::min<LineCount>((int)remaining + 1, size.line - 1))
+            draw_atoms("╰─", String(line > remaining ? dash : dotted_dash, content_size.column), "─╯");
     }
     m_dirty = true;
+}
+
+void TerminalUI::info_scroll(int amount)
+{
+    // info_hide only destroys the window, the content is kept around, so we can
+    // scroll (and redisplay) an info box that got hidden by, say, opening the
+    // command prompt to run this very command.
+    if (m_info.content.empty())
+        return;
+
+    m_info.scroll_offset += amount; // draw_info clamps it to the available range
+    draw_info();
 }
 
 void TerminalUI::info_hide()
@@ -1604,6 +1657,10 @@ void TerminalUI::set_ui_options(const Options& options)
     }
 
     m_info_max_width = find("terminal_info_max_width").map(str_to_int_ifp).value_or(0);
+    m_info_max_height = find("terminal_info_max_height").map(str_to_int_ifp).value_or(0);
+
+    if (m_info)
+        draw_info();
 }
 
 }

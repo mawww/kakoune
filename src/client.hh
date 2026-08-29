@@ -52,6 +52,7 @@ public:
     void info_show(DisplayLine title, DisplayLineList content, BufferCoord anchor, InfoStyle style);
     void info_show(StringView title, StringView content, BufferCoord anchor, InfoStyle style);
     void info_hide(bool even_modal = false);
+    void info_scroll(int amount);
     bool info_pending() const { return m_ui_pending & PendingUI::InfoShow; };
     bool status_line_pending() const { return m_ui_pending & PendingUI::StatusLine; };
 
@@ -119,6 +120,7 @@ private:
         StatusLine = 1 << 5,
         Draw       = 1 << 6,
         Refresh    = 1 << 7,
+        InfoScroll = 1 << 8,
     };
     int m_ui_pending = 0;
 
@@ -149,6 +151,8 @@ private:
         Optional<DisplayCoord> ui_anchor;
         InfoStyle style;
     } m_info{};
+
+    int m_info_scroll = 0;
 
     Vector<Key, MemoryDomain::Client> m_pending_keys;
 

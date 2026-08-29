@@ -200,6 +200,11 @@ void JsonUI::info_hide()
     rpc_call("info_hide");
 }
 
+void JsonUI::info_scroll(int amount)
+{
+    rpc_call("info_scroll", amount);
+}
+
 void JsonUI::refresh(bool force)
 {
     rpc_call("refresh", force);
