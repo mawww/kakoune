@@ -1,0 +1,2 @@
+map -atomic global normal <F1> 'jj'
+map global normal <F2> 'jj'
