@@ -401,8 +401,7 @@ are exclusively available to built-in options.
         *terminal_info_max_height*:::
             set the maximum allowable height, in content lines, of an info
             box. set to zero for no limit. content that does not fit stays
-            reachable with the `info-scroll-down` and `info-scroll-up`
-            commands.
+            reachable with the `info-scroll` command.
 
         *terminal_cursor_native*:::
             if *yes* or *true*, use native terminal cursor visibility control
