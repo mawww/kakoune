@@ -1375,7 +1375,7 @@ void TerminalUI::draw_info()
         max_size.line -= m_menu.size.line;
 
     // Like terminal_info_max_width, the limit applies to the content, the frame
-    // is drawn on top of it. Overflowing content stays reachable with info-scroll-*.
+    // is drawn on top of it. Overflowing content stays reachable with info-scroll.
     if (m_info_max_height > 0)
         max_size.line = std::min(max_size.line, m_info_max_height + (framed ? 2 : 0));
 
