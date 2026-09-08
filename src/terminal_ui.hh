@@ -53,7 +53,6 @@ public:
                    DisplayCoord anchor, Face face,
                    InfoStyle style) override;
     void info_hide() override;
-    void info_scroll(int amount) override;
 
     void refresh(bool force) override;
 
@@ -182,6 +181,8 @@ private:
     ColumnCount m_status_cursor_pos = 0;
     ColumnCount m_info_max_width = 0;
     LineCount m_info_max_height = 0;
+    int m_info_scroll_seq = 0;
+    int m_info_scroll_pending = 0;
 };
 
 }

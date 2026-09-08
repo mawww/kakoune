@@ -44,7 +44,6 @@ enum class MessageType : uint8_t
     Exit,
     Key,
     Paste,
-    InfoScroll,
 };
 
 class MsgWriter
@@ -397,7 +396,6 @@ public:
                    DisplayCoord anchor, Face face,
                    InfoStyle style) override;
     void info_hide() override;
-    void info_scroll(int amount) override;
 
     void draw(const DisplayBuffer& display_buffer,
               DisplayCoord cursor_pos,
@@ -566,11 +564,6 @@ void RemoteUI::info_hide()
     send_message(MessageType::InfoHide);
 }
 
-void RemoteUI::info_scroll(int amount)
-{
-    send_message(MessageType::InfoScroll, amount);
-}
-
 void RemoteUI::draw(const DisplayBuffer& display_buffer,
                     DisplayCoord cursor_pos,
                     const Face& default_face,
@@ -731,9 +724,6 @@ RemoteClient::RemoteClient(StringView session, StringView name, UniquePtr<UserIn
                 break;
             case MessageType::InfoHide:
                 exec(&UserInterface::info_hide);
-                break;
-            case MessageType::InfoScroll:
-                exec(&UserInterface::info_scroll);
                 break;
             case MessageType::Draw:
                 exec(&UserInterface::draw);

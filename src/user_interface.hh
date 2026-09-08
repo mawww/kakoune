@@ -64,7 +64,6 @@ public:
                            DisplayCoord anchor, Face face,
                            InfoStyle style) = 0;
     virtual void info_hide() = 0;
-    virtual void info_scroll(int amount) = 0;
 
     virtual void draw(const DisplayBuffer& display_buffer,
                       DisplayCoord cursor_pos,

@@ -2381,6 +2381,7 @@ const CommandDesc info_cmd = {
         { { "anchor", { ArgCompleter{}, "set info anchoring <line>.<column>" } },
           { "style", { {arg_completer(Array{"above", "below", "menu", "modal"})}, "set info style (above, below, menu, modal)" } },
           { "markup", { {}, "parse markup" } },
+          { "keep", { {}, "keep the current info box for this keystroke instead of displaying a new one" } },
           { "title", { ArgCompleter{}, "set info title" } } },
         ParameterDesc::Flags::None, 0, 1
     },
@@ -2391,6 +2392,15 @@ const CommandDesc info_cmd = {
     {
         if (not context.has_client())
             return;
+
+        // Info boxes are auto-hidden on the next keystroke; -keep cancels that, so
+        // that a command bound to a key can act on the info box that is displayed
+        // rather than on the one it just dismissed.
+        if (parser.get_switch("keep"))
+        {
+            context.client().info_keep();
+            return;
+        }
 
         const InfoStyle style = parser.get_switch("style").map(
             [](StringView style) -> Optional<InfoStyle> {
@@ -2422,25 +2432,6 @@ const CommandDesc info_cmd = {
                                        pos, style);
         else
             context.client().info_show(title.str(), parser[0], pos, style);
-    }
-};
-
-const CommandDesc info_scroll_cmd = {
-    "info-scroll",
-    nullptr,
-    "info-scroll [<count>]: scroll the info box by <count> lines, negative scrolls up, "
-    "positive scrolls down (1 by default)",
-    // SwitchesAsPositional so that a negative <count> is not parsed as a switch
-    ParameterDesc{ {}, ParameterDesc::Flags::SwitchesAsPositional, 0, 1 },
-    CommandFlags::None,
-    CommandHelper{},
-    CommandCompleter{},
-    [](const ParametersParser& parser, Context& context, const ShellContext&)
-    {
-        if (not context.has_client())
-            return;
-
-        context.client().info_scroll(parser.positional_count() > 0 ? str_to_int(parser[0]) : 1);
     }
 };
 
@@ -2855,7 +2846,6 @@ void register_commands()
     register_command(prompt_cmd);
     register_command(on_key_cmd);
     register_command(info_cmd);
-    register_command(info_scroll_cmd);
     register_command(try_catch_cmd);
     register_command(set_face_cmd);
     register_command(unset_face_cmd);

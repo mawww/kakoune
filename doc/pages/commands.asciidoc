@@ -391,6 +391,14 @@ but not really useful in that context.
         parse markup in both title (if provided) and text. (See
         <<faces#markup-strings,`:doc faces markup-strings`>>)
 
+    *-keep*:::
+        keep the info box that is currently displayed instead of
+        displaying a new one. Info boxes are automatically hidden on
+        the next keystroke, this cancels that, so that a command bound
+        to a key can act on the info box that is displayed rather than
+        on the one it just dismissed. All other switches and the text
+        parameter are ignored.
+
     NOTE: The info box is displayed in the current client context,
     so inside a draft context like `eval -draft`, it is invisible.
 
@@ -399,10 +407,14 @@ but not really useful in that context.
     content that does not fit on screen can be reached. A negative
     <count> scrolls up, a positive one scrolls down; <count> is 1 by
     default. A dotted border edge means there is more content in that
-    direction. The scroll position is kept by the client, and is reset
+    direction, and the right border doubles as a scrollbar showing which
+    part of the content is on screen, like the one on the completion
+    menu. The scroll position is kept by the client, and is reset
     whenever a different info box is displayed. If the info box got
     hidden (for instance by opening the command prompt to run this very
-    command) it is displayed again.
+    command) it is displayed again. +
+    This is not a builtin command but one defined in the standard
+    `kakrc`, so it is not available when running with `kak -n`.
 
 *try* <commands> [catch <on_error_commands>]...::
     prevent an error in *commands* from aborting the whole command

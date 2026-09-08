@@ -527,7 +527,8 @@ void register_options()
                        "    terminal_padding_char          codepoint\n"
                        "    terminal_padding_fill          bool\n"
                        "    terminal_cursor_native         bool\n"
-                       "    terminal_info_max_width        int\n",
+                       "    terminal_info_max_width        int\n"
+                       "    terminal_info_max_height       int\n",
                        UserInterface::Options{});
     reg.declare_option("modelinefmt", "format string used to generate the modeline",
                        "%val{bufname} %val{cursor_line}:%val{cursor_char_column} {{context_info}} {{mode_info}} - %val{client}@[%val{session}]"_str);
@@ -577,7 +578,6 @@ UniquePtr<UserInterface> make_ui(UIType ui_type)
 
         void info_show(const DisplayLine&, const DisplayLineList&, DisplayCoord, Face, InfoStyle) override {}
         void info_hide() override {}
-        void info_scroll(int) override {}
 
         void draw(const DisplayBuffer&, DisplayCoord, const Face&, const Face&, ColumnCount) override {}
         void draw_status(const DisplayLine&, const DisplayLine&, const ColumnCount, const DisplayLine&, const Face&, StatusStyle) override {}
