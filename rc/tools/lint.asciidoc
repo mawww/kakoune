@@ -12,10 +12,41 @@ If the 'kind' field contains 'error', the message is treated as an error,
 otherwise it is assumed to be a warning.
 
 The `:lint-buffer` and `:lint-selections` commands will run the shell command
-specified in the `lintcmd` option, passing it the path to a temporary file
-containing the text to be linted. The results are collected in the
-`*lint-output*` buffer, and analyze it. If `toolsclient` is set, the
-`*lint-output*` buffer will be displayed in the named client.
+specified in the `lintcmd` option. The following variables will be set in
+its environment:
+
+* `$lint_file`: full path to the file being linted, set to an empty string
+  if the source buffer is not saved on disk
+* `$lint_in`: full path to the file containing data to lint
+* `$lint_out`: full path to the file expected to contain diagnostics,
+  written in the format described above
+* `$lint_err`: full path to the file expected to contain errors
+
+Example of command expected to be stored in `lintcmd`:
+
+----
+linter < "$lint_in" > "$lint_out" 2>"$lint_err"
+----
+
+Note that explicitly redirecting diagnostics to `$lint_out` and errors
+to `$lint_err` is not required, as the standard output/error streams of
+the command are respectively being forwarded to the appropriate files by
+default. If relevant, the above command could simply be rewritten as:
+
+----
+linter < "$lint_in"
+# or
+linter "$lint_in"
+----
+
+In cases where only whole files are expected to be linted at runtime and
+context matters (e.g. header files surrounding C/C++ code), the `$lint_file`
+option can be passed to the linter directly, but selection linting will
+consequently not work.
+
+The results are collected in the `*lint-output*` buffer, and analyzed in
+it. If `toolsclient` is set, the `*lint-output*` buffer will be displayed
+in the named client.
 
 Each reported error or warning causes a marker to appear in the left-hand
 margin of the buffer that was checked. When the main cursor moves onto that
