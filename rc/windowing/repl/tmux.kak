@@ -9,6 +9,7 @@ hook global ModuleLoaded tmux %{
 provide-module tmux-repl %{
 
 declare-option -docstring "tmux pane id in which the REPL is running" str tmux_repl_id
+declare-option -docstring "whether to use bracketed paste" bool repl_bracketed_paste true
 
 define-command -hidden -params 1.. tmux-repl-impl %{
     evaluate-commands %sh{
@@ -61,7 +62,7 @@ define-command -params 0..1 tmux-repl-set-pane -docstring %{
         else
             tgt_pane="$1"
         fi
-        curr_win="$(tmux display-message -t ${kak_client_env_TMUX_PANE} -p '#{window_id}')" 
+        curr_win="$(tmux display-message -t ${kak_client_env_TMUX_PANE} -p '#{window_id}')"
         if tmux list-panes -t "$curr_win" -F \#D | grep -Fxq "%"$tgt_pane; then
             printf "set-option current tmux_repl_id '%s'" %$tgt_pane
         else
@@ -76,11 +77,11 @@ define-command -hidden tmux-send-text -params 0..1 -docstring %{
     } %{
     evaluate-commands %sh{
         if [ $# -eq 0 ]; then
-            tmux set-buffer -b kak_selection -- "${kak_selection}"
+            tmux set-buffer -b kak_selection -- "${kak_selections}"
         else
             tmux set-buffer -b kak_selection -- "$1"
         fi
-        tmux paste-buffer -b kak_selection -t "$kak_opt_tmux_repl_id" ||
+        tmux paste-buffer ${kak_opt_repl_bracketed_paste:+-p} -b kak_selection -t "$kak_opt_tmux_repl_id" ||
         echo 'fail tmux-send-text: failed to send text, see *debug* buffer for details'
     }
 }
