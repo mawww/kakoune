@@ -1259,7 +1259,12 @@ void expand_unprintable(HighlightContext context, DisplayBuffer& display_buffer,
                     if (ByteCount pos(next - line_data); pos < atom_it->end().column)
                         atom_it = line.split(atom_it, {begin.line, pos});
 
-                    atom_it->replace("�");
+                    if (cp < ' ')
+                        atom_it->replace(format("^{}", (char)(cp + '@')));
+                    else if (cp == 127)
+                        atom_it->replace("^?");
+                    else
+                        atom_it->replace("�");
                     atom_it->face = error;
                     break;
                 }
