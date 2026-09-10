@@ -1,14 +1,28 @@
 # https://palletsprojects.com/p/jinja/
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+hook global BufCreate .*\.jinja %{
+    set-option buffer filetype jinja
+}
+
+hook global WinSetOption filetype=jinja %{
+    require-module jinja
+    add-highlighter window/jinja ref jinja
+    hook -once -always window WinSetOption filetype=.* %{
+        remove-highlighter window/jinja
+    }
+}
+
 provide-module jinja %[
 
 require-module python
+require-module html
 
 # Highlighters
 # ‾‾‾‾‾‾‾‾‾‾‾‾
 
 add-highlighter shared/jinja regions
+add-highlighter shared/jinja/html default-region ref html
 add-highlighter shared/jinja/comment region '\{#' '#\}' fill comment
 
 # TODO: line statements # …
