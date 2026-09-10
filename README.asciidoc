@@ -214,7 +214,7 @@ sudo apt install kakoune
 If you want to compile from source on 20.04 or earlier, you must force the build to use GCC 10, which is not the default. Also, make sure you have .local/bin in your path so that kak is available after the installation.
 
 ----------------------------------------------------------------
-git clone https://github.com/mawww/kakoune.git && cd kakoune/src
+git clone https://github.com/mawww/kakoune.git && cd kakoune
 CXX=g++-10 make
 make PREFIX=$HOME/.local install
 ----------------------------------------------------------------
