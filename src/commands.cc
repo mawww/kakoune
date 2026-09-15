@@ -1692,12 +1692,14 @@ const CommandDesc debug_cmd = {
             {
                 KeymapMode m = parse_keymap_mode(mode, user_modes);
                 for (auto& key : keymaps.get_mapped_keys(m)) {
-                    KeyList kl = keymaps.get_mapping_keys(key, m);
-                    String mapping;
+                    auto* mapping = keymaps.get_mapping(key, m);
+                    const KeyList& kl = mapping->keys;
+                    String keys;
                     for (const auto& k : kl)
-                        mapping += to_string(k);
-                    write_to_debug_buffer(format(" * {} {}: '{}' {}",
-                                          mode, key, mapping, keymaps.get_mapping_docstring(key, m)));
+                        keys += to_string(k);
+                    write_to_debug_buffer(
+                        format(" * {} {}: '{}' {} {}", mode, key, keys,
+                               mapping->atomic ? "(atomic)" : "", mapping->docstring));
                 }
             }
         }
@@ -2027,9 +2029,9 @@ const CommandDesc unmap_key_cmd = {
         if (key.size() != 1)
             throw runtime_error("only a single key can be unmapped");
 
-        if (keymaps.is_mapped(key[0], keymap_mode) and
-            (parser.positional_count() < 4 or
-             keymaps.get_mapping_keys(key[0], keymap_mode) == parse_keys(parser[3])))
+        if (auto* mapping = keymaps.get_mapping(key[0], keymap_mode);
+            mapping and (parser.positional_count() < 4 or
+                         mapping->keys == parse_keys(parser[3])))
             keymaps.unmap_key(key[0], keymap_mode);
     }
 };
@@ -2684,14 +2686,14 @@ void enter_user_mode(Context& context, NormalParams params, String mode_name, Ke
         if (key == Key::Escape)
             return;
 
-        if (context.keymaps().is_mapped(key, mode))
+        if (auto* mapping = context.keymaps().get_mapping(key, mode))
         {
             ScopedSetBool disable_keymaps(context.keymaps_disabled());
 
             InputHandler::ScopedForceNormal force_normal{context.input_handler(), params};
 
             ScopedEdition edition(context);
-            for (auto& key : context.keymaps().get_mapping_keys(key, mode))
+            for (auto& key : auto(mapping->keys)) // copy to allow reentrant unmap
                 context.input_handler().handle_key(key);
         }
 

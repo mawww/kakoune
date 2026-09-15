@@ -1700,13 +1700,13 @@ void InputHandler::handle_key(Key key, bool synthesized)
 
     const auto keymap_mode = current_mode().keymap_mode();
     KeymapManager& keymaps = m_context.keymaps();
-    if (keymaps.is_mapped(key, keymap_mode) and not m_context.keymaps_disabled())
+    if (auto* mapping = keymaps.get_mapping(key, keymap_mode);
+        mapping and not m_context.keymaps_disabled())
     {
-        const auto mapping = keymaps.get_mapping_keys(key, keymap_mode);
-        unsigned int count = keymaps.is_atomic(key, keymap_mode) ?
-            current_mode().take_pending_count() : 1;
+        auto keys = mapping->keys; // copy to allow reentrant unmap
+        unsigned int count = mapping->atomic ? current_mode().take_pending_count() : 1;
         while (count--)
-            for (auto& k : mapping)
+            for (auto& k : keys)
                 process_key(k);
     }
     else

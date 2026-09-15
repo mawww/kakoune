@@ -188,7 +188,7 @@ String build_autoinfo_for_mapping(const Context& context, KeymapMode mode,
     for (auto& built_in : built_ins)
     {
         String keys = join(built_in.keys |
-                           filter([&](Key k){ return not keymaps.is_mapped(k, mode); }) |
+                           filter([&](Key k){ return keymaps.get_mapping(k, mode) == nullptr; }) |
                            transform((String(*)(Key))to_string),
                            ',', false);
         if (not keys.empty())
@@ -197,8 +197,9 @@ String build_autoinfo_for_mapping(const Context& context, KeymapMode mode,
 
     for (auto& key : keymaps.get_mapped_keys(mode))
     {
-        const String& docstring = keymaps.get_mapping_docstring(key, mode);
-        if (keymaps.get_mapping_keys(key, mode).empty() and docstring.empty())
+        auto* mapping = keymaps.get_mapping(key, mode);
+        const String& docstring = mapping->docstring;
+        if (mapping->keys.empty() and docstring.empty())
             continue;
         if (auto it = find_if(descs, [&](auto& elem) { return elem.second == docstring; });
             it != descs.end())
@@ -2232,7 +2233,8 @@ void exec_user_mappings(Context& context, NormalParams params)
 {
     on_next_key_with_autoinfo(context, "user-mapping", KeymapMode::None,
                              [params](Key key, Context& context) mutable {
-        if (not context.keymaps().is_mapped(key, KeymapMode::User))
+        auto* mapping = context.keymaps().get_mapping(key, KeymapMode::User);
+        if (not mapping)
             return;
 
         ScopedSetBool disable_keymaps(context.keymaps_disabled());
@@ -2241,7 +2243,7 @@ void exec_user_mappings(Context& context, NormalParams params)
 
         ScopedEdition edition(context);
         ScopedSelectionEdition selection_edition{context};
-        for (auto& key : context.keymaps().get_mapping_keys(key, KeymapMode::User))
+        for (auto& key : auto(mapping->keys)) // copy to allow reentrant unmap
             context.input_handler().handle_key(key);
     }, "user mapping",
     build_autoinfo_for_mapping(context, KeymapMode::User, {}));

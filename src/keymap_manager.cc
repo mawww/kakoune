@@ -32,20 +32,13 @@ void KeymapManager::unmap_keys(KeymapMode mode)
     }
 }
 
-bool KeymapManager::is_mapped(Key key, KeymapMode mode) const
-{
-    return m_mapping.find(KeyAndMode{key, mode}) != m_mapping.end() or
-           (m_parent and m_parent->is_mapped(key, mode));
-}
-
-const KeymapManager::KeymapInfo&
+const KeymapManager::KeymapInfo*
 KeymapManager::get_mapping(Key key, KeymapMode mode) const
 {
     auto it = m_mapping.find(KeyAndMode{key, mode});
     if (it != m_mapping.end())
-        return it->value;
-    kak_assert(m_parent);
-    return m_parent->get_mapping(key, mode);
+        return &it->value;
+    return m_parent ? m_parent->get_mapping(key, mode) : nullptr;
 }
 
 KeymapManager::KeyList KeymapManager::get_mapped_keys(KeymapMode mode) const
