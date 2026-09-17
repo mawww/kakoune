@@ -48,6 +48,7 @@ struct Token
         ValExpand,
         ArgExpand,
         FileExpand,
+        EnvExpand,
         CommandSeparator
     };
 
