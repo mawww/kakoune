@@ -506,6 +506,13 @@ void Client::info_hide(bool even_modal)
     m_ui_pending &= ~InfoShow;
 }
 
+// Cancel the pending auto-hide of the current info box, so that it survives the
+// keystroke that is being handled.
+void Client::info_keep()
+{
+    m_pending_clear &= ~PendingClear::Info;
+}
+
 void Client::schedule_clear()
 {
     if (not (m_ui_pending & InfoShow))

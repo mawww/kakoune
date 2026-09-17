@@ -2385,6 +2385,7 @@ const CommandDesc info_cmd = {
         { { "anchor", { ArgCompleter{}, "set info anchoring <line>.<column>" } },
           { "style", { {arg_completer(Array{"above", "below", "menu", "modal"})}, "set info style (above, below, menu, modal)" } },
           { "markup", { {}, "parse markup" } },
+          { "keep", { {}, "keep the current info box for this keystroke instead of displaying a new one" } },
           { "title", { ArgCompleter{}, "set info title" } } },
         ParameterDesc::Flags::None, 0, 1
     },
@@ -2395,6 +2396,15 @@ const CommandDesc info_cmd = {
     {
         if (not context.has_client())
             return;
+
+        // Info boxes are auto-hidden on the next keystroke; -keep cancels that, so
+        // that a command bound to a key can act on the info box that is displayed
+        // rather than on the one it just dismissed.
+        if (parser.get_switch("keep"))
+        {
+            context.client().info_keep();
+            return;
+        }
 
         const InfoStyle style = parser.get_switch("style").map(
             [](StringView style) -> Optional<InfoStyle> {

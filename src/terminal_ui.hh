@@ -121,6 +121,7 @@ private:
     } m_menu;
 
     void draw_menu();
+    void draw_info();
 
     LineCount content_line_offset() const;
 
@@ -131,6 +132,7 @@ private:
         Face face;
         DisplayCoord anchor;
         InfoStyle style;
+        LineCount scroll_offset = 0;
     } m_info;
 
     DisplayCoord m_cursor_pos;
@@ -178,6 +180,9 @@ private:
     ColumnCount m_status_pos = 0;
     ColumnCount m_status_cursor_pos = 0;
     ColumnCount m_info_max_width = 0;
+    LineCount m_info_max_height = 0;
+    int m_info_scroll_seq = 0;
+    int m_info_scroll_pending = 0;
 };
 
 }

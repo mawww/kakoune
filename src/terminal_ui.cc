@@ -552,6 +552,20 @@ void TerminalUI::redraw(bool force)
 
 void TerminalUI::refresh(bool force)
 {
+    // Applying the scroll is deferred to here because the server hides the info box
+    // when the prompt used to run the scrolling command is validated, and that hiding
+    // reaches us after the ui option carrying the request. info_hide only destroys the
+    // window and keeps the content around, so scrolling displays the box again.
+    if (m_info_scroll_pending != 0)
+    {
+        if (not m_info.content.empty())
+        {
+            m_info.scroll_offset += m_info_scroll_pending; // draw_info clamps it
+            draw_info();
+        }
+        m_info_scroll_pending = 0;
+    }
+
     if (m_dirty or force)
         redraw(force);
     m_dirty = false;
@@ -684,7 +698,7 @@ void TerminalUI::check_resize(bool force)
         menu_show(Vector<DisplayLine>(std::move(m_menu.items)),
                   m_menu.anchor, m_menu.fg, m_menu.bg, m_menu.style);
     if (info)
-        info_show(m_info.title, m_info.content, m_info.anchor, m_info.face, m_info.style);
+        draw_info();
 
     set_resize_pending();
 }
@@ -1198,8 +1212,7 @@ void TerminalUI::menu_show(ConstArrayView<DisplayLine> items,
     draw_menu();
 
     if (m_info)
-        info_show(m_info.title, m_info.content,
-                  m_info.anchor, m_info.face, m_info.style);
+        draw_info();
 }
 
 void TerminalUI::menu_select(int selected)
@@ -1254,7 +1267,7 @@ void TerminalUI::menu_hide()
 
     // Recompute info as it does not have to avoid the menu anymore
     if (m_info)
-        info_show(m_info.title, m_info.content, m_info.anchor, m_info.face, m_info.style);
+        draw_info();
 }
 
 static DisplayCoord compute_pos(DisplayCoord anchor, DisplayCoord size,
@@ -1333,13 +1346,37 @@ static DisplayLineList wrap_lines(const DisplayLineList& lines, ColumnCount max_
 void TerminalUI::info_show(const DisplayLine& title, const DisplayLineList& content,
                            DisplayCoord anchor, Face face, InfoStyle style)
 {
-    info_hide();
+    auto same_lines = [](const DisplayLineList& lhs, const DisplayLineList& rhs) {
+        if (lhs.size() != rhs.size())
+            return false;
+        for (size_t i = 0; i < lhs.size(); ++i)
+            if (not (lhs[i].atoms() == rhs[i].atoms()))
+                return false;
+        return true;
+    };
+    // Only reset the scroll position when the info box actually changed, so
+    // that it survives the redisplays triggered by resizes and menu changes.
+    if (not (m_info.title.atoms() == title.atoms()) or not same_lines(m_info.content, content))
+        m_info.scroll_offset = 0;
 
     m_info.title = title;
     m_info.content = content;
     m_info.anchor = anchor;
     m_info.face = face;
     m_info.style = style;
+
+    draw_info();
+}
+
+void TerminalUI::draw_info()
+{
+    info_hide();
+
+    const DisplayLine& title = m_info.title;
+    const DisplayLineList& content = m_info.content;
+    DisplayCoord anchor = m_info.anchor;
+    const Face& face = m_info.face;
+    const InfoStyle style = m_info.style;
 
     const bool framed = style == InfoStyle::Prompt or style == InfoStyle::Modal;
     const bool assisted = style == InfoStyle::Prompt and m_assistant.size() != 0;
@@ -1350,6 +1387,11 @@ void TerminalUI::info_show(const DisplayLine& title, const DisplayLineList& cont
                                    m_menu.pos.column);
     else if (style != InfoStyle::Modal)
         max_size.line -= m_menu.size.line;
+
+    // Like terminal_info_max_width, the limit applies to the content, the frame
+    // is drawn on top of it. Overflowing content stays reachable with info-scroll.
+    if (m_info_max_height > 0)
+        max_size.line = std::min(max_size.line, m_info_max_height + (framed ? 2 : 0));
 
     const auto max_content_width = (m_info_max_width > 0 ? std::min(max_size.column, m_info_max_width) : max_size.column) -
                                    (framed ? 4 : 0) -
@@ -1381,6 +1423,13 @@ void TerminalUI::info_show(const DisplayLine& title, const DisplayLineList& cont
     if ((framed and size.line < 3) or size.line <= 0)
         return;
 
+    const LineCount line_count{(int)lines.size()};
+    const LineCount visible = framed ? size.line - 2 : size.line;
+    const LineCount max_scroll = std::max(0_line, line_count - visible);
+    const LineCount offset = m_info.scroll_offset = clamp(m_info.scroll_offset, 0_line, max_scroll);
+    // the line the bottom frame edge sits on, right below the last visible content line
+    const LineCount bottom_line = std::min(line_count - offset + 1, size.line - 1);
+
     const Rect rect = {content_line_offset(), m_dimensions};
     if (style == InfoStyle::Prompt)
     {
@@ -1408,6 +1457,19 @@ void TerminalUI::info_show(const DisplayLine& title, const DisplayLineList& cont
         anchor.line += content_line_offset();
     }
 
+    constexpr Codepoint dash{L'─'};
+    constexpr Codepoint dotted_dash{L'┄'};
+    // a dotted border edge means there is more content in that direction
+    const Codepoint top_dash = offset > 0 ? dotted_dash : dash;
+    const Codepoint bottom_dash = offset < max_scroll ? dotted_dash : dash;
+
+    // On top of that, the right frame edge doubles as a scrollbar, drawn like the
+    // menu's (see draw_menu) except that here the scrolled axis and the axis the bar
+    // is painted along are the same one, so the geometry collapses to the obvious.
+    const bool scrollable = framed and max_scroll > 0;
+    const LineCount mark_height = scrollable ? min(div_round_up(sq(visible), line_count), visible) : 0_line;
+    const LineCount mark_line = scrollable ? (visible - mark_height) * offset / max_scroll : 0_line;
+
     m_info.create(anchor, size);
     for (auto line = 0_line; line < size.line; ++line)
     {
@@ -1428,8 +1490,6 @@ void TerminalUI::info_show(const DisplayLine& title, const DisplayLineList& cont
             (draw(args), ...);
         };
 
-        constexpr Codepoint dash{L'─'};
-        constexpr Codepoint dotted_dash{L'┄'};
         if (assisted)
         {
             const auto assistant_top_margin = (size.line - m_assistant.size()+1) / 2;
@@ -1439,31 +1499,40 @@ void TerminalUI::info_show(const DisplayLine& title, const DisplayLineList& cont
 
             draw_atoms(assistant_line.str());
         }
+        // the frame's top edge takes up a line, shifting the content down by one
+        const LineCount content_line = line - (framed ? 1 : 0) + offset;
+
         if (not framed)
-            draw_atoms(lines[(int)line]);
+        {
+            if (content_line < line_count)
+                draw_atoms(lines[(int)content_line]);
+        }
         else if (line == 0)
         {
             if (title.atoms().empty() or content_size.column < 2)
-                draw_atoms("╭─" + String{dash, content_size.column} + "─╮");
+                draw_atoms("╭─" + String{top_dash, content_size.column} + "─╮");
             else
             {
                 auto trimmed_title = title;
                 trimmed_title.trim(0, content_size.column - 2);
                 auto dash_count = content_size.column - trimmed_title.length() - 2;
-                String left{dash, dash_count / 2};
-                String right{dash, dash_count - dash_count / 2};
+                String left{top_dash, dash_count / 2};
+                String right{top_dash, dash_count - dash_count / 2};
                 draw_atoms("╭─" + left + "┤", trimmed_title, "├" + right +"─╮");
             }
         }
-        else if (line < size.line - 1 and line <= lines.size())
+        else if (line < size.line - 1 and content_line < line_count)
         {
-            auto info_line = lines[(int)line - 1];
+            auto info_line = lines[(int)content_line];
             const bool trimmed = info_line.trim(0, content_size.column);
             const ColumnCount padding = content_size.column - info_line.length();
-            draw_atoms("│ ", info_line, padding, (trimmed ? "…│" : " │"));
+            const LineCount bar_line = line - 1; // the top frame edge takes up a line
+            const bool is_mark = bar_line >= mark_line and bar_line < mark_line + mark_height;
+            const Codepoint edge = scrollable ? (is_mark ? L'█' : L'░') : L'│';
+            draw_atoms("│ ", info_line, padding, (trimmed ? "…" : " ") + String{edge});
         }
-        else if (line == std::min<LineCount>((int)lines.size() + 1, size.line - 1))
-            draw_atoms("╰─", String(line > lines.size() ? dash : dotted_dash, content_size.column), "─╯");
+        else if (line == bottom_line)
+            draw_atoms("╰─", String(bottom_dash, content_size.column), "─╯");
     }
     m_dirty = true;
 }
@@ -1604,6 +1673,27 @@ void TerminalUI::set_ui_options(const Options& options)
     }
 
     m_info_max_width = find("terminal_info_max_width").map(str_to_int_ifp).value_or(0);
+    m_info_max_height = find("terminal_info_max_height").map(str_to_int_ifp).value_or(0);
+
+    // Scrolling the info box is a client side concern, but the key that triggers it
+    // is handled by the server, which relays it through a "<seq>:<amount>" ui option.
+    // <seq> increases on every request, so that we can tell one apart from the same
+    // option map being handed to us again, which happens on any other ui option
+    // change and on every buffer switch.
+    if (auto scroll = find("terminal_info_scroll"))
+    {
+        auto sep = std::find(scroll->begin(), scroll->end(), ':');
+        auto seq = str_to_int_ifp({scroll->begin(), sep});
+        auto amount = sep != scroll->end() ? str_to_int_ifp({sep+1, scroll->end()}) : Optional<int>{};
+        if (seq and amount and *seq != m_info_scroll_seq)
+        {
+            m_info_scroll_seq = *seq;
+            m_info_scroll_pending += *amount; // applied in refresh
+        }
+    }
+
+    if (m_info)
+        draw_info();
 }
 
 }
