@@ -82,10 +82,9 @@ add-highlighter shared/kotlin/code/delimiters  regex (\(|\)|\[|\]|\{|\}|\;|') 1:
 add-highlighter shared/kotlin/code/operators   regex (\+|-|\*|&|=|\\|\?|%|\|-|!|\||->|\.|,|<|>|:|\^|/) 1:operator
 add-highlighter shared/kotlin/code/numbers     regex \b((0(x|X)[0-9a-fA-F]*)|(([0-9]+\.?[0-9]*)|(\.[0-9]+))((e|E)(\+|-)?[0-9]+)?)([LlFf])?\b 0:value
 
-# Generics need improvement, as after a colon will match as a constant only.
-# val program: IOU = XXXX; val cat: DOG = XXXX. matches IOU or DOG as a
-# CONSTANT when it could be generics. See: https://regex101.com/r/VPO5LE/10
-add-highlighter shared/kotlin/code/constants_and_generics regex \b((?<==\h)\([A-Z][A-Z0-9_]+(?=[<:\;])|(?<!<)[A-Z][A-Z0-9_]+\b(?!<[>\)]))|\b((?<!=\s)(?<!\.)[A-Z]+\d*?(?![\(\;:])(?=[,\)>\s]))\b 1:meta 2:type
+# See: https://regex101.com/r/VsBomM/1
+# Added (?<!:\h) (handles :  colon-space) and (?<!:) (handles :T colon-no-space) negative lookbehinds so constants don't match in type position.
+add-highlighter shared/kotlin/code/constants_and_generics regex \b((?<==\h)\([A-Z][A-Z0-9_]+(?=[<:\;])|(?<!:\h)(?<!<)[A-Z][A-Z0-9_]+\b(?!<[>\)]))|\b((?<!=\s)(?<!\.)[A-Z]+\d*?(?![\(\;:])(?=[,\)>\s]))\b 1:meta 2:type
 
 add-highlighter shared/kotlin/code/target regex @(delegate|field|file|get|param|property|receiver|set|setparam)(?=:) 0:meta
 add-highlighter shared/kotlin/code/soft   regex \b(by|catch|constructor|dynamic|finally|get|import|init|set|where)\b 1:keyword
