@@ -1,0 +1,19 @@
+image: alpine/latest
+packages:
+    - clang
+    - gcc
+    - make
+tasks:
+    - clang-build: |
+        cd kakoune
+        make CXX=clang++ -j$(nproc)
+    - clang-test: |
+        cd kakoune
+        LC_ALL=C.utf8 make test
+    - gcc-build: |
+        cd kakoune
+        make clean
+        make CXX=g++ -j$(nproc)
+    - gcc-test: |
+        cd kakoune
+        LC_ALL=C.utf8 make test
