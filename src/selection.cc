@@ -253,10 +253,6 @@ void update_selections(Vector<Selection>& selections, size_t& main, const Buffer
         }
         kak_assert(std::is_sorted(selections.begin(), selections.end(),
                                   compare_selections));
-        if (merge)
-            selections.erase(
-                merge_overlapping(selections.begin(), selections.end(),
-                                  main, overlaps), selections.end());
     }
     for (auto& sel : selections)
         clamp(sel, buffer);
