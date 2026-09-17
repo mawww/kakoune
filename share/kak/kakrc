@@ -1,3 +1,7 @@
+declare-option -hidden \
+    -docstring "Exposes the most recent successfully set colorscheme name." \
+    str colorscheme_current '' 
+
 def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
     -shell-script-candidates %{
     find -L "${kak_runtime}/colors" "${kak_config}/colors" -type f -name '*\.kak' \
@@ -20,7 +24,7 @@ def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
     fi
 
     if [ -n "${filename}" ]; then
-        printf 'source %%{%s}' "${filename}"
+        printf 'source %%{%s}; set-option global colorscheme_current %%{%s}' "${filename}" "${1}"
     else
         echo "fail 'No such colorscheme ${1}.kak'"
     fi
