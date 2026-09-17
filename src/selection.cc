@@ -113,11 +113,9 @@ Iterator merge_overlapping(Iterator begin, Iterator end, size_t& main, OverlapsF
             if (i < main)
                 --main;
         }
-        else
+        else if (++i != j)
         {
-            ++i;
-            if (i != j)
-                begin[i] = std::move(begin[j]);
+            begin[i] = std::move(begin[j]);
         }
     }
     kak_assert(std::is_sorted(begin, begin + i +1, compare_selections));
