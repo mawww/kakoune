@@ -55,8 +55,11 @@ select_to_next_word(const Context& context, const Selection& selection)
     Utf8Iterator begin{buffer.iterator_at(selection.cursor()), buffer};
     if (begin+1 == buffer.end())
         return {};
-    if (categorize<word_type>(*begin, extra_word_chars) !=
-        categorize<word_type>(*(begin+1), extra_word_chars))
+    const auto cursor_category = categorize<word_type>(*begin, extra_word_chars);
+    const auto next_category = categorize<word_type>(*(begin+1), extra_word_chars);
+    if (not ((cursor_category == CharCategories::Punctuation || cursor_category == CharCategories::Word) &&
+             next_category == CharCategories::Blank) &&
+        cursor_category != next_category)
         ++begin;
 
     if (not skip_while(begin, buffer.end(),
