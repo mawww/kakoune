@@ -222,6 +222,7 @@ The optional arguments are passed as commands to the new client' \
 complete-command -menu niri-new-window command
 
 alias global niri-terminal-vertical niri-terminal-consume
-alias global niri-terminal-horizontal niri-terminal-window
+# can't use niri-terminal-window below because it's an alias, not a command
+alias global niri-terminal-horizontal wayland-terminal-window
 
 ~
