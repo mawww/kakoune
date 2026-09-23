@@ -70,3 +70,30 @@ are then restored when the keys have been executed: */*, *"*, *|*, *^*,
 
 When using *evaluate-commands* a new scope, named `local` is inserted.
 See <<scopes#,`:doc scopes`>>
+
+== Expansions in *evaluate-commands*
+
+When using evaluate-commands to get expansion values (see <<expansions#,`:doc expansions`>>),
+care must be taken to get the desired values. In order to properly expand expansions
+in the target context, expansions must be wrapped in single quotes to avoid expanding
+them in the current context. See <<expansions#,`:doc expansions`>> for an explanation
+on how quoting affects expansions.
+
+For example, if you have two Kakoune clients (client0 and client1) and you want to
+print `%val{client}` of the second client from the first client to the
+<<buffers#debug-buffers,*debug* buffer>>, you would run this command
+from the first client:
+
+---
+evaluate-commands -client client1 -- echo -debug '%val{client}'
+---
+
+This will print "client1" to the debug buffer. Notice the single quotes
+around the expansion. If you were to omit them, like so:
+
+---
+evaluate-commands -client client1 -- echo -debug %val{client}
+---
+
+It would print "client0" instead, because Kakoune has expanded it before
+*evaluate-commands* has run.
