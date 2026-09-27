@@ -1,3 +1,6 @@
+# Adapted from the upstream mawwww/kakoune rc/ scripts.
+# Original: https://github.com/mawwww/kakoune/blob/master/rc/tools/clang.kak
+
 hook -once global BufSetOption filetype=(c|cpp) %{
     require-module clang
 }

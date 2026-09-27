@@ -1,3 +1,6 @@
+# Adapted from the upstream mawwww/kakoune rc/ scripts.
+# Original: https://github.com/mawwww/kakoune/blob/master/rc/filetype/c-family.kak
+
 # Detection
 hook global BufCreate .*\.(cc|cpp|cxx|C|hh|hpp|hxx|H)$ %{
     set-option buffer filetype cpp

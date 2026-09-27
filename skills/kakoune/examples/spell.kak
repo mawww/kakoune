@@ -1,3 +1,6 @@
+# Adapted from the upstream mawwww/kakoune rc/ scripts.
+# Original: https://github.com/mawwww/kakoune/blob/master/rc/tools/spell.kak
+
 declare-option -hidden range-specs spell_regions
 declare-option -hidden str spell_last_lang
 

@@ -1,6 +1,9 @@
 # Kakoune CTags support script
 #
 # This script requires the readtags command available in universal-ctags
+#
+# Adapted from the upstream mawwww/kakoune rc/ scripts.
+# Original: https://github.com/mawwww/kakoune/blob/master/rc/tools/ctags.kak
 
 declare-option -docstring "minimum characters before triggering autocomplete" \
     int ctags_min_chars 3

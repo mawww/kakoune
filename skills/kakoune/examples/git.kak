@@ -1,3 +1,6 @@
+# Adapted from the upstream mawwww/kakoune rc/ scripts.
+# Original: https://github.com/mawwww/kakoune/blob/master/rc/tools/git.kak
+
 declare-option -docstring "name of the client in which documentation is to be displayed" \
     str docsclient
 

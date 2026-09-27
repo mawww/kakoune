@@ -1,3 +1,6 @@
+# Adapted from the upstream mawwww/kakoune rc/ scripts.
+# Original: https://github.com/mawwww/kakoune/blob/master/rc/tools/fifo.kak
+
 provide-module fifo %{
 
 define-command -params .. -docstring %{
