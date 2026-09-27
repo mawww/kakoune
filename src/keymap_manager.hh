@@ -27,23 +27,25 @@ enum class KeymapMode : char
 class KeymapManager
 {
 public:
+    using KeyList = Vector<Key, MemoryDomain::Mapping>;
+    struct KeymapInfo
+    {
+        KeyList keys;
+        String docstring;
+        bool atomic = false;
+    };
+
     KeymapManager(KeymapManager& parent) : m_parent(&parent) {}
 
     void reparent(KeymapManager& parent) { m_parent = &parent; }
 
-    using KeyList = Vector<Key, MemoryDomain::Mapping>;
-    void map_key(Key key, KeymapMode mode, KeyList mapping, String docstring);
+    void map_key(Key key, KeymapMode mode, KeyList mapping, String docstring,
+                 bool atomic = false);
     void unmap_key(Key key, KeymapMode mode);
     void unmap_keys(KeymapMode mode);
 
-    bool is_mapped(Key key, KeymapMode mode) const;
     KeyList get_mapped_keys(KeymapMode mode) const;
-
-    auto get_mapping_keys(Key key, KeymapMode mode) {
-        return get_mapping(key, mode).keys;
-    }
-
-    const String& get_mapping_docstring(Key key, KeymapMode mode) { return get_mapping(key, mode).docstring; }
+    const KeymapInfo* get_mapping(Key key, KeymapMode mode) const;
 
     using UserModeList = Vector<String>;
     UserModeList& user_modes() {
@@ -54,13 +56,6 @@ public:
     void add_user_mode(String user_mode_name);
 
 private:
-    struct KeymapInfo
-    {
-        KeyList keys;
-        String docstring;
-    };
-    const KeymapInfo& get_mapping(Key key, KeymapMode mode) const;
-
     KeymapManager()
         : m_parent(nullptr) {}
     // the only one allowed to construct a root map manager

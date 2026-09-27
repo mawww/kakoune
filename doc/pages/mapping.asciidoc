@@ -39,6 +39,10 @@ The context of execution of the above modes is always the current one at the
 time of execution of the mapping, except for *user* mode (always executed
 in a 'normal' context). Refer to <<modes#,`:doc modes`>> for more details.
 
+The optional *-atomic* switch controls how counts affect the mapping.
+Without *-atomic*, the count is passed to the first key in the mapping.
+With *-atomic*, a count greater than one repeats the whole mapping.
+
 An optional *-docstring* switch followed by a string can be used
 to describe what the mapping does. This docstring will be used
 in autoinfo boxes.
