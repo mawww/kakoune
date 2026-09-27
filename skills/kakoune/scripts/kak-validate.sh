@@ -136,8 +136,12 @@ EOF
 fi
 
 TIMEOUT_SECS="${KAK_VALIDATE_TIMEOUT:-10}"
-work="$(mktemp -d "${XDG_RUNTIME_DIR:-/tmp}/kakval.XXXXXXXX")"
-session="kaval-$$_RANDOM"
+# Dot-free mktemp template on purpose: a '.' is not a valid Kak session-name
+# character, so the work-dir basename used below for session-id entropy must
+# contain only [A-Za-z0-9_-].
+work="$(mktemp -d "${XDG_RUNTIME_DIR:-/tmp}/kakvalXXXXXXXX")"
+# Session id combines the PID and the mktemp work-dir name: unique per run.
+session="kaval-$$_${work##*/}"
 err_raw=""
 
 cleanup() {
