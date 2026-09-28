@@ -14,6 +14,8 @@ This is an **authoring + validation** skill, not a reference dump. The authorita
 
 Use this skill when asked to create a Kakoune script or add to an existing one: a command, an option, a keymap, a hook, a highlighter, a completer, or a shell bridge (`%sh{}`). It is also the right tool for **debugging** a script whose keystrokes, commands, or quoting misbehave — the two trip-ups below cause the vast majority of such failures.
 
+A dedicated **kakoune-expert** subagent (`agents/kakoune-expert.md`) runs the same author → validate workflow end to end. Trigger it to get a script written *and* validated without working through the steps yourself.
+
 ## Prerequisites
 
 - `kak` on `PATH`. Confirm with `kak -version` (the flag is `-version`, not `--version`). If it is missing, stop and report it — do not fabricate a validation run.
@@ -78,6 +80,7 @@ python3 evals/viewer.py results.json evals.json -o report.html
 | Path | Purpose |
 | --- | --- |
 | `SKILL.md` | Agent-facing manifest and authoring spec (frontmatter + workflow). |
+| `agents/kakoune-expert.md` | Expert subagent that owns the author → validate workflow end to end. |
 | `scripts/kak-validate.sh` | Headless validator; the final gate before handover. |
 | `references/` | Condensed docs for each Kakoune subsystem — read before touching it. |
 | `examples/*.kak` | Real-world scripts (`git`, `clang`, `ctags`, `fifo`, `spell`, `c-family`). |
@@ -105,7 +108,8 @@ Prove the skill's structure is intact and its constraints are present:
 
 ```bash
 # Manifest, executable validator, reference coverage, example scripts all present.
-test -f SKILL.md && test -x scripts/kak-validate.sh \
+test -f SKILL.md && test -f agents/kakoune-expert.md \
+  && test -x scripts/kak-validate.sh \
   && [ "$(ls references/*.md | wc -l)" -ge 8 ] \
   && [ "$(ls examples/*.kak | wc -l)" -ge 4 ] \
   && grep -q 'execute-keys' SKILL.md && grep -q 'evaluate-commands' SKILL.md
