@@ -26,7 +26,7 @@ of the file onto the filesystem
     end of the list, keeping their current order.
 
     *-back*:::
-        Move the named buffers to the back, rather than the fron, of the buffer list..
+        Move the named buffers to the back, rather than the front, of the buffer list.
 
 *change-directory* [<directory>]::
     *alias* cd +
