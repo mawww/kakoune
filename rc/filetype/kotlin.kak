@@ -94,8 +94,6 @@ add-highlighter shared/kotlin/code/numbers     regex \b((0(x|X)[0-9a-fA-F]*)|(([
 # Negative lookbehinds keep constants out of type positions (name : TYPE):
 #   (?<!:\h) excludes colon-space (: Int)
 #   (?<!:)  excludes colon-run-on (:Int) and space-before-colon ( :Int)
-# Oniguruma forbids quantifiers inside lookarounds, so this is fixed-width and
-# does not handle multiple spaces before the colon (e.g. "x :  Int").
 add-highlighter shared/kotlin/code/constants regex \b((?<==\h)\([A-Z][A-Z0-9_]+(?=[<:\;])|(?<!:\h)(?<!<)(?<!:)[A-Z][A-Z0-9_]+\b(?!<[>\)])) 1:meta
 # generics type name: identifier immediately before `<`.
 # The builtin `type` list (line 110) ends in `(?=[^<])`, so it deliberately skips identifiers before `<` — this recovers `List` in `List<Int>`.
