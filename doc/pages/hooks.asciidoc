@@ -83,9 +83,12 @@ name. Hooks with no description will always use an empty string.
     a window was destroyed. This hook is executed in a draft context, so any
     changes to selections or input state will be discarded.
 
-*WinResize* `<line>.<column>`::
-    a window was resized. This hook is executed in a draft context, so any
-    changes to selections or input state will be discarded.
+*WinResize* `<new_lines>.<new_columns>`::
+    a window was resized. While this hook executes, the `window_*` value 
+    expansions contain the old size
+    (see <<expansions#value-expansions,`:doc expansions value-expansions`>>),
+    This hook is executed in a draft context, so any changes to selections or
+    input state will be discarded.
 
 *WinDisplay* `buffer name`::
     a client switched to displaying the given buffer.
