@@ -655,10 +655,10 @@ void TerminalUI::check_resize(bool force)
 
     resize_pending = 0;
 
-    const int fd = open("/dev/tty", O_RDWR);
-    if (fd < 0)
-        return;
-    auto close_fd = OnScopeEnd([fd]{ ::close(fd); });
+    // With no controlling terminal, fall back to our output, which is a tty.
+    const int tty_fd = open("/dev/tty", O_RDWR);
+    auto close_fd = OnScopeEnd([tty_fd]{ if (tty_fd >= 0) ::close(tty_fd); });
+    const int fd = tty_fd >= 0 ? tty_fd : STDOUT_FILENO;
 
     DisplayCoord terminal_size{24_line, 80_col};
     if (winsize ws; ioctl(fd, TIOCGWINSZ, &ws) == 0 and ws.ws_row > 0 and ws.ws_col > 0)

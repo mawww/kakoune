@@ -628,6 +628,19 @@ UniquePtr<UserInterface> create_local_ui(UIType ui_type)
     return ui;
 }
 
+// Give the terminal ui a fd 0 to read keys from, never the piped in one, which
+// is already consumed elsewhere.
+void replace_stdin_with_tty()
+{
+    int tty = open("/dev/tty", O_RDONLY);
+    if (tty < 0)
+        tty = open("/dev/null", O_RDONLY);
+    if (tty < 0)
+        return;
+    dup2(tty, 0);
+    close(tty);
+}
+
 int run_client(StringView session, StringView name, StringView client_init,
                Optional<BufferCoord> init_coord, UIType ui_type,
                bool suspend)
@@ -643,9 +656,7 @@ int run_client(StringView session, StringView name, StringView client_init,
         {
             // move stdin to another fd, and restore tty as stdin
             stdin_fd = dup(0);
-            int tty = open("/dev/tty", O_RDONLY);
-            dup2(tty, 0);
-            close(tty);
+            replace_stdin_with_tty();
         }
 
         EventManager event_manager;
@@ -802,9 +813,7 @@ int run_server(StringView session, StringView server_init,
         {
             // move stdin to another fd, and restore tty as stdin
             int fd = dup(0);
-            int tty = open("/dev/tty", O_RDONLY);
-            dup2(tty, 0);
-            close(tty);
+            replace_stdin_with_tty();
             create_fifo_buffer("*stdin*", fd, Buffer::Flags::None, AutoScroll::NotInitially);
         }
 

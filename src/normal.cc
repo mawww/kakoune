@@ -278,7 +278,8 @@ void goto_commands(Context& context, NormalParams params)
                 if (context.has_window())
                 {
                     auto& window = context.window();
-                    auto line = window.position().line + window.dimensions().line - 1;
+                    // dimensions can be empty when the terminal size is unknown
+                    auto line = std::max(0_line, window.position().line + window.dimensions().line - 1);
                     select_coord<mode>(context, line);
                 }
                 break;
