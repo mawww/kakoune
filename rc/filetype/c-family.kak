@@ -227,7 +227,7 @@ add-highlighter shared/c/code/numbers regex %{\b-?(0[xX][0-9a-fA-F]+|\d+)([uU][l
 evaluate-commands %sh{
     # Grammar
     keywords='asm break case continue default do else for goto if return
-              sizeof switch while offsetof alignas alignof'
+              sizeof switch while offsetof alignas alignof defer'
     attributes='auto atomic const enum extern inline register restrict static
                 struct typedef union volatile thread_local'
     types='char double float int long short signed unsigned void
