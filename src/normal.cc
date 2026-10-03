@@ -382,6 +382,8 @@ void goto_commands(Context& context, NormalParams params)
             {{{'g','k'},"buffer top"},
              {{'l'},    "line end"},
              {{'h'},    "line begin"},
+             {{'u'},    "up display line"},
+             {{'d'},    "down display line"},
              {{'i'},    "line non blank start"},
              {{'j'},    "buffer bottom"},
              {{'e'},    "buffer end"},
