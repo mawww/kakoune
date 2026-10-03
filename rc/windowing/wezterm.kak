@@ -4,7 +4,7 @@
 
 provide-module wezterm %{
 
-# ensure that we're running under screen
+# ensure that we're running under WezTerm
 evaluate-commands %sh{
     [ -z "${kak_opt_windowing_modules}" ] || [ -n "$WEZTERM_UNIX_SOCKET" ] || echo 'fail wezterm not detected'
 }
