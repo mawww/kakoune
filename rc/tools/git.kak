@@ -349,7 +349,7 @@ define-command -params 1.. \
                           return;
                       }
                       my $text = substr($sha,0,7) . " " . $dates{$sha} . " " . $authors{$sha};
-                      $text =~ s/~/~~/g;
+                      s/\\/\\\\/g, s/\|/\\|/g, s/~/~~/g for $text;
                       for ( my $i = 0; $i < $count; $i++ ) {
                           $flags .= " %~" . ($line+$i) . "|$text~";
                       }
