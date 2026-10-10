@@ -69,6 +69,8 @@ define-command \
             i=$(( i + 1 ))
         done
 
+        touch "$dir"/result
+
         # We do redirection trickiness to record stderr from
         # this background task and route it back to Kakoune,
         # but shellcheck isn't a fan.
@@ -80,24 +82,35 @@ define-command \
             # Read in the line and column offset of this selection.
             IFS=".," read -r start_line start_byte _ < "$selpath"/desc
 
-            # Run the linter, and record the exit-code.
-            eval "$lintcmd '$selpath/text/$filename'" |
-                    sort -t: -k2,2 -n |
-                    awk \
-                        -v line_offset=$(( start_line - 1 )) \
-                        -v first_line_byte_offset=$(( start_byte - 1 )) \
-                    '
-                        BEGIN { OFS=":"; FS=":" }
+            # Export variables expandable in $lintcmd
+            export lint_file="$kak_buffile"
+            export lint_in="$selpath/text/$filename"
+            export lint_out="$selpath/text/out"
+            export lint_err="$selpath/text/err"
 
-                        /:[1-9][0-9]*:[1-9][0-9]*:/ {
-                            $1 = ENVIRON["kak_bufname"]
-                            if ( $2 == 1 ) {
-                                $3 += first_line_byte_offset
-                            }
-                            $2 += line_offset
-                            print $0
+            # Run the linter
+            eval "$lintcmd" >"$lint_out" 2>"$lint_err"
+            if [ -s "$lint_out" ]; then
+                sort -t: -k2,2 -n "$lint_out" |
+                awk \
+                    -v line_offset=$(( start_line - 1 )) \
+                    -v first_line_byte_offset=$(( start_byte - 1 )) \
+                '
+                    BEGIN { OFS=":"; FS=":" }
+
+                    /:[1-9][0-9]*:[1-9][0-9]*:/ {
+                        $1 = ENVIRON["kak_bufname"]
+                        if ( $2 == 1 ) {
+                            $3 += first_line_byte_offset
                         }
-                    ' >>"$dir"/result
+                        $2 += line_offset
+                        print $0
+                    }
+                ' >>"$dir"/result
+            fi
+            if [ -s "$lint_err" ]; then
+                cat "$lint_err" >> "$dir"/stderr
+            fi
         done
 
         # Load all the linter messages into Kakoune options.
