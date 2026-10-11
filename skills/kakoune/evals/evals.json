@@ -1,0 +1,67 @@
+[
+  {
+    "instruction": "Write a Kakoune script that defines a hidden command `mytool-status` which echoes the name of the current buffer.",
+    "ground_truth": "define-command -hidden -docstring \"Show the current buffer name\" mytool-status %{\n    echo %val{bufname}\n}"
+  },
+  {
+    "instruction": "Write a command `mytool-j` that moves the cursor down by one line, driving the editor through its normal key bindings.",
+    "ground_truth": "define-command -docstring \"Move down one line\" mytool-j %{\n    execute-keys j\n}",
+    "note": "Use execute-keys (runs keystrokes subject to mappings); `j` is the default move-down key."
+  },
+  {
+    "instruction": "Write a command `mytool-del` that moves down one line and deletes the anchored selection, running the delete directly so it is NOT affected by any user mapping of `delete-anchored`.",
+    "ground_truth": "define-command -docstring \"Move down and delete the selection\" mytool-del %{\n    execute-keys j\n    evaluate-commands delete-anchored\n}",
+    "note": "evaluate-commands runs the command directly, bypassing mappings; execute-keys drives the key j."
+  },
+  {
+    "instruction": "Write a command `mytool-escape` that echoes the literal text `%{foo}'bar` (a literal percent-brace and a literal single quote). Quote it correctly so Kakoune does not try to expand `%{foo}`.",
+    "ground_truth": "define-command -docstring \"Echo a literal percent-brace and quote\" mytool-escape %{\n    echo \"%%{foo}'bar\"\n}",
+    "note": "Inside double quotes a doubled %% yields a literal %, so %%{foo} prints %{foo}; a single quote is literal inside double quotes."
+  },
+  {
+    "instruction": "Write a Kakoune script that declares a global boolean option `mytool-verbose` (default off) and a command `mytool-verbose-on` that turns it ON as a GLOBAL option, not a local one.",
+    "ground_truth": "declare-option bool mytool_verbose false\n\ndefine-command -docstring \"Enable verbose mode\" mytool-verbose-on %{\n    evaluate-commands -no-hooks { set-option global mytool_verbose true }\n}",
+    "note": "evaluate-commands inserts a local scope, so the option must be set with `set-option global`; wrap in -no-hooks to avoid hook noise. Option names allow only [a-zA-Z0-9_] (no hyphens), so `mytool-verbose` becomes `mytool_verbose`; boolean values are true/yes/false/no (not 0/1)."
+  },
+  {
+    "instruction": "Write a script that adds a highlighter which colors every occurrence of the word TODO in red in the current buffer.",
+    "ground_truth": "define-command -docstring \"Highlight TODO occurrences\" mytool-highlight-todo %{\n    add-highlighter --override mytool-todo regex TODO fg:red\n}",
+    "note": "Use add-highlighter with a name, a regex, and an attribute; --override replaces any prior highlighter of the same name."
+  },
+  {
+    "instruction": "Write a script that runs a hook which echoes a message whenever a new buffer is created.",
+    "ground_truth": "hook global BufCreate .* %{\n    echo \"buffer created: %val{bufname}\"\n}",
+    "note": "hook global binds to a global event; %val{bufname} expands to the new buffer's name at hook time."
+  },
+  {
+    "instruction": "Write a command `mytool-run` that shells out and prints the current directory using a POSIX-portable snippet (printf, not echo; $PWD, not $(pwd)).",
+    "ground_truth": "define-command -docstring \"Print the current directory\" mytool-run %{\n    %sh{\n        printf '%s\\n' \"$PWD\"\n    }\n}",
+    "note": "Shell code inside %sh{} must be POSIX-portable: prefer printf over echo and $PWD over $(pwd)."
+  },
+  {
+    "instruction": "The following command is broken because of an unbalanced expansion. Fix it so it parses and runs cleanly:\n\ndefine-command -docstring \"Broken\" mytool-bad %{\n    echo %{\n}",
+    "ground_truth": "define-command -docstring \"Fixed\" mytool-fix %{\n    echo ok\n}",
+    "note": "A mismatched %{ is a parse error; every opening delimiter must be closed. Validate with scripts/kak-validate.sh."
+  },
+  {
+    "instruction": "Explain, in one sentence, what exit code `scripts/kak-validate.sh myscript.kak` returns when the script contains a runtime error such as `set buffer bogusoption 5`, and what the user sees on stderr.",
+    "kind": "explanatory",
+    "ground_truth": "It returns a non-zero exit code (1) and prints the Kakoune error message (with the leading `N:M: 'source': ` position prefix stripped) to stderr, so the user sees the exact reason it failed.",
+    "note": "Validation is the final gate: non-zero on any load/runtime error, zero only when the script loads and runs cleanly."
+  },
+  {
+    "instruction": "Write a script that declares a global string option `mytool_greeting` with default value `hello`, and a command `mytool-greet` that echoes the option's value.",
+    "ground_truth": "declare-option str mytool_greeting \"hello\"\n\ndefine-command -docstring \"Greet\" mytool-greet %{\n    echo %opt{mytool_greeting}\n}",
+    "note": "The freeform-string option type is `str`, not `string`; `%opt{name}` reads an option's value inside a command body."
+  },
+  {
+    "instruction": "Write a command `mytool-greet` that echoes `hello`, then map it to the F12 function key in normal mode.",
+    "ground_truth": "define-command -docstring \"Say hello\" mytool-greet %{\n    echo hello\n}\n\nmap global normal <F12> :mytool-greet<ret>",
+    "note": "Function keys are written `<F1>` through `<F12>` with a capital F (lowercase `<f12>` is rejected); the mapped key sequence must end with `<ret>` to run the command."
+  },
+  {
+    "instruction": "Write a script that declares a completions option named `mytool_completions` and adds it to the completers list so it provides insert-mode completion.",
+    "ground_truth": "declare-option completions mytool_completions\nset -add buffer completers option=mytool_completions\n\ndefine-command -docstring \"Pick a fruit\" mytool-fruit %{\n    echo done\n}",
+    "note": "Register a custom completer with `declare-option completions <name>`, then `set -add buffer completers option=<name>` (option names allow only [a-zA-Z0-9_], so use underscores, not hyphens)."
+  }
+]
