@@ -398,6 +398,11 @@ are exclusively available to built-in options.
             set the maximum allowable width of an info box. set to zero for
             no limit.
 
+        *terminal_info_max_height*:::
+            set the maximum allowable height, in content lines, of an info
+            box. set to zero for no limit. content that does not fit stays
+            reachable with the `info-scroll` command.
+
         *terminal_cursor_native*:::
             if *yes* or *true*, use native terminal cursor visibility control
             instead of Kakoune's cursor management (defaults to *false*)

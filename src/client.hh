@@ -52,6 +52,7 @@ public:
     void info_show(DisplayLine title, DisplayLineList content, BufferCoord anchor, InfoStyle style);
     void info_show(StringView title, StringView content, BufferCoord anchor, InfoStyle style);
     void info_hide(bool even_modal = false);
+    void info_keep();
     bool info_pending() const { return m_ui_pending & PendingUI::InfoShow; };
     bool status_line_pending() const { return m_ui_pending & PendingUI::StatusLine; };
 

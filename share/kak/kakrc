@@ -26,6 +26,28 @@ def -params 1 -docstring "colorscheme <name>: enable named colorscheme" \
     fi
 }}
 
+# Scrolling the info box is purely a client side concern, so rather than routing it
+# through the server, the server just relays the request to the client through the
+# ui_options channel. The client keeps the scroll position and does the arithmetic.
+# The value is "<seq>:<amount>": <seq> increases on every request so the client can
+# tell an actual request apart from the option map merely being handed to it again.
+# The option is set at window scope so that only the requesting client sees it, and
+# unset right after so the window stops shadowing later global ui_options changes.
+declare-option -hidden int info_scroll_seq
+
+define-command -params ..1 \
+    -docstring "info-scroll [<count>]: scroll the info box of the current client by <count> lines, negative scrolls up, positive scrolls down (1 by default)" \
+    info-scroll %{
+    set -add global info_scroll_seq 1
+    try %{
+        # the info box is auto-hidden by the keystroke that opened the prompt to run
+        # this very command, so keep it around before asking the client to scroll it
+        info -keep
+        set -add window ui_options "terminal_info_scroll=%opt{info_scroll_seq}:%sh{ echo ${1:-1} }"
+        unset window ui_options
+    }
+}
+
 evaluate-commands %sh{
     autoload_directory() {
         find -L "$1" -type f -name '*\.kak' \
