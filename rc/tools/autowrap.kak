@@ -1,6 +1,7 @@
 declare-option -docstring "maximum amount of characters per line, after which a newline character will be inserted" \
     int autowrap_column 80
-
+declare-option -docstring "display a column highlight at the autowrap column" \
+    bool autowrap_highlight false
 declare-option -docstring %{
     when enabled, paragraph formatting will reformat the whole paragraph in which characters are being inserted
     This can potentially break formatting of documents containing markup (e.g. markdown)
@@ -47,4 +48,25 @@ define-command autowrap-enable -docstring "Automatically wrap the lines in which
 
 define-command autowrap-disable -docstring "Disable automatic line wrapping" %{
     remove-hooks window autowrap
+}
+
+define-command -hidden autowrap-set-highlight %{ evaluate-commands %sh{
+    if [ "$kak_opt_autowrap_highlight" = true ] \
+        && [ "$kak_opt_autowrap_column" -gt 0 ] ; then
+        column="$((kak_opt_autowrap_column+1))"
+        printf %s "
+            add-highlighter -override window/autowrap_column column ${column} default,bright-black
+        "
+    else
+        printf %s "try %{
+            remove-highlighter window/autowrap_column
+        }"
+    fi
+} }
+
+hook -group autowrap-highlight global WinSetOption autowrap_column=.* %{
+    autowrap-set-highlight
+}
+hook -group autowrap-highlight global WinSetOption autowrap_highlight=.* %{
+    autowrap-set-highlight
 }
