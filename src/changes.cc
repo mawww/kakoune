@@ -73,7 +73,7 @@ const Buffer::Change* forward_sorted_until(const Buffer::Change* first, const Bu
         const Buffer::Change* next = first;
         while (++next != last) {
             const auto& ref = first->type == Buffer::Change::Insert ? first->end : first->begin;
-            if (next->begin <= ref)
+            if (next->begin < ref)
                 return next;
             first = next;
         }

@@ -77,6 +77,9 @@ define-command -hidden c-family-indent-on-newline %< evaluate-commands -draft -i
         # copy indent of the opening paren line
         execute-keys -draft kx 1s(\))(\h+\w+)*\h*(\;\h*)?(?://\N+)?\n\z<ret> m<a-semicolon>J <a-S> 1<a-&>
     > catch %<
+        # else if previous line closed a block comment, copy indent of the comment opening line
+        execute-keys -draft kx 1s(\*/)\h*\n\z<ret> <a-?>/\*<ret> <a-semicolon>J <a-S> 1<a-&>
+    > catch %<
         # else indent new lines with the same level as the previous one
         execute-keys -draft K <a-&>
     >
@@ -190,8 +193,9 @@ define-command -hidden c-family-insert-on-newline %[ evaluate-commands -itersel 
 
         # trim trailing whitespace on the previous line
         try %[ execute-keys -draft k x s\h+$<ret> d ]
-        # align the new star with the previous one
-        execute-keys Kx1s^[^*]*(\*)<ret>&
+        # align the new star with the previous one, keeping its indentation characters
+        execute-keys -draft K <a-&>
+        try %[ execute-keys -draft kx<a-k>^\h*/\*<ret> jgi i<space><esc> ]
     ]
 ] ]
 
@@ -227,7 +231,7 @@ add-highlighter shared/c/code/numbers regex %{\b-?(0[xX][0-9a-fA-F]+|\d+)([uU][l
 evaluate-commands %sh{
     # Grammar
     keywords='asm break case continue default do else for goto if return
-              sizeof switch while offsetof alignas alignof'
+              sizeof switch while offsetof alignas alignof defer'
     attributes='auto atomic const enum extern inline register restrict static
                 struct typedef union volatile thread_local'
     types='char double float int long short signed unsigned void

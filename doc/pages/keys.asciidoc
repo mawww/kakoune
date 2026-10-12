@@ -430,6 +430,12 @@ Searches use the */* register by default (See <<registers#,`:doc registers`>>)
     *l*:::
         go to line end
 
+    *u*:::
+        go up one display line
+
+    *d*:::
+        go down one display line
+
     *i*:::
         go to non blank line start
 

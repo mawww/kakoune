@@ -4,7 +4,7 @@
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
-hook global BufCreate .*[.](json) %{
+hook global BufCreate .*[.](json)(l)? %{
     set-option buffer filetype json
 }
 

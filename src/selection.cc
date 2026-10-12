@@ -113,11 +113,9 @@ Iterator merge_overlapping(Iterator begin, Iterator end, size_t& main, OverlapsF
             if (i < main)
                 --main;
         }
-        else
+        else if (++i != j)
         {
-            ++i;
-            if (i != j)
-                begin[i] = std::move(begin[j]);
+            begin[i] = std::move(begin[j]);
         }
     }
     kak_assert(std::is_sorted(begin, begin + i +1, compare_selections));
@@ -253,10 +251,6 @@ void update_selections(Vector<Selection>& selections, size_t& main, const Buffer
         }
         kak_assert(std::is_sorted(selections.begin(), selections.end(),
                                   compare_selections));
-        if (merge)
-            selections.erase(
-                merge_overlapping(selections.begin(), selections.end(),
-                                  main, overlaps), selections.end());
     }
     for (auto& sel : selections)
         clamp(sel, buffer);

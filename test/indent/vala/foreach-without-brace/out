@@ -1,0 +1,5 @@
+void f () {
+    foreach (var i in list)
+        i++;
+    x++;
+}

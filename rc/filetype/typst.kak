@@ -24,7 +24,8 @@ provide-module typst %§
 add-highlighter shared/typst group
 
 # Comments
-add-highlighter shared/typst/ regex ^//(?:[^\n/]\N*|)$ 0:comment
+add-highlighter shared/typst/ regex ^\s+//(?:[^\n/]\N*|)$ 0:comment
+add-highlighter shared/typst/ regex /\*[^\*]*\*/ 0:comment
 
 # Strings
 add-highlighter shared/typst/ regex '"[^"]*"' 0:string
@@ -43,7 +44,7 @@ add-highlighter shared/typst/ regex \B(`\N+?`)\B 0:mono
 add-highlighter shared/typst/ regex \B(```\N+?```)\B 0:mono
 
 # Bold text
-add-highlighter shared/typst/ regex \s\*[^\*]+\*\B 0:+b
+add-highlighter shared/typst/ regex (?!/)\*(?!/)(?!\n)[^\*]+(?!/)\*(?!/) 0:+b
 
 # Italic text
 add-highlighter shared/typst/ regex \b_.*?_\b 0:+i

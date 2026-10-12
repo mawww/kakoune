@@ -1,0 +1,3 @@
+list.foreach ((e) => {
+    print (e);
+});
