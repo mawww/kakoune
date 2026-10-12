@@ -193,6 +193,12 @@ the Shift modifier and moving will extend each selection instead.
 *<c-d>*::
     scroll half a page down
 
+*<c-y>*::
+    scroll one line up
+
+*<c-e>*::
+    scroll one line down
+
 *;*, *<semicolon>*::
     reduce selections to their cursor
 
