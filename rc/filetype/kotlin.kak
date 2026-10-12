@@ -61,6 +61,14 @@ add-highlighter shared/kotlin/comment region /\* \*/ fill comment
 add-highlighter shared/kotlin/inline_documentation region /// $ fill documentation
 add-highlighter shared/kotlin/line_comment region // $ fill comment
 
+# Generics argument list: a -recurse region scopes the <...> argument list so
+# nested (List<Map<String,Int>>) and custom (List<MyCustom>) args are highlighted.
+# It is a group delegate: it colours exactly its children, so it re-includes the
+# < , > operators to keep real angle brackets operator-styled (see src/highlighters.cc).
+add-highlighter shared/kotlin/generics-args region -recurse '<' '<' '>' group
+add-highlighter shared/kotlin/generics-args/operators regex (,|<|>) 1:operator
+add-highlighter shared/kotlin/generics-args/argument regex \b([A-Za-z_]\w*) 1:type
+
 add-highlighter shared/kotlin/code/annotations regex @\w+\b|\b\w+@(?=\{) 0:meta
 add-highlighter shared/kotlin/code/identifiers regex \b(field|it)\b 1:variable
 add-highlighter shared/kotlin/code/fields      regex \.([A-Za-z_][\w]*)\s*?\. 1:type
@@ -82,10 +90,14 @@ add-highlighter shared/kotlin/code/delimiters  regex (\(|\)|\[|\]|\{|\}|\;|') 1:
 add-highlighter shared/kotlin/code/operators   regex (\+|-|\*|&|=|\\|\?|%|\|-|!|\||->|\.|,|<|>|:|\^|/) 1:operator
 add-highlighter shared/kotlin/code/numbers     regex \b((0(x|X)[0-9a-fA-F]*)|(([0-9]+\.?[0-9]*)|(\.[0-9]+))((e|E)(\+|-)?[0-9]+)?)([LlFf])?\b 0:value
 
-# Generics need improvement, as after a colon will match as a constant only.
-# val program: IOU = XXXX; val cat: DOG = XXXX. matches IOU or DOG as a
-# CONSTANT when it could be generics. See: https://regex101.com/r/VPO5LE/10
-add-highlighter shared/kotlin/code/constants_and_generics regex \b((?<==\h)\([A-Z][A-Z0-9_]+(?=[<:\;])|(?<!<)[A-Z][A-Z0-9_]+\b(?!<[>\)]))|\b((?<!=\s)(?<!\.)[A-Z]+\d*?(?![\(\;:])(?=[,\)>\s]))\b 1:meta 2:type
+# See: https://regex101.com/r/VsBomM/2
+# Negative lookbehinds keep constants out of type positions (name : TYPE):
+#   (?<!:\h) excludes colon-space (: Int)
+#   (?<!:)  excludes colon-run-on (:Int) and space-before-colon ( :Int)
+add-highlighter shared/kotlin/code/constants regex \b((?<==\h)\([A-Z][A-Z0-9_]+(?=[<:\;])|(?<!:\h)(?<!<)(?<!:)[A-Z][A-Z0-9_]+\b(?!<[>\)])) 1:meta
+# generics type name: identifier immediately before `<`.
+# The builtin `type` list (line 110) ends in `(?=[^<])`, so it deliberately skips identifiers before `<` — this recovers `List` in `List<Int>`.
+add-highlighter shared/kotlin/code/generics regex \b([A-Za-z_]\w*)(?=<) 1:type
 
 add-highlighter shared/kotlin/code/target regex @(delegate|field|file|get|param|property|receiver|set|setparam)(?=:) 0:meta
 add-highlighter shared/kotlin/code/soft   regex \b(by|catch|constructor|dynamic|finally|get|import|init|set|where)\b 1:keyword
