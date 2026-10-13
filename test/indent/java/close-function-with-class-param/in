@@ -1,0 +1,18 @@
+void f(int i,
+       S s)
+{
+%( )
+
+void g(int i,
+       S s) {
+%( )
+
+class T {
+    void h(int i,
+           S s) {
+    %( )
+
+    void i(int i,
+           S s) final {
+    %( )
+}

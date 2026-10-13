@@ -1,0 +1,4 @@
+source "%val{runtime}/colors/default.kak"
+source "%val{runtime}/rc/filetype/c-family.kak"
+source "%val{runtime}/rc/filetype/java.kak"
+set buffer filetype java
