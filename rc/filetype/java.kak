@@ -12,7 +12,7 @@ hook global WinSetOption filetype=java %[
     set-option window static_words %opt{java_static_words}
 
     # cleanup trailing whitespaces when exiting insert mode
-    hook window ModeChange pop:insert:.* -group java-trim-indent %{ try %{ execute-keys -draft xs^\h+$<ret>d } }
+    hook window ModeChange pop:insert:.* -group java-trim-indent java-trim-indents
     hook window InsertChar \n -group java-insert java-insert-on-new-line
     hook window InsertChar \n -group java-indent java-indent-on-new-line
     hook window InsertChar \{ -group java-indent java-indent-on-opening-curly-brace
@@ -43,6 +43,9 @@ add-highlighter shared/java/code/ regex "(?<!\w)@\w+\b" 0:meta
 
 # Commands
 # ‾‾‾‾‾‾‾‾
+define-command -hidden java-trim-indents %[
+    c-family-trim-indent
+]
 
 define-command -hidden java-insert-on-new-line %[
     c-family-insert-on-newline
