@@ -12,11 +12,11 @@ hook global WinSetOption filetype=java %[
     set-option window static_words %opt{java_static_words}
 
     # cleanup trailing whitespaces when exiting insert mode
-    hook window ModeChange pop:insert:.* -group java-trim-indent java-trim-indents
-    hook window InsertChar \n -group java-insert java-insert-on-new-line
-    hook window InsertChar \n -group java-indent java-indent-on-new-line
-    hook window InsertChar \{ -group java-indent java-indent-on-opening-curly-brace
-    hook window InsertChar \} -group java-indent java-indent-on-closing-curly-brace
+    hook window ModeChange pop:insert:.* -group java-trim-indent c-family-trim-indent
+    hook window InsertChar \n -group java-insert c-family-insert-on-newline
+    hook window InsertChar \n -group java-indent c-family-indent-on-newline
+    hook window InsertChar \{ -group java-indent c-family-indent-on-opening-curly-brace
+    hook window InsertChar \} -group java-indent c-family-indent-on-closing-curly-brace
     hook window InsertChar \} -group java-insert c-family-insert-on-closing-curly-brace
 
     hook -once -always window WinSetOption filetype=.* %{ remove-hooks window java-.+ }
@@ -28,8 +28,6 @@ hook -group java-highlight global WinSetOption filetype=java %{
 }
 
 provide-module java %§
-
-require-module c-family
 
 add-highlighter shared/java regions
 add-highlighter shared/java/code default-region group
@@ -43,26 +41,7 @@ add-highlighter shared/java/code/ regex "(?<!\w)@\w+\b" 0:meta
 
 # Commands
 # ‾‾‾‾‾‾‾‾
-define-command -hidden java-trim-indents %[
-    c-family-trim-indent
-]
-
-define-command -hidden java-insert-on-new-line %[
-    c-family-insert-on-newline
-]
-
-define-command -hidden java-indent-on-new-line %[
-    c-family-indent-on-newline
-]
-
-define-command -hidden java-indent-on-opening-curly-brace %[
-    c-family-indent-on-opening-curly-brace
-]
-
-define-command -hidden java-indent-on-closing-curly-brace %[
-    c-family-indent-on-closing-curly-brace
-]
-
+#
 # Shell
 # ‾‾‾‾‾
 # Oracle 2026, 3.9 Keywords, Chapter 3. Lexical Structure, Java Language Specification, Java SE 26, viewed 12 October 2026, <https://docs.oracle.com/en/java/javase/26/docs/specs/jls/jls-3.html#jls-3.9>
@@ -114,5 +93,4 @@ evaluate-commands %sh{
     add_module_highlighter "$modules" "module"
     # ---------------------------------------------------------------------------------------------- #
 }
-
 §
