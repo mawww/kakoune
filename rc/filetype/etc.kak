@@ -8,6 +8,7 @@ hook global BufCreate .*/etc/group                      %{ set-option buffer fil
 hook global BufCreate .*/etc/(fs|m)tab                  %{ set-option buffer filetype etc-fstab }
 hook global BufCreate .*/etc/environment                %{ set-option buffer filetype sh }
 hook global BufCreate .*/etc/env.d/.*                   %{ set-option buffer filetype sh }
+hook global BufCreate .*/etc/conf.d/.*                  %{ set-option buffer filetype sh }
 hook global BufCreate .*/etc/profile(\.(csh|env))?      %{ set-option buffer filetype sh }
 hook global BufCreate .*/etc/profile\.d/.*              %{ set-option buffer filetype sh }
 
