@@ -119,7 +119,6 @@ while (<STDIN>) {
         $file_line = ($version eq "+" ? $2 : $1) - 1;
         $other_file_line = ($version eq "+" ? $1 : $2) - 1;
     } else {
-        my $iscontext = m{^[ ]};
         if (m{^[ $version]}) {
            $file_line++ if defined $file_line;
         }
