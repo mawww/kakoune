@@ -81,11 +81,11 @@ define-command -hidden make-jump %{
 define-command -hidden make-select-next %{
         set-register / %opt{make_error_pattern}
         # go to the current line end, search and go to the start of selection
-        execute-keys "%opt{jump_current_line}ggl" "/<ret><a-;>;"
+        execute-keys "%opt{jump_current_line}g<a-l>" "/<ret><a-;>;"
 }
 define-command -hidden make-select-previous %{
         set-register / %opt{make_error_pattern}
-        execute-keys "%opt{jump_current_line}g" "<a-/><ret><a-;>;"
+        execute-keys "%opt{jump_current_line}g<a-h>" "<a-/><ret><a-;>;"
 }
 
 define-command make-next-error -docstring %{alias for "jump-next *make*"} %{
