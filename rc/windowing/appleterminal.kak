@@ -29,8 +29,6 @@ The program passed as argument will be executed in the new terminal'\
 }
 complete-command appleterminal-terminal-window shell
 
-alias global terminal appleterminal-terminal-window
-
 define-command appleterminal-focus -params ..1 -docstring '
 appleterminal-focus [<client>]: focus the given client
 If no client is passed then the current one is used' \
