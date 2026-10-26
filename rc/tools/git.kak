@@ -898,6 +898,8 @@ define-command -params 1.. \
         echo "echo -markup '{Information}{\\}$msg'"
     }
 
+    on_close_fifo=
+
     case "$1" in
         apply)
             shift
