@@ -1,0 +1,18 @@
+interface A
+{
+    void foo() {
+        bar()%(;)
+}
+
+interface D {
+    void baz() %({)
+    int qux%(;)
+
+if (true) {
+    if (true) {
+        foo%(;)
+    bar%(;)
+
+    foo(bar) {}
+{
+    baz%(;)
