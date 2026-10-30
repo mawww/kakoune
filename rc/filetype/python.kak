@@ -41,15 +41,15 @@ add-highlighter shared/python/documentation region '##'  '$'              fill d
 add-highlighter shared/python/comment       region '#'   '$'              fill comment
 
 # String interpolation
-add-highlighter shared/python/f_triple_string region -match-capture [fF]("""|''') (?<!\\)(?:\\\\)*("""|''') group
+add-highlighter shared/python/f_triple_string region -match-capture [fFtT]("""|''') (?<!\\)(?:\\\\)*("""|''') group
 add-highlighter shared/python/f_triple_string/ fill string
 add-highlighter shared/python/f_triple_string/ regex \{.*?\} 0:value
 
-add-highlighter shared/python/f_double_string region '[fF]"'   (?<!\\)(\\\\)*" group
+add-highlighter shared/python/f_double_string region '[fFtT]"'   (?<!\\)(\\\\)*" group
 add-highlighter shared/python/f_double_string/ fill string
 add-highlighter shared/python/f_double_string/ regex \{.*?\} 0:value
 
-add-highlighter shared/python/f_single_string region "[fF]'"   (?<!\\)(\\\\)*' group
+add-highlighter shared/python/f_single_string region "[fFtT]'"   (?<!\\)(\\\\)*' group
 add-highlighter shared/python/f_single_string/ fill string
 add-highlighter shared/python/f_single_string/ regex \{.*?\} 0:value
 
