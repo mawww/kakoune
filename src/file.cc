@@ -63,24 +63,33 @@ std::pair<StringView, StringView> split_path(StringView path)
     return { {path.begin(), slash+1}, {slash+1, path.end()} };
 }
 
+struct MallocDeleter
+{
+    void operator()(char *ptr) const
+    {
+        free(ptr);
+    }
+};
+
 String real_path(StringView filename)
 {
     if (filename.empty())
         return {};
 
-    char buffer[PATH_MAX+1];
-
     StringView existing = filename;
     StringView non_existing{};
 
+    using unique_cstr = std::unique_ptr<char, MallocDeleter>;
+
     while (true)
     {
-        if (char* res = realpath(existing.zstr(), buffer))
+        unique_cstr res(realpath(existing.zstr(), nullptr));
+        if (res)
         {
             if (non_existing.empty())
-                return res;
+                return String(res.get());
 
-            StringView dir = res;
+            StringView dir = res.get();
             while (not dir.empty() and dir.back() == '/')
                 dir = dir.substr(0_byte, dir.length()-1_byte);
             return format("{}/{}", dir, non_existing);
@@ -295,22 +304,25 @@ void write_to_file(StringView filename, StringView data)
     write(fd, data);
 }
 
-int open_temp_file(StringView filename, char (&buffer)[PATH_MAX])
+int open_temp_file(StringView filename, String &buffer)
 {
     String path = real_path(filename);
     auto [dir,file] = split_path(path);
 
     if (dir.empty())
-        format_to(buffer, ".{}.kak.XXXXXX", file);
+        buffer = format(".{}.kak.XXXXXX", file);
     else
-        format_to(buffer, "{}/.{}.kak.XXXXXX", dir, file);
+        buffer = format("{}/.{}.kak.XXXXXX", dir, file);
 
-    return mkstemp(buffer);
+    char* tmplt = strndup(buffer.c_str(), (size_t)buffer.length());
+    int fp = mkstemp(tmplt);
+    buffer = tmplt;
+    return fp;
 }
 
 int open_temp_file(StringView filename)
 {
-    char buffer[PATH_MAX];
+    String buffer;
     return open_temp_file(filename, buffer);
 }
 
@@ -368,9 +380,9 @@ void make_directory(StringView dir, mode_t mode)
 
 void list_files(StringView dirname, FunctionRef<void (StringView, const struct stat&)> callback)
 {
-    char buffer[PATH_MAX+1];
-    format_to(buffer, "{}", dirname);
-    DIR* dir = opendir(dirname.empty() ? "./" : buffer);
+    String buffer;
+    buffer = format("{}", dirname);
+    DIR* dir = opendir(dirname.empty() ? "./" : buffer.c_str());
     if (not dir)
         return;
 
@@ -384,12 +396,12 @@ void list_files(StringView dirname, FunctionRef<void (StringView, const struct s
 
         struct stat st;
         auto fmt_str = (dirname.empty() or dirname.back() == '/') ? "{}{}" : "{}/{}";
-        format_to(buffer, fmt_str, dirname, filename);
-        if (stat(buffer, &st) != 0)
+        buffer = format(fmt_str, dirname, filename);
+        if (stat(buffer.c_str(), &st) != 0)
             continue;
 
         if (S_ISDIR(st.st_mode))
-            filename = format_to(buffer, "{}/", filename);
+            filename = format(buffer.c_str(), "{}/", filename);
         callback(filename, st);
     }
 }
