@@ -40,11 +40,15 @@ hence options cannot be unset from the *global* scope.
 New options can be declared using the `declare-option` command:
 
 ---------------------------------------------------
-declare-option [-hidden] <type> <name> [<value>...]
+declare-option [<switches>] <type> <name> [<value>...]
 ---------------------------------------------------
 
-If `-hidden` is specified, the option will not be displayed in completion
-suggestions.
+*-hidden*::
+    If `-hidden` is specified, the option will not be displayed in completion
+    suggestions.
+
+*-docstring*::
+    define the documentation string for the option
 
 [[update-option]]
 Certain option type can be *updated*, usually to match potential changes
