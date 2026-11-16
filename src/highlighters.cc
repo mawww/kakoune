@@ -702,6 +702,7 @@ struct WrapHighlighter : Highlighter
         if (pos.atom_it == line_end)
             return false;
 
+        const ColumnCount start_column = pos.column;
         if (pos.atom_it->type() != DisplayAtom::Range and
             pos.column + pos.atom_it->length() >= wrap_column)
             return ++pos.atom_it != line_end;
@@ -712,7 +713,9 @@ struct WrapHighlighter : Highlighter
             const char* it = &content[pos.byte];
             const Codepoint cp = utf8::read_codepoint(it, content.end());
             const ColumnCount width = codepoint_width(cp);
-            if (pos.column + width > wrap_column) // the target column was in the char
+            // the target column was in the char, which we still have to take if nothing
+            // else is on the line yet, else we would split in front of it forever
+            if (pos.column + width > wrap_column and pos.column > start_column)
             {
                 update_word_boundaries(cp);
                 break;
