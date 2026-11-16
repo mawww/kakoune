@@ -1,1 +1,1 @@
-ulimit -v 1048576
+ulimit -t 2
