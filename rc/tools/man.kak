@@ -63,8 +63,11 @@ define-command -hidden -params ..3 man-impl %{ evaluate-commands %sh{
 
 define-command -params ..1 \
     -shell-script-candidates %{
+        if [ "$(uname -s)" = "Darwin" ]; then
+	        MANPATH="${MANPATH}":"$(manpath)"
+        fi
         find /usr/share/man/ $(printf %s "${MANPATH}" |
-            sed 's/:/ /') -name '*.[1-8]*' |
+            sed 's/:/ /g') -name '*.[1-8]*' |
             sed 's,^.*/\(.*\)\.\([1-8][a-zA-Z]*\).*$,\1(\2),'
     } \
     -docstring %{
