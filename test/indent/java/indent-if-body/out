@@ -1,0 +1,16 @@
+if (int i = bar())
+    foo
+
+if (bar(a, b,
+        c, d))
+    foo
+
+if (bar(a, b,
+        c, d)) // comment
+    foo
+
+else
+    foo
+
+else // comment
+    foo

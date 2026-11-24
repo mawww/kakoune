@@ -1,0 +1,11 @@
+if(c == '(') {
+    bar
+
+if(c == '(') {}
+bar
+
+if(s == "(") {
+    bar
+
+if(s == "(" "foo") {
+    bar
