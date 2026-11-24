@@ -64,8 +64,8 @@ define-command -hidden -params ..3 man-impl %{ evaluate-commands %sh{
 define-command -params ..1 \
     -shell-script-candidates %{
         find /usr/share/man/ $(printf %s "${MANPATH}" |
-            sed 's/:/ /') -name '*.[1-8]*' |
-            sed 's,^.*/\(.*\)\.\([1-8][a-zA-Z]*\).*$,\1(\2),'
+            sed 's/:/ /') -name '*.[1-9]*' |
+            sed 's,^.*/\(.*\)\.\([1-9][a-zA-Z]*\).*$,\1(\2),'
     } \
     -docstring %{
         man [<page>]: manpage viewer wrapper
@@ -76,7 +76,7 @@ define-command -params ..1 \
 
     ## The completion suggestions display the page number, strip them if present
     case "${subject}" in
-        *\([1-8]*\))
+        *\([1-9]*\))
             pagenum="${subject##*\(}"
             pagenum="${pagenum%\)}"
             subject="${subject%%\(*}"
