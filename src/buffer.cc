@@ -154,7 +154,9 @@ BufferIterator Buffer::iterator_at(BufferCoord coord) const
 
 BufferCoord Buffer::clamp(BufferCoord coord) const
 {
-    if (coord > back_coord())
+    if (coord.line < 0)
+        coord = BufferCoord{0, 0};
+    else if (coord > back_coord())
         coord = back_coord();
     kak_assert(coord.line >= 0 and coord.line < line_count());
     ByteCount max_col = std::max(0_byte, m_lines[coord.line].length() - 1);
