@@ -1,0 +1,6 @@
+declare-option range-specs ranges %val{timestamp} '2.1+1|
+note
+'
+
+add-highlighter window/ wrap
+add-highlighter window/ replace-ranges ranges
