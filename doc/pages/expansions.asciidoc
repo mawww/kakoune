@@ -333,6 +333,18 @@ The following expansions are supported (with required context _in italics_):
     _in buffer, window scope_ +
     `true` if the buffer has modifications not saved, otherwise `false`
 
+*%val{scratch}*::
+    _in buffer, window scope_ +
+    `true` if the buffer is not linked to a file ("scratch"), otherwise `false`
+
+*%val{new_file}*::
+    _in buffer, window scope_ +
+    `true` if the buffer is linked to a file that does not exist yet, otherwise `false`
+
+*%val{fifo}*::
+    _in buffer, window scope_ +
+    `true` if the buffer is currently linked and reading from a fifo, otherwise `false`
+
 *%val{object_flags}*::
     _for commands executed from the object menu's `<a-;>` only_ +
     a pipe-separted list of words including `inner` if the user wants
