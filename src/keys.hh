@@ -95,6 +95,8 @@ struct Key
     static Modifiers to_modifier(MouseButton button) { return Key::Modifiers{((int)button << 6) & (int)Modifiers::MouseButtonMask}; }
 
     Optional<Codepoint> codepoint() const;
+
+    static constexpr const char* option_type_name = "key";
 };
 
 constexpr bool with_bit_ops(Meta::Type<Key::Modifiers>) { return true; }
@@ -108,6 +110,8 @@ KeyList parse_keys(StringView str);
 String  to_string(Key key);
 StringView to_string(Key::MouseButton button);
 Key::MouseButton str_to_button(StringView str);
+String option_to_string(const Key& key);
+Key option_from_string(Meta::Type<Key>, StringView str);
 
 constexpr Key shift(Key key)
 {
