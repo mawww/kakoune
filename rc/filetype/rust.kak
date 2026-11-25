@@ -1,11 +1,19 @@
 # http://rust-lang.org
 # ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
 
+# Optional dependencies
+# ‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+declare-option -docstring "maximum amount of characters per line, after which a newline character will be inserted" \
+    int autowrap_column 80
+
 # Detection
 # ‾‾‾‾‾‾‾‾‾
 
 hook global BufCreate .*[.](rust|rs) %{
     set-option buffer filetype rust
+    set-option buffer tabstop 4
+    set-option buffer autowrap_column 99
 }
 
 # Initialization
