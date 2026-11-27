@@ -117,7 +117,7 @@ Installing
 
 In order to install *kak* on your system, rather than running it directly from
 its source directory, type *make install*. You can specify the `PREFIX` and
-`DESTDIR` if needed.
+`DESTDIR` if needed (eg `make PREFIX=$HOME install`).
 
 [TIP]
 .Homebrew (macOS) or Linuxbrew
