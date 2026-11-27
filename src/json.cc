@@ -42,6 +42,52 @@ String to_json(StringView str)
 
 static bool is_digit(char c) { return c >= '0' and c <= '9'; }
 
+// Parses the 4 hex digits at pos, returns {} if they are not all there yet
+static Optional<Codepoint> parse_hex4(const char* pos, const char* end)
+{
+    if (end - pos < 4)
+        return {};
+    Codepoint res = 0;
+    for (char c : StringView{pos, pos+4})
+    {
+        res *= 16;
+        if (is_digit(c))
+            res += c - '0';
+        else if (c >= 'a' and c <= 'f')
+            res += c - 'a' + 10;
+        else if (c >= 'A' and c <= 'F')
+            res += c - 'A' + 10;
+        else
+            throw runtime_error("invalid hex digit in unicode escape");
+    }
+    return res;
+}
+
+// Parses a \uXXXX escape, pos pointing after the 'u', and advances pos past it.
+// Characters above U+FFFF are encoded as two escapes, a surrogate pair.
+static Optional<Codepoint> parse_unicode_escape(const char*& pos, const char* end)
+{
+    auto cp = parse_hex4(pos, end);
+    if (not cp)
+        return {};
+    if (*cp >= 0xDC00 and *cp <= 0xDFFF)
+        throw runtime_error("invalid unicode surrogate pair");
+    if (*cp < 0xD800 or *cp > 0xDBFF)
+    {
+        pos += 4;
+        return cp;
+    }
+    if ((end - pos > 4 and pos[4] != '\\') or (end - pos > 5 and pos[5] != 'u'))
+        throw runtime_error("invalid unicode surrogate pair");
+    if (end - pos < 10)
+        return {};
+    auto low = parse_hex4(pos+6, end);
+    if (*low < 0xDC00 or *low > 0xDFFF)
+        throw runtime_error("invalid unicode surrogate pair");
+    pos += 10;
+    return 0x10000 + ((*cp - 0xD800) << 10) + (*low - 0xDC00);
+}
+
 static constexpr size_t max_parsing_depth = 100;
 
 JsonResult parse_json_impl(const char* pos, const char* end, size_t depth)
@@ -72,9 +118,27 @@ JsonResult parse_json_impl(const char* pos, const char* end, size_t depth)
             if (escaped)
             {
                 escaped = false;
-                value += StringView{pos, string_end};
-                value.back() = *string_end;
+                value += StringView{pos, string_end-1};
                 pos = string_end+1;
+                switch (*string_end)
+                {
+                    case '"': case '\\': case '/': value.push_back(*string_end); break;
+                    case 'b': value.push_back('\b'); break;
+                    case 'f': value.push_back('\f'); break;
+                    case 'n': value.push_back('\n'); break;
+                    case 'r': value.push_back('\r'); break;
+                    case 't': value.push_back('\t'); break;
+                    case 'u':
+                    {
+                        auto cp = parse_unicode_escape(pos, end);
+                        if (not cp)
+                            return {};
+                        value += String{*cp};
+                        break;
+                    }
+                    default: throw runtime_error("invalid escape in string");
+                }
+                string_end = pos-1;
                 continue;
             }
             if (*string_end == '\\')
@@ -188,6 +252,31 @@ UnitTest test_json_parser{[]()
         }
         kak_expect_throw(runtime_error, parse_json(big_nested_array));
     }
+
+    {
+        auto value = parse_json(R"("a\"b\\c\/d\b\f\n\r\te")").value;
+        kak_assert(value and value.as<String>() == "a\"b\\c/d\b\f\n\r\te");
+    }
+
+    {
+        auto value = parse_json(R"("caf\u00e9 \u2026 \ud83d\ude00")").value;
+        kak_assert(value and value.as<String>() == "café … 😀");
+    }
+
+    {
+        auto value = parse_json(to_json(StringView{"\033"})).value;
+        kak_assert(value and value.as<String>() == "\033");
+    }
+
+    kak_assert(not parse_json(R"("\u20)").value);
+    kak_assert(not parse_json(R"("\ud83d\ude)").value);
+
+    kak_expect_throw(runtime_error, parse_json(R"("\u12zz")"));
+    kak_expect_throw(runtime_error, parse_json(R"("\ude00")"));
+    kak_expect_throw(runtime_error, parse_json(R"("\ud83dabcdef")"));
+    kak_expect_throw(runtime_error, parse_json(R"("\ud83d")"));
+    kak_expect_throw(runtime_error, parse_json(R"("\ud83d\u0041")"));
+    kak_expect_throw(runtime_error, parse_json(R"("\q")"));
 }};
 
 UnitTest test_to_json{[]()
